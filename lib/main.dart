@@ -1,0 +1,177 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sizer/sizer.dart';
+import 'package:flutter/foundation.dart';
+
+import './core/utils/app_localizations.dart';
+import './core/utils/locale_manager.dart';
+import './services/payment_service.dart';
+import './services/supabase_service.dart';
+import './widgets/custom_error_widget.dart';
+import 'core/app_export.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase
+  await SupabaseService.initialize();
+
+  // Initialize Stripe payment service
+  try {
+    await PaymentService.initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      print('Stripe initialization failed: $e');
+    }
+  }
+
+  bool _hasShownError = false;
+
+  // 🚨 CRITICAL: Custom error handling - DO NOT REMOVE
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (!_hasShownError) {
+      _hasShownError = true;
+
+      // Reset flag after 3 seconds to allow error widget on new screens
+      Future.delayed(const Duration(seconds: 5), () {
+        _hasShownError = false;
+      });
+
+      return CustomErrorWidget(errorDetails: details);
+    }
+    return const SizedBox.shrink();
+  };
+
+  // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
+  Future.wait([
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
+  ]).then((value) {
+    runApp(const MyApp());
+  });
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+
+  /// Static method to access _MyAppState from anywhere in the widget tree
+  static _MyAppState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_MyAppState>();
+  }
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale? _locale;
+  ThemeMode _themeMode = ThemeMode.light;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  /// Initialize app with saved settings before first build
+  Future<void> _initializeApp() async {
+    final savedLocale = await LocaleManager.getSavedLocale();
+    final savedTheme = await LocaleManager.getSavedThemeMode();
+
+    if (mounted) {
+      setState(() {
+        _locale = savedLocale ?? const Locale('en');
+        _themeMode = _parseThemeMode(savedTheme);
+        _isInitialized = true;
+      });
+    }
+  }
+
+  ThemeMode _parseThemeMode(String theme) {
+    switch (theme.toLowerCase()) {
+      case 'dark':
+        return ThemeMode.dark;
+      case 'system':
+      case 'auto':
+        return ThemeMode.system;
+      case 'light':
+      default:
+        return ThemeMode.light;
+    }
+  }
+
+  /// Public method to update locale and force complete app rebuild
+  void updateLocale(Locale locale) {
+    if (_locale?.languageCode != locale.languageCode) {
+      setState(() {
+        _locale = locale;
+      });
+    }
+  }
+
+  /// Public method to update theme mode and force complete app rebuild
+  void updateThemeMode(String theme) {
+    final newThemeMode = _parseThemeMode(theme);
+    if (_themeMode != newThemeMode) {
+      setState(() {
+        _themeMode = newThemeMode;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Show loading screen until locale is loaded
+    if (!_isInitialized || _locale == null) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+
+    return Sizer(
+      builder: (context, orientation, screenType) {
+        return MaterialApp(
+          key: ValueKey(_locale!.languageCode + _themeMode.toString()),
+          title: 'everywear',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: _themeMode,
+          // 🚨 CRITICAL: NEVER REMOVE OR MODIFY
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.0)),
+              child: child!,
+            );
+          },
+          // 🚨 END CRITICAL SECTION
+          debugShowCheckedModeBanner: false,
+          // Localization configuration
+          locale: _locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          localeResolutionCallback: (locale, supportedLocales) {
+            if (locale != null) {
+              for (var supportedLocale in supportedLocales) {
+                if (supportedLocale.languageCode == locale.languageCode) {
+                  return supportedLocale;
+                }
+              }
+            }
+            return supportedLocales.first;
+          },
+          routes: AppRoutes.routes,
+          initialRoute: AppRoutes.initial,
+        );
+      },
+    );
+  }
+}
