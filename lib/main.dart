@@ -32,7 +32,7 @@ void main() async {
   // Initialize Sentry
   await SentryFlutter.init(
     (options) {
-      options.dsn = const String.fromEnvironment('SENTRY_DSN');
+      options.dsn = 'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
       options.tracesSampleRate = 1.0;
       options.debug = kDebugMode;
     },
