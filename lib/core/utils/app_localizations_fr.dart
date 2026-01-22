@@ -194,6 +194,8 @@ const Map<String, String> appLocalizationsFr = {
   'no_items_found': 'Aucun article trouvé',
   'continue_with_item_singular': 'Continuer avec {count} article',
   'continue_with_items_plural': 'Continuer avec {count} articles',
+  'cost_per_wear': 'Coût par usage',
+  'per_wear': '/usage',
 
   // Dynamic AI messages
   'ai_bubble_message_initial':

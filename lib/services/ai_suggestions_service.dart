@@ -18,6 +18,8 @@ class AiSuggestionsService {
   Future<Map<String, dynamic>> generateSuggestions({
     required String imageUrl,
     required String language,
+    Map<String, dynamic>? weatherContext,
+    List<Map<String, dynamic>>? itemHistory,
   }) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -42,7 +44,12 @@ class AiSuggestionsService {
 
       final response = await _supabase.functions.invoke(
         'ai-suggestions',
-        body: {'imageUrl': imageUrl, 'language': language},
+        body: {
+          'imageUrl': imageUrl,
+          'language': language,
+          'weather': weatherContext,
+          'itemsInfo': itemHistory,
+        },
       );
 
       if (response.data != null) {

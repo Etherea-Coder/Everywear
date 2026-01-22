@@ -18,6 +18,8 @@ dependencies:
   flutter_svg: ^2.0.9        # Required for SVG icon support
   google_fonts: ^6.1.0       # Required for typography (replaces local fonts)
   shared_preferences: ^2.2.2 # Required for local data storage
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
   web: ^1.1.1
   
   # Feature dependencies - safe to modify
@@ -42,6 +44,8 @@ dev_dependencies:
   flutter_test:    # CRITICAL: Required for Flutter project testing - DO NOT REMOVE
     sdk: flutter   # CRITICAL: Required for Flutter project testing - DO NOT REMOVE
   flutter_lints: ^5.0.0 # CRITICAL: Required for code quality - DO NOT REMOVE
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.9
 
 flutter:
   uses-material-design: true # CRITICAL: Required for Material icon font - DO NOT REMOVE

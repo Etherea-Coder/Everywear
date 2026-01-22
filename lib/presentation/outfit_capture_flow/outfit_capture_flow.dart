@@ -1,12 +1,14 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/ai_suggestions_service.dart';
+import '../../services/weather_service.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
 import '../../widgets/custom_icon_widget.dart';
 import './widgets/camera_view_widget.dart';
@@ -41,6 +43,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   bool _isLoading = false;
 
   final AiSuggestionsService _aiSuggestionsService = AiSuggestionsService();
+  final WeatherService _weatherService = WeatherService();
   String? _aiSuggestions;
   bool _isLoadingSuggestions = false;
   String _selectedLanguage = 'EN';
@@ -147,6 +150,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
 
   /// Handle method selection
   void _selectCaptureMethod(String method) {
+    HapticFeedback.lightImpact();
     setState(() {
       _captureMethod = method;
       _currentStep = 1;
@@ -214,9 +218,28 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       _aiSuggestions = null;
     });
 
+    // Fetch weather context
+    final weatherContext = await _weatherService.getCurrentWeather();
+
+    // Prepare items context (if building from wardrobe)
+    final itemsContext =
+        _selectedItems.isNotEmpty
+            ? _selectedItems
+                .map(
+                  (item) => {
+                    'name': item['name'],
+                    'category': item['category'],
+                    'brand': item['brand'],
+                  },
+                )
+                .toList()
+            : null;
+
     final result = await _aiSuggestionsService.generateSuggestions(
       imageUrl: imageUrl,
       language: _selectedLanguage,
+      weatherContext: weatherContext,
+      itemHistory: itemsContext,
     );
 
     setState(() {

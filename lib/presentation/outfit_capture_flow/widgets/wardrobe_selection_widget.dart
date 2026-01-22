@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
@@ -33,6 +34,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "White cotton crew neck t-shirt laid flat on neutral background",
       "color": "White",
       "brand": "Everlane",
+      "price": 30.0,
+      "wearCount": 15,
     },
     {
       "id": "top_2",
@@ -44,6 +47,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "Navy blue knit sweater with ribbed texture on white background",
       "color": "Navy",
       "brand": "Uniqlo",
+      "price": 80.0,
+      "wearCount": 4,
     },
     {
       "id": "top_3",
@@ -55,6 +60,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "Black turtleneck sweater folded neatly on light surface",
       "color": "Black",
       "brand": "COS",
+      "price": 95.0,
+      "wearCount": 2,
     },
     {
       "id": "bottom_1",
@@ -66,6 +73,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "Medium wash blue denim jeans laid flat showing front view",
       "color": "Blue",
       "brand": "Levi's",
+      "price": 110.0,
+      "wearCount": 22,
     },
     {
       "id": "bottom_2",
@@ -77,6 +86,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "Black tailored trousers with pressed crease on neutral background",
       "color": "Black",
       "brand": "Zara",
+      "price": 60.0,
+      "wearCount": 8,
     },
     {
       "id": "bottom_3",
@@ -88,6 +99,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "Khaki colored chino pants folded showing fabric texture",
       "color": "Khaki",
       "brand": "Gap",
+      "price": 45.0,
+      "wearCount": 12,
     },
     {
       "id": "shoe_1",
@@ -99,6 +112,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "White leather sneakers with minimal design on clean background",
       "color": "White",
       "brand": "Adidas",
+      "price": 90.0,
+      "wearCount": 30,
     },
     {
       "id": "shoe_2",
@@ -109,6 +124,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
       "semanticLabel": "Brown leather ankle boots with laces on wooden surface",
       "color": "Brown",
       "brand": "Clarks",
+      "price": 140.0,
+      "wearCount": 5,
     },
     {
       "id": "accessory_1",
@@ -120,6 +137,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "Brown leather belt with silver buckle coiled on white background",
       "color": "Brown",
       "brand": "Coach",
+      "price": 120.0,
+      "wearCount": 1,
     },
     {
       "id": "accessory_2",
@@ -131,6 +150,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           "Natural canvas tote bag with leather handles on neutral surface",
       "color": "Beige",
       "brand": "Madewell",
+      "price": 40.0,
+      "wearCount": 6,
     },
   ];
 
@@ -167,6 +188,7 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
 
   /// Toggle item selection
   void _toggleItemSelection(String itemId) {
+    HapticFeedback.lightImpact();
     setState(() {
       if (_selectedItemIds.contains(itemId)) {
         _selectedItemIds.remove(itemId);
@@ -429,13 +451,21 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(12),
                   ),
-                  child: CustomImageWidget(
-                    imageUrl: item['image'] as String,
-                    width: 40.w,
-                    height: 15.h,
-                    fit: BoxFit.cover,
-                    semanticLabel: item['semanticLabel'] as String,
+                  child: Hero(
+                    tag: 'wardrobe_item_${item['id']}',
+                    child: CustomImageWidget(
+                      imageUrl: item['image'] as String,
+                      width: 40.w,
+                      height: 15.h,
+                      fit: BoxFit.cover,
+                      semanticLabel: item['semanticLabel'] as String,
+                    ),
                   ),
+                ),
+                Positioned(
+                  top: 2.w,
+                  left: 2.w,
+                  child: _buildCPWBadge(theme, item),
                 ),
                 if (isSelected)
                   Positioned(
@@ -500,14 +530,41 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
         color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: CustomImageWidget(
-          imageUrl: item['image'] as String,
-          width: 20.w,
-          height: double.infinity,
-          fit: BoxFit.cover,
-          semanticLabel: item['semanticLabel'] as String,
+      child: Hero(
+        tag: 'wardrobe_item_chip_${item['id']}',
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: CustomImageWidget(
+            imageUrl: item['image'] as String,
+            width: 20.w,
+            height: double.infinity,
+            fit: BoxFit.cover,
+            semanticLabel: item['semanticLabel'] as String,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build CPW badge
+  Widget _buildCPWBadge(ThemeData theme, Map<String, dynamic> item) {
+    final price = item['price'] as double? ?? 0.0;
+    final wearCount = item['wearCount'] as int? ?? 1;
+    final cpw = wearCount > 0 ? price / wearCount : price;
+    final localizations = AppLocalizations.of(context);
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondary.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '\$${cpw.toStringAsFixed(2)}${localizations.perWear}',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 9.sp,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

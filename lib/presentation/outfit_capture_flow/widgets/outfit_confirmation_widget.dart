@@ -160,21 +160,24 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: kIsWeb
-          ? Image.network(
-              widget.capturedImage!.path,
-              height: 50.h,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            )
-          : Image.file(
-              File(widget.capturedImage!.path),
-              height: 50.h,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+    return Hero(
+      tag: 'captured_outfit_image', // Special tag for camera captures
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: kIsWeb
+            ? Image.network(
+                widget.capturedImage!.path,
+                height: 50.h,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              )
+            : Image.file(
+                File(widget.capturedImage!.path),
+                height: 50.h,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+      ),
     );
   }
 
@@ -232,12 +235,15 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: CustomImageWidget(
-              imageUrl: item['image'] as String,
-              width: double.infinity,
-              height: 15.h,
-              fit: BoxFit.cover,
-              semanticLabel: item['semanticLabel'] as String,
+            child: Hero(
+              tag: 'wardrobe_item_${item['id']}',
+              child: CustomImageWidget(
+                imageUrl: item['image'] as String,
+                width: double.infinity,
+                height: 15.h,
+                fit: BoxFit.cover,
+                semanticLabel: item['semanticLabel'] as String,
+              ),
             ),
           ),
           Padding(

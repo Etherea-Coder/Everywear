@@ -176,6 +176,8 @@ class AppLocalizations {
   String get selectAtLeastOneItem => translate('select_at_least_one_item');
   String get searchWardrobeHint => translate('search_wardrobe_hint');
   String get noItemsFound => translate('no_items_found');
+  String get costPerWear => translate('cost_per_wear');
+  String get perWear => translate('per_wear');
 
   String getSelectedItemsLabel(int count) =>
       translate('selected_items_count').replaceAll('{count}', count.toString());
