@@ -202,4 +202,23 @@ const Map<String, String> appLocalizationsEs = {
       '👋 ¡Hola! ¡He analizado tu guardarropa y he encontrado {count} combinaciones de atuendos perfectas para ti hoy! Cada sugerencia está personalizada según tus preferencias de estilo, las condiciones climáticas y tus favoritos anteriores.',
   'ai_bubble_message_found':
       '🎯 ¡He encontrado {count} atuendos potenciados por IA con un {confidence}% de coincidencia con tu estilo! Toca cualquier sugerencia para ver consejos de estilo detallados y completar el look. ¿Quieres probar algo nuevo? ¡También he incluido combinaciones que aún no has usado!',
+  
+  // New Wardrobe & Item Management
+  'retry': 'Reintentar',
+  'items': 'artículos',
+  'selected_items': 'artículos seleccionados',
+  'items_limit_reached': 'Límite de artículos alcanzado',
+  'live_sync': 'En vivo',
+  'wardrobe_search_hint': 'Buscar por nombre o marca',
+  'loading_wardrobe': 'Cargando guardarropa...',
+  'failed_to_load_wardrobe': 'Error al cargar el guardarropa',
+  'delete_item': 'Eliminar Artículo',
+  'delete_items': 'Eliminar Artículos',
+  'delete_item_confirmation': '¿Estás seguro de que deseas eliminar este artículo de tu guardarropa?',
+  'item_deleted_success': 'Artículo eliminado con éxito',
+  'item_delete_error': 'Error al eliminar el artículo',
+  'items_deleted_success': 'Artículos eliminados con éxito',
+  'items_delete_error': 'Error al eliminar los artículos',
+  'item_added_to_wardrobe': 'añadido al guardarropa',
+  'item_save_error': 'Error al guardar el artículo. Por favor, inténtalo de nuevo.',
 };

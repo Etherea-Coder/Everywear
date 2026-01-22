@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/wardrobe_service.dart';
 import '../../widgets/custom_icon_widget.dart';
 import './widgets/item_details_form.dart';
 import './widgets/photo_capture_section.dart';
@@ -22,6 +23,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
   final _brandController = TextEditingController();
   final _priceController = TextEditingController();
   final _storeController = TextEditingController();
+  final WardrobeService _wardrobeService = WardrobeService();
 
   List<String> _capturedPhotos = [];
   String? _selectedCategory;
@@ -120,50 +122,44 @@ class _AddClothingItemState extends State<AddClothingItem> {
     setState(() => _isSaving = true);
 
     try {
-      // Simulate saving to local storage/database
-      await Future.delayed(const Duration(seconds: 1));
+      final localizations = AppLocalizations.of(context);
+      
+      final price = _priceController.text.trim().isNotEmpty
+          ? double.tryParse(_priceController.text.trim())
+          : null;
 
-      // Create item data structure with AI tags
-      final itemData = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'name': _itemNameController.text.trim(),
-        'category': _selectedCategory,
-        'brand': _brandController.text.trim(),
-        'price': _priceController.text.trim(),
-        'purchaseDate': _purchaseDate?.toIso8601String(),
-        'store': _storeController.text.trim(),
-        'photos': _capturedPhotos,
-        'createdAt': DateTime.now().toIso8601String(),
-        'wearCount': 0,
-        'costPerWear': _priceController.text.trim().isNotEmpty
-            ? double.tryParse(_priceController.text.trim())
+      final savedItem = await _wardrobeService.addWardrobeItem(
+        name: _itemNameController.text.trim(),
+        category: _selectedCategory!, // We validated it's not null
+        brand: _brandController.text.trim(),
+        imageUrl: _capturedPhotos.isNotEmpty ? _capturedPhotos.first : null,
+        semanticLabel: _aiAnalysisData != null 
+            ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
             : null,
-        // AI-generated metadata
-        'aiTags': _aiAnalysisData?['tags'] ?? [],
-        'color': _aiAnalysisData?['color'],
-        'material': _aiAnalysisData?['material'],
-        'style_vibe': _aiAnalysisData?['style_vibe'],
-        'aiConfidence': _aiAnalysisData?['confidence'],
-      };
+        purchasePrice: price,
+        purchaseDate: _purchaseDate,
+        notes: _storeController.text.trim(), // Reusing store as notes for now
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_itemNameController.text} added to wardrobe'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            content: Text('${_itemNameController.text} ${localizations.itemAddedToWardrobe}'),
+            backgroundColor: theme.colorScheme.primary,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
           ),
         );
 
         // Navigate back to wardrobe management
-        Navigator.of(context, rootNavigator: true).pop(itemData);
+        Navigator.of(context, rootNavigator: true).pop(savedItem);
       }
     } catch (e) {
       if (mounted) {
+        final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to save item. Please try again.'),
+            content: Text(localizations.itemSaveError),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),

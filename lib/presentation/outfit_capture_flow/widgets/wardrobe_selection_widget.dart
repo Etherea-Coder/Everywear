@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:sizer/sizer.dart';
-
 import '../../../core/app_export.dart';
+import '../../../services/wardrobe_service.dart';
 
 /// Wardrobe selection widget for building outfits from existing items
 /// Implements categorized horizontal scrolling with multi-select interface
@@ -17,143 +14,30 @@ class WardrobeSelectionWidget extends StatefulWidget {
       _WardrobeSelectionWidgetState();
 }
 
-class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  final Set<String> _selectedItemIds = {};
+  final WardrobeService _wardrobeService = WardrobeService();
+  List<Map<String, dynamic>> _wardrobeItems = [];
+  bool _isSyncing = true;
 
-  // Mock wardrobe data
-  final List<Map<String, dynamic>> _wardrobeItems = [
-    {
-      "id": "top_1",
-      "category": "Tops",
-      "name": "White Cotton T-Shirt",
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_1d49fa61f-1766582359298.png",
-      "semanticLabel":
-          "White cotton crew neck t-shirt laid flat on neutral background",
-      "color": "White",
-      "brand": "Everlane",
-      "price": 30.0,
-      "wearCount": 15,
-    },
-    {
-      "id": "top_2",
-      "category": "Tops",
-      "name": "Navy Sweater",
-      "image":
-          "https://images.unsplash.com/photo-1670080589800-6416c8ce8a14",
-      "semanticLabel":
-          "Navy blue knit sweater with ribbed texture on white background",
-      "color": "Navy",
-      "brand": "Uniqlo",
-      "price": 80.0,
-      "wearCount": 4,
-    },
-    {
-      "id": "top_3",
-      "category": "Tops",
-      "name": "Black Turtleneck",
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_151c1c2d5-1765986465525.png",
-      "semanticLabel":
-          "Black turtleneck sweater folded neatly on light surface",
-      "color": "Black",
-      "brand": "COS",
-      "price": 95.0,
-      "wearCount": 2,
-    },
-    {
-      "id": "bottom_1",
-      "category": "Bottoms",
-      "name": "Blue Jeans",
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_10022c057-1767737640248.png",
-      "semanticLabel":
-          "Medium wash blue denim jeans laid flat showing front view",
-      "color": "Blue",
-      "brand": "Levi's",
-      "price": 110.0,
-      "wearCount": 22,
-    },
-    {
-      "id": "bottom_2",
-      "category": "Bottoms",
-      "name": "Black Trousers",
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_1be7e67a4-1766999382260.png",
-      "semanticLabel":
-          "Black tailored trousers with pressed crease on neutral background",
-      "color": "Black",
-      "brand": "Zara",
-      "price": 60.0,
-      "wearCount": 8,
-    },
-    {
-      "id": "bottom_3",
-      "category": "Bottoms",
-      "name": "Khaki Chinos",
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_16c23660c-1764658181737.png",
-      "semanticLabel":
-          "Khaki colored chino pants folded showing fabric texture",
-      "color": "Khaki",
-      "brand": "Gap",
-      "price": 45.0,
-      "wearCount": 12,
-    },
-    {
-      "id": "shoe_1",
-      "category": "Shoes",
-      "name": "White Sneakers",
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_13ef60586-1767723958930.png",
-      "semanticLabel":
-          "White leather sneakers with minimal design on clean background",
-      "color": "White",
-      "brand": "Adidas",
-      "price": 90.0,
-      "wearCount": 30,
-    },
-    {
-      "id": "shoe_2",
-      "category": "Shoes",
-      "name": "Brown Boots",
-      "image":
-          "https://images.unsplash.com/photo-1595388710140-e7b90300ec73",
-      "semanticLabel": "Brown leather ankle boots with laces on wooden surface",
-      "color": "Brown",
-      "brand": "Clarks",
-      "price": 140.0,
-      "wearCount": 5,
-    },
-    {
-      "id": "accessory_1",
-      "category": "Accessories",
-      "name": "Leather Belt",
-      "image":
-          "https://images.unsplash.com/photo-1719006289912-ee23ba74e315",
-      "semanticLabel":
-          "Brown leather belt with silver buckle coiled on white background",
-      "color": "Brown",
-      "brand": "Coach",
-      "price": 120.0,
-      "wearCount": 1,
-    },
-    {
-      "id": "accessory_2",
-      "category": "Accessories",
-      "name": "Canvas Tote",
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_12e3fa5ba-1765572948306.png",
-      "semanticLabel":
-          "Natural canvas tote bag with leather handles on neutral surface",
-      "color": "Beige",
-      "brand": "Madewell",
-      "price": 40.0,
-      "wearCount": 6,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchProductionData();
+  }
+
+  Future<void> _fetchProductionData() async {
+    try {
+      final items = await _wardrobeService.fetchWardrobeItems();
+      setState(() {
+        _wardrobeItems = items;
+        _isSyncing = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+        // Fallback to empty list or notify user
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -223,6 +107,10 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isSyncing) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final theme = Theme.of(context);
     final localizations = AppLocalizations.of(context);
 
@@ -454,11 +342,11 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
                   child: Hero(
                     tag: 'wardrobe_item_${item['id']}',
                     child: CustomImageWidget(
-                      imageUrl: item['image'] as String,
+                      imageUrl: (item['image_url'] ?? item['image']) as String,
                       width: 40.w,
                       height: 15.h,
                       fit: BoxFit.cover,
-                      semanticLabel: item['semanticLabel'] as String,
+                      semanticLabel: (item['semantic_label'] ?? item['semanticLabel'] ?? '') as String,
                     ),
                   ),
                 ),
@@ -535,11 +423,11 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: CustomImageWidget(
-            imageUrl: item['image'] as String,
+            imageUrl: (item['image_url'] ?? item['image']) as String,
             width: 20.w,
             height: double.infinity,
             fit: BoxFit.cover,
-            semanticLabel: item['semanticLabel'] as String,
+            semanticLabel: (item['semantic_label'] ?? item['semanticLabel'] ?? '') as String,
           ),
         ),
       ),
@@ -548,8 +436,8 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
 
   /// Build CPW badge
   Widget _buildCPWBadge(ThemeData theme, Map<String, dynamic> item) {
-    final price = item['price'] as double? ?? 0.0;
-    final wearCount = item['wearCount'] as int? ?? 1;
+    final price = (item['purchase_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
+    final wearCount = item['wearCount'] ?? item['wear_count'] as int? ?? 1;
     final cpw = wearCount > 0 ? price / wearCount : price;
     final localizations = AppLocalizations.of(context);
 

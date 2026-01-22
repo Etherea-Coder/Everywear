@@ -9,6 +9,7 @@ import './widgets/usage_chart_widget.dart';
 import './widgets/cost_per_wear_chart_widget.dart';
 import './widgets/sustainability_score_widget.dart';
 import './widgets/ai_insight_card_widget.dart';
+import '../../services/wardrobe_service.dart';
 
 /// Insights Dashboard - AI-powered style analytics and wardrobe insights
 /// Displays comprehensive analytics including usage patterns, cost-per-wear,
@@ -22,24 +23,18 @@ class InsightsDashboard extends StatefulWidget {
 
 class _InsightsDashboardState extends State<InsightsDashboard> {
   int _selectedTimeRange = 0; // 0: Week, 1: Month, 2: Year
-  bool _isLoading = false;
+  bool _isLoading = true;
+  final WardrobeService _wardrobeService = WardrobeService();
 
   // Mock analytics data
-  final Map<String, dynamic> _analyticsData = {
-    'totalItems': 42,
-    'outfitsLogged': 15,
-    'avgCostPerWear': 12.50,
-    'sustainabilityScore': 78,
-    'mostWornCategory': 'Tops',
-    'leastWornCategory': 'Dresses',
-    'wardrobeUtilization': 65,
-    'topItems': [
-      {'name': 'Black Jeans', 'wears': 8, 'cpw': 6.25},
-      {'name': 'White T-Shirt', 'wears': 7, 'cpw': 4.28},
-      {'name': 'Denim Jacket', 'wears': 5, 'cpw': 18.00},
-    ],
-    'neglectedItems': 12,
-    'avgWearFrequency': 2.3,
+  Map<String, dynamic> _analyticsData = {
+    'totalItems': 0,
+    'favorite_items': 0,
+    'outfitsLogged': 0,
+    'avgCostPerWear': 0.0,
+    'sustainabilityScore': 0,
+    'wardrobeUtilization': 0,
+    'topItems': [],
   };
 
   // AI-generated insights
@@ -66,6 +61,42 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
       'icon': Icons.eco,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final stats = await _wardrobeService.getWardrobeStatistics();
+      final history = await _wardrobeService.fetchOutfitHistory(limit: 50);
+      
+      if (mounted) {
+        setState(() {
+          _analyticsData = {
+            'totalItems': stats['total_items'],
+            'favorite_items': stats['favorite_items'],
+            'outfitsLogged': history.length,
+            'avgCostPerWear': 12.50,
+            'sustainabilityScore': 78,
+            'wardrobeUtilization': (stats['total_items'] > 0) 
+                ? (stats['favorite_items'] / stats['total_items'] * 100).toInt() 
+                : 0,
+            'topItems': [], 
+          };
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -378,9 +409,7 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
   }
 
   Future<void> _refreshData() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _isLoading = false);
+    await _loadStats();
   }
 
   void _handleNavigation(int index) {

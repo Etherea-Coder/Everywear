@@ -10,13 +10,16 @@ class LocalWardrobeItem {
   String? remoteId;
 
   String? name;
-  String? category;
+  String? category; // Maps to clothing_category enum in production
   String? brand;
   String? imageUrl;
   String? semanticLabel;
-  double? price;
-  int? wearCount;
+  int wearCount = 0;
   DateTime? lastWorn;
+  double? purchasePrice;
+  DateTime? purchaseDate;
+  String? notes;
   bool isFavorite = false;
   DateTime? createdAt;
+  DateTime? updatedAt;
 }

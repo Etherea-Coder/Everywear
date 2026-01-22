@@ -202,4 +202,23 @@ const Map<String, String> appLocalizationsFr = {
       '👋 Salut ! J\'ai analysé votre garde-robe et trouvé {count} combinaisons de tenues parfaites pour vous aujourd\'hui ! Chaque suggestion est personnalisée en fonction de vos préférences de style, des conditions météorologiques et de vos favoris passés.',
   'ai_bubble_message_found':
       '🎯 J\'ai trouvé {count} tenues propulsées par l\'IA avec une correspondance de {confidence}% avec votre style ! Appuyez sur n\'importe quelle suggestion pour voir des conseils de style détaillés et compléter le look. Envie d\'essayer quelque chose de nouveau ? J\'ai aussi inclus des combinaisons que vous n\'avez pas encore portées !',
+  
+  // New Wardrobe & Item Management
+  'retry': 'Réessayer',
+  'items': 'articles',
+  'selected_items': 'articles sélectionnés',
+  'items_limit_reached': 'Limite d\'articles atteinte',
+  'live_sync': 'En direct',
+  'wardrobe_search_hint': 'Rechercher par nom ou marque',
+  'loading_wardrobe': 'Chargement de la garde-robe...',
+  'failed_to_load_wardrobe': 'Échec du chargement de la garde-robe',
+  'delete_item': 'Supprimer l\'article',
+  'delete_items': 'Supprimer les articles',
+  'delete_item_confirmation': 'Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?',
+  'item_deleted_success': 'Article supprimé avec succès',
+  'item_delete_error': 'Échec de la suppression de l\'article',
+  'items_deleted_success': 'Articles supprimés avec succès',
+  'items_delete_error': 'Échec de la suppression des articles',
+  'item_added_to_wardrobe': 'ajouté à la garde-robe',
+  'item_save_error': 'Échec de l\'enregistrement de l\'article. Veuillez réessayer.',
 };

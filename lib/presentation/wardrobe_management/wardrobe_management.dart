@@ -198,38 +198,43 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
     final theme = Theme.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Item', style: theme.textTheme.titleLarge),
-        content: Text(
-          'Are you sure you want to delete this item from your wardrobe?',
-          style: theme.textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder: (context) {
+        final localizations = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(localizations.deleteItem, style: theme.textTheme.titleLarge),
+          content: Text(
+            localizations.deleteItemConfirmation,
+            style: theme.textTheme.bodyMedium,
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteItem(itemId);
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
             ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _deleteItem(itemId);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.error,
+              ),
+              child: Text(localizations.delete),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Future<void> _deleteItem(String itemId) async {
     try {
+      final localizations = AppLocalizations.of(context);
       await _wardrobeService.deleteWardrobeItem(itemId);
-      _showSnackBar('Item deleted successfully');
+      _showSnackBar(localizations.itemDeletedSuccess);
     } catch (error) {
-      _showSnackBar('Failed to delete item: $error', isError: true);
+      final localizations = AppLocalizations.of(context);
+      _showSnackBar('${localizations.itemDeleteError}: $error', isError: true);
     }
   }
 
@@ -238,42 +243,47 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
     final theme = Theme.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Items', style: theme.textTheme.titleLarge),
-        content: Text(
-          'Delete ${_selectedItems.length} selected items?',
-          style: theme.textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder: (context) {
+        final localizations = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(localizations.deleteItems, style: theme.textTheme.titleLarge),
+          content: Text(
+            '${localizations.delete} ${_selectedItems.length} ${localizations.selectedItems}?',
+            style: theme.textTheme.bodyMedium,
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteBatchItems();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
             ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _deleteBatchItems();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.error,
+              ),
+              child: Text(localizations.delete),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Future<void> _deleteBatchItems() async {
     try {
+      final localizations = AppLocalizations.of(context);
       await _wardrobeService.deleteMultipleItems(_selectedItems.toList());
       setState(() {
         _selectedItems.clear();
         _isMultiSelectMode = false;
       });
-      _showSnackBar('Items deleted successfully');
+      _showSnackBar(localizations.itemsDeletedSuccess);
     } catch (error) {
-      _showSnackBar('Failed to delete items: $error', isError: true);
+      final localizations = AppLocalizations.of(context);
+      _showSnackBar('${localizations.itemsDeleteError}: $error', isError: true);
     }
   }
 
@@ -313,7 +323,7 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
                     borderRadius: BorderRadius.circular(12.0),
                   ),
                   child: Text(
-                    '${_tierInfo!['items_count']}/${_tierInfo!['items_limit']} items',
+                    '${_tierInfo!['items_count']}/${_tierInfo!['items_limit']} ${localizations.items}',
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
@@ -369,7 +379,7 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
                               ),
                               SizedBox(width: 1.w),
                               Text(
-                                'Live',
+                                localizations.liveSync,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
@@ -415,7 +425,7 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
                     TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Search by name or brand',
+                        hintText: localizations.wardrobeSearchHint,
                         prefixIcon: CustomIconWidget(
                           iconName: 'search',
                           color: theme.colorScheme.onSurfaceVariant,
@@ -474,10 +484,10 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
+                        const CircularProgressIndicator(),
                         SizedBox(height: 2.h),
                         Text(
-                          'Loading wardrobe...',
+                          localizations.loadingWardrobe,
                           style: theme.textTheme.bodyMedium,
                         ),
                       ],
@@ -495,7 +505,7 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          'Failed to load wardrobe',
+                          localizations.failedToLoadWardrobe,
                           style: theme.textTheme.titleMedium,
                         ),
                         SizedBox(height: 1.h),
@@ -510,7 +520,7 @@ class _WardrobeManagementState extends State<WardrobeManagement> {
                         SizedBox(height: 2.h),
                         ElevatedButton(
                           onPressed: _loadWardrobeItems,
-                          child: const Text('Retry'),
+                          child: Text(localizations.retry),
                         ),
                       ],
                     ),

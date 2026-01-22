@@ -8,6 +8,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/ai_suggestions_service.dart';
+import '../../services/wardrobe_service.dart';
 import '../../services/weather_service.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
 import '../../widgets/custom_icon_widget.dart';
@@ -44,6 +45,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
 
   final AiSuggestionsService _aiSuggestionsService = AiSuggestionsService();
   final WeatherService _weatherService = WeatherService();
+  final WardrobeService _wardrobeService = WardrobeService();
   String? _aiSuggestions;
   bool _isLoadingSuggestions = false;
   String _selectedLanguage = 'EN';
@@ -178,16 +180,35 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   }
 
   /// Handle outfit confirmation
-  void _onOutfitConfirmed(String outfitName, int rating) {
-    // Save outfit logic would go here
-    Navigator.of(context, rootNavigator: true).pop({
-      'success': true,
-      'outfitName': outfitName,
-      'rating': rating,
-      'captureMethod': _captureMethod,
-      'image': _capturedImage?.path,
-      'items': _selectedItems,
-    });
+  Future<void> _onOutfitConfirmed(String outfitName, int rating) async {
+    try {
+      setState(() => _isLoading = true);
+      
+      final weatherContext = await _weatherService.getCurrentWeather();
+      final itemIds = _selectedItems.map((item) => item['id'] as String).toList();
+      
+      await _wardrobeService.createOutfitLog(
+        itemIds: itemIds,
+        outfitName: outfitName,
+        rating: rating,
+        weather: '${weatherContext['temperature']}${weatherContext['unit']} ${weatherContext['condition']}',
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop({
+          'success': true,
+          'outfitName': outfitName,
+          'rating': rating,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save outfit: $e')),
+        );
+      }
+    }
   }
 
   /// Handle back navigation

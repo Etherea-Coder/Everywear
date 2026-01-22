@@ -67,6 +67,9 @@ class AppLocalizations {
   String get search => translate('search');
   String get filter => translate('filter');
   String get sort => translate('sort');
+  String get retry => translate('retry');
+  String get items => translate('items');
+  String get selectedItems => translate('selected_items');
 
   // Auth strings
   String get welcomeBack => translate('welcome_back');
@@ -110,6 +113,20 @@ class AppLocalizations {
   String get outfits => translate('outfits');
   String get dailyLog => translate('daily_log');
   String get insights => translate('insights');
+  String get itemsLimitReached => translate('items_limit_reached');
+  String get liveSync => translate('live_sync');
+  String get wardrobeSearchHint => translate('wardrobe_search_hint');
+  String get loadingWardrobe => translate('loading_wardrobe');
+  String get failedToLoadWardrobe => translate('failed_to_load_wardrobe');
+  String get deleteItem => translate('delete_item');
+  String get deleteItemConfirmation => translate('delete_item_confirmation');
+  String get itemDeletedSuccess => translate('item_deleted_success');
+  String get itemDeleteError => translate('item_delete_error');
+  String get deleteItems => translate('delete_items');
+  String get itemsDeletedSuccess => translate('items_deleted_success');
+  String get itemsDeleteError => translate('items_delete_error');
+  String get itemAddedToWardrobe => translate('item_added_to_wardrobe');
+  String get itemSaveError => translate('item_save_error');
 
   // Language names
   String get english => translate('english');

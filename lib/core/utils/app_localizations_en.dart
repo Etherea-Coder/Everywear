@@ -202,4 +202,23 @@ const Map<String, String> appLocalizationsEn = {
       '👋 Hi! I\'ve analyzed your wardrobe and found {count} perfect outfit combinations for you today! Each suggestion is personalized based on your style preferences, weather conditions, and past favorites.',
   'ai_bubble_message_found':
       '🎯 I found {count} AI-powered outfits with a {confidence}% match to your style! Tap any suggestion to see detailed styling tips and complete the look. Want to try something new? I\'ve also included combinations you haven\'t worn yet!',
+  
+  // New Wardrobe & Item Management
+  'retry': 'Retry',
+  'items': 'items',
+  'selected_items': 'selected items',
+  'items_limit_reached': 'Item limit reached',
+  'live_sync': 'Live',
+  'wardrobe_search_hint': 'Search by name or brand',
+  'loading_wardrobe': 'Loading wardrobe...',
+  'failed_to_load_wardrobe': 'Failed to load wardrobe',
+  'delete_item': 'Delete Item',
+  'delete_items': 'Delete Items',
+  'delete_item_confirmation': 'Are you sure you want to delete this item from your wardrobe?',
+  'item_deleted_success': 'Item deleted successfully',
+  'item_delete_error': 'Failed to delete item',
+  'items_deleted_success': 'Items deleted successfully',
+  'items_delete_error': 'Failed to delete items',
+  'item_added_to_wardrobe': 'added to wardrobe',
+  'item_save_error': 'Failed to save item. Please try again.',
 };
