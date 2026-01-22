@@ -1,0 +1,69 @@
+name: everywear
+description: A new Flutter project.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:       # CRITICAL: Required for every Flutter project - DO NOT REMOVE
+    sdk: flutter # CRITICAL: Required for every Flutter project - DO NOT REMOVE
+  flutter_localizations: # Required for multi-language support
+    sdk: flutter
+  
+  # CRITICAL: Core UI and responsive design - DO NOT REMOVE OR MODIFY
+  supabase_flutter: ^2.9.1
+  sizer: ^2.0.15              # Required for responsive design system
+  flutter_svg: ^2.0.9        # Required for SVG icon support
+  google_fonts: ^6.1.0       # Required for typography (replaces local fonts)
+  shared_preferences: ^2.2.2 # Required for local data storage
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  web: ^1.1.1
+  
+  # Feature dependencies - safe to modify
+  cached_network_image: ^3.3.1
+  connectivity_plus: ^6.1.4
+  dio: ^5.4.0
+  fluttertoast: ^8.2.4
+  fl_chart: ^0.65.0
+  flutter_slidable: ^4.0.3
+  camera: ^0.10.5+5
+  image_picker: ^1.0.4
+  permission_handler: ^11.1.0
+  percent_indicator: ^4.2.5
+  intl: ^0.20.2
+  path_provider: ^2.1.2       # Model file caching and local storage management
+  http: ^1.6.0                # Downloading ML models from remote sources
+  universal_html: ^2.2.4
+  flutter_stripe: ^12.1.1     # Stripe payment integration (mobile and web support)
+  flutter_stripe_web: ^7.1.1  # Stripe web-specific functionality
+  
+  # Modernization dependencies
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  shimmer: ^3.0.0
+  flutter_image_compress: ^2.3.0
+  sentry_flutter: ^8.0.0
+
+dev_dependencies:
+  flutter_test:    # CRITICAL: Required for Flutter project testing - DO NOT REMOVE
+    sdk: flutter   # CRITICAL: Required for Flutter project testing - DO NOT REMOVE
+  flutter_lints: ^5.0.0 # CRITICAL: Required for code quality - DO NOT REMOVE
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.4.0
+
+flutter:
+  uses-material-design: true # CRITICAL: Required for Material icon font - DO NOT REMOVE
+  assets:
+    - assets/
+    - assets/images/
+  # CRITICAL ASSET MANAGEMENT RULES:
+  # - DO NOT ADD NEW ASSET DIRECTORIES (assets/svg/, assets/icons/, etc.)
+  # - ONLY USE EXISTING AND ITEMS AVAILABLE IN THE DIRECTORIES LISTED ABOVE (assets/, assets/images/)
+  
+  # CRITICAL FONTS RULE: 
+  # - THIS PROJECT USES GOOGLE FONTS INSTEAD OF LOCAL FONTS
+  # - DO NOT ADD ANY LOCAL FONTS SECTION OR FONT FILES
