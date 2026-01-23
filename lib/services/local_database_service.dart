@@ -32,8 +32,8 @@ class LocalDatabaseService {
         ..brand = item['brand']
         ..imageUrl = item['image_url']
         ..semanticLabel = item['semantic_label']
-        ..price = (item['purchase_price'] as num?)?.toDouble()
-        ..wearCount = item['wear_count'] as int?
+        ..purchasePrice = (item['purchase_price'] as num?)?.toDouble()
+        ..wearCount = (item['wear_count'] as num?)?.toInt() ?? 0
         ..lastWorn = item['last_worn'] != null ? DateTime.parse(item['last_worn']) : null
         ..isFavorite = item['is_favorite'] ?? false
         ..createdAt = item['created_at'] != null ? DateTime.parse(item['created_at']) : null;

@@ -57,38 +57,25 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     super.dispose();
   }
 
+  AppLocalizations get localizations => AppLocalizations.of(context);
+
   /// Sets up real-time subscription for wardrobe changes
   void _setupRealtimeSubscription() {
     try {
       _realtimeChannel = _wardrobeService.subscribeToWardrobeChanges(
         onInsert: (payload) {
           if (!mounted) return;
-          final newItem = payload.newRecord;
-          setState(() {
-            _wardrobeItems.insert(0, newItem);
-          });
+          ref.read(wardrobeItemsProvider.notifier).refresh();
           _showSnackBar('New item added to wardrobe');
         },
         onUpdate: (payload) {
           if (!mounted) return;
-          final updatedItem = payload.newRecord;
-          setState(() {
-            final index = _wardrobeItems.indexWhere(
-              (item) => item['id'] == updatedItem['id'],
-            );
-            if (index != -1) {
-              _wardrobeItems[index] = updatedItem;
-            }
-          });
+          ref.read(wardrobeItemsProvider.notifier).refresh();
           _showSnackBar('Item updated');
         },
         onDelete: (payload) {
           if (!mounted) return;
-          final deletedRecord = payload.oldRecord;
-          final deletedId = deletedRecord['id'] as String;
-          setState(() {
-            _wardrobeItems.removeWhere((item) => item['id'] == deletedId);
-          });
+          ref.read(wardrobeItemsProvider.notifier).refresh();
           _showSnackBar('Item deleted from wardrobe');
         },
       );

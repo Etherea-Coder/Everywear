@@ -196,6 +196,45 @@ class AppLocalizations {
   String get costPerWear => translate('cost_per_wear');
   String get perWear => translate('per_wear');
 
+  // Settings detail strings
+  String get emailPreferences => translate('email_preferences');
+  String get manageEmailNotifications => translate('manage_email_notifications');
+  String get enabled => translate('enabled');
+  String get disabled => translate('disabled');
+  String get manageNotifications => translate('manage_notifications');
+  String get dataSharing => translate('data_sharing');
+  String get shareUsageData => translate('share_usage_data');
+  String get analytics => translate('analytics');
+  String get helpImproveApp => translate('help_improve_app');
+  String get profileVisibility => translate('profile_visibility');
+  String get manageProfileVisibility => translate('manage_profile_visibility');
+  String get downloadWardrobeData => translate('download_wardrobe_data');
+  String get backupSettings => translate('backup_settings');
+  String get automaticCloudBackup => translate('automatic_cloud_backup');
+  String get permanentlyDeleteAccount => translate('permanently_delete_account');
+  String get currentPlan => translate('current_plan');
+  String get billingHistory => translate('billing_history');
+  String get viewPastInvoices => translate('view_past_invoices');
+  String get upgradePlan => translate('upgrade_plan');
+  String get unlockMoreFeatures => translate('unlock_more_features');
+  String get helpCenter => translate('help_center');
+  String get faqs_and_guides => translate('faqs_and_guides');
+  String get sendFeedback => translate('send_feedback');
+  String get shareYourThoughts => translate('share_your_thoughts');
+  String get lightMode => translate('light_mode');
+  String get darkMode => translate('dark_mode');
+  String get auto_system => translate('auto_system');
+  String get exportDataFormat => translate('export_data_format');
+  String get pdfReport => translate('pdf_report');
+  String get comprehensive_wardrobe_report => translate('comprehensive_wardrobe_report');
+  String get csvSpreadsheet => translate('csv_spreadsheet');
+  String get raw_data_analysis => translate('raw_data_analysis');
+  String get exportingData => translate('exporting_data');
+  String get deleteAccountConfirmation => translate('delete_account_confirmation');
+  String get about_everywear => translate('about_everywear');
+  String get logout_confirmation => translate('logout_confirmation');
+  String get updatePassword => translate('change_password'); // Alias for change_password
+
   String getSelectedItemsLabel(int count) =>
       translate('selected_items_count').replaceAll('{count}', count.toString());
 

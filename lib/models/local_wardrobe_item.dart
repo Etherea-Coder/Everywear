@@ -1,4 +1,4 @@
-import 'isar';
+import 'package:isar/isar.dart';
 
 part 'local_wardrobe_item.g.dart';
 
@@ -10,7 +10,7 @@ class LocalWardrobeItem {
   String? remoteId;
 
   String? name;
-  String? category; // Maps to clothing_category enum in production
+  String? category;
   String? brand;
   String? imageUrl;
   String? semanticLabel;

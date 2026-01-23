@@ -1,5 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:sizer/sizer.dart';
 import '../../../core/app_export.dart';
 import '../../../services/wardrobe_service.dart';
+import '../../../widgets/custom_icon_widget.dart';
+import '../../../widgets/custom_image_widget.dart';
+import '../../../core/utils/app_localizations.dart';
 
 /// Wardrobe selection widget for building outfits from existing items
 /// Implements categorized horizontal scrolling with multi-select interface
@@ -7,15 +13,19 @@ class WardrobeSelectionWidget extends StatefulWidget {
   final Function(List<Map<String, dynamic>>) onItemsSelected;
 
   const WardrobeSelectionWidget({Key? key, required this.onItemsSelected})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<WardrobeSelectionWidget> createState() =>
       _WardrobeSelectionWidgetState();
 }
 
+class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
   final WardrobeService _wardrobeService = WardrobeService();
+  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _wardrobeItems = [];
+  Set<String> _selectedItemIds = {};
+  String _searchQuery = '';
   bool _isSyncing = true;
 
   @override
@@ -27,14 +37,15 @@ class WardrobeSelectionWidget extends StatefulWidget {
   Future<void> _fetchProductionData() async {
     try {
       final items = await _wardrobeService.fetchWardrobeItems();
-      setState(() {
-        _wardrobeItems = items;
-        _isSyncing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _wardrobeItems = items;
+          _isSyncing = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isSyncing = false);
-        // Fallback to empty list or notify user
       }
     }
   }
@@ -50,8 +61,8 @@ class WardrobeSelectionWidget extends StatefulWidget {
     if (_searchQuery.isEmpty) return _wardrobeItems;
 
     return _wardrobeItems.where((item) {
-      final name = (item['name'] as String).toLowerCase();
-      final category = (item['category'] as String).toLowerCase();
+      final name = (item['name']?.toString() ?? '').toLowerCase();
+      final category = (item['category']?.toString() ?? '').toLowerCase();
       final query = _searchQuery.toLowerCase();
       return name.contains(query) || category.contains(query);
     }).toList();
@@ -62,7 +73,7 @@ class WardrobeSelectionWidget extends StatefulWidget {
     final Map<String, List<Map<String, dynamic>>> categorized = {};
 
     for (var item in _filteredItems) {
-      final category = item['category'] as String;
+      final category = item['category']?.toString() ?? 'Other';
       categorized.putIfAbsent(category, () => []);
       categorized[category]!.add(item);
     }
@@ -85,7 +96,7 @@ class WardrobeSelectionWidget extends StatefulWidget {
   /// Get selected items
   List<Map<String, dynamic>> get _selectedItems {
     return _wardrobeItems
-        .where((item) => _selectedItemIds.contains(item['id']))
+        .where((item) => _selectedItemIds.contains(item['id']?.toString()))
         .toList();
   }
 
@@ -300,7 +311,8 @@ class WardrobeSelectionWidget extends StatefulWidget {
             separatorBuilder: (_, __) => SizedBox(width: 3.w),
             itemBuilder: (context, index) {
               final item = items[index];
-              final isSelected = _selectedItemIds.contains(item['id']);
+              final isSelected =
+                  _selectedItemIds.contains(item['id']?.toString());
               return _buildItemCard(theme, item, isSelected);
             },
           ),
@@ -315,8 +327,9 @@ class WardrobeSelectionWidget extends StatefulWidget {
     Map<String, dynamic> item,
     bool isSelected,
   ) {
+    final itemId = item['id']?.toString() ?? '';
     return GestureDetector(
-      onTap: () => _toggleItemSelection(item['id'] as String),
+      onTap: () => _toggleItemSelection(itemId),
       child: Container(
         width: 40.w,
         decoration: BoxDecoration(
@@ -340,13 +353,16 @@ class WardrobeSelectionWidget extends StatefulWidget {
                     top: Radius.circular(12),
                   ),
                   child: Hero(
-                    tag: 'wardrobe_item_${item['id']}',
+                    tag: 'wardrobe_item_$itemId',
                     child: CustomImageWidget(
-                      imageUrl: (item['image_url'] ?? item['image']) as String,
+                      imageUrl: (item['image_url'] ?? item['image'] ?? '')
+                          as String,
                       width: 40.w,
                       height: 15.h,
                       fit: BoxFit.cover,
-                      semanticLabel: (item['semantic_label'] ?? item['semanticLabel'] ?? '') as String,
+                      semanticLabel: (item['semantic_label'] ??
+                          item['semanticLabel'] ??
+                          '') as String,
                     ),
                   ),
                 ),
@@ -384,7 +400,7 @@ class WardrobeSelectionWidget extends StatefulWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['name'] as String,
+                    item['name']?.toString() ?? 'Unnamed Item',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                       color: theme.colorScheme.onSurface,
@@ -394,7 +410,7 @@ class WardrobeSelectionWidget extends StatefulWidget {
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
-                    item['brand'] as String,
+                    item['brand']?.toString() ?? 'Unknown Brand',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -412,6 +428,7 @@ class WardrobeSelectionWidget extends StatefulWidget {
 
   /// Build selected item chip
   Widget _buildSelectedItemChip(ThemeData theme, Map<String, dynamic> item) {
+    final itemId = item['id']?.toString() ?? '';
     return Container(
       width: 20.w,
       decoration: BoxDecoration(
@@ -419,15 +436,17 @@ class WardrobeSelectionWidget extends StatefulWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Hero(
-        tag: 'wardrobe_item_chip_${item['id']}',
+        tag: 'wardrobe_item_chip_$itemId',
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: CustomImageWidget(
-            imageUrl: (item['image_url'] ?? item['image']) as String,
+            imageUrl: (item['image_url'] ?? item['image'] ?? '') as String,
             width: 20.w,
             height: double.infinity,
             fit: BoxFit.cover,
-            semanticLabel: (item['semantic_label'] ?? item['semanticLabel'] ?? '') as String,
+            semanticLabel: (item['semantic_label'] ??
+                item['semanticLabel'] ??
+                '') as String,
           ),
         ),
       ),
@@ -436,7 +455,8 @@ class WardrobeSelectionWidget extends StatefulWidget {
 
   /// Build CPW badge
   Widget _buildCPWBadge(ThemeData theme, Map<String, dynamic> item) {
-    final price = (item['purchase_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
+    final price =
+        (item['purchase_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
     final wearCount = item['wearCount'] ?? item['wear_count'] as int? ?? 1;
     final cpw = wearCount > 0 ? price / wearCount : price;
     final localizations = AppLocalizations.of(context);

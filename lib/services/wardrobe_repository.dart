@@ -1,8 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/local_wardrobe_item.dart';
 import './wardrobe_service.dart';
 import './local_database_service.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 
 class WardrobeRepository {
   final WardrobeService _remoteService = WardrobeService();
@@ -57,7 +58,7 @@ class WardrobeRepository {
       'brand': item.brand,
       'image_url': item.imageUrl,
       'semantic_label': item.semanticLabel,
-      'purchase_price': item.price,
+      'purchase_price': item.purchasePrice,
       'wear_count': item.wearCount,
       'last_worn': item.lastWorn?.toIso8601String(),
       'is_favorite': item.isFavorite,
@@ -95,6 +96,3 @@ class WardrobeRepository {
     );
   }
 }
-
-// Add debugPrint import if needed, usually available in flutter/material.dart
-import 'package:flutter/foundation.dart';

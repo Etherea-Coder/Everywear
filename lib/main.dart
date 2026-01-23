@@ -9,6 +9,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
+import './core/providers.dart';
 import './services/payment_service.dart';
 import './services/supabase_service.dart';
 import './widgets/custom_error_widget.dart';

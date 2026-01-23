@@ -250,9 +250,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     }
   }
 
+  AppLocalizations get localizations => AppLocalizations.of(context);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
 
     // Check if user has sufficient data for suggestions
     final bool hasSufficientData = _suggestions.isNotEmpty;

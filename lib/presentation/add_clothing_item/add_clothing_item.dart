@@ -116,13 +116,15 @@ class _AddClothingItemState extends State<AddClothingItem> {
         _selectedCategory != null;
   }
 
+  AppLocalizations get localizations => AppLocalizations.of(context);
+
   Future<void> _saveItem() async {
     if (!_isFormValid()) return;
 
     setState(() => _isSaving = true);
 
     try {
-      final localizations = AppLocalizations.of(context);
+      final theme = Theme.of(context);
       
       final price = _priceController.text.trim().isNotEmpty
           ? double.tryParse(_priceController.text.trim())

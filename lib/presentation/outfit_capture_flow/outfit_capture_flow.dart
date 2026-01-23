@@ -50,6 +50,8 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   bool _isLoadingSuggestions = false;
   String _selectedLanguage = 'EN';
 
+  AppLocalizations get localizations => AppLocalizations.of(context);
+
   @override
   void initState() {
     super.initState();
@@ -280,6 +282,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
 
     return PopScope(
       canPop: false,

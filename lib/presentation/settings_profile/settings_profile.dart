@@ -375,7 +375,8 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
               ...languages.map((lang) {
                 final languageCode = lang['code']!;
                 final languageName = lang['name']!;
-                final isSelected = _selectedLanguage == languageCode;
+                final currentLanguageCode = ref.watch(localeProvider).languageCode;
+                final isSelected = currentLanguageCode == languageCode;
 
                 return ListTile(
                   leading: Text(
