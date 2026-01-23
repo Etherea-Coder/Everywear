@@ -240,10 +240,6 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomBar(
-        currentIndex: 3,
-        onTap: _handleNavigation,
-      ),
     );
   }
 

@@ -652,7 +652,7 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(
       context,
       rootNavigator: true,
-    ).pushReplacementNamed('/settings-profile');
+    ).pushReplacementNamed(AppRoutes.home);
   }
 
   void _showErrorSnackBar(String message) {

@@ -74,7 +74,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: localizations.settingsAndProfile,
-        variant: CustomAppBarVariant.detail,
+        variant: CustomAppBarVariant.standard,
       ),
       body: SingleChildScrollView(
         child: Column(
