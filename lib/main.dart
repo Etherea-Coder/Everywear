@@ -15,70 +15,62 @@ import './services/supabase_service.dart';
 import './widgets/custom_error_widget.dart';
 import 'core/app_export.dart';
 
-void main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  // Ensure widgets are initialized
+  WidgetsFlutterBinding.ensureInitialized();
 
-    // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-    // Initialize services with a timeout to avoid hanging the app start
-    final initFuture = _initializeAllServices();
-    
-    // We don't await initFuture here to ensure Sentry and runApp start immediately
-    // but we can monitor it later if needed.
-    
-    // Initialize Sentry and run the app
-    await SentryFlutter.init(
-      (options) {
-        options.dsn =
-            'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
-        options.tracesSampleRate = 1.0;
-        options.debug = kDebugMode;
-      },
-      appRunner: () {
-        bool _hasShownError = false;
-
-        // 🚨 CRITICAL: Custom error handling - DO NOT REMOVE
-        ErrorWidget.builder = (FlutterErrorDetails details) {
-          if (!_hasShownError) {
-            _hasShownError = true;
-
-            // Report error to Sentry
-            Sentry.captureException(details.exception,
-                stackTrace: details.stack);
-
-            // Reset flag after 5 seconds to allow error widget on new screens
-            Future.delayed(const Duration(seconds: 5), () {
-              _hasShownError = false;
-            });
-
-            return CustomErrorWidget(errorDetails: details);
-          }
-          return const SizedBox.shrink();
-        };
-
-        runApp(
-          const ProviderScope(
-            child: MyApp(),
-          ),
-        );
-      },
-    );
-  } catch (e, stack) {
-    if (kDebugMode) {
-      print('Fatal error during startup: $e\n$stack');
+  // 🚨 CRITICAL: Custom error handling - DO NOT REMOVE
+  bool _hasShownError = false;
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (!_hasShownError) {
+      _hasShownError = true;
+      Sentry.captureException(details.exception, stackTrace: details.stack);
+      Future.delayed(const Duration(seconds: 5), () => _hasShownError = false);
+      return CustomErrorWidget(errorDetails: details);
     }
-    // Final fallback to ensure something is rendered
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Text('Initialization Error: $e'),
-          ),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
+  };
+
+  // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  // Run the app immediately to prevent native splash hang
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
+
+  // Initialize all long-running services in the background
+  _initializeServicesInBackground();
+}
+
+/// Initialize services without blocking the initial app render
+Future<void> _initializeServicesInBackground() async {
+  // 1. Initialize Sentry
+  try {
+    await SentryFlutter.init((options) {
+      options.dsn =
+          'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
+      options.tracesSampleRate = 1.0;
+      options.debug = kDebugMode;
+    });
+  } catch (e) {
+    if (kDebugMode) print('Sentry init failed: $e');
+  }
+
+  // 2. Initialize Supabase
+  try {
+    await SupabaseService.initialize().timeout(const Duration(seconds: 10));
+  } catch (e) {
+    if (kDebugMode) print('Supabase init failed: $e');
+  }
+
+  // 3. Initialize Stripe
+  try {
+    await PaymentService.initialize().timeout(const Duration(seconds: 5));
+  } catch (e) {
+    if (kDebugMode) print('Stripe init failed: $e');
   }
 }
 
