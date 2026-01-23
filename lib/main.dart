@@ -19,7 +19,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Supabase
-  await SupabaseService.initialize();
+  try {
+    await SupabaseService.initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      print('Supabase initialization failed: $e');
+    }
+    // Note: App will continue to Sentry initialization to avoid white screen hang
+  }
 
   // Initialize Stripe payment service
   try {
