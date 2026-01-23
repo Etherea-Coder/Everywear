@@ -10,6 +10,8 @@ workflows:
       - name: Create env.json
         script: |
           echo "{\"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\", \"STRIPE_PUBLISHABLE_KEY\": \"$STRIPE_PUBLISHABLE_KEY\"}" > env.json
+      - name: Clean build cache
+        script: flutter clean
       - name: Build APK
         script: flutter build apk --release --dart-define-from-file=env.json
     artifacts:

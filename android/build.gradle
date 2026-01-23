@@ -14,12 +14,14 @@ subprojects {
 }
 
 subprojects {
-    project.plugins.withId('com.android.library') {
-        project.android {
-            compileSdk 36
-            if (namespace == null) {
-                if (project.name == 'isar_flutter_libs') {
-                    namespace = 'dev.isar.isar_flutter_libs'
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdk 36
+                if (namespace == null) {
+                    if (project.name == 'isar_flutter_libs') {
+                        namespace = 'dev.isar.isar_flutter_libs'
+                    }
                 }
             }
         }
