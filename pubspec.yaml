@@ -42,7 +42,6 @@ dependencies:
   
   # Modernization dependencies
   flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
   shimmer: ^3.0.0
   flutter_image_compress: ^2.3.0
   sentry_flutter: ^8.0.0
@@ -53,7 +52,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0 # CRITICAL: Required for code quality - DO NOT REMOVE
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.9
-  riverpod_generator: ^2.4.0
 
 flutter:
   uses-material-design: true # CRITICAL: Required for Material icon font - DO NOT REMOVE
