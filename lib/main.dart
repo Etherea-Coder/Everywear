@@ -42,57 +42,25 @@ void main() {
   );
 
   // Initialize all long-running services in the background
-  _initializeServicesInBackground();
+  _initializeAllServicesInBackground();
 }
 
-/// Initialize services without blocking the initial app render
-Future<void> _initializeServicesInBackground() async {
-  // 1. Initialize Sentry
+// Initial service bootstrapper
+Future<void> _initializeAllServicesInBackground() async {
+  // Sentry tracking first
   try {
     await SentryFlutter.init((options) {
-      options.dsn =
-          'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
+      options.dsn = 'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
       options.tracesSampleRate = 1.0;
       options.debug = kDebugMode;
     });
-  } catch (e) {
-    if (kDebugMode) print('Sentry init failed: $e');
-  }
+  } catch (_) {}
 
-  // 2. Initialize Supabase
-  try {
-    await SupabaseService.initialize().timeout(const Duration(seconds: 10));
-  } catch (e) {
-    if (kDebugMode) print('Supabase init failed: $e');
-  }
-
-  // 3. Initialize Stripe
-  try {
-    await PaymentService.initialize().timeout(const Duration(seconds: 5));
-  } catch (e) {
-    if (kDebugMode) print('Stripe init failed: $e');
-  }
-}
-
-/// Helper to initialize internal services without blocking the main event loop
-Future<void> _initializeAllServices() async {
-  // Initialize Supabase
-  try {
-    await SupabaseService.initialize().timeout(const Duration(seconds: 10));
-  } catch (e) {
-    if (kDebugMode) {
-      print('Supabase initialization failed: $e');
-    }
-  }
-
-  // Initialize Stripe payment service
-  try {
-    await PaymentService.initialize().timeout(const Duration(seconds: 5));
-  } catch (e) {
-    if (kDebugMode) {
-      print('Stripe initialization failed: $e');
-    }
-  }
+  // Parallel initialization with timeouts
+  await Future.wait([
+    SupabaseService.initialize().timeout(const Duration(seconds: 15)).catchError((_) {}),
+    PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {}),
+  ]);
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -101,7 +69,6 @@ class MyApp extends ConsumerStatefulWidget {
   @override
   ConsumerState<MyApp> createState() => _MyAppState();
 
-  /// Static method to access _MyAppState from anywhere in the widget tree
   static _MyAppState? of(BuildContext context) {
     return context.findAncestorStateOfType<_MyAppState>();
   }
@@ -118,16 +85,13 @@ class _MyAppState extends ConsumerState<MyApp> {
     _initializeApp();
   }
 
-  /// Initialize app with saved settings before first build
   Future<void> _initializeApp() async {
     try {
-      if (kDebugMode) print('Starting _initializeApp...');
-      
-      // Load saved settings with a safety timeout
+      // SharedPreferences often hangs on poor hardware - 2s limit
       final results = await Future.wait([
         LocaleManager.getSavedLocale(),
         LocaleManager.getSavedThemeMode(),
-      ]).timeout(const Duration(seconds: 3));
+      ]).timeout(const Duration(seconds: 2), onTimeout: () => [null, 'light']);
 
       final savedLocale = results[0] as Locale?;
       final savedTheme = results[1] as String;
@@ -139,15 +103,10 @@ class _MyAppState extends ConsumerState<MyApp> {
           _isInitialized = true;
         });
         
-        if (kDebugMode) print('App initialized with locale: ${_locale?.languageCode}');
-        
-        // Sync providers
         ref.read(themeModeProvider.notifier).state = _themeMode;
         ref.read(localeProvider.notifier).state = _locale!;
       }
-    } catch (e) {
-      if (kDebugMode) print('Initialization error: $e');
-      // Fallback to defaults if something fails
+    } catch (_) {
       if (mounted) {
         setState(() {
           _locale = const Locale('en');
@@ -194,11 +153,31 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading screen until locale is loaded
+    // Show branded loading screen until locale is loaded
     if (!_isInitialized || _locale == null) {
-      return const MaterialApp(
+      return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          backgroundColor: const Color(0xFF2D5A27), // Branded Primary Light
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Image.asset(
+                    'assets/images/icon-1768225114910.png',
+                    width: 120,
+                    height: 120,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const CircularProgressIndicator(color: Colors.white),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
