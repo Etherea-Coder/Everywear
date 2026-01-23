@@ -16,17 +16,7 @@ subprojects {
             compileSdk = 36
         }
     }
-    
-    // Set namespace for isar_flutter_libs
-    if (project.name == 'isar_flutter_libs') {
-        plugins.withId("com.android.library") {
-            android {
-                namespace = 'dev.isar.isar_flutter_libs'
-            }
-        }
-    }
 }
 
 tasks.register("clean", Delete) {
-    delete rootProject.buildDir
-}
+    delete rootProject.buildDir}
