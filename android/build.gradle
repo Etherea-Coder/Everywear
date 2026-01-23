@@ -9,20 +9,19 @@ rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
-subprojects {
-    project.evaluationDependsOn(':app')
-}
 
-subprojects { subproject ->
-    subproject.afterEvaluate {
-        if (subproject.hasProperty('android')) {
-            subproject.android {
-                compileSdk 36
-                if (namespace == null) {
-                    if (subproject.name == 'isar_flutter_libs') {
-                        namespace = 'dev.isar.isar_flutter_libs'
-                    }
-                }
+subprojects {
+    plugins.withId("com.android.library") {
+        android {
+            compileSdk = 36
+        }
+    }
+    
+    // Set namespace for isar_flutter_libs
+    if (project.name == 'isar_flutter_libs') {
+        plugins.withId("com.android.library") {
+            android {
+                namespace = 'dev.isar.isar_flutter_libs'
             }
         }
     }
