@@ -16,65 +16,91 @@ import './widgets/custom_error_widget.dart';
 import 'core/app_export.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
+    // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    // Initialize services with a timeout to avoid hanging the app start
+    final initFuture = _initializeAllServices();
+    
+    // We don't await initFuture here to ensure Sentry and runApp start immediately
+    // but we can monitor it later if needed.
+    
+    // Initialize Sentry and run the app
+    await SentryFlutter.init(
+      (options) {
+        options.dsn =
+            'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
+        options.tracesSampleRate = 1.0;
+        options.debug = kDebugMode;
+      },
+      appRunner: () {
+        bool _hasShownError = false;
+
+        // 🚨 CRITICAL: Custom error handling - DO NOT REMOVE
+        ErrorWidget.builder = (FlutterErrorDetails details) {
+          if (!_hasShownError) {
+            _hasShownError = true;
+
+            // Report error to Sentry
+            Sentry.captureException(details.exception,
+                stackTrace: details.stack);
+
+            // Reset flag after 5 seconds to allow error widget on new screens
+            Future.delayed(const Duration(seconds: 5), () {
+              _hasShownError = false;
+            });
+
+            return CustomErrorWidget(errorDetails: details);
+          }
+          return const SizedBox.shrink();
+        };
+
+        runApp(
+          const ProviderScope(
+            child: MyApp(),
+          ),
+        );
+      },
+    );
+  } catch (e, stack) {
+    if (kDebugMode) {
+      print('Fatal error during startup: $e\n$stack');
+    }
+    // Final fallback to ensure something is rendered
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Initialization Error: $e'),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Helper to initialize internal services without blocking the main event loop
+Future<void> _initializeAllServices() async {
   // Initialize Supabase
   try {
-    await SupabaseService.initialize();
+    await SupabaseService.initialize().timeout(const Duration(seconds: 10));
   } catch (e) {
     if (kDebugMode) {
       print('Supabase initialization failed: $e');
     }
-    // Note: App will continue to Sentry initialization to avoid white screen hang
   }
 
   // Initialize Stripe payment service
   try {
-    await PaymentService.initialize();
+    await PaymentService.initialize().timeout(const Duration(seconds: 5));
   } catch (e) {
     if (kDebugMode) {
       print('Stripe initialization failed: $e');
     }
   }
-
-  // Initialize Sentry
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = 'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
-      options.tracesSampleRate = 1.0;
-      options.debug = kDebugMode;
-    },
-    appRunner: () async {
-      bool _hasShownError = false;
-
-      // 🚨 CRITICAL: Custom error handling - DO NOT REMOVE
-      ErrorWidget.builder = (FlutterErrorDetails details) {
-        if (!_hasShownError) {
-          _hasShownError = true;
-
-          // Report error to Sentry
-          Sentry.captureException(details.exception, stackTrace: details.stack);
-
-          // Reset flag after 5 seconds to allow error widget on new screens
-          Future.delayed(const Duration(seconds: 5), () {
-            _hasShownError = false;
-          });
-
-          return CustomErrorWidget(errorDetails: details);
-        }
-        return const SizedBox.shrink();
-      };
-
-      // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
-      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-      
-      runApp(
-        const ProviderScope(
-          child: MyApp(),
-        ),
-      );
-    },
-  );
 }
 
 class MyApp extends ConsumerStatefulWidget {
