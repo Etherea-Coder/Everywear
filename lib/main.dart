@@ -120,19 +120,41 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   /// Initialize app with saved settings before first build
   Future<void> _initializeApp() async {
-    final savedLocale = await LocaleManager.getSavedLocale();
-    final savedTheme = await LocaleManager.getSavedThemeMode();
-
-    if (mounted) {
-      setState(() {
-        _locale = savedLocale ?? const Locale('en');
-        _themeMode = _parseThemeMode(savedTheme);
-        _isInitialized = true;
-      });
+    try {
+      if (kDebugMode) print('Starting _initializeApp...');
       
-      // Sync providers
-      ref.read(themeModeProvider.notifier).state = _themeMode;
-      ref.read(localeProvider.notifier).state = _locale!;
+      // Load saved settings with a safety timeout
+      final results = await Future.wait([
+        LocaleManager.getSavedLocale(),
+        LocaleManager.getSavedThemeMode(),
+      ]).timeout(const Duration(seconds: 3));
+
+      final savedLocale = results[0] as Locale?;
+      final savedTheme = results[1] as String;
+
+      if (mounted) {
+        setState(() {
+          _locale = savedLocale ?? const Locale('en');
+          _themeMode = _parseThemeMode(savedTheme);
+          _isInitialized = true;
+        });
+        
+        if (kDebugMode) print('App initialized with locale: ${_locale?.languageCode}');
+        
+        // Sync providers
+        ref.read(themeModeProvider.notifier).state = _themeMode;
+        ref.read(localeProvider.notifier).state = _locale!;
+      }
+    } catch (e) {
+      if (kDebugMode) print('Initialization error: $e');
+      // Fallback to defaults if something fails
+      if (mounted) {
+        setState(() {
+          _locale = const Locale('en');
+          _themeMode = ThemeMode.light;
+          _isInitialized = true;
+        });
+      }
     }
   }
 
