@@ -13,13 +13,13 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
+subprojects { subproject ->
+    subproject.afterEvaluate {
+        if (subproject.hasProperty('android')) {
+            subproject.android {
                 compileSdk 36
                 if (namespace == null) {
-                    if (project.name == 'isar_flutter_libs') {
+                    if (subproject.name == 'isar_flutter_libs') {
                         namespace = 'dev.isar.isar_flutter_libs'
                     }
                 }
