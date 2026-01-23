@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const GEMINI_MODEL = 'google/gemini-2.0-flash-exp:free'
+const GEMINI_MODEL = 'google/gemini-2.5-flash-lite'
 
 interface RequestBody {
   imageUrl: string
@@ -54,7 +54,7 @@ serve(async (req) => {
 
     // Get user from auth
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-    
+
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -76,9 +76,9 @@ serve(async (req) => {
 
     if (!canRequest) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Monthly suggestion limit reached. Upgrade to premium for more suggestions.' 
+        JSON.stringify({
+          success: false,
+          error: 'Monthly suggestion limit reached. Upgrade to premium for more suggestions.'
         }),
         { status: 429, headers: { 'Content-Type': 'application/json' } }
       )
@@ -129,12 +129,12 @@ Be encouraging and constructive. Keep each suggestion to 1-2 sentences.`
       body: JSON.stringify({
         model: GEMINI_MODEL,
         messages: [
-          { 
-            role: 'system', 
-            content: systemPrompt 
+          {
+            role: 'system',
+            content: systemPrompt
           },
-          { 
-            role: 'user', 
+          {
+            role: 'user',
             content: [
               {
                 type: 'text',
@@ -191,7 +191,7 @@ Be encouraging and constructive. Keep each suggestion to 1-2 sentences.`
     )
   } catch (error) {
     console.error('AI Suggestions Error:', error)
-    
+
     return new Response(
       JSON.stringify({
         success: false,
