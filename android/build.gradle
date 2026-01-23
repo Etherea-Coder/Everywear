@@ -14,23 +14,13 @@ subprojects {
 }
 
 subprojects {
-    def configureProject = { prj ->
-        if (prj.hasProperty('android')) {
-            if (prj.android.namespace == null) {
-                switch (prj.name) {
-                    case 'isar_flutter_libs':
-                        prj.android.namespace = 'dev.isar.isar_flutter_libs'
-                        break
+    project.plugins.withId('com.android.library') {
+        project.android {
+            if (namespace == null) {
+                if (project.name == 'isar_flutter_libs') {
+                    namespace = 'dev.isar.isar_flutter_libs'
                 }
             }
-        }
-    }
-
-    if (project.state.evaluated) {
-        configureProject(project)
-    } else {
-        project.afterEvaluate {
-            configureProject(it)
         }
     }
 }
