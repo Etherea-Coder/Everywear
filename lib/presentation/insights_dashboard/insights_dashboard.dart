@@ -67,7 +67,7 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
   @override
   void initState() {
     super.initState();
-    _loadStats();
+    // _loadStats(); // DISABLED FOR DEBUGGING
   }
 
   Future<void> _loadStats() async {
@@ -78,8 +78,11 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     });
     
     try {
-      final stats = await _wardrobeService.getWardrobeStatistics();
-      final history = await _wardrobeService.fetchOutfitHistory(limit: 50);
+      // Added 5s timeout to prevent infinite white screen hang
+      final stats = await _wardrobeService.getWardrobeStatistics()
+          .timeout(const Duration(seconds: 5));
+      final history = await _wardrobeService.fetchOutfitHistory(limit: 50)
+          .timeout(const Duration(seconds: 5));
       
       if (mounted) {
         setState(() {
@@ -110,41 +113,36 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    // Error Boundary
-    if (_error != null) {
-      return Scaffold(
-        appBar: CustomAppBar(title: 'Insights'),
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(4.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red),
-                SizedBox(height: 2.h),
-                Text(
-                  'Something went wrong',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                SizedBox(height: 1.h),
-                Text(
-                  _error!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.red,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 2.h),
-                ElevatedButton(
-                  onPressed: _loadStats,
-                  child: Text('Retry'),
-                ),
-              ],
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.bug_report, size: 48, color: Colors.orange),
+            const SizedBox(height: 20),
+            const Text(
+              "DEBUG MODE: DASHBOARD RENDERED",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-          ),
+            const SizedBox(height: 10),
+            const Text("If you see this, the white screen is GONE."),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _loadStats,
+              child: const Text("Load Data Manually"),
+            ),
+            const SizedBox(height: 20),
+            if (_error != null) 
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(_error!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+              ),
+            if (_isLoading) const CircularProgressIndicator(),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
     final theme = Theme.of(context);
 
