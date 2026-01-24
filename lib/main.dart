@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
@@ -60,6 +61,7 @@ Future<void> _initializeAllServicesInBackground() async {
   await Future.wait([
     SupabaseService.initialize().timeout(const Duration(seconds: 15)).catchError((_) {}),
     PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {}),
+    Hive.initFlutter().timeout(const Duration(seconds: 5)).catchError((_) {}),
   ]);
 }
 

@@ -33,7 +33,18 @@ class CostPerWearChartWidget extends StatelessWidget {
             ),
           ),
           SizedBox(height: 2.h),
-          Expanded(child: BarChart(_buildBarChartData(theme))),
+          Expanded(
+            child: topItems.isEmpty
+                ? Center(
+                    child: Text(
+                      'Not enough data yet',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
+                : BarChart(_buildBarChartData(theme)),
+          ),
         ],
       ),
     );
