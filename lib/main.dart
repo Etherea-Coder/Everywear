@@ -59,7 +59,7 @@ Future<void> _initializeAllServicesInBackground() async {
 
   // Parallel initialization with timeouts
   await Future.wait([
-    SupabaseService.initialize().timeout(const Duration(seconds: 15)).catchError((_) {}),
+    SupabaseService.initialize().timeout(const Duration(seconds: 15)),
     PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {}),
     Hive.initFlutter().timeout(const Duration(seconds: 5)).catchError((_) {}),
   ]);
