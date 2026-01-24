@@ -6,7 +6,7 @@ import './supabase_service.dart';
 /// Service layer for wardrobe management with real-time synchronization
 /// Provides CRUD operations and real-time subscription capabilities
 class WardrobeService {
-  final SupabaseClient _client = SupabaseService.instance.client;
+  SupabaseClient get _client => SupabaseService.instance.client;
   final UserTierService _tierService = UserTierService();
   RealtimeChannel? _realtimeChannel;
 

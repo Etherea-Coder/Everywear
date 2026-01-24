@@ -10,7 +10,9 @@ class LocalDatabaseService {
     if (_isInitialized) return;
     
     await Hive.initFlutter();
-    Hive.registerAdapter(LocalWardrobeItemAdapter());
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(LocalWardrobeItemAdapter());
+    }
     _box = await Hive.openBox<LocalWardrobeItem>(_boxName);
     _isInitialized = true;
   }
