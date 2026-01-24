@@ -113,6 +113,43 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // Error Boundary
+    if (_error != null) {
+      return Scaffold(
+        appBar: CustomAppBar(title: 'Insights'),
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.all(4.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: Colors.red),
+                SizedBox(height: 2.h),
+                Text(
+                  'Something went wrong',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  _error!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.red,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 2.h),
+                ElevatedButton(
+                  onPressed: _loadStats,
+                  child: Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // DEBUG MODE
     return Scaffold(
       body: Center(
         child: Column(
@@ -142,159 +179,6 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
         ),
       ),
     );
-  }
-
-    final theme = Theme.of(context);
-
-    try {
-      return Scaffold(
-        appBar: CustomAppBar(
-          title: 'Insights',
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.auto_awesome),
-              onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.aiIntelligence);
-              },
-              tooltip: 'AI Intelligence',
-            ),
-            IconButton(
-              icon: const Icon(Icons.emoji_events_outlined),
-              onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.personalProgressDashboard);
-              },
-              tooltip: 'My Progress',
-            ),
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: _showFilterOptions,
-              tooltip: 'Filter insights',
-            ),
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.settingsProfile);
-              },
-              tooltip: 'Settings',
-            ),
-          ],
-        ),
-        body: RefreshIndicator(
-          onRefresh: _refreshData,
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTimeRangeSelector(theme),
-                      SizedBox(height: 2.h),
-                      _buildMetricsOverview(),
-                      SizedBox(height: 3.h),
-                      _buildSectionHeader('Wardrobe Usage', theme),
-                      UsageChartWidget(timeRange: _selectedTimeRange),
-                      SizedBox(height: 3.h),
-                      _buildSectionHeader('Cost Per Wear Analysis', theme),
-                      CostPerWearChartWidget(topItems: _analyticsData['topItems']),
-                      SizedBox(height: 3.h),
-                      _buildSectionHeader('Sustainability Score', theme),
-                      SustainabilityScoreWidget(
-                        score: _analyticsData['sustainabilityScore'],
-                        wardrobeUtilization: _analyticsData['wardrobeUtilization'],
-                      ),
-                      SizedBox(height: 3.h),
-                      _buildSectionHeader('AI Insights', theme),
-                      _buildAIInsights(),
-                      SizedBox(height: 2.h),
-
-                      // Achievement Gallery Link
-                      GestureDetector(
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRoutes.achievementGallery),
-                        child: Container(
-                          margin: EdgeInsets.symmetric(horizontal: 4.w),
-                          padding: EdgeInsets.all(4.w),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                theme.colorScheme.secondary,
-                                theme.colorScheme.secondary.withValues(alpha: 0.8),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.shadowColor.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(3.w),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.onSecondary.withValues(
-                                    alpha: 0.2,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.emoji_events,
-                                  color: theme.colorScheme.onSecondary,
-                                  size: 28,
-                                ),
-                              ),
-                              SizedBox(width: 3.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Achievement Gallery',
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        color: theme.colorScheme.onSecondary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    SizedBox(height: 0.3.h),
-                                    Text(
-                                      'View your earned badges and milestones',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSecondary.withValues(
-                                          alpha: 0.9,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                color: theme.colorScheme.onSecondary,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 3.h),
-                    ],
-                  ),
-                ),
-        ),
-      );
-    } catch (e, stack) {
-      return Scaffold(
-        body: Center(
-          child: Text('Render Error: $e'),
-        ),
-      );
-    }
   }
 
   Widget _buildTimeRangeSelector(ThemeData theme) {
