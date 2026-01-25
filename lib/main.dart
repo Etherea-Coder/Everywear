@@ -99,11 +99,19 @@ class _MyAppState extends ConsumerState<MyApp> {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.light;
   bool _isInitialized = false;
+  bool _showBrandedLoader = true;
 
   @override
   void initState() {
     super.initState();
     _initializeApp();
+    
+    // Safety timeout: Never show the branded loader for more than 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _showBrandedLoader) {
+        setState(() => _showBrandedLoader = false);
+      }
+    });
   }
 
   Future<void> _initializeApp() async {
@@ -122,6 +130,8 @@ class _MyAppState extends ConsumerState<MyApp> {
           _locale = savedLocale ?? const Locale('en');
           _themeMode = _parseThemeMode(savedTheme);
           _isInitialized = true;
+          // If we finished loading locale, we can potentially hide the branded loader
+          // but we still wait for auth if it's very fast (handled by the builder logic)
         });
         
         ref.read(themeModeProvider.notifier).state = _themeMode;
@@ -177,7 +187,16 @@ class _MyAppState extends ConsumerState<MyApp> {
     // Show branded loading screen until locale and auth are loaded
     final authState = ref.watch(authStateProvider);
 
-    if (!_isInitialized || _locale == null || authState.isLoading) {
+    // ROBUST BUILD LOGIC:
+    // Only show the branded loader if:
+    // 1. Initialized is false AND We haven't hit our safety timeout
+    // OR 
+    // 2. Locale is missing AND We haven't hit our safety timeout
+    // OR
+    // 3. Auth is specifically LOADING AND We haven't hit our safety timeout
+    final stillLoading = !_isInitialized || _locale == null || authState.isLoading;
+
+    if (_showBrandedLoader && stillLoading) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
@@ -193,7 +212,7 @@ class _MyAppState extends ConsumerState<MyApp> {
                     'assets/images/icon-1768225114910.png',
                     width: 120,
                     height: 120,
-                  ),
+                   ),
                 ),
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(color: Colors.white),

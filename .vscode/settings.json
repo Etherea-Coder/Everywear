@@ -1,0 +1,13 @@
+{
+    "deno.enable": true,
+    "deno.enablePaths": [
+        "./supabase/functions"
+    ],
+    "deno.importMap": "./supabase/functions/deno.json",
+    "deno.path": "/home/theanarchitect/.deno/bin/deno",
+    "deno.lint": true,
+    "editor.defaultFormatter": "denoland.vscode-deno",
+    "[typescript]": {
+        "editor.defaultFormatter": "denoland.vscode-deno"
+    }
+}

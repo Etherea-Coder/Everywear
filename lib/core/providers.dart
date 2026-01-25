@@ -12,7 +12,8 @@ final userTierServiceProvider = Provider((ref) => UserTierService());
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!SupabaseService.isInitialized) {
-    return const Stream.empty();
+    // Return a stream that immediately closes so the provider moves out of loading state
+    return Stream.empty();
   }
   return SupabaseService.instance.client.auth.onAuthStateChange;
 });
@@ -21,8 +22,12 @@ final currentUserProvider = Provider<User?>((ref) {
   if (!SupabaseService.isInitialized) {
     return null;
   }
-  final authState = ref.watch(authStateProvider).asData?.value;
-  return authState?.session?.user ?? SupabaseService.instance.client.auth.currentUser;
+  // Safe watch with fallback
+  final authState = ref.watch(authStateProvider);
+  return authState.maybeWhen(
+    data: (state) => state.session?.user,
+    orElse: () => SupabaseService.instance.client.auth.currentUser,
+  );
 });
 
 class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
