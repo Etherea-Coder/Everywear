@@ -7,6 +7,7 @@ import '../../core/app_export.dart';
 import '../../core/providers.dart';
 import '../../services/user_tier_service.dart';
 import '../../services/wardrobe_service.dart';
+import '../../services/supabase_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_icon_widget.dart';
 import '../../widgets/shimmer_loading.dart';
