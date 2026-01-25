@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_service.dart';
 import '../services/wardrobe_repository.dart';
 import '../services/user_tier_service.dart';
 import './utils/locale_manager.dart';
