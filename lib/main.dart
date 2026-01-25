@@ -19,7 +19,7 @@ import './presentation/home_screen/home_screen.dart';
 import './presentation/splash_screen/splash_screen.dart';
 import 'core/app_export.dart';
 
-void main() {
+void main() async {
   // Ensure widgets are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -38,19 +38,22 @@ void main() {
   // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // Run the app immediately to prevent native splash hang
+  // Initial service bootstrapper - Critical services first
+  await _initializeEssentialServices();
+
+  // Run the app after critical services are ready
   runApp(
     const ProviderScope(
       child: MyApp(),
     ),
   );
 
-  // Initialize all long-running services in the background
-  _initializeAllServicesInBackground();
+  // Initialize remaining non-critical services in the background
+  _initializeBackgroundServices();
 }
 
-// Initial service bootstrapper
-Future<void> _initializeAllServicesInBackground() async {
+// Essential services that the UI depends on immediately
+Future<void> _initializeEssentialServices() async {
   // Sentry tracking first
   try {
     await SentryFlutter.init((options) {
@@ -60,12 +63,25 @@ Future<void> _initializeAllServicesInBackground() async {
     });
   } catch (_) {}
 
-  // Parallel initialization with timeouts
-  await Future.wait([
-    SupabaseService.initialize().timeout(const Duration(seconds: 15)),
-    PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {}),
-    Hive.initFlutter().timeout(const Duration(seconds: 5)).catchError((_) {}),
-  ]);
+  // Initialize Supabase and Hive sequentially to ensure stability
+  try {
+    await SupabaseService.initialize().timeout(const Duration(seconds: 10));
+  } catch (e) {
+    print('⚠️ Essential service Supabase failed to init: $e');
+  }
+
+  try {
+    await Hive.initFlutter().timeout(const Duration(seconds: 5));
+  } catch (e) {
+    print('⚠️ Essential service Hive failed to init: $e');
+  }
+}
+
+// Non-critical services that can load while splash screen is showing
+Future<void> _initializeBackgroundServices() async {
+  try {
+    await PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
+  } catch (_) {}
 }
 
 class MyApp extends ConsumerStatefulWidget {

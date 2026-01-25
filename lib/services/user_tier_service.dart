@@ -1,9 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './supabase_service.dart';
 
 /// Service for managing user tier limits and usage tracking
 /// Handles item limits (30 free/100 premium) and suggestion limits
 class UserTierService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => SupabaseService.instance.client;
 
   /// Check if user can add more items to wardrobe based on tier
   /// Returns true if user hasn't reached their tier limit

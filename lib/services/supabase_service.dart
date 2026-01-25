@@ -6,6 +6,9 @@ class SupabaseService {
 
   SupabaseService._();
 
+  static bool _isInitialized = false;
+  static bool get isInitialized => _isInitialized;
+
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: '',
@@ -16,16 +19,30 @@ class SupabaseService {
   );
 
   // Initialize Supabase - call this in main()
-  static Future<void> initialize() async {
+  static Future<bool> initialize() async {
+    if (_isInitialized) return true;
+
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
       // Log warning instead of crashing - app can still run in offline mode
       print('⚠️ SUPABASE_URL and SUPABASE_ANON_KEY not defined. Running in offline mode.');
-      return;
+      return false;
     }
 
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+    try {
+      await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+      _isInitialized = true;
+      return true;
+    } catch (e) {
+      print('❌ Failed to initialize Supabase: $e');
+      return false;
+    }
   }
 
   // Get Supabase client
-  SupabaseClient get client => Supabase.instance.client;
+  SupabaseClient get client {
+    if (!_isInitialized) {
+      throw StateError('Supabase has not been initialized. Call initialize() first.');
+    }
+    return Supabase.instance.client;
+  }
 }

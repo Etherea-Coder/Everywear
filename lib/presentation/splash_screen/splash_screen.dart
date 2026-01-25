@@ -604,9 +604,13 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      if (!SupabaseService.isInitialized) {
+        throw Exception('Supabase service is not initialized. Please check your connection and try again.');
+      }
+      
       // For mobile, this usually requires the google_sign_in package
-      // For now, we'll use the standard Supabase OAuth flow which opens a browser
-      await Supabase.instance.client.auth.signInWithOAuth(
+      // For now, we'll use the standard Supabase OAuth flow
+      await SupabaseService.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: kIsWeb ? null : 'io.supabase.everywear://login-callback/',
       );
@@ -631,8 +635,12 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      if (!SupabaseService.isInitialized) {
+        throw Exception('Supabase service is not initialized. Please check your connection and try again.');
+      }
+
       if (_isSignUp) {
-        await Supabase.instance.client.auth.signUp(
+        await SupabaseService.instance.client.auth.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
           data: {'full_name': _nameController.text.trim()},
@@ -641,7 +649,7 @@ class _SplashScreenState extends State<SplashScreen>
           _showErrorSnackBar('Check your email for confirmation!', isError: false);
         }
       } else {
-        await Supabase.instance.client.auth.signInWithPassword(
+        await SupabaseService.instance.client.auth.signInWithPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );

@@ -1,8 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './supabase_service.dart';
 import '../services/user_tier_service.dart';
 
 class AiSuggestionsService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => SupabaseService.instance.client;
   final UserTierService _tierService = UserTierService();
 
   /// Generates AI styling suggestions for an outfit image

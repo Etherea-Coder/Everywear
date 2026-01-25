@@ -10,12 +10,18 @@ final wardrobeRepositoryProvider = Provider((ref) => WardrobeRepository());
 final userTierServiceProvider = Provider((ref) => UserTierService());
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
-  return Supabase.instance.client.auth.onAuthStateChange;
+  if (!SupabaseService.isInitialized) {
+    return const Stream.empty();
+  }
+  return SupabaseService.instance.client.auth.onAuthStateChange;
 });
 
 final currentUserProvider = Provider<User?>((ref) {
-  final authState = ref.watch(authStateProvider).value;
-  return authState?.session?.user ?? Supabase.instance.client.auth.currentUser;
+  if (!SupabaseService.isInitialized) {
+    return null;
+  }
+  final authState = ref.watch(authStateProvider).asData?.value;
+  return authState?.session?.user ?? SupabaseService.instance.client.auth.currentUser;
 });
 
 class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
