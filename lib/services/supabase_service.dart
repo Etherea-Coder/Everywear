@@ -57,10 +57,18 @@ class SupabaseService {
   // Get Supabase client
   SupabaseClient get client {
     if (!_isInitialized) {
-      final reason = supabaseUrl.isEmpty || supabaseAnonKey.isEmpty 
-          ? 'Environment variables are missing (SUPABASE_URL/SUPABASE_ANON_KEY).'
-          : 'Initialization failed or has not been called.';
-      throw StateError('Supabase not ready: $reason');
+      String reason;
+      if (supabaseUrl.isEmpty && supabaseAnonKey.isEmpty) {
+        reason = 'BOTH SUPABASE_URL and SUPABASE_ANON_KEY are missing from environment.';
+      } else if (supabaseUrl.isEmpty) {
+        reason = 'SUPABASE_URL is missing from environment.';
+      } else if (supabaseAnonKey.isEmpty) {
+        reason = 'SUPABASE_ANON_KEY is missing from environment.';
+      } else {
+        reason = 'Initialization failed or was never called successfully.';
+      }
+      throw StateError('Supabase Client Access Error: $reason\n'
+          'Verify these are set in Codemagic environment variables and injected via env.json.');
     }
     return Supabase.instance.client;
   }

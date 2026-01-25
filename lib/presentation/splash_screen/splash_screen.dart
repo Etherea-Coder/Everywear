@@ -647,7 +647,7 @@ class _SplashScreenState extends State<SplashScreen>
       }
 
       if (!SupabaseService.isInitialized) {
-        throw Exception('Authentication service (Supabase) not available. Please verify your internet connection.');
+        throw Exception('Supabase Client not ready. Check environment variables in your build dashboard.');
       }
 
       if (_isSignUp) {
@@ -657,7 +657,10 @@ class _SplashScreenState extends State<SplashScreen>
           data: {'full_name': _nameController.text.trim()},
         );
         if (mounted) {
-          _showErrorSnackBar('Check your email for confirmation!', isError: false);
+          _showErrorSnackBar(
+            'Success! Check your inbox for a confirmation email.', 
+            isError: false,
+          );
         }
       } else {
         await SupabaseService.instance.client.auth.signInWithPassword(
@@ -668,14 +671,20 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (mounted) {
         HapticFeedback.mediumImpact();
-        // Navigation is handled reactively by MyApp in main.dart
       }
     } catch (e) {
       if (mounted) {
+        String userFriendlyError = e.toString();
+        if (userFriendlyError.contains('AuthApiError')) {
+          userFriendlyError = 'Auth Error: Ensure your Email provider is enabled in Supabase Dashboard.';
+        } else if (userFriendlyError.contains('SocketException')) {
+          userFriendlyError = 'Connection failed. Please check your internet.';
+        }
+        
         _showErrorSnackBar(
           _isSignUp
-              ? 'Sign up failed: ${e.toString()}'
-              : 'Sign in failed: ${e.toString()}',
+              ? 'Sign up failed: $userFriendlyError'
+              : 'Sign in failed: $userFriendlyError',
         );
       }
     } finally {
@@ -698,7 +707,13 @@ class _SplashScreenState extends State<SplashScreen>
         content: Text(message),
         backgroundColor: isError ? Colors.redAccent : const Color(0xFF2D5A27),
         behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: isError ? 5 : 3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        action: isError ? SnackBarAction(
+          label: 'DISMISS', 
+          textColor: Colors.white,
+          onPressed: () {},
+        ) : null,
       ),
     );
   }
