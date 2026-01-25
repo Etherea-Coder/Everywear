@@ -155,8 +155,10 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Show branded loading screen until locale is loaded
-    if (!_isInitialized || _locale == null) {
+    // Show branded loading screen until locale and auth are loaded
+    final authState = ref.watch(authStateProvider);
+
+    if (!_isInitialized || _locale == null || authState.isLoading) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
@@ -221,8 +223,18 @@ class _MyAppState extends ConsumerState<MyApp> {
             }
             return supportedLocales.first;
           },
+          // Determine home based on auth state
+          home: authState.when(
+            data: (state) {
+              if (state.session != null) {
+                return const HomeScreen();
+              }
+              return const SplashScreen();
+            },
+            loading: () => const SplashScreen(), // Should be caught by the top-level loading check
+            error: (_, __) => const SplashScreen(),
+          ),
           routes: AppRoutes.routes,
-          initialRoute: AppRoutes.initial,
         );
       },
     );

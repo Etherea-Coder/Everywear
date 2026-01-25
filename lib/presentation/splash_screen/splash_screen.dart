@@ -602,16 +602,19 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implement Google Sign-In with Supabase
-      await Future.delayed(const Duration(seconds: 2));
-
+      // For mobile, this usually requires the google_sign_in package
+      // For now, we'll use the standard Supabase OAuth flow which opens a browser
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? null : 'io.supabase.everywear://login-callback/',
+      );
+      
       if (mounted) {
         HapticFeedback.mediumImpact();
-        _navigateToSettings();
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Google sign-in failed. Please try again.');
+        _showErrorSnackBar('Google sign-in failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -626,19 +629,32 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implement Email Auth with Supabase
-      await Future.delayed(const Duration(seconds: 2));
+      if (_isSignUp) {
+        await Supabase.instance.client.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          data: {'full_name': _nameController.text.trim()},
+        );
+        if (mounted) {
+          _showErrorSnackBar('Check your email for confirmation!', isError: false);
+        }
+      } else {
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+      }
 
       if (mounted) {
         HapticFeedback.mediumImpact();
-        _navigateToSettings();
+        // Navigation is handled reactively by MyApp in main.dart
       }
     } catch (e) {
       if (mounted) {
         _showErrorSnackBar(
           _isSignUp
-              ? 'Sign up failed. Please try again.'
-              : 'Sign in failed. Please check your credentials.',
+              ? 'Sign up failed: ${e.toString()}'
+              : 'Sign in failed: ${e.toString()}',
         );
       }
     } finally {
@@ -655,11 +671,11 @@ class _SplashScreenState extends State<SplashScreen>
     ).pushReplacementNamed(AppRoutes.home);
   }
 
-  void _showErrorSnackBar(String message) {
+  void _showErrorSnackBar(String message, {bool isError = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: isError ? Colors.redAccent : const Color(0xFF2D5A27),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
