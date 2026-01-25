@@ -18,9 +18,9 @@ class SupabaseService {
   // Initialize Supabase - call this in main()
   static Future<void> initialize() async {
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-      throw Exception(
-        'SUPABASE_URL and SUPABASE_ANON_KEY must be defined using --dart-define.',
-      );
+      // Log warning instead of crashing - app can still run in offline mode
+      print('⚠️ SUPABASE_URL and SUPABASE_ANON_KEY not defined. Running in offline mode.');
+      return;
     }
 
     await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);

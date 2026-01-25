@@ -5,9 +5,6 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_bottom_bar.dart';
 import '../../routes/app_routes.dart';
 import './widgets/metric_card_widget.dart';
-import './widgets/usage_chart_widget.dart';
-import './widgets/cost_per_wear_chart_widget.dart';
-import './widgets/sustainability_score_widget.dart';
 import './widgets/ai_insight_card_widget.dart';
 import '../../services/wardrobe_service.dart';
 
@@ -23,10 +20,10 @@ class InsightsDashboard extends StatefulWidget {
 
 class _InsightsDashboardState extends State<InsightsDashboard> {
   int _selectedTimeRange = 0; // 0: Week, 1: Month, 2: Year
-  bool _isLoading = true;
+  bool _isLoading = false; // Start with false to show content immediately
   final WardrobeService _wardrobeService = WardrobeService();
 
-  // Mock analytics data
+  // Analytics data with sensible defaults
   Map<String, dynamic> _analyticsData = {
     'totalItems': 0,
     'favorite_items': 0,
@@ -67,7 +64,8 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
   @override
   void initState() {
     super.initState();
-    // _loadStats(); // DISABLED FOR DEBUGGING
+    // Load stats in background (non-blocking)
+    _loadStats();
   }
 
   Future<void> _loadStats() async {
@@ -149,34 +147,53 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
       );
     }
 
-    // DEBUG MODE
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.bug_report, size: 48, color: Colors.orange),
-            const SizedBox(height: 20),
-            const Text(
-              "DEBUG MODE: DASHBOARD RENDERED",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text("If you see this, the white screen is GONE."),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadStats,
-              child: const Text("Load Data Manually"),
-            ),
-            const SizedBox(height: 20),
-            if (_error != null) 
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(_error!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-              ),
-            if (_isLoading) const CircularProgressIndicator(),
-          ],
+    // LOADING STATE
+    if (_isLoading) {
+      return Scaffold(
+        appBar: CustomAppBar(title: 'Insights'),
+        body: const Center(
+          child: CircularProgressIndicator(),
         ),
+        bottomNavigationBar: CustomBottomBar(
+          currentIndex: 3,
+          onTap: _handleNavigation,
+        ),
+      );
+    }
+
+    // MAIN DASHBOARD
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: 'Insights',
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.filter_list),
+        //     onPressed: _showFilterOptions,
+        //   ),
+        // ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTimeRangeSelector(theme),
+              _buildMetricsOverview(),
+              SizedBox(height: 2.h),
+              _buildSectionHeader('AI Insights', theme),
+              SizedBox(height: 1.h),
+              _buildAIInsights(),
+              SizedBox(height: 10.h), // Bottom padding
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: CustomBottomBar(
+        currentIndex: 3,
+        onTap: _handleNavigation,
       ),
     );
   }

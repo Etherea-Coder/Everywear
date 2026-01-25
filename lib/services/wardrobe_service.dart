@@ -16,10 +16,16 @@ class WardrobeService {
     String? searchQuery,
   }) async {
     try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) {
+        // User not authenticated - return empty list instead of crashing
+        return [];
+      }
+      
       var query = _client
           .from('wardrobe_items')
           .select()
-          .eq('user_id', _client.auth.currentUser!.id);
+          .eq('user_id', userId);
 
       if (category != null && category != 'All') {
         query = query.eq('category', category);
@@ -34,7 +40,9 @@ class WardrobeService {
       final response = await query.order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (error) {
-      throw Exception('Failed to fetch wardrobe items: $error');
+      // Return empty list on any error (including Supabase not initialized)
+      // This prevents white screen crashes
+      return [];
     }
   }
 

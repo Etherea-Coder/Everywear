@@ -9,7 +9,12 @@ class LocalDatabaseService {
   Future<void> init() async {
     if (_isInitialized) return;
     
-    await Hive.initFlutter();
+    // Try to init Hive, may already be initialized from main.dart
+    try {
+      await Hive.initFlutter();
+    } catch (_) {
+      // Already initialized, ignore
+    }
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(LocalWardrobeItemAdapter());
     }
