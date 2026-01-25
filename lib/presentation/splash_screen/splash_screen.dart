@@ -605,8 +605,13 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      // Robustness: Try to re-init if not already initialized
       if (!SupabaseService.isInitialized) {
-        throw Exception('Supabase service is not initialized. Please check your connection and try again.');
+        await SupabaseService.initialize();
+      }
+
+      if (!SupabaseService.isInitialized) {
+        throw Exception('Authentication service (Supabase) not available. Please verify your internet connection.');
       }
       
       // For mobile, this usually requires the google_sign_in package
@@ -636,8 +641,13 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      // Robustness: Try to re-init if not already initialized
       if (!SupabaseService.isInitialized) {
-        throw Exception('Supabase service is not initialized. Please check your connection and try again.');
+        await SupabaseService.initialize();
+      }
+
+      if (!SupabaseService.isInitialized) {
+        throw Exception('Authentication service (Supabase) not available. Please verify your internet connection.');
       }
 
       if (_isSignUp) {

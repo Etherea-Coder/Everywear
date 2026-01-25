@@ -12,8 +12,9 @@ final userTierServiceProvider = Provider((ref) => UserTierService());
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!SupabaseService.isInitialized) {
-    // Return a stream that immediately closes so the provider moves out of loading state
-    return Stream.empty();
+    // Return a dummy stream that emits a fake state to move provider to 'data' state
+    // This prevents the UI from staying in the branded loading screen
+    return Stream.value(AuthState(event: AuthChangeEvent.initialSession, session: null));
   }
   return SupabaseService.instance.client.auth.onAuthStateChange;
 });
@@ -23,10 +24,9 @@ final currentUserProvider = Provider<User?>((ref) {
     return null;
   }
   // Safe watch with fallback
-  final authState = ref.watch(authStateProvider);
-  return authState.maybeWhen(
+  return ref.watch(authStateProvider).maybeWhen(
     data: (state) => state.session?.user,
-    orElse: () => SupabaseService.instance.client.auth.currentUser,
+    orElse: () => null,
   );
 });
 
