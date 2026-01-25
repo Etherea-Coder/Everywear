@@ -227,12 +227,12 @@ class _MyAppState extends ConsumerState<MyApp> {
           home: authState.when(
             data: (state) {
               if (state.session != null) {
-                return const HomeScreen();
+                return HomeScreen(); 
               }
-              return const SplashScreen();
+              return SplashScreen();
             },
-            loading: () => const SplashScreen(), 
-            error: (_, __) => const SplashScreen(),
+            loading: () => SplashScreen(), 
+            error: (_, __) => SplashScreen(),
           ),
           routes: AppRoutes.routes,
         );
