@@ -76,22 +76,31 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     });
     
     try {
-      // Added 5s timeout to prevent infinite white screen hang
-      final stats = await _wardrobeService.getWardrobeStatistics()
-          .timeout(const Duration(seconds: 5));
-      final history = await _wardrobeService.fetchOutfitHistory(limit: 50)
-          .timeout(const Duration(seconds: 5));
+      // Use Future.wait with timeout to prevent hanging
+      final results = await Future.wait([
+        _wardrobeService.getWardrobeStatistics().timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => {'total_items': 0, 'favorite_items': 0, 'category_counts': {}},
+        ),
+        _wardrobeService.fetchOutfitHistory(limit: 50).timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => [],
+        ),
+      ]).timeout(const Duration(seconds: 5));
+      
+      final stats = results[0] as Map<String, dynamic>;
+      final history = results[1] as List<Map<String, dynamic>>;
       
       if (mounted) {
         setState(() {
           _analyticsData = {
-            'totalItems': stats['total_items'],
-            'favorite_items': stats['favorite_items'],
+            'totalItems': stats['total_items'] ?? 0,
+            'favorite_items': stats['favorite_items'] ?? 0,
             'outfitsLogged': history.length,
             'avgCostPerWear': 12.50,
             'sustainabilityScore': 78,
-            'wardrobeUtilization': (stats['total_items'] > 0) 
-                ? (stats['favorite_items'] / stats['total_items'] * 100).toInt() 
+            'wardrobeUtilization': (stats['total_items'] != null && stats['total_items'] > 0) 
+                ? ((stats['favorite_items'] ?? 0) / stats['total_items'] * 100).toInt() 
                 : 0,
             'topItems': [], 
           };
@@ -103,7 +112,22 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _error = 'Failed to load insights: $e';
+          // Don't show error for demo mode or network issues - just show empty state
+          if (e.toString().contains('Demo mode') || 
+              e.toString().contains('Network') ||
+              e.toString().contains('timeout')) {
+            _analyticsData = {
+              'totalItems': 0,
+              'favorite_items': 0,
+              'outfitsLogged': 0,
+              'avgCostPerWear': 0.0,
+              'sustainabilityScore': 0,
+              'wardrobeUtilization': 0,
+              'topItems': [],
+            };
+          } else {
+            _error = 'Failed to load insights: $e';
+          }
         });
       }
     }

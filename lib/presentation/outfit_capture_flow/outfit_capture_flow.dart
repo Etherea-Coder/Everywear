@@ -35,6 +35,8 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   CameraController? _cameraController;
   List<CameraDescription> _cameras = [];
   bool _isCameraInitialized = false;
+  bool _isCameraPermissionDenied = false;
+  bool _isCameraUnavailable = false;
   XFile? _capturedImage;
 
   // Wardrobe selection state
@@ -71,11 +73,18 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
     final status = await Permission.camera.request();
     if (!status.isGranted) {
       if (mounted) {
+        setState(() {
+          _isCameraPermissionDenied = true;
+        });
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(localizations.cameraPermissionRequired),
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Settings',
+              onPressed: () => openAppSettings(),
+            ),
           ),
         );
       }
@@ -87,9 +96,31 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
     try {
       setState(() => _isLoading = true);
 
+      // Check if permission was denied
+      if (_isCameraPermissionDenied) {
+        setState(() {
+          _isLoading = false;
+          _isCameraUnavailable = true;
+        });
+        return;
+      }
+
       _cameras = await availableCameras();
       if (_cameras.isEmpty) {
-        throw Exception('No cameras available');
+        setState(() {
+          _isLoading = false;
+          _isCameraUnavailable = true;
+        });
+        if (mounted) {
+          final localizations = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('No cameras available on this device'),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
       }
 
       final camera = kIsWeb
@@ -128,17 +159,25 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
         setState(() {
           _isCameraInitialized = true;
           _isLoading = false;
+          _isCameraUnavailable = false;
         });
       }
     } catch (e) {
       debugPrint('Camera initialization error: $e');
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isCameraUnavailable = true;
+        });
         final localizations = AppLocalizations.of(context);
-        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.cameraInitError),
+            content: Text('Camera initialization failed: ${e.toString()}'),
             duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: () => _initializeCamera(),
+            ),
           ),
         );
       }

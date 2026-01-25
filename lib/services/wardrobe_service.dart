@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 
 import '../services/user_tier_service.dart';
 import './supabase_service.dart';
@@ -10,38 +11,68 @@ class WardrobeService {
   final UserTierService _tierService = UserTierService();
   RealtimeChannel? _realtimeChannel;
 
+  /// Retry mechanism with exponential backoff
+  Future<T> _retryOperation<T>(
+    Future<T> Function() operation, {
+    int maxRetries = 3,
+    Duration initialDelay = const Duration(seconds: 1),
+  }) async {
+    int attempts = 0;
+    Duration delay = initialDelay;
+
+    while (attempts < maxRetries) {
+      try {
+        return await operation().timeout(const Duration(seconds: 10));
+      } catch (e) {
+        attempts++;
+        if (attempts >= maxRetries) {
+          rethrow;
+        }
+        
+        debugPrint('Operation failed, retrying in ${delay.inSeconds}s... (attempt $attempts/$maxRetries)');
+        await Future.delayed(delay);
+        delay *= 2; // Exponential backoff
+      }
+    }
+    
+    throw Exception('Max retries reached');
+  }
+
   /// Fetches all wardrobe items for the authenticated user
   Future<List<Map<String, dynamic>>> fetchWardrobeItems({
     String? category,
     String? searchQuery,
   }) async {
     try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) {
-        // User not authenticated - return empty list instead of crashing
-        return [];
-      }
-      
-      var query = _client
-          .from('wardrobe_items')
-          .select()
-          .eq('user_id', userId);
+      return await _retryOperation(() async {
+        final userId = _client.auth.currentUser?.id;
+        if (userId == null) {
+          // User not authenticated - return empty list instead of crashing
+          return [];
+        }
+        
+        var query = _client
+            .from('wardrobe_items')
+            .select()
+            .eq('user_id', userId);
 
-      if (category != null && category != 'All') {
-        query = query.eq('category', category);
-      }
+        if (category != null && category != 'All') {
+          query = query.eq('category', category);
+        }
 
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.or(
-          'name.ilike.%$searchQuery%,brand.ilike.%$searchQuery%',
-        );
-      }
+        if (searchQuery != null && searchQuery.isNotEmpty) {
+          query = query.or(
+            'name.ilike.%$searchQuery%,brand.ilike.%$searchQuery%',
+          );
+        }
 
-      final response = await query.order('created_at', ascending: false);
-      return List<Map<String, dynamic>>.from(response);
+        final response = await query.order('created_at', ascending: false);
+        return List<Map<String, dynamic>>.from(response);
+      });
     } catch (error) {
       // Return empty list on any error (including Supabase not initialized)
       // This prevents white screen crashes
+      debugPrint('Wardrobe fetch error: $error');
       return [];
     }
   }

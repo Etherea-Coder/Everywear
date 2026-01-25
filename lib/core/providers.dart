@@ -33,30 +33,60 @@ final currentUserProvider = Provider<User?>((ref) {
 class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   @override
   Future<List<Map<String, dynamic>>> build() async {
-    final repository = ref.watch(wardrobeRepositoryProvider);
-    return repository.getWardrobeItems();
+    try {
+      final repository = ref.watch(wardrobeRepositoryProvider);
+      return await repository.getWardrobeItems().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => [],
+      );
+    } catch (e) {
+      debugPrint('WardrobeItemsNotifier build error: $e');
+      return []; // Return empty list on error to prevent white screens
+    }
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final repository = ref.watch(wardrobeRepositoryProvider);
-      return repository.getWardrobeItems();
+      try {
+        final repository = ref.read(wardrobeRepositoryProvider);
+        return await repository.getWardrobeItems().timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => [],
+        );
+      } catch (e) {
+        debugPrint('WardrobeItemsNotifier refresh error: $e');
+        return []; // Return empty list on error
+      }
     });
   }
 
   Future<void> addItem(Map<String, dynamic> itemData) async {
-    final repository = ref.read(wardrobeRepositoryProvider);
-    final result = await repository.addItem(itemData);
-    if (result['success'] == true) {
-      await refresh();
+    try {
+      final repository = ref.read(wardrobeRepositoryProvider);
+      final result = await repository.addItem(itemData).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => {'success': false, 'error': 'Timeout'},
+      );
+      if (result['success'] == true) {
+        await refresh();
+      }
+    } catch (e) {
+      debugPrint('WardrobeItemsNotifier addItem error: $e');
     }
   }
 
   Future<void> deleteItem(String itemId) async {
-    final repository = ref.read(wardrobeRepositoryProvider);
-    await repository.deleteItem(itemId);
-    await refresh();
+    try {
+      final repository = ref.read(wardrobeRepositoryProvider);
+      await repository.deleteItem(itemId).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => debugPrint('Delete timeout for item: $itemId'),
+      );
+      await refresh();
+    } catch (e) {
+      debugPrint('WardrobeItemsNotifier deleteItem error: $e');
+    }
   }
 }
 

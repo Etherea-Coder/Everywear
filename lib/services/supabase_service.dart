@@ -12,11 +12,11 @@ class SupabaseService {
 
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: '',
+    defaultValue: 'https://demo.supabase.co',
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: '',
+    defaultValue: 'demo-key',
   );
 
   // Helper to mask sensitive values for logging
@@ -33,6 +33,16 @@ class SupabaseService {
     print('📡 Initializing Supabase...');
     print('   URL: ${_mask(supabaseUrl)}');
     print('   Key: ${_mask(supabaseAnonKey)}');
+
+    // Check for demo/development mode
+    final isDemoMode = supabaseUrl.contains('demo.supabase.co') || 
+                      supabaseAnonKey == 'demo-key';
+    
+    if (isDemoMode) {
+      print('⚠️ Running in demo mode - limited functionality available');
+      _isInitialized = true;
+      return true;
+    }
 
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
       print('⚠️ SUPABASE_URL or SUPABASE_ANON_KEY is empty. App will run in offline mode.');
@@ -70,6 +80,21 @@ class SupabaseService {
       throw StateError('Supabase Client Access Error: $reason\n'
           'Verify these are set in Codemagic environment variables and injected via env.json.');
     }
+
+    // Check if we're in demo mode
+    final isDemoMode = supabaseUrl.contains('demo.supabase.co') || 
+                      supabaseAnonKey == 'demo-key';
+    
+    if (isDemoMode) {
+      // Return a mock client or throw a controlled error for demo mode
+      throw StateError('Demo mode active - Supabase features are limited. '
+          'Please configure real Supabase credentials for full functionality.');
+    }
+
     return Supabase.instance.client;
   }
+
+  // Check if we're in demo mode
+  static bool get isDemoMode => 
+      supabaseUrl.contains('demo.supabase.co') || supabaseAnonKey == 'demo-key';
 }

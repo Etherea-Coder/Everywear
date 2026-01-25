@@ -62,6 +62,12 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   /// Sets up real-time subscription for wardrobe changes
   void _setupRealtimeSubscription() {
     try {
+      // Check if we're in demo mode before setting up subscription
+      if (SupabaseService.isDemoMode) {
+        debugPrint('Demo mode active - skipping real-time subscription');
+        return;
+      }
+      
       _realtimeChannel = _wardrobeService.subscribeToWardrobeChanges(
         onInsert: (payload) {
           if (!mounted) return;
@@ -81,6 +87,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       );
     } catch (error) {
       debugPrint('Failed to setup real-time subscription: $error');
+      // Don't show error to user - app will work without real-time updates
     }
   }
 

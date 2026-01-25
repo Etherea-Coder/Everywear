@@ -14,25 +14,30 @@ class WardrobeRepository {
     String? category,
     String? searchQuery,
   }) async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    final isOnline = connectivityResult != ConnectivityResult.none;
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      final isOnline = connectivityResult != ConnectivityResult.none;
 
-    if (isOnline) {
-      try {
-        final remoteItems = await _remoteService.fetchWardrobeItems(
-          category: category,
-          searchQuery: searchQuery,
-        );
-        // Sync to local for future offline use
-        await _localService.syncItems(remoteItems);
-        return remoteItems;
-      } catch (e) {
-        // Fallback to local if remote fails
-        debugPrint('Remote fetch failed, falling back to local: $e');
+      if (isOnline) {
+        try {
+          final remoteItems = await _remoteService.fetchWardrobeItems(
+            category: category,
+            searchQuery: searchQuery,
+          ).timeout(const Duration(seconds: 8));
+          // Sync to local for future offline use
+          await _localService.syncItems(remoteItems).timeout(const Duration(seconds: 3));
+          return remoteItems;
+        } catch (e) {
+          debugPrint('Remote fetch failed, falling back to local: $e');
+          return _fetchLocalAsMap(category, searchQuery);
+        }
+      } else {
         return _fetchLocalAsMap(category, searchQuery);
       }
-    } else {
-      return _fetchLocalAsMap(category, searchQuery);
+    } catch (e) {
+      debugPrint('Complete wardrobe fetch failure: $e');
+      // Return empty list as last resort to prevent white screens
+      return [];
     }
   }
 
