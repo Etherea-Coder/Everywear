@@ -1,5 +1,5 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'std/http/server.ts'
+import { createClient } from '@supabase/supabase-js'
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const GEMINI_MODEL = 'google/gemini-2.5-flash-lite'
@@ -189,13 +189,15 @@ Be encouraging and constructive. Keep each suggestion to 1-2 sentences.`
         },
       }
     )
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('AI Suggestions Error:', error)
+
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate suggestions'
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Failed to generate suggestions',
+        error: errorMessage,
       }),
       {
         status: 500,
