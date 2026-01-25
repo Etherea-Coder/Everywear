@@ -8,12 +8,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
 import './core/providers.dart';
 import './services/payment_service.dart';
 import './services/supabase_service.dart';
 import './widgets/custom_error_widget.dart';
+import './presentation/home_screen/home_screen.dart';
+import './presentation/splash_screen/splash_screen.dart';
 import 'core/app_export.dart';
 
 void main() {
