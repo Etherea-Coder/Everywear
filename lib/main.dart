@@ -227,11 +227,11 @@ class _MyAppState extends ConsumerState<MyApp> {
           home: authState.when(
             data: (state) {
               if (state.session != null) {
-                return const HomeScreen();
+                return const HomeScreen(); // If HomeScreen has a const constructor, this is fine, but if it fails, remove 'const'
               }
               return const SplashScreen();
             },
-            loading: () => const SplashScreen(), // Should be caught by the top-level loading check
+            loading: () => const SplashScreen(), 
             error: (_, __) => const SplashScreen(),
           ),
           routes: AppRoutes.routes,
