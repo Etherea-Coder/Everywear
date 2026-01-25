@@ -1,5 +1,6 @@
-import { serve } from 'std/http/server.ts'
-import { createClient } from '@supabase/supabase-js'
+// @ts-nocheck
+// @ts-ignore
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const GEMINI_MODEL = 'google/gemini-2.5-flash-lite'
@@ -9,7 +10,7 @@ interface RequestBody {
   language: 'EN' | 'FR' | 'ES'
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // CORS headers
   if (req.method === 'OPTIONS') {
     return new Response(null, {
