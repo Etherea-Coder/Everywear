@@ -605,13 +605,26 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      // Check if we're in demo mode
+      if (SupabaseService.isDemoMode) {
+        if (mounted) {
+          _showErrorSnackBar(
+            'Google sign-in is not available in demo mode. Please configure Supabase credentials for full authentication.',
+          );
+        }
+        return;
+      }
+
       // Robustness: Try to re-init if not already initialized
       if (!SupabaseService.isInitialized) {
-        await SupabaseService.initialize();
+        final initialized = await SupabaseService.initialize();
+        if (!initialized) {
+          throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
+        }
       }
 
       if (!SupabaseService.isInitialized) {
-        throw Exception('Authentication service (Supabase) not available. Please verify your internet connection.');
+        throw Exception('Authentication service (Supabase) not available. Please verify your internet connection and environment variables.');
       }
       
       // For mobile, this usually requires the google_sign_in package
@@ -626,7 +639,18 @@ class _SplashScreenState extends State<SplashScreen>
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Google sign-in failed: ${e.toString()}');
+        String errorMessage = 'Google sign-in failed';
+        
+        // Provide user-friendly error messages
+        if (e.toString().contains('demo') || e.toString().contains('Demo')) {
+          errorMessage = 'Google sign-in is not available in demo mode';
+        } else if (e.toString().contains('not available') || e.toString().contains('not ready')) {
+          errorMessage = 'Authentication service unavailable. Please configure Supabase credentials.';
+        } else {
+          errorMessage = 'Google sign-in failed: ${e.toString()}';
+        }
+        
+        _showErrorSnackBar(errorMessage);
       }
     } finally {
       if (mounted) {
@@ -641,9 +665,22 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      // Check if we're in demo mode
+      if (SupabaseService.isDemoMode) {
+        if (mounted) {
+          _showErrorSnackBar(
+            'Email authentication is not available in demo mode. Please configure Supabase credentials for full authentication.',
+          );
+        }
+        return;
+      }
+
       // Robustness: Try to re-init if not already initialized
       if (!SupabaseService.isInitialized) {
-        await SupabaseService.initialize();
+        final initialized = await SupabaseService.initialize();
+        if (!initialized) {
+          throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
+        }
       }
 
       if (!SupabaseService.isInitialized) {
@@ -675,7 +712,13 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (e) {
       if (mounted) {
         String userFriendlyError = e.toString();
-        if (userFriendlyError.contains('AuthApiError')) {
+        
+        // Provide user-friendly error messages
+        if (userFriendlyError.contains('demo') || userFriendlyError.contains('Demo')) {
+          userFriendlyError = 'Email authentication is not available in demo mode';
+        } else if (userFriendlyError.contains('not available') || userFriendlyError.contains('not ready')) {
+          userFriendlyError = 'Authentication service unavailable. Please configure Supabase credentials.';
+        } else if (userFriendlyError.contains('AuthApiError')) {
           userFriendlyError = 'Auth Error: Ensure your Email provider is enabled in Supabase Dashboard.';
         } else if (userFriendlyError.contains('SocketException')) {
           userFriendlyError = 'Connection failed. Please check your internet.';
