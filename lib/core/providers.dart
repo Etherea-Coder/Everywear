@@ -14,7 +14,7 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!SupabaseService.isInitialized) {
     // Return a dummy stream that emits a fake state to move provider to 'data' state
     // This prevents the UI from staying in the branded loading screen
-    return Stream.value(AuthState(event: AuthChangeEvent.initialSession, session: null));
+    return Stream.value(AuthState(AuthChangeEvent.initialSession, null));
   }
   return SupabaseService.instance.client.auth.onAuthStateChange;
 });
