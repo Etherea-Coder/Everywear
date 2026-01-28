@@ -4,11 +4,21 @@ workflows:
     max_build_duration: 60
     environment:
       flutter: stable
+      vars:
+        # Set these in Codemagic environment variables
+        SUPABASE_URL: $SUPABASE_URL
+        SUPABASE_ANON_KEY: $SUPABASE_ANON_KEY
+        STRIPE_PUBLISHABLE_KEY: $STRIPE_PUBLISHABLE_KEY
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
       - name: Create env.json
         script: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "⚠️ WARNING: SUPABASE_URL or SUPABASE_ANON_KEY not set in Codemagic environment variables"
+            echo "Please configure these in Codemagic dashboard: Project Settings > Environment variables"
+            exit 1
+          fi
           echo "{\"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\", \"STRIPE_PUBLISHABLE_KEY\": \"$STRIPE_PUBLISHABLE_KEY\"}" > env.json
       - name: Clean build cache
         script: flutter clean
@@ -22,11 +32,21 @@ workflows:
     max_build_duration: 60
     environment:
       flutter: stable
+      vars:
+        # Set these in Codemagic environment variables
+        SUPABASE_URL: $SUPABASE_URL
+        SUPABASE_ANON_KEY: $SUPABASE_ANON_KEY
+        STRIPE_PUBLISHABLE_KEY: $STRIPE_PUBLISHABLE_KEY
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
       - name: Create env.json
         script: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "⚠️ WARNING: SUPABASE_URL or SUPABASE_ANON_KEY not set in Codemagic environment variables"
+            echo "Please configure these in Codemagic dashboard: Project Settings > Environment variables"
+            exit 1
+          fi
           echo "{\"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\", \"STRIPE_PUBLISHABLE_KEY\": \"$STRIPE_PUBLISHABLE_KEY\"}" > env.json
       - name: Build Web
         script: flutter build web --dart-define-from-file=env.json
