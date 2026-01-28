@@ -19,7 +19,10 @@ workflows:
             echo "Please configure these in Codemagic dashboard: Project Settings > Environment variables"
             exit 1
           fi
-          echo "{\"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\", \"STRIPE_PUBLISHABLE_KEY\": \"$STRIPE_PUBLISHABLE_KEY\"}" > env.json
+          # --dart-define-from-file expects key=value format, not JSON
+          echo "SUPABASE_URL=$SUPABASE_URL" > env.json
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> env.json
+          echo "STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY" >> env.json
       - name: Clean build cache
         script: flutter clean
       - name: Build APK
@@ -47,7 +50,10 @@ workflows:
             echo "Please configure these in Codemagic dashboard: Project Settings > Environment variables"
             exit 1
           fi
-          echo "{\"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\", \"STRIPE_PUBLISHABLE_KEY\": \"$STRIPE_PUBLISHABLE_KEY\"}" > env.json
+          # --dart-define-from-file expects key=value format, not JSON
+          echo "SUPABASE_URL=$SUPABASE_URL" > env.json
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> env.json
+          echo "STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY" >> env.json
       - name: Build Web
         script: flutter build web --dart-define-from-file=env.json
     artifacts:
