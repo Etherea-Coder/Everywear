@@ -278,7 +278,7 @@ class _MyAppState extends ConsumerState<MyApp> {
             },
             error: (error, stack) {
               debugPrint('❌ Auth state error: $error, showing SplashScreen');
-              return SplashScreen(),
+              return SplashScreen();
             },
           ),
           routes: AppRoutes.routes,

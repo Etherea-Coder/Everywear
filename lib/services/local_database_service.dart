@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../models/local_wardrobe_item.dart';
 
 class LocalDatabaseService {
@@ -60,19 +61,19 @@ class LocalDatabaseService {
       localItems[localItem.id] = localItem;
     }
 
-    await _box.putAll(localItems);
+    await box.putAll(localItems);
   }
 
   /// Fetches all items from local database
   Future<List<LocalWardrobeItem>> getLocalItems() async {
     await init();
-    return _box.values.toList();
+    return box.values.toList();
   }
 
   /// Closes the database
   Future<void> close() async {
     if (_isInitialized) {
-      await _box.close();
+      await box.close();
       _isInitialized = false;
     }
   }
