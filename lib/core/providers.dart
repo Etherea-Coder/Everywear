@@ -11,12 +11,21 @@ final wardrobeRepositoryProvider = Provider((ref) => WardrobeRepository());
 final userTierServiceProvider = Provider((ref) => UserTierService());
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
+  // TODO: Ensure Supabase is initialized before accessing client
   if (!SupabaseService.isInitialized) {
-    // Return a dummy stream that emits a fake state to move provider to 'data' state
-    // This prevents the UI from staying in the branded loading screen
-    return Stream.value(AuthState(AuthChangeEvent.initialSession, null));
+    debugPrint('⚠️ authStateProvider: Supabase not initialized, returning empty stream');
+    return const Stream.empty();
   }
-  return SupabaseService.instance.client.auth.onAuthStateChange;
+  
+  debugPrint('✅ authStateProvider: Listening to auth state changes');
+  final stream = SupabaseService.instance.client.auth.onAuthStateChange;
+  
+  // Add logging for auth state changes
+  stream.listen((state) {
+    debugPrint('🔐 Auth state changed: ${state.event}, session: ${state.session != null}');
+  });
+  
+  return stream;
 });
 
 final currentUserProvider = Provider<User?>((ref) {

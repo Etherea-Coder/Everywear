@@ -197,6 +197,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     final stillLoading = !_isInitialized || _locale == null || authState.isLoading;
 
     if (_showBrandedLoader && stillLoading) {
+      debugPrint('📱 Showing branded loader - initialized: $_isInitialized, locale: $_locale, authLoading: ${authState.isLoading}');
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
@@ -264,13 +265,21 @@ class _MyAppState extends ConsumerState<MyApp> {
           // Determine home based on auth state
           home: authState.when(
             data: (state) {
-              if (state.session != null) {
+              final hasSession = state.session != null;
+              debugPrint('🏠 Navigation decision: hasSession=$hasSession, event=${state.event}');
+              if (hasSession) {
                 return HomeScreen(); 
               }
               return SplashScreen();
             },
-            loading: () => SplashScreen(), 
-            error: (_, __) => SplashScreen(),
+            loading: () {
+              debugPrint('⏳ Auth state loading, showing SplashScreen');
+              return SplashScreen(); 
+            },
+            error: (error, stack) {
+              debugPrint('❌ Auth state error: $error, showing SplashScreen');
+              return SplashScreen(),
+            },
           ),
           routes: AppRoutes.routes,
         );

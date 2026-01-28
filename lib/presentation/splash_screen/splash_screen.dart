@@ -605,18 +605,23 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      debugPrint('🔐 Starting Google sign-in...');
+
       // Robustness: Try to re-init if not already initialized
       if (!SupabaseService.isInitialized) {
+        debugPrint('⚠️ Supabase not initialized, attempting to initialize...');
         final initialized = await SupabaseService.initialize();
         if (!initialized) {
           throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
         }
+        debugPrint('✅ Supabase initialized successfully');
       }
 
       if (!SupabaseService.isInitialized) {
         throw Exception('Authentication service (Supabase) not available. Please verify your internet connection and environment variables.');
       }
       
+      debugPrint('🔐 Calling signInWithOAuth...');
       // For mobile, this usually requires the google_sign_in package
       // For now, we'll use the standard Supabase OAuth flow
       await SupabaseService.instance.client.auth.signInWithOAuth(
@@ -624,10 +629,13 @@ class _SplashScreenState extends State<SplashScreen>
         redirectTo: kIsWeb ? null : 'io.supabase.everywear://login-callback/',
       );
       
+      debugPrint('✅ Google sign-in initiated successfully');
+      
       if (mounted) {
         HapticFeedback.mediumImpact();
       }
     } catch (e) {
+      debugPrint('❌ Google sign-in failed: $e');
       if (mounted) {
         String errorMessage = 'Google sign-in failed';
         
@@ -653,24 +661,30 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
+      debugPrint('🔐 Starting email authentication (${_isSignUp ? 'sign-up' : 'sign-in'})...');
+
       // Robustness: Try to re-init if not already initialized
       if (!SupabaseService.isInitialized) {
+        debugPrint('⚠️ Supabase not initialized, attempting to initialize...');
         final initialized = await SupabaseService.initialize();
         if (!initialized) {
           throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
         }
+        debugPrint('✅ Supabase initialized successfully');
       }
 
       if (!SupabaseService.isInitialized) {
         throw Exception('Supabase Client not ready. Check environment variables in your build dashboard.');
       }
 
+      debugPrint('🔐 Calling ${_isSignUp ? 'signUp' : 'signInWithPassword'}...');
       if (_isSignUp) {
         await SupabaseService.instance.client.auth.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
           data: {'full_name': _nameController.text.trim()},
         );
+        debugPrint('✅ Sign-up initiated successfully');
         if (mounted) {
           _showErrorSnackBar(
             'Success! Check your inbox for a confirmation email.', 
@@ -682,12 +696,14 @@ class _SplashScreenState extends State<SplashScreen>
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+        debugPrint('✅ Sign-in successful');
       }
 
       if (mounted) {
         HapticFeedback.mediumImpact();
       }
     } catch (e) {
+      debugPrint('❌ Email authentication failed: $e');
       if (mounted) {
         String userFriendlyError = e.toString();
         

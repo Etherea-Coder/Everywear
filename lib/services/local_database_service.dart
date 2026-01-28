@@ -3,23 +3,37 @@ import '../models/local_wardrobe_item.dart';
 
 class LocalDatabaseService {
   static const String _boxName = 'wardrobe_items';
-  late Box<LocalWardrobeItem> _box;
+  Box<LocalWardrobeItem>? _box;
   bool _isInitialized = false;
 
   Future<void> init() async {
     if (_isInitialized) return;
     
-    // Try to init Hive, may already be initialized from main.dart
     try {
-      await Hive.initFlutter();
-    } catch (_) {
-      // Already initialized, ignore
+      // Try to init Hive, may already be initialized from main.dart
+      try {
+        await Hive.initFlutter();
+      } catch (_) {
+        // Already initialized, ignore
+      }
+      if (!Hive.isAdapterRegistered(0)) {
+        Hive.registerAdapter(LocalWardrobeItemAdapter());
+      }
+      _box = await Hive.openBox<LocalWardrobeItem>(_boxName);
+      _isInitialized = true;
+      debugPrint('✅ LocalDatabaseService initialized');
+    } catch (e) {
+      debugPrint('❌ Failed to initialize LocalDatabaseService: $e');
+      _isInitialized = false;
     }
-    if (!Hive.isAdapterRegistered(0)) {
-      Hive.registerAdapter(LocalWardrobeItemAdapter());
+  }
+
+  // Ensure box is initialized before use
+  Box<LocalWardrobeItem> get box {
+    if (!_isInitialized || _box == null) {
+      throw StateError('LocalDatabaseService not initialized. Call init() first.');
     }
-    _box = await Hive.openBox<LocalWardrobeItem>(_boxName);
-    _isInitialized = true;
+    return _box!;
   }
 
   /// Syncs remote items to local database
