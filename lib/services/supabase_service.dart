@@ -81,25 +81,8 @@ class SupabaseService {
 >>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
   }
 
-  // Get Supabase client
-  SupabaseClient get client {
-    if (!_isInitialized) {
-      String reason;
-      if (supabaseUrl.isEmpty && supabaseAnonKey.isEmpty) {
-        reason = 'BOTH SUPABASE_URL and SUPABASE_ANON_KEY are missing from environment.';
-      } else if (supabaseUrl.isEmpty) {
-        reason = 'SUPABASE_URL is missing from environment.';
-      } else if (supabaseAnonKey.isEmpty) {
-        reason = 'SUPABASE_ANON_KEY is missing from environment.';
-      } else {
-        reason = 'Initialization failed or was never called successfully.';
-      }
-      throw StateError('Supabase Client Access Error: $reason\n'
-          'Verify these are set in Codemagic environment variables and injected via env.json.');
-    }
-
-    return Supabase.instance.client;
-  }
+  // Get Supabase client instance
+  SupabaseClient get client => Supabase.instance.client;
 
   // Check if we're in demo mode (always false for production)
   static bool get isDemoMode => false;
