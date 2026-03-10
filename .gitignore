@@ -47,3 +47,5 @@ app.*.map.json
 /android/app/release
 android/app/.cxx
 env.json
+supabase/.env.local
+.vscode/launch.json

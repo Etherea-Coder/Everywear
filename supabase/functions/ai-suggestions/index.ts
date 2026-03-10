@@ -2,8 +2,8 @@
 // @ts-ignore
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const GEMINI_MODEL = 'google/gemini-2.5-flash-lite'
+const GEMINI_MODEL = 'gemini-2.5-flash-lite'
+const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 interface RequestBody {
   imageUrl: string
@@ -85,10 +85,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get OpenRouter API key from environment
-    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
-    if (!openRouterApiKey) {
-      throw new Error('OPENROUTER_API_KEY not configured')
+    // Get Google AI API key from environment
+    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
+    if (!googleAiApiKey) {
+      throw new Error('GOOGLE_AI_API_KEY not configured')
     }
 
     // Convert image to base64
@@ -118,51 +118,46 @@ Deno.serve(async (req) => {
 2. Then give 2-3 short, positive styling suggestions
 Be encouraging and constructive. Keep each suggestion to 1-2 sentences.`
 
-    // Call OpenRouter with Gemini 2.5 Flash Lite
-    const geminiResponse = await fetch(OPENROUTER_API_URL, {
+    // Call Google Gemini API directly
+    const geminiResponse = await fetch(`${GOOGLE_API_URL}?key=${googleAiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openRouterApiKey}`,
-        'HTTP-Referer': Deno.env.get('SUPABASE_URL') || 'https://everywear.app',
-        'X-Title': 'EveryWear AI Suggestions',
       },
       body: JSON.stringify({
-        model: GEMINI_MODEL,
-        messages: [
+        contents: [
           {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: [
+            parts: [
+              { text: languageInstructions[language] },
               {
-                type: 'text',
-                text: languageInstructions[language]
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Image
                 }
               }
             ]
           }
         ],
-        max_tokens: 500,
-        temperature: 0.1,
+        system_instruction: {
+          parts: [
+            { text: systemPrompt }
+          ]
+        },
+        generationConfig: {
+          maxOutputTokens: 500,
+          temperature: 0.1,
+        },
       }),
     })
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text()
-      console.error('OpenRouter API error:', errorText)
-      throw new Error(`OpenRouter API error: ${errorText}`)
+      console.error('Google AI API error:', errorText)
+      throw new Error(`Google AI API error: ${errorText}`)
     }
 
     const geminiData = await geminiResponse.json()
-    const suggestions = geminiData.choices?.[0]?.message?.content || ''
+    const suggestions = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
     if (!suggestions) {
       throw new Error('No suggestions received from Gemini')

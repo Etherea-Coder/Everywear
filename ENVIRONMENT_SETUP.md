@@ -10,6 +10,7 @@ The Everywear app requires the following environment variables to be configured 
 # Supabase Configuration
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+GOOGLE_AI_API_KEY=your_google_ai_api_key
 ```
 
 ## Production Setup Instructions
