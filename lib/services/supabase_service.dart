@@ -4,86 +4,32 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SupabaseService {
   static SupabaseService? _instance;
   static SupabaseService get instance => _instance ??= SupabaseService._();
-
   SupabaseService._();
 
-<<<<<<< HEAD
   static bool _isInitialized = false;
   static bool get isInitialized => _isInitialized;
 
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: '',
-  );
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: '',
-  );
-=======
-  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
->>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
 
-  // Defensive cleaning to handle potential injection issues (quotes, etc)
-  static String _clean(String value) {
-    return value.trim().replaceAll('"', '').replaceAll("'", "");
-  }
-
+  static String _clean(String value) => value.trim().replaceAll('"', '').replaceAll("'", "");
   static String get cleanSupabaseUrl => _clean(supabaseUrl);
   static String get cleanSupabaseAnonKey => _clean(supabaseAnonKey);
 
-  // Helper to mask sensitive values for logging
-  static String _mask(String value) {
-    final cleaned = _clean(value);
-    if (cleaned.isEmpty) return "MISSING";
-    if (cleaned.length <= 8) return "****";
-    return "${cleaned.substring(0, 4)}...${cleaned.substring(cleaned.length - 4)}";
-  }
-
-  // Initialize Supabase - call this in main()
-<<<<<<< HEAD
   static Future<bool> initialize() async {
     if (_isInitialized) return true;
-
-    print('📡 Initializing Supabase...');
-    print('   URL: ${_mask(supabaseUrl)}');
-    print('   Key: ${_mask(supabaseAnonKey)}');
-
     final url = cleanSupabaseUrl;
     final anonKey = cleanSupabaseAnonKey;
-
-    if (url.isEmpty || anonKey.isEmpty) {
-      print('❌ SUPABASE_URL or SUPABASE_ANON_KEY is missing/empty. Please configure environment variables.');
-      return false;
-    }
-
-    if (url.contains('$') || anonKey.contains('$')) {
-      print('❌ ERROR: Environment variables contain unresolved placeholders (detecting \$). Check your CI configuration.');
-      return false;
-    }
-
+    if (url.isEmpty || anonKey.isEmpty) return false;
     try {
-      await Supabase.initialize(
-        url: url, 
-        anonKey: anonKey,
-        debug: kDebugMode,
-      );
+      await Supabase.initialize(url: url, anonKey: anonKey, debug: kDebugMode);
       _isInitialized = true;
-      print('✅ Supabase initialized successfully.');
       return true;
     } catch (e) {
-      print('❌ Failed to initialize Supabase: $e');
       return false;
     }
-=======
-  static Future<void> initialize() async {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
->>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
   }
 
-  // Get Supabase client instance
   SupabaseClient get client => Supabase.instance.client;
-
-  // Check if we're in demo mode (always false for production)
   static bool get isDemoMode => false;
 }
