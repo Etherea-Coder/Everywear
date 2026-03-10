@@ -7,28 +7,20 @@ environment:
   sdk: ^3.9.0
 
 dependencies:
-  flutter:       # CRITICAL: Required for every Flutter project - DO NOT REMOVE
-    sdk: flutter # CRITICAL: Required for every Flutter project - DO NOT REMOVE
-  flutter_localizations: # Required for multi-language support
+  flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
   
-  # CRITICAL: Core UI and responsive design - DO NOT REMOVE OR MODIFY
   supabase_flutter: ^2.9.1
-  sizer: ^2.0.15              # Required for responsive design system
-  flutter_svg: ^2.0.9        # Required for SVG icon support
-  google_fonts: ^6.1.0       # Required for typography (replaces local fonts)
-  shared_preferences: ^2.2.2 # Required for local data storage
-<<<<<<< HEAD
+  sizer: ^2.0.15
+  flutter_svg: ^2.0.9
+  google_fonts: ^6.1.0
+  shared_preferences: ^2.2.2
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-=======
-  # NOTE: Temporarily disabled Isar to resolve dependency conflicts
-  # isar: ^3.1.0+1
-  # isar_flutter_libs: ^3.1.0+1
->>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
   web: ^1.1.1
   
-  # Feature dependencies - safe to modify
   cached_network_image: ^3.3.1
   connectivity_plus: ^6.1.4
   dio: ^5.4.0
@@ -40,49 +32,25 @@ dependencies:
   permission_handler: ^11.1.0
   percent_indicator: ^4.2.5
   intl: ^0.20.2
-  path_provider: ^2.1.2       # Model file caching and local storage management
-  http: ^1.6.0                # Downloading ML models from remote sources
+  path_provider: ^2.1.2
+  http: ^1.6.0
   universal_html: ^2.2.4
-<<<<<<< HEAD
-  flutter_stripe: ^12.4.0     # Stripe payment integration (mobile and web support)
-  flutter_stripe_web: ^7.4.0  # Stripe web-specific functionality
-  
-  # Modernization dependencies
+  flutter_stripe: ^12.4.0
+  flutter_stripe_web: ^7.4.0
   flutter_riverpod: ^2.5.1
-=======
-  flutter_stripe: ^12.1.1     # Stripe payment integration (mobile and web support)
-  # flutter_stripe_web: ^7.1.1  # Stripe web-specific functionality
-  
-  # Modernization dependencies
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.4.0
->>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
   shimmer: ^3.0.0
   flutter_image_compress: ^2.3.0
   sentry_flutter: ^8.0.0
 
 dev_dependencies:
-  flutter_test:    # CRITICAL: Required for Flutter project testing - DO NOT REMOVE
-    sdk: flutter   # CRITICAL: Required for Flutter project testing - DO NOT REMOVE
-  flutter_lints: ^5.0.0 # CRITICAL: Required for code quality - DO NOT REMOVE
-<<<<<<< HEAD
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
   hive_generator: ^2.0.1
   build_runner: ^2.4.9
-=======
-  # isar_generator: ^3.1.0+1
-  build_runner: ^2.4.9
-  riverpod_generator: ^2.6.5
->>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
 
 flutter:
-  uses-material-design: true # CRITICAL: Required for Material icon font - DO NOT REMOVE
+  uses-material-design: true
   assets:
     - assets/
     - assets/images/
-  # CRITICAL ASSET MANAGEMENT RULES:
-  # - DO NOT ADD NEW ASSET DIRECTORIES (assets/svg/, assets/icons/, etc.)
-  # - ONLY USE EXISTING AND ITEMS AVAILABLE IN THE DIRECTORIES LISTED ABOVE (assets/, assets/images/)
-  
-  # CRITICAL FONTS RULE: 
-  # - THIS PROJECT USES GOOGLE FONTS INSTEAD OF LOCAL FONTS
-  # - DO NOT ADD ANY LOCAL FONTS SECTION OR FONT FILES
