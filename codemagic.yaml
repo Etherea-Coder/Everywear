@@ -7,20 +7,10 @@ workflows:
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
-      - name: Create .env
-        script: |
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "⚠️ WARNING: SUPABASE_URL or SUPABASE_ANON_KEY not set in Codemagic environment variables"
-            echo "Please configure these in Codemagic dashboard: Project Settings > Environment variables"
-            exit 1
-          fi
-          echo "SUPABASE_URL=$SUPABASE_URL" > .env
-          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
-          echo "STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY" >> .env
       - name: Clean build cache
         script: flutter clean
       - name: Build APK
-        script: flutter build apk --release --dart-define-from-file=.env
+        script: flutter build apk --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --dart-define=STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
       
@@ -32,17 +22,7 @@ workflows:
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
-      - name: Create .env
-        script: |
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "⚠️ WARNING: SUPABASE_URL or SUPABASE_ANON_KEY not set in Codemagic environment variables"
-            echo "Please configure these in Codemagic dashboard: Project Settings > Environment variables"
-            exit 1
-          fi
-          echo "SUPABASE_URL=$SUPABASE_URL" > .env
-          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
-          echo "STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY" >> .env
       - name: Build Web
-        script: flutter build web --dart-define-from-file=.env
+        script: flutter build web --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --dart-define=STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY
     artifacts:
       - build/web/**
