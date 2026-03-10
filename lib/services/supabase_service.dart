@@ -7,6 +7,7 @@ class SupabaseService {
 
   SupabaseService._();
 
+<<<<<<< HEAD
   static bool _isInitialized = false;
   static bool get isInitialized => _isInitialized;
 
@@ -18,6 +19,10 @@ class SupabaseService {
     'SUPABASE_ANON_KEY',
     defaultValue: '',
   );
+=======
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+>>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
 
   // Defensive cleaning to handle potential injection issues (quotes, etc)
   static String _clean(String value) {
@@ -36,6 +41,7 @@ class SupabaseService {
   }
 
   // Initialize Supabase - call this in main()
+<<<<<<< HEAD
   static Future<bool> initialize() async {
     if (_isInitialized) return true;
 
@@ -69,6 +75,10 @@ class SupabaseService {
       print('❌ Failed to initialize Supabase: $e');
       return false;
     }
+=======
+  static Future<void> initialize() async {
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+>>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
   }
 
   // Get Supabase client

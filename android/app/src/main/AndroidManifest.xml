@@ -44,6 +44,7 @@
                  Flutter's first frame. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+<<<<<<< HEAD
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <!-- Supabase Deep Link Config -->
@@ -54,6 +55,14 @@
                 <data android:scheme="io.supabase.everywear" android:host="login-callback" />
             </intent-filter>
         </activity>
+=======
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+    <intent-filter>
+        <action android:name="com.google.android.gms.auth.api.signin.GoogleSignInActivity"/>
+    </intent-filter>
+</activity>
+>>>>>>> 99395ab (Fix Supabase URL injection, dependency conflicts and build errors)
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
