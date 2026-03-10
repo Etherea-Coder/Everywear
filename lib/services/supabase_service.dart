@@ -19,11 +19,20 @@ class SupabaseService {
     defaultValue: '',
   );
 
+  // Defensive cleaning to handle potential injection issues (quotes, etc)
+  static String _clean(String value) {
+    return value.trim().replaceAll('"', '').replaceAll("'", "");
+  }
+
+  static String get cleanSupabaseUrl => _clean(supabaseUrl);
+  static String get cleanSupabaseAnonKey => _clean(supabaseAnonKey);
+
   // Helper to mask sensitive values for logging
   static String _mask(String value) {
-    if (value.isEmpty) return "MISSING";
-    if (value.length <= 8) return "****";
-    return "${value.substring(0, 4)}...${value.substring(value.length - 4)}";
+    final cleaned = _clean(value);
+    if (cleaned.isEmpty) return "MISSING";
+    if (cleaned.length <= 8) return "****";
+    return "${cleaned.substring(0, 4)}...${cleaned.substring(cleaned.length - 4)}";
   }
 
   // Initialize Supabase - call this in main()
@@ -34,15 +43,23 @@ class SupabaseService {
     print('   URL: ${_mask(supabaseUrl)}');
     print('   Key: ${_mask(supabaseAnonKey)}');
 
-    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-      print('❌ SUPABASE_URL or SUPABASE_ANON_KEY is missing. Please configure environment variables.');
+    final url = cleanSupabaseUrl;
+    final anonKey = cleanSupabaseAnonKey;
+
+    if (url.isEmpty || anonKey.isEmpty) {
+      print('❌ SUPABASE_URL or SUPABASE_ANON_KEY is missing/empty. Please configure environment variables.');
+      return false;
+    }
+
+    if (url.contains('$') || anonKey.contains('$')) {
+      print('❌ ERROR: Environment variables contain unresolved placeholders (detecting $). Check your CI configuration.');
       return false;
     }
 
     try {
       await Supabase.initialize(
-        url: supabaseUrl, 
-        anonKey: supabaseAnonKey,
+        url: url, 
+        anonKey: anonKey,
         debug: kDebugMode,
       );
       _isInitialized = true;
