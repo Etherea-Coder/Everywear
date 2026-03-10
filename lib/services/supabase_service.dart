@@ -52,7 +52,7 @@ class SupabaseService {
     }
 
     if (url.contains('$') || anonKey.contains('$')) {
-      print('❌ ERROR: Environment variables contain unresolved placeholders (detecting $). Check your CI configuration.');
+      print('❌ ERROR: Environment variables contain unresolved placeholders (detecting \$). Check your CI configuration.');
       return false;
     }
 
