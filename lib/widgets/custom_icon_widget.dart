@@ -1,24 +1,34 @@
 import 'package:flutter/material.dart';
 
 /// Minimal icon utility for Everywear app
-/// 
-/// Instead of a massive icon map, use IconData directly:
+///
+/// This replaces the previous 9000+ line icon mapping file.
+/// Only includes icons the app ACTUALLY uses.
+///
+/// Usage:
 /// ```dart
-/// // Recommended: Direct usage
-/// Icon(Icons.lightbulb_outline, size: 24, color: Colors.green)
-/// 
-/// // For dynamic icons from API strings:
-/// AppIcons.fromName('lightbulb')
+/// // Recommended: Direct IconData usage
+/// CustomIconWidget(
+///   icon: Icons.emoji_events,
+///   size: 24,
+///   color: Colors.amber,
+/// )
+///
+/// // With icon name (string) - for API-driven icons
+/// CustomIconWidget(
+///   iconName: 'trophy',
+///   size: 24,
+///   color: Colors.amber,
+/// )
 /// ```
-/// 
-/// This replaces the previous 4000+ line icon mapping file.
-/// Only include icons your app ACTUALLY uses.
+
+// ============================================
+// APP ICONS - Static IconData constants
+// ============================================
 class AppIcons {
   AppIcons._();
 
-  // ============================================
   // CORE NAVIGATION ICONS
-  // ============================================
   static const IconData today = Icons.today;
   static const IconData todayOutlined = Icons.today_outlined;
   static const IconData wardrobe = Icons.checkroom;
@@ -30,9 +40,7 @@ class AppIcons {
   static const IconData profile = Icons.person;
   static const IconData profileOutlined = Icons.person_outlined;
 
-  // ============================================
   // WARDROBE & CLOTHING ICONS
-  // ============================================
   static const IconData hanger = Icons.checkroom;
   static const IconData shirt = Icons.dry_cleaning;
   static const IconData pants = Icons.checkroom;
@@ -46,9 +54,7 @@ class AppIcons {
   static const IconData watch = Icons.watch_later_outlined;
   static const IconData belt = Icons.horizontal_rule;
 
-  // ============================================
   // ACTIONS & OPERATIONS
-  // ============================================
   static const IconData add = Icons.add;
   static const IconData addCircle = Icons.add_circle_outline;
   static const IconData edit = Icons.edit_outlined;
@@ -69,9 +75,7 @@ class AppIcons {
   static const IconData more = Icons.more_vert;
   static const IconData moreHorizontal = Icons.more_horiz;
 
-  // ============================================
   // INSIGHTS & ANALYTICS
-  // ============================================
   static const IconData insights = Icons.insights;
   static const IconData insightsOutlined = Icons.insights_outlined;
   static const IconData analytics = Icons.analytics_outlined;
@@ -84,9 +88,7 @@ class AppIcons {
   static const IconData sustainability = Icons.eco;
   static const IconData sustainabilityOutlined = Icons.eco_outlined;
 
-  // ============================================
   // AI & SMART FEATURES
-  // ============================================
   static const IconData ai = Icons.auto_awesome;
   static const IconData aiOutlined = Icons.auto_awesome_outlined;
   static const IconData lightbulb = Icons.lightbulb;
@@ -96,9 +98,7 @@ class AppIcons {
   static const IconData smart = Icons.psychology;
   static const IconData smartOutlined = Icons.psychology_outlined;
 
-  // ============================================
   // GAMIFICATION & ACHIEVEMENTS
-  // ============================================
   static const IconData trophy = Icons.emoji_events;
   static const IconData trophyOutlined = Icons.emoji_events_outlined;
   static const IconData badge = Icons.military_tech;
@@ -112,9 +112,7 @@ class AppIcons {
   static const IconData milestone = Icons.flag;
   static const IconData streak = Icons.local_fire_department;
 
-  // ============================================
   // SETTINGS & PROFILE
-  // ============================================
   static const IconData settings = Icons.settings;
   static const IconData settingsOutlined = Icons.settings_outlined;
   static const IconData theme = Icons.palette;
@@ -132,9 +130,7 @@ class AppIcons {
   static const IconData about = Icons.info;
   static const IconData logout = Icons.logout;
 
-  // ============================================
   // WEATHER & CONDITIONS
-  // ============================================
   static const IconData sunny = Icons.wb_sunny;
   static const IconData cloudy = Icons.wb_cloudy;
   static const IconData rainy = Icons.water_drop;
@@ -143,9 +139,7 @@ class AppIcons {
   static const IconData wind = Icons.air;
   static const IconData umbrella = Icons.umbrella;
 
-  // ============================================
   // CATEGORIES
-  // ============================================
   static const IconData tops = Icons.dry_cleaning;
   static const IconData bottoms = Icons.checkroom;
   static const IconData outerwear = Icons.ac_unit;
@@ -155,9 +149,7 @@ class AppIcons {
   static const IconData casual = Icons.weekend;
   static const IconData sleepwear = Icons.bedtime;
 
-  // ============================================
   // COMMON UI ICONS
-  // ============================================
   static const IconData arrowBack = Icons.arrow_back;
   static const IconData arrowForward = Icons.arrow_forward;
   static const IconData arrowDown = Icons.keyboard_arrow_down;
@@ -191,9 +183,7 @@ class AppIcons {
   static const IconData successOutlined = Icons.check_circle_outline;
   static const IconData empty = Icons.inbox;
 
-  // ============================================
   // PAYMENT & SUBSCRIPTION
-  // ============================================
   static const IconData payment = Icons.payment;
   static const IconData creditCard = Icons.credit_card;
   static const IconData subscription = Icons.card_membership;
@@ -202,8 +192,7 @@ class AppIcons {
   static const IconData premiumOutlined = Icons.diamond_outlined;
 
   // ============================================
-  // DYNAMIC ICON RESOLUTION
-  // For API-driven icon names, use this curated map
+  // DYNAMIC ICON RESOLUTION MAP
   // ============================================
   static final Map<String, IconData> _iconMap = {
     // Navigation
@@ -217,15 +206,16 @@ class AppIcons {
     'purchases_outlined': purchasesOutlined,
     'profile': profile,
     'profile_outlined': profileOutlined,
-    
+
     // AI & Smart
     'ai': ai,
     'ai_outlined': aiOutlined,
     'lightbulb': lightbulb,
     'lightbulb_outline': lightbulbOutlined,
+    'lightbulb_outlined': lightbulbOutlined,
     'smart': smart,
     'smart_outlined': smartOutlined,
-    
+
     // Insights
     'insights': insights,
     'insights_outlined': insightsOutlined,
@@ -233,7 +223,7 @@ class AppIcons {
     'trending': trending,
     'sustainability': sustainability,
     'sustainability_outlined': sustainabilityOutlined,
-    
+
     // Actions
     'add': add,
     'edit': edit,
@@ -245,7 +235,7 @@ class AppIcons {
     'gallery': gallery,
     'search': search,
     'filter': filter,
-    
+
     // Gamification
     'trophy': trophy,
     'trophy_outlined': trophyOutlined,
@@ -254,7 +244,10 @@ class AppIcons {
     'star': star,
     'star_outline': starOutlined,
     'achievement': achievement,
-    
+    'medal': medal,
+    'medal_outlined': medalOutlined,
+    'streak': streak,
+
     // Settings
     'settings': settings,
     'settings_outlined': settingsOutlined,
@@ -266,13 +259,13 @@ class AppIcons {
     'notifications_outlined': notificationsOutlined,
     'privacy': privacy,
     'privacy_outlined': privacyOutlined,
-    
+
     // Weather
     'sunny': sunny,
     'cloudy': cloudy,
     'rainy': rainy,
     'cold': cold,
-    
+
     // Categories
     'tops': tops,
     'bottoms': bottoms,
@@ -281,7 +274,7 @@ class AppIcons {
     'activewear': activewear,
     'formal': formal,
     'casual': casual,
-    
+
     // Common
     'calendar': calendar,
     'calendar_outlined': calendarOutlined,
@@ -292,7 +285,7 @@ class AppIcons {
     'tag_outlined': tagOutlined,
     'arrow_back': arrowBack,
     'chevron_right': chevronRight,
-    
+
     // Payment
     'payment': payment,
     'credit_card': creditCard,
@@ -310,11 +303,11 @@ class AppIcons {
         .toLowerCase()
         .replaceAll(' ', '_')
         .replaceAll('-', '_');
-    
-    return _iconMap[normalizedName] ?? 
-           _iconMap[name] ?? 
-           fallback ?? 
-           Icons.help_outline;
+
+    return _iconMap[normalizedName] ??
+        _iconMap[name] ??
+        fallback ??
+        Icons.help_outline;
   }
 
   /// Check if icon name exists in the map
@@ -322,11 +315,114 @@ class AppIcons {
     return _iconMap.containsKey(name) || _iconMap.containsKey(name.toLowerCase());
   }
 
-  /// Get all available icon names (useful for debugging or generating icon pickers)
+  /// Get all available icon names
   static List<String> get availableIcons => _iconMap.keys.toList()..sort();
 }
 
-/// Extension for easy icon widget creation
+// ============================================
+// CUSTOM ICON WIDGET - Drop-in replacement
+// ============================================
+/// Custom Icon Widget - Backward compatible replacement for the old 9000+ line widget
+///
+/// Usage:
+/// ```dart
+/// // With icon name (string) - for API-driven icons
+/// CustomIconWidget(
+///   iconName: 'trophy',
+///   size: 24,
+///   color: Colors.amber,
+/// )
+///
+/// // With IconData directly - recommended for better performance
+/// CustomIconWidget(
+///   icon: Icons.emoji_events,
+///   size: 24,
+///   color: Colors.amber,
+/// )
+/// ```
+class CustomIconWidget extends StatelessWidget {
+  /// Icon name string (for API-driven icons, uses AppIcons.fromName)
+  final String? iconName;
+
+  /// Direct IconData (recommended for better performance)
+  final IconData? icon;
+
+  /// Icon size (default: 24)
+  final double size;
+
+  /// Icon color (default: inherits from theme)
+  final Color? color;
+
+  /// Semantic label for accessibility
+  final String? semanticLabel;
+
+  /// Text direction for RTL support
+  final TextDirection? textDirection;
+
+  /// Whether to apply a custom background
+  final Color? backgroundColor;
+
+  /// Padding around the icon
+  final EdgeInsetsGeometry? padding;
+
+  /// Border radius for background
+  final BorderRadius? borderRadius;
+
+  const CustomIconWidget({
+    Key? key,
+    this.iconName,
+    this.icon,
+    this.size = 24,
+    this.color,
+    this.semanticLabel,
+    this.textDirection,
+    this.backgroundColor,
+    this.padding,
+    this.borderRadius,
+  })  : assert(
+          icon != null || iconName != null,
+          'Either icon or iconName must be provided',
+        ),
+        super(key: key);
+
+  /// Get the IconData to display
+  IconData get _iconData {
+    if (icon != null) return icon!;
+    return AppIcons.fromName(iconName!);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final iconWidget = Icon(
+      _iconData,
+      size: size,
+      color: color,
+      semanticLabel: semanticLabel,
+      textDirection: textDirection,
+    );
+
+    // If no background styling, return simple icon
+    if (backgroundColor == null && padding == null) {
+      return iconWidget;
+    }
+
+    // Return with background styling
+    return Container(
+      padding: padding ?? const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: borderRadius ?? BorderRadius.circular(8),
+      ),
+      child: iconWidget,
+    );
+  }
+}
+
+// ============================================
+// EXTENSIONS
+// ============================================
+
+/// Extension for easy icon widget creation from IconData
 extension AppIconExtension on IconData {
   /// Create an Icon widget with this IconData
   Widget icon({
@@ -341,6 +437,23 @@ extension AppIconExtension on IconData {
       color: color,
       semanticLabel: semanticLabel,
       textDirection: textDirection,
+    );
+  }
+}
+
+/// Extension to convert string to CustomIconWidget easily
+extension StringIconExtension on String {
+  /// Convert icon name string to CustomIconWidget
+  Widget toIcon({
+    double size = 24,
+    Color? color,
+    String? semanticLabel,
+  }) {
+    return CustomIconWidget(
+      iconName: this,
+      size: size,
+      color: color,
+      semanticLabel: semanticLabel,
     );
   }
 }
