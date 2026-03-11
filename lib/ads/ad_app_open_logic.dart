@@ -59,7 +59,7 @@ class AdAppOpenLogic {
 
     // Call the registered callback
     if (onShowAdRequested != null) {
-      final shown = await onShowAdAdRequested!();
+      final shown = await onShowAdRequested!();
       _isShowing = false;
       return shown;
     }

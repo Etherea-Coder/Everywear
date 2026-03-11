@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'ad_banner_placeholder.dart';
-import 'ad_interstitial_logic.dart';
+import '../ads/ad_banner_placeholder.dart';
+import '../ads/ad_interstitial_logic.dart';
 
 /// Ad Layout - Wrapper that adds banner space to any screen
 ///
