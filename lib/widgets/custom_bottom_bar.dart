@@ -87,6 +87,14 @@ class CustomBottomBar extends StatelessWidget {
             label: 'Purchases',
             tooltip: 'Track purchases',
           ),
+
+          // Settings - App settings and profile
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.settings_outlined, size: 24),
+            activeIcon: const Icon(Icons.settings, size: 24),
+            label: 'Settings',
+            tooltip: 'App settings',
+          ),
         ],
       ),
     );

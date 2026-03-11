@@ -4,6 +4,7 @@ import '../wardrobe_management/wardrobe_management.dart';
 import '../smart_suggestions/smart_suggestions.dart';
 import '../insights_dashboard/insights_dashboard.dart';
 import '../purchase_tracking/purchase_tracking.dart';
+import '../settings_profile/settings_profile.dart';
 import '../../widgets/custom_bottom_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const SmartSuggestions(),
     const InsightsDashboard(),
     const PurchaseTracking(),
+    const SettingsProfile(),
   ];
 
   @override

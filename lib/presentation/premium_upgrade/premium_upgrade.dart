@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 
 import '../../widgets/custom_app_bar.dart';
 import '../../services/payment_service.dart';
@@ -511,20 +510,10 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
               ),
             ),
             SizedBox(height: 1.h),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: EdgeInsets.all(3.w),
-              child: stripe.CardField(
-                onCardChanged: (card) {
-                  // Card validation handled by CardField
-                },
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  helperText: 'Enter your card details',
-                ),
+            Text(
+              'Payment processing is not available in this version.',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
               ),
             ),
             SizedBox(height: 3.h),
@@ -578,44 +567,9 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
         throw Exception('User not authenticated');
       }
 
-      final amount = _selectedPlan == 'annual' ? 99.99 : 9.99;
-
-      final paymentIntentResponse = await PaymentService.instance
-          .createPaymentIntent(
-            amount: amount,
-            userId: user.id,
-            planType: _selectedPlan,
-            currency: 'usd',
-          );
-
-      final billingDetails = stripe.BillingDetails(
-        name: _nameController.text,
-        email: _emailController.text,
-        address: stripe.Address(
-          line1: '',
-          line2: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          country: 'US',
-        ),
-      );
-
-      final result = await PaymentService.instance.processPayment(
-        clientSecret: paymentIntentResponse.clientSecret,
-        billingDetails: billingDetails,
-      );
-
-      if (result.success) {
-        final upgraded = await UserTierService().upgradeToPremium(user.id);
-        if (upgraded) {
-          _showSuccessDialog();
-        } else {
-          throw Exception('Failed to upgrade account');
-        }
-      } else {
-        throw Exception(result.message);
-      }
+      // Payment processing is disabled
+      _showErrorDialog('Payment processing is not available in this version.');
+      return;
     } catch (e) {
       _showErrorDialog(e.toString());
     } finally {
