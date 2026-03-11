@@ -3,15 +3,13 @@ import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/outfit_log_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import './widgets/calendar_header_widget.dart';
 import './widgets/outfit_entry_card_widget.dart';
 import './widgets/quick_log_button_widget.dart';
 import './widgets/stats_summary_widget.dart';
 
-/// Daily Log Screen - Track daily outfit choices and wearing patterns
-/// Displays calendar view of logged outfits, statistics, and quick logging options.
-/// Helps users understand their wardrobe usage and identify neglected items.
 class DailyLog extends StatefulWidget {
   const DailyLog({Key? key}) : super(key: key);
 
@@ -22,67 +20,58 @@ class DailyLog extends StatefulWidget {
 class _DailyLogState extends State<DailyLog> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedMonth = DateTime.now();
-  String _viewMode = 'calendar'; // 'calendar' or 'list'
+  String _viewMode = 'calendar';
 
-  // Mock data for outfit entries
-  final Map<String, List<Map<String, dynamic>>> _outfitEntries = {
-    '2026-01-12': [
-      {
-        'id': '1',
-        'time': '09:30 AM',
-        'occasion': 'Work Meeting',
-        'items': ['Blue Blazer', 'White Shirt', 'Black Trousers'],
-        'imageUrl':
-            'https://img.rocket.new/generatedImages/rocket_gen_img_15c832cbe-1767853952825.png',
-        'semanticLabel':
-            'Professional outfit with blue blazer and white shirt on hanger',
-        'rating': 4,
-        'notes': 'Felt confident and professional',
-      },
-    ],
-    '2026-01-11': [
-      {
-        'id': '2',
-        'time': '02:00 PM',
-        'occasion': 'Casual Outing',
-        'items': ['Denim Jacket', 'Graphic Tee', 'Jeans'],
-        'imageUrl':
-            'https://img.rocket.new/generatedImages/rocket_gen_img_1a40c7fe0-1764769079439.png',
-        'semanticLabel': 'Casual denim outfit with graphic tee laid flat',
-        'rating': 5,
-        'notes': 'Perfect for weekend vibes',
-      },
-    ],
-    '2026-01-10': [
-      {
-        'id': '3',
-        'time': '10:00 AM',
-        'occasion': 'Gym Session',
-        'items': ['Sports Bra', 'Leggings', 'Running Shoes'],
-        'imageUrl': 'https://images.unsplash.com/photo-1726195222148-fc8a7e7f37fa',
-        'semanticLabel': 'Athletic wear with black leggings and sports top',
-        'rating': 4,
-        'notes': 'Comfortable and breathable',
-      },
-      {
-        'id': '4',
-        'time': '06:30 PM',
-        'occasion': 'Dinner Date',
-        'items': ['Little Black Dress', 'Heels', 'Clutch'],
-        'imageUrl':
-            'https://images.unsplash.com/photo-1695149870901-88a563e7a281',
-        'semanticLabel': 'Elegant black dress on mannequin with accessories',
-        'rating': 5,
-        'notes': 'Received many compliments!',
-      },
-    ],
+  final OutfitLogService _outfitLogService = OutfitLogService();
+
+  List<Map<String, dynamic>> _todayEntries = [];
+  Map<String, List<Map<String, dynamic>>> _monthEntries = {};
+  Map<String, dynamic> _monthlyStats = {
+    'totalOutfits': 0,
+    'uniqueItems': 0,
+    'favoriteOccasion': 'None',
   };
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    await Future.wait([
+      _loadEntriesForDate(_selectedDate),
+      _loadMonthData(_focusedMonth),
+    ]);
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadEntriesForDate(DateTime date) async {
+    final entries = await _outfitLogService.fetchOutfitLogsForDate(date);
+    if (mounted) {
+      setState(() => _todayEntries = entries);
+    }
+  }
+
+  Future<void> _loadMonthData(DateTime month) async {
+    final dates = await _outfitLogService.fetchLoggedDatesForMonth(month);
+    final stats = await _outfitLogService.fetchMonthlyStats(month);
+
+    if (mounted) {
+      setState(() {
+        _monthlyStats = stats;
+        // Build month entries map (just keys, for calendar dots)
+        _monthEntries = {
+          for (final date in dates) date: [],
+        };
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final selectedDateKey = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    final todayEntries = _outfitEntries[selectedDateKey] ?? [];
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
@@ -100,59 +89,95 @@ class _DailyLogState extends State<DailyLog> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.insights, color: Theme.of(context).colorScheme.primary),
+            icon: Icon(
+              Icons.insights,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             onPressed: _showInsights,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Calendar Header
-          CalendarHeaderWidget(
-            focusedMonth: _focusedMonth,
-            selectedDate: _selectedDate,
-            outfitEntries: _outfitEntries,
-            onDateSelected: (date) {
-              setState(() => _selectedDate = date);
-            },
-            onMonthChanged: (month) {
-              setState(() => _focusedMonth = month);
-            },
-          ),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: Column(
+          children: [
+            // Calendar
+            CalendarHeaderWidget(
+              focusedMonth: _focusedMonth,
+              selectedDate: _selectedDate,
+              outfitEntries: _monthEntries,
+              onDateSelected: (date) {
+                setState(() => _selectedDate = date);
+                _loadEntriesForDate(date);
+              },
+              onMonthChanged: (month) {
+                setState(() => _focusedMonth = month);
+                _loadMonthData(month);
+              },
+            ),
 
-          // Stats Summary
-          StatsSummaryWidget(
-            totalOutfits: _getTotalOutfitsThisMonth(),
-            uniqueItems: _getUniqueItemsThisMonth(),
-            favoriteOccasion: _getFavoriteOccasion(),
-          ),
+            // Stats
+            StatsSummaryWidget(
+              totalOutfits: _monthlyStats['totalOutfits'] as int,
+              uniqueItems: _monthlyStats['uniqueItems'] as int,
+              favoriteOccasion: _monthlyStats['favoriteOccasion'] as String,
+            ),
 
-          // Outfit Entries List
-          Expanded(
-            child: todayEntries.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 4.w,
-                      vertical: 2.h,
-                    ),
-                    itemCount: todayEntries.length,
-                    itemBuilder: (context, index) {
-                      return OutfitEntryCardWidget(
-                        entry: todayEntries[index],
-                        onEdit: () => _editEntry(todayEntries[index]),
-                        onDelete: () => _deleteEntry(todayEntries[index]['id']),
-                      );
-                    },
-                  ),
-          ),
-        ],
+            // Outfit Entries
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _todayEntries.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 4.w,
+                            vertical: 2.h,
+                          ),
+                          itemCount: _todayEntries.length,
+                          itemBuilder: (context, index) {
+                            final entry = _todayEntries[index];
+                            return OutfitEntryCardWidget(
+                              entry: _formatEntry(entry),
+                              onEdit: () => _editEntry(entry),
+                              onDelete: () => _deleteEntry(entry['id']),
+                              onRepeat: () => _repeatEntry(entry['id']),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: QuickLogButtonWidget(
         onQuickLog: _showQuickLogOptions,
         onFullLog: _navigateToFullLog,
       ),
     );
+  }
+
+  /// Format Supabase entry for the card widget
+  Map<String, dynamic> _formatEntry(Map<String, dynamic> entry) {
+    final items = (entry['outfit_items'] as List<dynamic>? ?? [])
+        .map((oi) => (oi['wardrobe_items']?['name'] ?? 'Unknown') as String)
+        .toList();
+
+    final imageUrl = (entry['outfit_items'] as List<dynamic>? ?? [])
+        .map((oi) => oi['wardrobe_items']?['image_url'] as String?)
+        .firstWhere((url) => url != null && url.isNotEmpty, orElse: () => null);
+
+    final wornDate = DateTime.parse(entry['worn_date']);
+
+    return {
+      'id': entry['id'],
+      'time': DateFormat('hh:mm a').format(wornDate),
+      'occasion': entry['occasion'] ?? 'Outfit',
+      'items': items,
+      'imageUrl': imageUrl ?? '',
+      'semanticLabel': entry['outfit_name'] ?? 'Outfit',
+      'rating': entry['rating'] ?? 0,
+      'notes': entry['notes'] ?? '',
+    };
   }
 
   Widget _buildEmptyState() {
@@ -184,57 +209,11 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  int _getTotalOutfitsThisMonth() {
-    int count = 0;
-    _outfitEntries.forEach((key, entries) {
-      final date = DateTime.parse(key);
-      if (date.month == _focusedMonth.month &&
-          date.year == _focusedMonth.year) {
-        count += entries.length;
-      }
-    });
-    return count;
-  }
-
-  int _getUniqueItemsThisMonth() {
-    Set<String> uniqueItems = {};
-    _outfitEntries.forEach((key, entries) {
-      final date = DateTime.parse(key);
-      if (date.month == _focusedMonth.month &&
-          date.year == _focusedMonth.year) {
-        for (var entry in entries) {
-          uniqueItems.addAll(List<String>.from(entry['items']));
-        }
-      }
-    });
-    return uniqueItems.length;
-  }
-
-  String _getFavoriteOccasion() {
-    Map<String, int> occasionCount = {};
-    _outfitEntries.forEach((key, entries) {
-      final date = DateTime.parse(key);
-      if (date.month == _focusedMonth.month &&
-          date.year == _focusedMonth.year) {
-        for (var entry in entries) {
-          final occasion = entry['occasion'] as String;
-          occasionCount[occasion] = (occasionCount[occasion] ?? 0) + 1;
-        }
-      }
-    });
-
-    if (occasionCount.isEmpty) return 'None';
-
-    return occasionCount.entries
-        .reduce((a, b) => a.value > b.value ? a : b)
-        .key;
-  }
-
   void _showQuickLogOptions() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
       ),
       builder: (context) => Container(
@@ -276,11 +255,11 @@ class _DailyLogState extends State<DailyLog> {
             ),
             _buildQuickOption(
               icon: Icons.repeat,
-              title: 'Repeat Outfit',
-              subtitle: 'Log a previously worn outfit',
+              title: 'Repeat Last Outfit',
+              subtitle: 'Log your most recent outfit again',
               onTap: () {
                 Navigator.pop(context);
-                _showRepeatOutfitDialog();
+                _repeatLastOutfit();
               },
             ),
             SizedBox(height: 2.h),
@@ -318,27 +297,156 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   void _navigateToFullLog() {
-    // Navigate to full outfit logging screen
-    Navigator.pushNamed(context, AppRoutes.outfitCaptureFlow);
+    final navigator = Navigator.of(context);
+    navigator.pushNamed(AppRoutes.outfitCaptureFlow).then((_) {
+      _loadData();
+    });
   }
 
-  void _showRepeatOutfitDialog() {
-    // Show dialog to select previous outfit
-    showDialog(
+  Future<void> _repeatLastOutfit() async {
+    if (_todayEntries.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No recent outfit to repeat')),
+      );
+      return;
+    }
+    await _repeatEntry(_todayEntries.first['id']);
+  }
+
+  Future<void> _repeatEntry(String outfitId) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Repeat Outfit'),
-        content: const Text(
-          'This feature will show your previous outfits to quickly log again.',
-        ),
+        content: const Text('Log this outfit again for today?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Repeat'),
           ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    final newId = await _outfitLogService.repeatOutfitLog(outfitId);
+    if (newId != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Outfit repeated for today!')),
+      );
+      _loadData();
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to repeat outfit')),
+      );
+    }
+  }
+
+  Future<void> _editEntry(Map<String, dynamic> entry) async {
+    final occasionController = TextEditingController(
+      text: entry['occasion'] ?? '',
+    );
+    final notesController = TextEditingController(text: entry['notes'] ?? '');
+    int rating = entry['rating'] ?? 0;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Outfit'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: occasionController,
+                decoration: const InputDecoration(labelText: 'Occasion'),
+              ),
+              SizedBox(height: 2.h),
+              TextField(
+                controller: notesController,
+                decoration: const InputDecoration(labelText: 'Notes'),
+                maxLines: 2,
+              ),
+              SizedBox(height: 2.h),
+              Row(
+                children: [
+                  Text('Rating: ', style: TextStyle(fontSize: 14.sp)),
+                  ...List.generate(5, (index) {
+                    return GestureDetector(
+                      onTap: () => setDialogState(() => rating = index + 1),
+                      child: Icon(
+                        index < rating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 28,
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                final success = await _outfitLogService.updateOutfitLog(
+                  outfitId: entry['id'],
+                  occasion: occasionController.text,
+                  notes: notesController.text,
+                  rating: rating,
+                );
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Outfit updated!')),
+                  );
+                  _loadData();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteEntry(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Outfit'),
+        content: const Text('Are you sure you want to delete this outfit?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final success = await _outfitLogService.deleteOutfitLog(id);
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Outfit deleted')),
+      );
+      _loadData();
+    }
   }
 
   void _showInsights() {
@@ -356,10 +464,11 @@ class _DailyLogState extends State<DailyLog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInsightRow('Total Outfits', '${_getTotalOutfitsThisMonth()}'),
-            _buildInsightRow('Unique Items', '${_getUniqueItemsThisMonth()}'),
-            _buildInsightRow('Favorite Occasion', _getFavoriteOccasion()),
-            _buildInsightRow('Avg. Rating', '4.5 ⭐'),
+            _buildInsightRow(
+                'Total Outfits', '${_monthlyStats['totalOutfits']}'),
+            _buildInsightRow('Unique Items', '${_monthlyStats['uniqueItems']}'),
+            _buildInsightRow(
+                'Favorite Occasion', '${_monthlyStats['favoriteOccasion']}'),
           ],
         ),
         actions: [
@@ -378,10 +487,8 @@ class _DailyLogState extends State<DailyLog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700),
-          ),
+          Text(label,
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700)),
           Text(
             value,
             style: TextStyle(
@@ -389,60 +496,6 @@ class _DailyLogState extends State<DailyLog> {
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.primary,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _editEntry(Map<String, dynamic> entry) {
-    // Navigate to edit screen
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Outfit'),
-        content: const Text(
-          'Edit functionality will allow you to modify outfit details.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _deleteEntry(String id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Outfit'),
-        content: const Text(
-          'Are you sure you want to delete this outfit entry?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                final selectedDateKey = DateFormat(
-                  'yyyy-MM-dd',
-                ).format(_selectedDate);
-                _outfitEntries[selectedDateKey]?.removeWhere(
-                  (e) => e['id'] == id,
-                );
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Outfit deleted')));
-            },
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

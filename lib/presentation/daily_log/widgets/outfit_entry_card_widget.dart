@@ -7,16 +7,24 @@ class OutfitEntryCardWidget extends StatelessWidget {
   final Map<String, dynamic> entry;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onRepeat;
 
   const OutfitEntryCardWidget({
     Key? key,
     required this.entry,
     required this.onEdit,
     required this.onDelete,
+    required this.onRepeat,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final rating = entry['rating'] as int? ?? 0;
+    final items = entry['items'] as List<dynamic>? ?? [];
+    final notes = entry['notes'] as String? ?? '';
+    final imageUrl = entry['imageUrl'] as String? ?? '';
+
     return Container(
       margin: EdgeInsets.only(bottom: 2.h),
       decoration: BoxDecoration(
@@ -33,74 +41,81 @@ class OutfitEntryCardWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image and Time Header
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
-                child: CustomImageWidget(
-                  imageUrl: entry['imageUrl'],
-                  height: 25.h,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  semanticLabel: entry['semanticLabel'],
-                ),
-              ),
-              Positioned(
-                top: 2.w,
-                right: 2.w,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(153),
-                    borderRadius: BorderRadius.circular(20.0),
+          // Image header (only if image exists)
+          if (imageUrl.isNotEmpty)
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16.0)),
+                  child: CustomImageWidget(
+                    imageUrl: imageUrl,
+                    height: 25.h,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    semanticLabel: entry['semanticLabel'] ?? 'Outfit image',
                   ),
-                  child: Text(
-                    entry['time'],
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                ),
+                Positioned(
+                  top: 2.w,
+                  right: 2.w,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 3.w, vertical: 1.h),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(153),
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    child: Text(
+                      entry['time'] ?? '',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Positioned(
-                top: 2.w,
-                left: 2.w,
-                child: Row(
-                  children: List.generate(
-                    entry['rating'] as int,
-                    (index) => Icon(
-                      Icons.star,
-                      color: Colors.amber,
-                      size: 18,
+                if (rating > 0)
+                  Positioned(
+                    top: 2.w,
+                    left: 2.w,
+                    child: Row(
+                      children: List.generate(
+                        rating,
+                        (index) => const Icon(Icons.star,
+                            color: Colors.amber, size: 18),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
           // Content
           Padding(
             padding: EdgeInsets.all(4.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Occasion
+                // Time (if no image)
+                if (imageUrl.isEmpty)
+                  Text(
+                    entry['time'] ?? '',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                // Occasion + actions
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.event,
-                          size: 18,
-                          color: AppTheme.primaryLight,
-                        ),
+                        Icon(Icons.event, size: 18,
+                            color: theme.colorScheme.primary),
                         SizedBox(width: 2.w),
                         Text(
-                          entry['occasion'],
+                          entry['occasion'] ?? 'Outfit',
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
@@ -110,53 +125,81 @@ class OutfitEntryCardWidget extends StatelessWidget {
                     ),
                     Row(
                       children: [
+                        // Repeat button
                         IconButton(
-                          icon: Icon(Icons.edit_outlined, size: 20),
+                          icon: const Icon(Icons.repeat, size: 20),
+                          onPressed: onRepeat,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Repeat outfit today',
+                        ),
+                        SizedBox(width: 2.w),
+                        // Edit button
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 20),
                           onPressed: onEdit,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
+                          tooltip: 'Edit outfit',
                         ),
                         SizedBox(width: 2.w),
+                        // Delete button
                         IconButton(
-                          icon: Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                          icon: const Icon(Icons.delete_outline,
+                              size: 20, color: Colors.red),
                           onPressed: onDelete,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
+                          tooltip: 'Delete outfit',
                         ),
                       ],
                     ),
                   ],
                 ),
                 SizedBox(height: 1.h),
-                // Items
-                Wrap(
-                  spacing: 2.w,
-                  runSpacing: 1.h,
-                  children: (entry['items'] as List<dynamic>)
-                      .map((item) => Container(
+                // Rating (if no image)
+                if (imageUrl.isEmpty && rating > 0)
+                  Row(
+                    children: List.generate(
+                      rating,
+                      (index) => const Icon(Icons.star,
+                          color: Colors.amber, size: 16),
+                    ),
+                  ),
+                SizedBox(height: 0.5.h),
+                // Items chips
+                if (items.isNotEmpty)
+                  Wrap(
+                    spacing: 2.w,
+                    runSpacing: 1.h,
+                    children: items
+                        .map(
+                          (item) => Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 3.w,
                               vertical: 0.5.h,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryLight.withAlpha(26),
+                              color: theme.colorScheme.primary.withAlpha(26),
                               borderRadius: BorderRadius.circular(20.0),
                             ),
                             child: Text(
-                              item,
+                              item.toString(),
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: AppTheme.primaryLight,
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ))
-                      .toList(),
-                ),
-                if (entry['notes'] != null && entry['notes'].isNotEmpty) ...[
+                          ),
+                        )
+                        .toList(),
+                  ),
+                // Notes
+                if (notes.isNotEmpty) ...[
                   SizedBox(height: 1.h),
                   Text(
-                    entry['notes'],
+                    notes,
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: Colors.grey.shade600,
