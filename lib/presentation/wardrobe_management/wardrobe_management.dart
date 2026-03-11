@@ -82,7 +82,6 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       );
     } catch (error) {
       debugPrint('Failed to setup real-time subscription: $error');
-      // Don't show error to user - app will work without real-time updates
     }
   }
 
@@ -246,49 +245,9 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: CustomAppBar(
-        title: 'Wardrobe',
-        actions: [
-          tierInfoAsync.when(
-            data: (tierInfo) => tierInfo != null
-                ? Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
-                    child: Center(
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 3.w,
-                          vertical: 0.5.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: tierInfo['tier'] == 'premium'
-                              ? Colors.amber.withValues(alpha: 0.2)
-                              : theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: Text(
-                          '${tierInfo['items_count']}/${tierInfo['items_limit']} ${localizations.items}',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                (tierInfo['items_count'] as int) >=
-                                    (tierInfo['items_limit'] as int)
-                                ? theme.colorScheme.error
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          // Custom AppBar content
+          // AppBar content - single title only
           Container(
             color: theme.appBarTheme.backgroundColor,
             child: SafeArea(
@@ -302,10 +261,40 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Wardrobe',
+                            localizations.wardrobe,
                             style: theme.textTheme.headlineMedium,
                           ),
                         ),
+                        tierInfoAsync.when(
+                          data: (tierInfo) => tierInfo != null
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 3.w,
+                                    vertical: 0.5.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: tierInfo['tier'] == 'premium'
+                                        ? Colors.amber.withValues(alpha: 0.2)
+                                        : theme.colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(12.0),
+                                  ),
+                                  child: Text(
+                                    '${tierInfo['items_count']}/${tierInfo['items_limit']} ${localizations.items}',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: (tierInfo['items_count'] as int) >=
+                                              (tierInfo['items_limit'] as int)
+                                          ? theme.colorScheme.error
+                                          : theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                        SizedBox(width: 2.w),
                         // Real-time sync indicator
                         Container(
                           padding: EdgeInsets.symmetric(
