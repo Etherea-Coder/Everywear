@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 /// Custom bottom navigation bar for wardrobe analytics app
 /// Implements bottom-heavy interaction design with thumb-accessible navigation
 ///
-/// Navigation items based on Mobile Navigation Hierarchy:
-/// 1. Daily Log (Today/Camera) - Core daily interaction
-/// 2. Wardrobe Management (Closet/Hanger) - Essential wardrobe organization
-/// 3. Smart Suggestions (Lightbulb/Sparkle) - AI-powered recommendations
-/// 4. Insights Dashboard (Graph/Chart) - Analytics and learning paths
-/// 5. Purchase Tracking (Shopping Bag) - Purchase logging and spending analysis
+/// Reduced to 5 tabs for better UX and to prevent label truncation:
+/// 1. Today (Daily Log) - Core daily interaction
+/// 2. Wardrobe - Essential wardrobe organization
+/// 3. Style (Smart Suggestions) - AI-powered recommendations
+/// 4. Purchases - Purchase logging and spending analysis
+/// 5. Profile - User profile and settings (includes Insights link)
 class CustomBottomBar extends StatelessWidget {
-  /// Current selected index
+  /// Current selected index (0-4)
   final int currentIndex;
 
   /// Callback when navigation item is tapped
@@ -47,53 +47,49 @@ class CustomBottomBar extends StatelessWidget {
         unselectedLabelStyle:
             theme.bottomNavigationBarTheme.unselectedLabelStyle,
         elevation: 0,
-        items: [
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        items: const [
           // Daily Log - Core daily interaction
           BottomNavigationBarItem(
-            icon: const Icon(Icons.today_outlined, size: 24),
-            activeIcon: const Icon(Icons.today, size: 24),
+            icon: Icon(Icons.today_outlined, size: 24),
+            activeIcon: Icon(Icons.today, size: 24),
             label: 'Today',
             tooltip: 'Daily outfit log',
           ),
 
           // Wardrobe Management - Essential wardrobe organization
           BottomNavigationBarItem(
-            icon: const Icon(Icons.checkroom_outlined, size: 24),
-            activeIcon: const Icon(Icons.checkroom, size: 24),
+            icon: Icon(Icons.checkroom_outlined, size: 24),
+            activeIcon: Icon(Icons.checkroom, size: 24),
             label: 'Wardrobe',
             tooltip: 'Manage wardrobe items',
           ),
 
           // Smart Suggestions - AI-powered recommendations
+          // Shortened from "Suggestions" to "Style" to prevent truncation
           BottomNavigationBarItem(
-            icon: const Icon(Icons.lightbulb_outline, size: 24),
-            activeIcon: const Icon(Icons.lightbulb, size: 24),
-            label: 'Suggestions',
+            icon: Icon(Icons.auto_awesome_outlined, size: 24),
+            activeIcon: Icon(Icons.auto_awesome, size: 24),
+            label: 'Style',
             tooltip: 'Smart outfit suggestions',
-          ),
-
-          // Insights Dashboard - Analytics and learning paths
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.insights_outlined, size: 24),
-            activeIcon: const Icon(Icons.insights, size: 24),
-            label: 'Insights',
-            tooltip: 'Analytics and insights',
           ),
 
           // Purchase Tracking - Purchase logging and spending analysis
           BottomNavigationBarItem(
-            icon: const Icon(Icons.shopping_bag_outlined, size: 24),
-            activeIcon: const Icon(Icons.shopping_bag, size: 24),
+            icon: Icon(Icons.shopping_bag_outlined, size: 24),
+            activeIcon: Icon(Icons.shopping_bag, size: 24),
             label: 'Purchases',
             tooltip: 'Track purchases',
           ),
 
-          // Settings - App settings and profile
+          // Profile - User profile and settings (includes Insights)
+          // Renamed from "Settings" to "Profile" for clearer context
           BottomNavigationBarItem(
-            icon: const Icon(Icons.settings_outlined, size: 24),
-            activeIcon: const Icon(Icons.settings, size: 24),
-            label: 'Settings',
-            tooltip: 'App settings',
+            icon: Icon(Icons.person_outline, size: 24),
+            activeIcon: Icon(Icons.person, size: 24),
+            label: 'Profile',
+            tooltip: 'Profile and settings',
           ),
         ],
       ),
