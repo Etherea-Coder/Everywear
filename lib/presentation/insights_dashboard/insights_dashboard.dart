@@ -5,6 +5,9 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_bottom_bar.dart';
 import '../../routes/app_routes.dart';
 import './widgets/metric_card_widget.dart';
+import './widgets/usage_chart_widget.dart';
+import './widgets/cost_per_wear_chart_widget.dart';
+import './widgets/sustainability_score_widget.dart';
 import './widgets/ai_insight_card_widget.dart';
 import '../../services/wardrobe_service.dart';
 
@@ -20,10 +23,10 @@ class InsightsDashboard extends StatefulWidget {
 
 class _InsightsDashboardState extends State<InsightsDashboard> {
   int _selectedTimeRange = 0; // 0: Week, 1: Month, 2: Year
-  bool _isLoading = false; // Start with false to show content immediately
+  bool _isLoading = true;
   final WardrobeService _wardrobeService = WardrobeService();
 
-  // Analytics data with sensible defaults
+  // Mock analytics data
   Map<String, dynamic> _analyticsData = {
     'totalItems': 0,
     'favorite_items': 0,
@@ -59,143 +62,77 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     },
   ];
 
-  String? _error;
-
   @override
   void initState() {
     super.initState();
-    // Load stats in background (non-blocking)
     _loadStats();
   }
 
   Future<void> _loadStats() async {
     if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    
+    setState(() => _isLoading = true);
     try {
-      // Use Future.wait with timeout to prevent hanging
-      final results = await Future.wait([
-        _wardrobeService.getWardrobeStatistics().timeout(
-          const Duration(seconds: 3),
-          onTimeout: () => {'total_items': 0, 'favorite_items': 0, 'category_counts': {}},
-        ),
-        _wardrobeService.fetchOutfitHistory(limit: 50).timeout(
-          const Duration(seconds: 3),
-          onTimeout: () => [],
-        ),
-      ]).timeout(const Duration(seconds: 5));
-      
-      final stats = results[0] as Map<String, dynamic>;
-      final history = results[1] as List<Map<String, dynamic>>;
+      final stats = await _wardrobeService.getWardrobeStatistics();
+      final history = await _wardrobeService.fetchOutfitHistory(limit: 50);
       
       if (mounted) {
         setState(() {
           _analyticsData = {
-            'totalItems': stats['total_items'] ?? 0,
-            'favorite_items': stats['favorite_items'] ?? 0,
+            'totalItems': stats['total_items'],
+            'favorite_items': stats['favorite_items'],
             'outfitsLogged': history.length,
             'avgCostPerWear': 12.50,
             'sustainabilityScore': 78,
-            'wardrobeUtilization': (stats['total_items'] != null && stats['total_items'] > 0) 
-                ? ((stats['favorite_items'] ?? 0) / stats['total_items'] * 100).toInt() 
+            'wardrobeUtilization': (stats['total_items'] > 0) 
+                ? (stats['favorite_items'] / stats['total_items'] * 100).toInt() 
                 : 0,
             'topItems': [], 
           };
           _isLoading = false;
         });
       }
-    } catch (e, stack) {
-      debugPrint('InsightsDashboard Error: $e\n$stack');
+    } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          // Don't show error for demo mode or network issues - just show empty state
-          if (e.toString().contains('Demo mode') || 
-              e.toString().contains('Network') ||
-              e.toString().contains('timeout')) {
-            _analyticsData = {
-              'totalItems': 0,
-              'favorite_items': 0,
-              'outfitsLogged': 0,
-              'avgCostPerWear': 0.0,
-              'sustainabilityScore': 0,
-              'wardrobeUtilization': 0,
-              'topItems': [],
-            };
-          } else {
-            _error = 'Failed to load insights: $e';
-          }
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Error Boundary
-    if (_error != null) {
-      return Scaffold(
-        appBar: CustomAppBar(title: 'Insights'),
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(4.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red),
-                SizedBox(height: 2.h),
-                Text(
-                  'Something went wrong',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                SizedBox(height: 1.h),
-                Text(
-                  _error!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.red,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 2.h),
-                ElevatedButton(
-                  onPressed: _loadStats,
-                  child: Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // LOADING STATE
-    if (_isLoading) {
-      return Scaffold(
-        appBar: CustomAppBar(title: 'Insights'),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-        bottomNavigationBar: CustomBottomBar(
-          currentIndex: 3,
-          onTap: _handleNavigation,
-        ),
-      );
-    }
-
-    // MAIN DASHBOARD
     final theme = Theme.of(context);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Insights',
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.filter_list),
-        //     onPressed: _showFilterOptions,
-        //   ),
-        // ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.aiIntelligence);
+            },
+            tooltip: 'AI Intelligence',
+          ),
+          IconButton(
+            icon: const Icon(Icons.emoji_events_outlined),
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.personalProgressDashboard);
+            },
+            tooltip: 'My Progress',
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterOptions,
+            tooltip: 'Filter insights',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.settingsProfile);
+            },
+            tooltip: 'Settings',
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
@@ -205,12 +142,100 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildTimeRangeSelector(theme),
-              _buildMetricsOverview(),
               SizedBox(height: 2.h),
+              _buildMetricsOverview(),
+              SizedBox(height: 3.h),
+              _buildSectionHeader('Wardrobe Usage', theme),
+              UsageChartWidget(timeRange: _selectedTimeRange),
+              SizedBox(height: 3.h),
+              _buildSectionHeader('Cost Per Wear Analysis', theme),
+              CostPerWearChartWidget(topItems: _analyticsData['topItems']),
+              SizedBox(height: 3.h),
+              _buildSectionHeader('Sustainability Score', theme),
+              SustainabilityScoreWidget(
+                score: _analyticsData['sustainabilityScore'],
+                wardrobeUtilization: _analyticsData['wardrobeUtilization'],
+              ),
+              SizedBox(height: 3.h),
               _buildSectionHeader('AI Insights', theme),
-              SizedBox(height: 1.h),
               _buildAIInsights(),
-              SizedBox(height: 10.h), // Bottom padding
+              SizedBox(height: 2.h),
+
+              // Achievement Gallery Link
+              GestureDetector(
+                onTap: () =>
+                    Navigator.pushNamed(context, AppRoutes.achievementGallery),
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                  padding: EdgeInsets.all(4.w),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.secondary,
+                        theme.colorScheme.secondary.withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(3.w),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSecondary.withValues(
+                            alpha: 0.2,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.emoji_events,
+                          color: theme.colorScheme.onSecondary,
+                          size: 28,
+                        ),
+                      ),
+                      SizedBox(width: 3.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Achievement Gallery',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onSecondary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: 0.3.h),
+                            Text(
+                              'View your earned badges and milestones',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSecondary.withValues(
+                                  alpha: 0.9,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: theme.colorScheme.onSecondary,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 3.h),
             ],
           ),
         ),

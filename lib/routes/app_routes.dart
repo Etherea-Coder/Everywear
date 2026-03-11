@@ -3,7 +3,6 @@ import '../presentation/smart_suggestions/smart_suggestions.dart';
 import '../presentation/learning_paths/learning_paths.dart';
 import '../presentation/outfit_capture_flow/outfit_capture_flow.dart';
 import '../presentation/splash_screen/splash_screen.dart';
-import '../presentation/home_screen/home_screen.dart';
 import '../presentation/add_clothing_item/add_clothing_item.dart';
 import '../presentation/wardrobe_management/wardrobe_management.dart';
 import '../presentation/welcome_philosophy/welcome_philosophy.dart';
@@ -19,10 +18,12 @@ import '../presentation/ai_intelligence/ai_intelligence.dart';
 import '../presentation/personal_progress_dashboard/personal_progress_dashboard.dart';
 import '../presentation/challenge_center/challenge_center.dart';
 import '../presentation/achievement_gallery/achievement_gallery.dart';
+import '../presentation/home_screen/home_screen.dart';
 
 class AppRoutes {
   // TODO: Add your routes here
   static const String initial = '/';
+  static const String home = '/home';
   static const String smartSuggestions = '/smart-suggestions';
   static const String learningPaths = '/learning-paths';
   static const String outfitCaptureFlow = '/outfit-capture-flow';
@@ -41,13 +42,11 @@ class AppRoutes {
   static const String aiIntelligence = '/ai-intelligence';
   static const String personalProgressDashboard =
       '/personal-progress-dashboard';
-  static const String home = '/home';
   static const String challengeCenter = '/challenge-center';
   static const String achievementGallery = '/achievement-gallery';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
-    home: (context) => const HomeScreen(),
     smartSuggestions: (context) => const SmartSuggestions(),
     learningPaths: (context) => const LearningPaths(),
     outfitCaptureFlow: (context) => const OutfitCaptureFlow(),
@@ -67,6 +66,7 @@ class AppRoutes {
     personalProgressDashboard: (context) => const PersonalProgressDashboard(),
     challengeCenter: (context) => const ChallengeCenter(),
     achievementGallery: (context) => const AchievementGallery(),
+    home: (context) => const HomeScreen(),
     // TODO: Add your other routes here
   };
 }

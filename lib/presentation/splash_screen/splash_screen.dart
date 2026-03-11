@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:sizer/sizer.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../services/supabase_service.dart';
 
 import '../../core/app_export.dart';
 import '../../widgets/custom_image_widget.dart';
@@ -605,48 +602,16 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
-      debugPrint('🔐 Starting Google sign-in...');
+      // TODO: Implement Google Sign-In with Supabase
+      await Future.delayed(const Duration(seconds: 2));
 
-      // Robustness: Try to re-init if not already initialized
-      if (!SupabaseService.isInitialized) {
-        debugPrint('⚠️ Supabase not initialized, attempting to initialize...');
-        final initialized = await SupabaseService.initialize();
-        if (!initialized) {
-          throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
-        }
-        debugPrint('✅ Supabase initialized successfully');
-      }
-
-      if (!SupabaseService.isInitialized) {
-        throw Exception('Authentication service (Supabase) not available. Please verify your internet connection and environment variables.');
-      }
-      
-      debugPrint('🔐 Calling signInWithOAuth...');
-      // For mobile, this usually requires the google_sign_in package
-      // For now, we'll use the standard Supabase OAuth flow
-      await SupabaseService.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: kIsWeb ? null : 'io.supabase.everywear://login-callback/',
-      );
-      
-      debugPrint('✅ Google sign-in initiated successfully');
-      
       if (mounted) {
         HapticFeedback.mediumImpact();
+        _navigateToHome();
       }
     } catch (e) {
-      debugPrint('❌ Google sign-in failed: $e');
       if (mounted) {
-        String errorMessage = 'Google sign-in failed';
-        
-        // Provide user-friendly error messages
-        if (e.toString().contains('not available') || e.toString().contains('not ready')) {
-          errorMessage = 'Authentication service unavailable. Please configure Supabase credentials.';
-        } else {
-          errorMessage = 'Google sign-in failed: ${e.toString()}';
-        }
-        
-        _showErrorSnackBar(errorMessage);
+        _showErrorSnackBar('Google sign-in failed. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -661,65 +626,19 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
 
     try {
-      debugPrint('🔐 Starting email authentication (${_isSignUp ? 'sign-up' : 'sign-in'})...');
-
-      // Robustness: Try to re-init if not already initialized
-      if (!SupabaseService.isInitialized) {
-        debugPrint('⚠️ Supabase not initialized, attempting to initialize...');
-        final initialized = await SupabaseService.initialize();
-        if (!initialized) {
-          throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
-        }
-        debugPrint('✅ Supabase initialized successfully');
-      }
-
-      if (!SupabaseService.isInitialized) {
-        throw Exception('Supabase Client not ready. Check environment variables in your build dashboard.');
-      }
-
-      debugPrint('🔐 Calling ${_isSignUp ? 'signUp' : 'signInWithPassword'}...');
-      if (_isSignUp) {
-        await SupabaseService.instance.client.auth.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-          data: {'full_name': _nameController.text.trim()},
-        );
-        debugPrint('✅ Sign-up initiated successfully');
-        if (mounted) {
-          _showErrorSnackBar(
-            'Success! Check your inbox for a confirmation email.', 
-            isError: false,
-          );
-        }
-      } else {
-        await SupabaseService.instance.client.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
-        debugPrint('✅ Sign-in successful');
-      }
+      // TODO: Implement Email Auth with Supabase
+      await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
         HapticFeedback.mediumImpact();
+        _navigateToHome();
       }
     } catch (e) {
-      debugPrint('❌ Email authentication failed: $e');
       if (mounted) {
-        String userFriendlyError = e.toString();
-        
-        // Provide user-friendly error messages
-        if (userFriendlyError.contains('not available') || userFriendlyError.contains('not ready')) {
-          userFriendlyError = 'Authentication service unavailable. Please configure Supabase credentials.';
-        } else if (userFriendlyError.contains('AuthApiError')) {
-          userFriendlyError = 'Auth Error: Ensure your Email provider is enabled in Supabase Dashboard.';
-        } else if (userFriendlyError.contains('SocketException')) {
-          userFriendlyError = 'Connection failed. Please check your internet.';
-        }
-        
         _showErrorSnackBar(
           _isSignUp
-              ? 'Sign up failed: $userFriendlyError'
-              : 'Sign in failed: $userFriendlyError',
+              ? 'Sign up failed. Please try again.'
+              : 'Sign in failed. Please check your credentials.',
         );
       }
     } finally {
@@ -729,26 +648,20 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  void _navigateToSettings() {
+  void _navigateToHome() {
     Navigator.of(
       context,
       rootNavigator: true,
-    ).pushReplacementNamed(AppRoutes.home);
+    ).pushReplacementNamed('/home');
   }
 
-  void _showErrorSnackBar(String message, {bool isError = true}) {
+  void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : const Color(0xFF2D5A27),
+        backgroundColor: Colors.redAccent,
         behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: isError ? 5 : 3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: isError ? SnackBarAction(
-          label: 'DISMISS', 
-          textColor: Colors.white,
-          onPressed: () {},
-        ) : null,
       ),
     );
   }
