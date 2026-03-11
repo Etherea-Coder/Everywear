@@ -55,7 +55,7 @@ class PurchaseService {
       final response = await _client.from('purchases').insert({
         'user_id': userId, 'name': name, 'price': price,
         'purchase_date': purchaseDate.toIso8601String().split('T')[0],
-        'brand': brand, 'category': category, 'image_url': imageUrl,
+        'brand': brand, 'image_url': imageUrl,
         'notes': notes, 'wardrobe_item_id': wardrobeItemId,
       }).select().single();
       return Map<String, dynamic>.from(response);

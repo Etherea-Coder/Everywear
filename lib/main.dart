@@ -17,6 +17,7 @@ import './widgets/custom_error_widget.dart';
 import './presentation/home_screen/home_screen.dart';
 import './presentation/splash_screen/splash_screen.dart';
 import 'core/app_export.dart';
+import './ads/ad_service.dart';
 
 void main() async {
   // Ensure widgets are initialized
@@ -39,6 +40,9 @@ void main() async {
 
   // Initial service bootstrapper - Critical services first
   await _initializeEssentialServices();
+
+  // ✅ NEW: Initialize Ad Service
+  await AdService.instance.initialize(testMode: true);
 
   // Run the app after critical services are ready
   runApp(

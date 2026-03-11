@@ -161,7 +161,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.itemSaveError),
+            content: Text('Save error: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
