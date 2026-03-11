@@ -20,53 +20,139 @@ import '../presentation/challenge_center/challenge_center.dart';
 import '../presentation/achievement_gallery/achievement_gallery.dart';
 import '../presentation/home_screen/home_screen.dart';
 
+/// App Routes - Centralized navigation configuration for Everywear
+/// 
+/// Navigation Structure (Updated):
+/// - Bottom Nav: 5 tabs (Today, Wardrobe, Style, Purchases, Profile)
+/// - Insights: Moved to Profile screen for cleaner navigation
+/// - Secondary screens accessed via pushNamed
 class AppRoutes {
-  // TODO: Add your routes here
+  AppRoutes._();
+
+  // ============================================
+  // MAIN NAVIGATION ROUTES (Bottom Bar)
+  // ============================================
   static const String initial = '/';
   static const String home = '/home';
-  static const String smartSuggestions = '/smart-suggestions';
-  static const String learningPaths = '/learning-paths';
-  static const String outfitCaptureFlow = '/outfit-capture-flow';
-  static const String splash = '/splash-screen';
-  static const String addClothingItem = '/add-clothing-item';
+  
+  // Primary tabs (indexes 0-4)
+  static const String dailyLog = '/daily-log';
   static const String wardrobeManagement = '/wardrobe-management';
+  static const String smartSuggestions = '/smart-suggestions';
+  static const String purchaseTracking = '/purchase-tracking';
+  static const String settingsProfile = '/settings-profile';
+
+  // ============================================
+  // INSIGHTS & ANALYTICS (Secondary navigation)
+  // ============================================
+  static const String insightsDashboard = '/insights-dashboard';
+  static const String personalProgressDashboard = '/personal-progress-dashboard';
+  static const String achievementGallery = '/achievement-gallery';
+
+  // ============================================
+  // ONBOARDING & SETUP
+  // ============================================
+  static const String splash = '/splash-screen';
   static const String welcomePhilosophy = '/welcome-philosophy';
   static const String featureOverview = '/feature-overview';
   static const String personalizationSetup = '/personalization-setup';
-  static const String dailyLog = '/daily-log';
-  static const String outfitRating = '/outfit-rating';
-  static const String insightsDashboard = '/insights-dashboard';
-  static const String purchaseTracking = '/purchase-tracking';
-  static const String settingsProfile = '/settings-profile';
-  static const String premiumUpgrade = '/premium-upgrade';
-  static const String aiIntelligence = '/ai-intelligence';
-  static const String personalProgressDashboard =
-      '/personal-progress-dashboard';
-  static const String challengeCenter = '/challenge-center';
-  static const String achievementGallery = '/achievement-gallery';
 
+  // ============================================
+  // WARDROBE OPERATIONS
+  // ============================================
+  static const String addClothingItem = '/add-clothing-item';
+  static const String outfitCaptureFlow = '/outfit-capture-flow';
+  static const String outfitRating = '/outfit-rating';
+
+  // ============================================
+  // AI & INTELLIGENCE
+  // ============================================
+  static const String aiIntelligence = '/ai-intelligence';
+  static const String learningPaths = '/learning-paths';
+  static const String challengeCenter = '/challenge-center';
+
+  // ============================================
+  // PREMIUM & BILLING
+  // ============================================
+  static const String premiumUpgrade = '/premium-upgrade';
+
+  // ============================================
+  // ROUTE MAP
+  // ============================================
   static Map<String, WidgetBuilder> routes = {
+    // Main navigation
     initial: (context) => const SplashScreen(),
-    smartSuggestions: (context) => const SmartSuggestions(),
-    learningPaths: (context) => const LearningPaths(),
-    outfitCaptureFlow: (context) => const OutfitCaptureFlow(),
-    splash: (context) => const SplashScreen(),
-    addClothingItem: (context) => const AddClothingItem(),
+    home: (context) => const HomeScreen(),
+    
+    // Primary tabs
+    dailyLog: (context) => const DailyLog(),
     wardrobeManagement: (context) => const WardrobeManagement(),
+    smartSuggestions: (context) => const SmartSuggestions(),
+    purchaseTracking: (context) => const PurchaseTracking(),
+    settingsProfile: (context) => const SettingsProfile(),
+
+    // Insights & Analytics (accessed from Profile)
+    insightsDashboard: (context) => const InsightsDashboard(),
+    personalProgressDashboard: (context) => const PersonalProgressDashboard(),
+    achievementGallery: (context) => const AchievementGallery(),
+
+    // Onboarding
+    splash: (context) => const SplashScreen(),
     welcomePhilosophy: (context) => const WelcomePhilosophy(),
     featureOverview: (context) => const FeatureOverview(),
     personalizationSetup: (context) => const PersonalizationSetup(),
-    dailyLog: (context) => const DailyLog(),
+
+    // Wardrobe operations
+    addClothingItem: (context) => const AddClothingItem(),
+    outfitCaptureFlow: (context) => const OutfitCaptureFlow(),
     outfitRating: (context) => const OutfitRating(),
-    insightsDashboard: (context) => const InsightsDashboard(),
-    purchaseTracking: (context) => const PurchaseTracking(),
-    settingsProfile: (context) => const SettingsProfile(),
-    premiumUpgrade: (context) => const PremiumUpgrade(),
+
+    // AI & Intelligence
     aiIntelligence: (context) => const AIIntelligence(),
-    personalProgressDashboard: (context) => const PersonalProgressDashboard(),
+    learningPaths: (context) => const LearningPaths(),
     challengeCenter: (context) => const ChallengeCenter(),
-    achievementGallery: (context) => const AchievementGallery(),
-    home: (context) => const HomeScreen(),
-    // TODO: Add your other routes here
+
+    // Premium
+    premiumUpgrade: (context) => const PremiumUpgrade(),
   };
+
+  // ============================================
+  // HELPER METHODS
+  // ============================================
+  
+  /// Get route name for bottom nav index
+  static String getBottomNavRoute(int index) {
+    switch (index) {
+      case 0:
+        return dailyLog;
+      case 1:
+        return wardrobeManagement;
+      case 2:
+        return smartSuggestions;
+      case 3:
+        return purchaseTracking;
+      case 4:
+        return settingsProfile;
+      default:
+        return home;
+    }
+  }
+
+  /// Get bottom nav index for a route
+  static int getBottomNavIndex(String route) {
+    switch (route) {
+      case dailyLog:
+        return 0;
+      case wardrobeManagement:
+        return 1;
+      case smartSuggestions:
+        return 2;
+      case purchaseTracking:
+        return 3;
+      case settingsProfile:
+        return 4;
+      default:
+        return 0;
+    }
+  }
 }

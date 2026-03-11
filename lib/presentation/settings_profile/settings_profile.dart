@@ -17,6 +17,10 @@ import './widgets/theme_selector_dialog.dart';
 
 /// Settings Profile Screen - Comprehensive user account management and app customization
 /// Provides organized sections for profile management, preferences, privacy, and data control
+/// 
+/// Navigation structure updated:
+/// - Insights Dashboard now accessible from Profile (reduced bottom nav to 5 tabs)
+/// - Clear visual hierarchy with sectioned settings
 class SettingsProfile extends ConsumerStatefulWidget {
   const SettingsProfile({Key? key}) : super(key: key);
 
@@ -87,6 +91,51 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
               onEditProfile: _handleEditProfile,
             ),
             SizedBox(height: 2.h),
+            
+            // ==========================================
+            // INSIGHTS & ANALYTICS SECTION (NEW)
+            // Moved from bottom navigation for cleaner UX
+            // ==========================================
+            SettingsSectionWidget(
+              title: 'Insights & Analytics',
+              children: [
+                SettingsTileWidget(
+                  icon: Icons.insights_outlined,
+                  title: 'Style Insights',
+                  subtitle: 'View wardrobe analytics and AI recommendations',
+                  trailing: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'NEW',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.insightsDashboard),
+                ),
+                SettingsTileWidget(
+                  icon: Icons.emoji_events_outlined,
+                  title: 'Achievements',
+                  subtitle: 'View earned badges and milestones',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.achievementGallery),
+                ),
+                SettingsTileWidget(
+                  icon: Icons.trending_up_outlined,
+                  title: 'Progress Dashboard',
+                  subtitle: 'Track your style evolution',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.personalProgressDashboard),
+                ),
+              ],
+            ),
+            SizedBox(height: 2.h),
+            
             SettingsSectionWidget(
               title: localizations.accountSettings,
               children: [

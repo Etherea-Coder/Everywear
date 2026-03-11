@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_bottom_bar.dart';
 import '../../routes/app_routes.dart';
 import './widgets/metric_card_widget.dart';
 import './widgets/usage_chart_widget.dart';
@@ -12,8 +11,15 @@ import './widgets/ai_insight_card_widget.dart';
 import '../../services/wardrobe_service.dart';
 
 /// Insights Dashboard - AI-powered style analytics and wardrobe insights
-/// Displays comprehensive analytics including usage patterns, cost-per-wear,
-/// sustainability metrics, and personalized AI recommendations
+/// 
+/// Displays comprehensive analytics including:
+/// - Usage patterns and wardrobe utilization
+/// - Cost-per-wear analysis
+/// - Sustainability metrics
+/// - Personalized AI recommendations
+/// 
+/// Navigation: Accessed from Profile screen (SettingsProfile)
+/// No bottom bar - uses app bar back navigation
 class InsightsDashboard extends StatefulWidget {
   const InsightsDashboard({Key? key}) : super(key: key);
 
@@ -103,8 +109,10 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      // Uses detail variant for back navigation
       appBar: CustomAppBar(
-        title: 'Insights',
+        title: 'Style Insights',
+        variant: CustomAppBarVariant.detail,
         actions: [
           IconButton(
             icon: const Icon(Icons.auto_awesome),
@@ -124,13 +132,6 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterOptions,
             tooltip: 'Filter insights',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.settingsProfile);
-            },
-            tooltip: 'Settings',
           ),
         ],
       ),
@@ -240,10 +241,7 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomBar(
-        currentIndex: 3,
-        onTap: _handleNavigation,
-      ),
+      // No bottom navigation bar - uses app bar back navigation
     );
   }
 
@@ -410,19 +408,5 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
 
   Future<void> _refreshData() async {
     await _loadStats();
-  }
-
-  void _handleNavigation(int index) {
-    if (index == 3) return;
-
-    final routes = [
-      '/daily-log',
-      '/wardrobe-management',
-      '/smart-suggestions',
-      '/insights-dashboard',
-      '/learning-paths',
-    ];
-
-    Navigator.pushReplacementNamed(context, routes[index]);
   }
 }
