@@ -7,9 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
-import 'package:supabase_flutter/supabase_flutter.dart';
-import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
 import './core/providers.dart';
 import './services/payment_service.dart';
@@ -67,13 +64,13 @@ Future<void> _initializeEssentialServices() async {
   try {
     await SupabaseService.initialize().timeout(const Duration(seconds: 10));
   } catch (e) {
-    print('⚠️ Essential service Supabase failed to init: $e');
+    debugPrint('⚠️ Essential service Supabase failed to init: $e');
   }
 
   try {
     await Hive.initFlutter().timeout(const Duration(seconds: 5));
   } catch (e) {
-    print('⚠️ Essential service Hive failed to init: $e');
+    debugPrint('⚠️ Essential service Hive failed to init: $e');
   }
 }
 

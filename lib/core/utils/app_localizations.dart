@@ -218,21 +218,21 @@ class AppLocalizations {
   String get upgradePlan => translate('upgrade_plan');
   String get unlockMoreFeatures => translate('unlock_more_features');
   String get helpCenter => translate('help_center');
-  String get faqs_and_guides => translate('faqs_and_guides');
+  String get faqsAndGuides => translate('faqs_and_guides');
   String get sendFeedback => translate('send_feedback');
   String get shareYourThoughts => translate('share_your_thoughts');
   String get lightMode => translate('light_mode');
   String get darkMode => translate('dark_mode');
-  String get auto_system => translate('auto_system');
+  String get autoSystem => translate('auto_system');
   String get exportDataFormat => translate('export_data_format');
   String get pdfReport => translate('pdf_report');
-  String get comprehensive_wardrobe_report => translate('comprehensive_wardrobe_report');
+  String get comprehensiveWardrobeReport => translate('comprehensive_wardrobe_report');
   String get csvSpreadsheet => translate('csv_spreadsheet');
-  String get raw_data_analysis => translate('raw_data_analysis');
+  String get rawDataAnalysis => translate('raw_data_analysis');
   String get exportingData => translate('exporting_data');
   String get deleteAccountConfirmation => translate('delete_account_confirmation');
-  String get about_everywear => translate('about_everywear');
-  String get logout_confirmation => translate('logout_confirmation');
+  String get aboutEverywear => translate('about_everywear');
+  String get logoutConfirmation => translate('logout_confirmation');
   String get updatePassword => translate('change_password'); // Alias for change_password
 
   String getSelectedItemsLabel(int count) =>

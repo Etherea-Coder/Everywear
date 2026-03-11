@@ -224,8 +224,9 @@ class WardrobeService {
       if (imageUrl != null) updateData['image_url'] = imageUrl;
       if (semanticLabel != null) updateData['semantic_label'] = semanticLabel;
       if (wearCount != null) updateData['wear_count'] = wearCount;
-      if (lastWorn != null)
+      if (lastWorn != null) {
         updateData['last_worn'] = lastWorn.toIso8601String();
+      }
       if (costPerWear != null) updateData['cost_per_wear'] = costPerWear;
       if (purchasePrice != null) updateData['purchase_price'] = purchasePrice;
       if (purchaseDate != null) {
@@ -298,8 +299,8 @@ class WardrobeService {
       }
 
       return {
-        'total_items': totalItemsData.count ?? 0,
-        'favorite_items': favoriteItemsData.count ?? 0,
+        'total_items': totalItemsData.count,
+        'favorite_items': favoriteItemsData.count,
         'category_counts': categoryCounts,
       };
     } catch (error) {

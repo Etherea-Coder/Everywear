@@ -11,7 +11,6 @@ import '../../services/ai_suggestions_service.dart';
 import '../../services/wardrobe_service.dart';
 import '../../services/weather_service.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
-import '../../widgets/custom_icon_widget.dart';
 import './widgets/camera_view_widget.dart';
 import './widgets/outfit_confirmation_widget.dart';
 import './widgets/wardrobe_selection_widget.dart';

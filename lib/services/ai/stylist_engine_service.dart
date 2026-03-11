@@ -282,9 +282,9 @@ class StylistEngineService {
     // Weather consideration
     final temp = weatherData['temperature'] as int;
     if (temp > 75) {
-      reasons.add('Light and breathable for ${temp}°F weather');
+      reasons.add('Light and breathable for $temp°F weather');
     } else if (temp < 50) {
-      reasons.add('Warm and cozy for ${temp}°F weather');
+      reasons.add('Warm and cozy for $temp°F weather');
     }
 
     // Occasion match

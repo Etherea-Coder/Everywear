@@ -4,10 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 
 import '../../core/app_export.dart';
-import '../../core/utils/app_localizations.dart';
 import '../../core/utils/locale_manager.dart';
 import '../../main.dart';
-import '../../routes/app_routes.dart';
 import '../../widgets/custom_app_bar.dart';
 import './widgets/confirmation_dialog_widget.dart';
 import './widgets/profile_header_widget.dart';

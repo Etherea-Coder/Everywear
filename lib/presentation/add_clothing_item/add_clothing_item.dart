@@ -3,7 +3,6 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/wardrobe_service.dart';
-import '../../widgets/custom_icon_widget.dart';
 import './widgets/item_details_form.dart';
 import './widgets/photo_capture_section.dart';
 import './widgets/purchase_info_section.dart';

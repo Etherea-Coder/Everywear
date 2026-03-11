@@ -18,12 +18,12 @@ class LearningPaths extends StatefulWidget {
 
 class _LearningPathsState extends State<LearningPaths> {
   // User progress data
-  int _currentLevel = 2;
-  int _totalModulesCompleted = 3;
-  int _totalModules = 12;
-  double _overallProgress = 0.25;
-  int _outfitsLogged = 15;
-  int _wardrobeItems = 42;
+  final int _currentLevel = 2;
+  final int _totalModulesCompleted = 3;
+  final int _totalModules = 12;
+  final double _overallProgress = 0.25;
+  final int _outfitsLogged = 15;
+  final int _wardrobeItems = 42;
 
   // Learning modules data with unlock requirements
   final List<Map<String, dynamic>> _learningModules = [

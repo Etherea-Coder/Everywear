@@ -3,9 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 import '../../../core/app_export.dart';
 import '../../../services/wardrobe_service.dart';
-import '../../../widgets/custom_icon_widget.dart';
-import '../../../widgets/custom_image_widget.dart';
-import '../../../core/utils/app_localizations.dart';
 
 /// Wardrobe selection widget for building outfits from existing items
 /// Implements categorized horizontal scrolling with multi-select interface
@@ -24,7 +21,7 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
   final WardrobeService _wardrobeService = WardrobeService();
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _wardrobeItems = [];
-  Set<String> _selectedItemIds = {};
+  final Set<String> _selectedItemIds = {};
   String _searchQuery = '';
   bool _isSyncing = true;
 

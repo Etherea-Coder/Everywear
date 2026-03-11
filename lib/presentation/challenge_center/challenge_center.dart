@@ -18,7 +18,7 @@ class ChallengeCenter extends StatefulWidget {
 
 class _ChallengeCenterState extends State<ChallengeCenter> {
   String _selectedFilter = 'all';
-  String _selectedDifficulty = 'all';
+  final String _selectedDifficulty = 'all';
 
   final Map<String, dynamic> _featuredChallenge = {
     'id': 'featured-1',

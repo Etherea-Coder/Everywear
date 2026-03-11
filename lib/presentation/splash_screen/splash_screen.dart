@@ -403,8 +403,9 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               validator: (value) {
                 if (value?.isEmpty ?? true) return 'Password is required';
-                if (value!.length < 6)
+                if (value!.length < 6) {
                   return 'Password must be at least 6 characters';
+                }
                 return null;
               },
             ),
