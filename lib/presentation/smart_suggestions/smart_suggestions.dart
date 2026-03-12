@@ -19,6 +19,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   Map<String, dynamic> _insights = {};
   Map<String, dynamic>? _quizResult;
   bool _isLoading = true;
+  String _coachTip = '';
+  bool _isCoachTipLoading = false;
 
   @override
   void initState() {
@@ -41,6 +43,21 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         _insights = results[2] as Map<String, dynamic>;
         _quizResult = results[3] as Map<String, dynamic>?;
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadCoachTip() async {
+    if (_coachTip.isNotEmpty) return; // Don't reload if already loaded
+    setState(() => _isCoachTipLoading = true);
+    final tip = await _styleService.fetchPassiveCoachTip(
+      insights: _insights,
+      quizResult: _quizResult,
+    );
+    if (mounted) {
+      setState(() {
+        _coachTip = tip;
+        _isCoachTipLoading = false;
       });
     }
   }
@@ -437,7 +454,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
     // ── COACH ───────────────────────────────────────────────
   Widget _buildCoachSection(ThemeData theme) {
-    final passiveTip = _getPassiveCoachTip();
     final nextEvent = _events.isNotEmpty ? _events.first : null;
 
     return Column(
@@ -500,12 +516,27 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 ],
               ),
               SizedBox(height: 2.h),
-              Text(
-                passiveTip,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.4,
-                ),
-              ),
+              _isCoachTipLoading
+                ? Row(
+                    children: [
+                      SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 2.w),
+                      Text(
+                        'Your coach is thinking...',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    _coachTip.isNotEmpty ? _coachTip : 'Your coach is preparing a tip for you...',
+                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                  ),
               SizedBox(height: 2.h),
               SizedBox(
                 width: double.infinity,
@@ -703,9 +734,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     child: OutlinedButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(prompt)),
-                        );
+                        _askCoachQuestion(prompt);
                       },
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(
@@ -735,37 +764,211 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     final dateStr = DateFormat('MMM dd').format(date);
     final eventType = event['event_type'] as String? ?? 'Other';
     final dressCode = event['dress_code'] as String?;
+    bool isLoading = true;
+    Map<String, dynamic> coachData = {};
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(event['title'] as String),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('$dateStr · $eventType'),
-            if (dressCode != null) ...[
-              const SizedBox(height: 8),
-              Text('Dress code: $dressCode'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          // Trigger load on first build
+          if (isLoading && coachData.isEmpty) {
+            _styleService.fetchEventCoaching(
+              event: event,
+              insights: _insights,
+              quizResult: _quizResult,
+            ).then((data) {
+              if (context.mounted) {
+                setDialogState(() {
+                  coachData = data;
+                  isLoading = false;
+                });
+              }
+            });
+          }
+
+          return AlertDialog(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(event['title'] as String),
+                Text(
+                  '$dateStr · $eventType${dressCode != null ? " · $dressCode" : ""}',
+                  style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.normal),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: isLoading
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                : coachData.containsKey('error')
+                  ? Text(coachData['error'] as String)
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (coachData['intro'] != null) ...[
+                            Text(coachData['intro'] as String),
+                            const SizedBox(height: 12),
+                          ],
+                          if (coachData['outfit_1'] != null)
+                            _buildOutfitSuggestion('1', coachData['outfit_1'] as String),
+                          if (coachData['outfit_2'] != null)
+                            _buildOutfitSuggestion('2', coachData['outfit_2'] as String),
+                          if (coachData['outfit_3'] != null)
+                            _buildOutfitSuggestion('3', coachData['outfit_3'] as String),
+                          if (coachData['prep_tip'] != null) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('💡 ', style: TextStyle(fontSize: 14)),
+                                  Expanded(child: Text(coachData['prep_tip'] as String,
+                                    style: const TextStyle(fontSize: 13))),
+                                ],
+                              ),
+                            ),
+                          ],
+                          if (coachData['tip'] != null)
+                            Text(coachData['tip'] as String),
+                        ],
+                      ),
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
             ],
-            const SizedBox(height: 16),
-            const Text(
-              'Coach preview',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildOutfitSuggestion(String number, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24, height: 24,
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade100,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Your coach will use your style profile, wardrobe pieces, and this event context to suggest outfits that feel appropriate and personal.',
+            child: Center(
+              child: Text(number, style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple.shade700,
+              )),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
           ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, height: 1.4))),
         ],
+      ),
+    );
+  }
+
+  void _askCoachQuestion(String question) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          bool isLoading = true;
+          Map<String, dynamic> result = {};
+
+          _styleService.askCoach(
+            question: question,
+            insights: _insights,
+            quizResult: _quizResult,
+          ).then((data) {
+            if (context.mounted) {
+              setDialogState(() {
+                result = data;
+                isLoading = false;
+              });
+            }
+          });
+
+          return AlertDialog(
+            title: const Text('Style Coach'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: isLoading
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          question,
+                          style: const TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          result['answer'] as String? ?? '',
+                          style: const TextStyle(fontSize: 14, height: 1.5),
+                        ),
+                        if ((result['next_step'] as String? ?? '').isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('👣 ', style: TextStyle(fontSize: 14)),
+                                Expanded(
+                                  child: Text(
+                                    result['next_step'] as String,
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

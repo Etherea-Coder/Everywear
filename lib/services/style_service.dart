@@ -213,4 +213,134 @@ class StyleService {
       return false;
     }
   }
+  // ── COACH ───────────────────────────────────────────────
+  Future<String> fetchPassiveCoachTip({
+    required Map<String, dynamic> insights,
+    Map<String, dynamic>? quizResult,
+  }) async {
+    try {
+      final profile = quizResult != null ? {
+        'styleProfile': quizResult['style_profile'],
+        'preferredColors': quizResult['preferred_colors']?.toString(),
+        'styleGoals': quizResult['style_goals']?.toString(),
+      } : null;
+
+      final wardrobeSummary = _buildWardrobeSummary(insights);
+
+      final response = await _client.functions.invoke(
+        'style-coach',
+        body: {
+          'mode': 'passive',
+          'userProfile': profile,
+          'insights': insights,
+          'wardrobeSummary': wardrobeSummary,
+        },
+      );
+
+      if (response.data != null && response.data['success'] == true) {
+        return response.data['tip'] as String? ?? _localPassiveTip(insights, quizResult);
+      }
+      return _localPassiveTip(insights, quizResult);
+    } catch (e) {
+      debugPrint('Coach passive tip error: $e');
+      return _localPassiveTip(insights, quizResult);
+    }
+  }
+
+  Future<Map<String, dynamic>> askCoach({
+    required String question,
+    required Map<String, dynamic> insights,
+    Map<String, dynamic>? quizResult,
+  }) async {
+    try {
+      final profile = quizResult != null ? {
+        'styleProfile': quizResult['style_profile'],
+        'preferredColors': quizResult['preferred_colors']?.toString(),
+        'styleGoals': quizResult['style_goals']?.toString(),
+      } : null;
+
+      final response = await _client.functions.invoke(
+        'style-coach',
+        body: {
+          'mode': 'active',
+          'userProfile': profile,
+          'insights': insights,
+          'wardrobeSummary': _buildWardrobeSummary(insights),
+          'question': question,
+        },
+      );
+
+      if (response.data != null && response.data['success'] == true) {
+        return {
+          'answer': response.data['answer'] ?? response.data['tip'] ?? 'No answer received.',
+          'next_step': response.data['next_step'] ?? '',
+        };
+      }
+      return {'answer': 'Your coach is unavailable right now. Try again shortly.', 'next_step': ''};
+    } catch (e) {
+      debugPrint('Coach active error: $e');
+      return {'answer': 'Your coach is unavailable right now. Try again shortly.', 'next_step': ''};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchEventCoaching({
+    required Map<String, dynamic> event,
+    required Map<String, dynamic> insights,
+    Map<String, dynamic>? quizResult,
+  }) async {
+    try {
+      final date = DateTime.parse(event['event_date']);
+      final daysLeft = date.difference(DateTime.now()).inDays;
+      final profile = quizResult != null ? {
+        'styleProfile': quizResult['style_profile'],
+        'preferredColors': quizResult['preferred_colors']?.toString(),
+        'styleGoals': quizResult['style_goals']?.toString(),
+      } : null;
+
+      final response = await _client.functions.invoke(
+        'style-coach',
+        body: {
+          'mode': 'event',
+          'userProfile': profile,
+          'insights': insights,
+          'wardrobeSummary': _buildWardrobeSummary(insights),
+          'event': {
+            'title': event['title'],
+            'type': event['event_type'],
+            'date': event['event_date'],
+            'daysLeft': daysLeft,
+            'dressCode': event['dress_code'] ?? 'Not specified',
+          },
+        },
+      );
+
+      if (response.data != null && response.data['success'] == true) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {'error': 'Coach unavailable right now.'};
+    } catch (e) {
+      debugPrint('Coach event error: $e');
+      return {'error': 'Coach unavailable right now.'};
+    }
+  }
+
+  String _buildWardrobeSummary(Map<String, dynamic> insights) {
+    final total = insights['totalItems'] ?? 0;
+    final topCat = insights['topCategory'] ?? 'Unknown';
+    final topOcc = insights['topOccasion'] ?? 'Casual';
+    final dist = insights['categoryDistribution'] as Map? ?? {};
+    final distStr = dist.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+    return 'Total: $total items. Distribution: $distStr. Top category: $topCat. Top occasion: $topOcc.';
+  }
+
+  String _localPassiveTip(Map<String, dynamic> insights, Map<String, dynamic>? quiz) {
+    final profile = (quiz?['style_profile'] ?? '').toString().toLowerCase();
+    final topCat = insights['topCategory'] ?? 'your wardrobe';
+    if (profile.contains('classic')) return 'Your style leans polished and timeless. Try one softer texture this week to add depth without losing elegance.';
+    if (profile.contains('bold')) return 'You enjoy expressive style. Balance one statement piece with a simpler base to make it stand out even more.';
+    if (profile.contains('sport')) return 'Your style is practical. Try elevating one look with a more structured layer for a sharper finish.';
+    if (profile.contains('minimal')) return 'Your style is clean and intentional. Focus on contrast this week with one richer tone or texture.';
+    return 'You have a strong base in $topCat. Try combining a familiar piece with something you wear less often this week.';
+  }
+
 }
