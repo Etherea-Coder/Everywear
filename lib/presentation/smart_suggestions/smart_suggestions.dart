@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
 import '../../core/app_export.dart';
 import '../../services/style_service.dart';
-import '../../services/weather_service.dart';
 
 class SmartSuggestions extends StatefulWidget {
   const SmartSuggestions({Key? key}) : super(key: key);
@@ -14,13 +13,11 @@ class SmartSuggestions extends StatefulWidget {
 
 class _SmartSuggestionsState extends State<SmartSuggestions> {
   final StyleService _styleService = StyleService();
-  final WeatherService _weatherService = WeatherService();
 
   List<Map<String, dynamic>> _events = [];
   List<Map<String, dynamic>> _challenges = [];
   Map<String, dynamic> _insights = {};
   Map<String, dynamic>? _quizResult;
-  Map<String, dynamic> _weather = {};
   bool _isLoading = true;
 
   @override
@@ -36,7 +33,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       _styleService.fetchChallenges(),
       _styleService.fetchStyleInsights(),
       _styleService.fetchQuizResult(),
-      _weatherService.getCurrentWeather(),
     ]);
     if (mounted) {
       setState(() {
@@ -44,7 +40,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         _challenges = results[1] as List<Map<String, dynamic>>;
         _insights = results[2] as Map<String, dynamic>;
         _quizResult = results[3] as Map<String, dynamic>?;
-        _weather = (results[4] as Map<String, dynamic>?) ?? {};
         _isLoading = false;
       });
     }
@@ -80,9 +75,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 padding: EdgeInsets.symmetric(horizontal: 4.w),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Weather card
-                    _buildWeatherCard(theme),
-                    SizedBox(height: 3.h),
                     // Style Quiz section
                     _buildQuizSection(theme),
                     SizedBox(height: 3.h),
@@ -114,80 +106,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         ),
       ),
     );
-  }
-
-  // ── WEATHER ─────────────────────────────────────────────
-  Widget _buildWeatherCard(ThemeData theme) {
-    final temp = _weather['temperature'] ?? '--';
-    final condition = _weather['condition'] ?? 'Loading...';
-    final location = _weather['location'] ?? '';
-    final unit = _weather['unit'] ?? '°F';
-
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.7),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.wb_sunny, color: Colors.white, size: 48),
-          SizedBox(width: 4.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$temp$unit · $condition',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (location.isNotEmpty)
-                  Text(
-                    location,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white70,
-                    ),
-                  ),
-                SizedBox(height: 1.h),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _getWeatherTip(condition),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getWeatherTip(String condition) {
-    final c = condition.toLowerCase();
-    if (c.contains('rain')) return '🌂 Bring a waterproof layer today';
-    if (c.contains('snow')) return '🧥 Layer up, stay warm';
-    if (c.contains('sun') || c.contains('clear')) return '😎 Perfect for light layers';
-    if (c.contains('cloud')) return '🌤 A light jacket would work well';
-    if (c.contains('wind')) return '💨 Try a fitted outfit today';
-    return '👗 Dress for your day ahead';
   }
 
   // ── EVENTS ──────────────────────────────────────────────

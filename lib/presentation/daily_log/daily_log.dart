@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/outfit_log_service.dart';
+import '../../services/weather_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import './widgets/calendar_header_widget.dart';
 import './widgets/outfit_entry_card_widget.dart';
@@ -23,6 +24,7 @@ class _DailyLogState extends State<DailyLog> {
   String _viewMode = 'calendar';
 
   final OutfitLogService _outfitLogService = OutfitLogService();
+  final WeatherService _weatherService = WeatherService();
 
   List<Map<String, dynamic>> _todayEntries = [];
   Map<String, List<Map<String, dynamic>>> _monthEntries = {};
@@ -31,6 +33,7 @@ class _DailyLogState extends State<DailyLog> {
     'uniqueItems': 0,
     'favoriteOccasion': 'None',
   };
+  Map<String, dynamic> _weather = {};
   bool _isLoading = true;
 
   @override
@@ -41,11 +44,17 @@ class _DailyLogState extends State<DailyLog> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    await Future.wait([
+    final results = await Future.wait([
       _loadEntriesForDate(_selectedDate),
       _loadMonthData(_focusedMonth),
+      _weatherService.getCurrentWeather(),
     ]);
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() {
+        _weather = (results[2] as Map<String, dynamic>?) ?? {};
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadEntriesForDate(DateTime date) async {
@@ -70,10 +79,85 @@ class _DailyLogState extends State<DailyLog> {
     }
   }
 
+  // ── WEATHER ─────────────────────────────────────────────
+  Widget _buildWeatherCard(ThemeData theme) {
+    final temp = _weather['temperature'] ?? '--';
+    final condition = _weather['condition'] ?? 'Loading...';
+    final location = _weather['location'] ?? '';
+    final unit = _weather['unit'] ?? '°C';
+
+    return Container(
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.wb_sunny, color: Colors.white, size: 48),
+          SizedBox(width: 4.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$temp$unit · $condition',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (location.isNotEmpty)
+                  Text(
+                    location,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                SizedBox(height: 1.h),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    _getWeatherTip(condition),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getWeatherTip(String condition) {
+    final c = condition.toLowerCase();
+    if (c.contains('rain')) return '🌂 Bring a waterproof layer today';
+    if (c.contains('snow')) return '🧥 Layer up, stay warm';
+    if (c.contains('sun') || c.contains('clear')) return '😎 Perfect for light layers';
+    if (c.contains('cloud')) return '🌤 A light jacket would work well';
+    if (c.contains('wind')) return '💨 Try a fitted outfit today';
+    return '👗 Dress for your day ahead';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'Daily Log',
         actions: [
@@ -101,6 +185,9 @@ class _DailyLogState extends State<DailyLog> {
         onRefresh: _loadData,
         child: Column(
           children: [
+            // Weather Card
+            _buildWeatherCard(theme),
+            SizedBox(height: 2.h),
             // Calendar
             CalendarHeaderWidget(
               focusedMonth: _focusedMonth,

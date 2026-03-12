@@ -38,7 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const WardrobeManagement(), // Index 1: Wardrobe
     const SmartSuggestions(),   // Index 2: Style
     const PurchaseTracking(),   // Index 3: Purchases
-    const SettingsProfile(),    // Index 4: Profile (includes Insights link)
+    const ProfileScreen(),    // Index 4: Profile (includes Insights link)
   ];
 
   /// Track navigation as actions for interstitial ads

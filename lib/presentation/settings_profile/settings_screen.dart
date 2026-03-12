@@ -13,6 +13,8 @@ import './widgets/confirmation_dialog_widget.dart';
 import './widgets/settings_section_widget.dart';
 import './widgets/settings_tile_widget.dart';
 import './widgets/theme_selector_dialog.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);

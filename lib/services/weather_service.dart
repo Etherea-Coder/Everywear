@@ -93,7 +93,7 @@ class WeatherService {
 
     try {
       final uri = Uri.parse(
-        '$_baseUrl?latitude=$_latitude&longitude=$_longitude&current=temperature_2m,weather_code,is_day&temperature_unit=fahrenheit',
+        '$_baseUrl?latitude=$_latitude&longitude=$_longitude&current=temperature_2m,weather_code,is_day&temperature_unit=celsius',
       );
 
       final response = await http.get(uri).timeout(
@@ -128,7 +128,7 @@ class WeatherService {
       'condition': _getConditionFromCode(weatherCode),
       'icon': _getIconFromCode(weatherCode, isDay == 1),
       'location': _locationName,
-      'unit': '°F',
+      'unit': '°C',
       'timestamp': DateTime.now().toIso8601String(),
       'latitude': _latitude,
       'longitude': _longitude,
@@ -233,11 +233,11 @@ class WeatherService {
     final index = (now.hour + now.minute) % conditions.length;
 
     return {
-      'temperature': 65 + (now.minute % 15), // 65-79°F range
+      'temperature': 18 + (now.minute % 12), // 18-29°C range
       'condition': conditions[index],
       'icon': icons[index],
       'location': _locationName,
-      'unit': '°F',
+      'unit': '°C',
       'timestamp': now.toIso8601String(),
     };
   }
