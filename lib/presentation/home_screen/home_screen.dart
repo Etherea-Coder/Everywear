@@ -5,7 +5,7 @@ import '../daily_log/daily_log.dart';
 import '../wardrobe_management/wardrobe_management.dart';
 import '../smart_suggestions/smart_suggestions.dart';
 import '../purchase_tracking/purchase_tracking.dart';
-import '../settings_profile/settings_profile.dart';
+import '../settings_profile/profile_screen.dart';
 import '../../widgets/custom_bottom_bar.dart';
 import '../../layout/ad_layout.dart';
 import '../../providers/ad_providers.dart';
