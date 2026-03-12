@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/providers.dart';
 
+import '../../core/providers.dart';
 import '../../core/app_export.dart';
 import '../../core/utils/app_localizations.dart';
 import '../../core/utils/locale_manager.dart';
@@ -15,12 +15,6 @@ import './widgets/settings_section_widget.dart';
 import './widgets/settings_tile_widget.dart';
 import './widgets/theme_selector_dialog.dart';
 
-/// Settings Profile Screen - Comprehensive user account management and app customization
-/// Provides organized sections for profile management, preferences, privacy, and data control
-/// 
-/// Navigation structure updated:
-/// - Insights Dashboard now accessible from Profile (reduced bottom nav to 5 tabs)
-/// - Clear visual hierarchy with sectioned settings
 class SettingsProfile extends ConsumerStatefulWidget {
   const SettingsProfile({Key? key}) : super(key: key);
 
@@ -29,50 +23,16 @@ class SettingsProfile extends ConsumerStatefulWidget {
 }
 
 class _SettingsProfileState extends ConsumerState<SettingsProfile> {
-  // User profile data (mock)
-  final Map<String, dynamic> _userProfile = {
-    'name': 'Sarah Mitchell',
-    'email': 'sarah.mitchell@email.com',
-    'avatarUrl': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330',
-    'membershipTier': 'Premium',
-    'joinDate': '2025-06-15',
-  };
-
-  // App preferences
-  bool _emailNotifications = false;
-  bool _twoFactorAuth = true;
-  bool _dataSharing = false;
+  bool _morningAISuggestions = true;
   bool _analyticsOptIn = true;
-  String _measurementUnit = 'metric';
-
-  // Subscription data (mock)
-  final Map<String, dynamic> _subscriptionData = {
-    'plan': 'Premium',
-    'price': '\$9.99/month',
-    'nextBilling': '2026-02-12',
-    'features': [
-      'Unlimited wardrobe items',
-      'AI insights',
-      'Export data',
-      'Priority support',
-    ],
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedSettings();
-  }
-
-  /// Load saved settings from persistent storage (deprecated for providers)
-  Future<void> _loadSavedSettings() async {
-    // Current theme and locale are already managed by providers synced in MyApp
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localizations = AppLocalizations.of(context);
+
+    // ⚠️ Adjust `currentUserProvider` to match your actual auth provider
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -82,114 +42,30 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
       ),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ProfileHeaderWidget(
-              name: _userProfile['name'],
-              email: _userProfile['email'],
-              avatarUrl: _userProfile['avatarUrl'],
-              membershipTier: _userProfile['membershipTier'],
+              name: user?.displayName ?? '',
+              email: user?.email ?? '',
+              avatarUrl: user?.photoURL ?? '',
+              membershipTier: user?.membershipTier ?? 'Free',
               onEditProfile: _handleEditProfile,
             ),
             SizedBox(height: 2.h),
-            
-            // ==========================================
-            // INSIGHTS & ANALYTICS SECTION (NEW)
-            // Moved from bottom navigation for cleaner UX
-            // ==========================================
-            SettingsSectionWidget(
-              title: 'Insights & Analytics',
+
+            _buildSection(
+              title: 'General',
               children: [
-                SettingsTileWidget(
-                  icon: Icons.insights_outlined,
-                  title: 'Style Insights',
-                  subtitle: 'View wardrobe analytics and AI recommendations',
-                  trailing: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'NEW',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.insightsDashboard),
-                ),
-                SettingsTileWidget(
-                  icon: Icons.emoji_events_outlined,
-                  title: 'Achievements',
-                  subtitle: 'View earned badges and milestones',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.achievementGallery),
-                ),
-                SettingsTileWidget(
-                  icon: Icons.trending_up_outlined,
-                  title: 'Progress Dashboard',
-                  subtitle: 'Track your style evolution',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.personalProgressDashboard),
-                ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            
-            SettingsSectionWidget(
-              title: localizations.accountSettings,
-              children: [
-                SettingsTileWidget(
-                  icon: Icons.lock_outline,
-                  title: localizations.changePassword,
-                  subtitle: localizations.updatePassword,
-                  onTap: _handleChangePassword,
-                ),
-                SettingsTileWidget(
-                  icon: Icons.email_outlined,
-                  title: localizations.emailPreferences,
-                  subtitle: localizations.manageEmailNotifications,
-                  trailing: Switch(
-                    value: _emailNotifications,
-                    onChanged: (value) {
-                      setState(() => _emailNotifications = value);
-                    },
-                    activeThumbColor: theme.colorScheme.primary,
-                  ),
-                ),
-                SettingsTileWidget(
-                  icon: Icons.security,
-                  title: localizations.twoFactorAuth,
-                  subtitle: _twoFactorAuth
-                      ? localizations.enabled
-                      : localizations.disabled,
-                  trailing: Switch(
-                    value: _twoFactorAuth,
-                    onChanged: (value) {
-                      setState(() => _twoFactorAuth = value);
-                    },
-                    activeThumbColor: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            SettingsSectionWidget(
-              title: localizations.appPreferences,
-              children: [
-                SettingsTileWidget(
+                _buildNavTile(
                   icon: Icons.palette_outlined,
                   title: localizations.theme,
-                  subtitle: _getThemeLabel(ref.watch(themeModeProvider).toString().split('.').last, localizations),
+                  subtitle: _getThemeLabel(
+                    ref.watch(themeModeProvider).toString().split('.').last,
+                    localizations,
+                  ),
                   onTap: () => _showThemeSelector(context),
                 ),
-                SettingsTileWidget(
-                  icon: Icons.notifications_outlined,
-                  title: localizations.notifications,
-                  subtitle: localizations.manageNotifications,
-                  onTap: () {},
-                ),
-                SettingsTileWidget(
+                _buildNavTile(
                   icon: Icons.language_outlined,
                   title: localizations.language,
                   subtitle: LocaleManager.getLanguageDisplayName(
@@ -197,61 +73,28 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
                   ),
                   onTap: () => _showLanguageSelector(context),
                 ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            SettingsSectionWidget(
-              title: localizations.privacySettings,
-              children: [
-                SettingsTileWidget(
-                  icon: Icons.share_outlined,
-                  title: localizations.dataSharing,
-                  subtitle: localizations.shareUsageData,
-                  trailing: Switch(
-                    value: _dataSharing,
-                    onChanged: (value) {
-                      setState(() => _dataSharing = value);
-                    },
-                    activeThumbColor: theme.colorScheme.primary,
-                  ),
-                ),
-                SettingsTileWidget(
-                  icon: Icons.analytics_outlined,
-                  title: localizations.analytics,
-                  subtitle: localizations.helpImproveApp,
-                  trailing: Switch(
-                    value: _analyticsOptIn,
-                    onChanged: (value) {
-                      setState(() => _analyticsOptIn = value);
-                    },
-                    activeThumbColor: theme.colorScheme.primary,
-                  ),
-                ),
-                SettingsTileWidget(
-                  icon: Icons.visibility_outlined,
-                  title: localizations.profileVisibility,
-                  subtitle: localizations.manageProfileVisibility,
-                  onTap: _handleVisibilitySettings,
+                _buildSwitchTile(
+                  icon: Icons.wb_sunny_outlined,
+                  title: 'Morning AI suggestions',
+                  subtitle: 'Daily outfit ideas every morning',
+                  value: _morningAISuggestions,
+                  onChanged: (value) =>
+                      setState(() => _morningAISuggestions = value),
                 ),
               ],
             ),
             SizedBox(height: 2.h),
-            SettingsSectionWidget(
-              title: localizations.dataManagement,
+
+            _buildSection(
+              title: localizations.accountSettings,
               children: [
-                SettingsTileWidget(
-                  icon: Icons.download_outlined,
-                  title: localizations.exportData,
-                  subtitle: localizations.downloadWardrobeData,
-                  onTap: () => _showExportOptions(context),
+                _buildNavTile(
+                  icon: Icons.lock_outline,
+                  title: localizations.changePassword,
+                  subtitle: localizations.updatePassword,
+                  onTap: _handleChangePassword,
                 ),
-                SettingsTileWidget(
-                  icon: Icons.backup_outlined,
-                  title: localizations.backupSettings,
-                  subtitle: localizations.automaticCloudBackup,
-                  onTap: _handleBackupSettings,
-                ),
-                SettingsTileWidget(
+                _buildNavTile(
                   icon: Icons.delete_outline,
                   title: localizations.deleteAccount,
                   subtitle: localizations.permanentlyDeleteAccount,
@@ -261,23 +104,38 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
               ],
             ),
             SizedBox(height: 2.h),
-            SettingsSectionWidget(
+
+            _buildSection(
+              title: localizations.privacySettings,
+              children: [
+                _buildSwitchTile(
+                  icon: Icons.analytics_outlined,
+                  title: localizations.analytics,
+                  subtitle: localizations.helpImproveApp,
+                  value: _analyticsOptIn,
+                  onChanged: (value) =>
+                      setState(() => _analyticsOptIn = value),
+                ),
+                _buildNavTile(
+                  icon: Icons.download_outlined,
+                  title: localizations.exportData,
+                  subtitle: localizations.downloadWardrobeData,
+                  onTap: () => _showExportOptions(context),
+                ),
+              ],
+            ),
+            SizedBox(height: 2.h),
+
+            _buildSection(
               title: localizations.subscription,
               children: [
-                SettingsTileWidget(
+                _buildNavTile(
                   icon: Icons.card_membership,
                   title: localizations.currentPlan,
-                  subtitle:
-                      '${_subscriptionData['plan']} - ${_subscriptionData['price']}',
+                  subtitle: user?.membershipTier ?? 'Free',
                   onTap: _handleViewSubscription,
                 ),
-                SettingsTileWidget(
-                  icon: Icons.receipt_long,
-                  title: localizations.billingHistory,
-                  subtitle: localizations.viewPastInvoices,
-                  onTap: _handleBillingHistory,
-                ),
-                SettingsTileWidget(
+                _buildNavTile(
                   icon: Icons.upgrade,
                   title: localizations.upgradePlan,
                   subtitle: localizations.unlockMoreFeatures,
@@ -286,42 +144,38 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
               ],
             ),
             SizedBox(height: 2.h),
-            SettingsSectionWidget(
+
+            _buildSection(
               title: localizations.helpAndSupport,
               children: [
-                SettingsTileWidget(
+                _buildNavTile(
                   icon: Icons.help_outline,
                   title: localizations.helpCenter,
                   subtitle: localizations.faqsAndGuides,
                   onTap: _handleHelpCenter,
                 ),
-                SettingsTileWidget(
+                _buildNavTile(
                   icon: Icons.feedback_outlined,
                   title: localizations.sendFeedback,
                   subtitle: localizations.shareYourThoughts,
                   onTap: _handleSendFeedback,
                 ),
-                SettingsTileWidget(
-                  icon: Icons.info_outline,
-                  title: localizations.about,
-                  subtitle: localizations.version,
-                  onTap: _handleAbout,
-                ),
               ],
             ),
             SizedBox(height: 3.h),
+
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _handleLogout,
+                  onPressed: () => _handleLogout(context, localizations),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.error,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 1.5.h),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: Text(
@@ -334,12 +188,66 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
                 ),
               ),
             ),
+            SizedBox(height: 1.5.h),
+
+            Text(
+              'Version 1.0.0',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
             SizedBox(height: 3.h),
           ],
         ),
       ),
     );
   }
+
+  // ─── Section & Tile Builders ──────────────────────────────────────────────
+
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return SettingsSectionWidget(title: title, children: children);
+  }
+
+  Widget _buildNavTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Color? titleColor,
+    VoidCallback? onTap,
+  }) {
+    return SettingsTileWidget(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      titleColor: titleColor,
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildSwitchTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SettingsTileWidget(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      trailing: Switch(
+        value: value,
+        onChanged: onChanged,
+        activeThumbColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
+  // ─── Theme ────────────────────────────────────────────────────────────────
 
   String _getThemeLabel(String theme, AppLocalizations localizations) {
     switch (theme) {
@@ -354,50 +262,32 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     }
   }
 
-  void _handleEditProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit profile functionality coming soon')),
-    );
-  }
-
-  void _handleChangePassword() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Change password functionality coming soon'),
-      ),
-    );
-  }
-
   void _showThemeSelector(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => ThemeSelectorDialog(
-        currentTheme: ref.watch(themeModeProvider).toString().split('.').last,
-        onThemeSelected: (theme) {
-          _applyThemeMode(theme);
-        },
+        currentTheme:
+            ref.watch(themeModeProvider).toString().split('.').last,
+        onThemeSelected: _applyThemeMode,
       ),
     );
   }
 
   void _applyThemeMode(String themeMode) async {
-    final mode = themeMode == 'dark' ? ThemeMode.dark : (themeMode == 'auto' ? ThemeMode.system : ThemeMode.light);
+    final mode = themeMode == 'dark'
+        ? ThemeMode.dark
+        : themeMode == 'auto'
+            ? ThemeMode.system
+            : ThemeMode.light;
+
     await ref.read(settingsNotifierProvider.notifier).updateTheme(mode);
 
-    // Apply theme to entire app by updating MyApp state
     if (mounted) {
-      final myAppState = MyApp.of(context);
-      if (myAppState != null) {
-        myAppState.updateThemeMode(themeMode);
-      }
+      MyApp.of(context)?.updateThemeMode(themeMode);
     }
   }
 
-  void _toggleMeasurementUnit() {
-    setState(() {
-      _measurementUnit = _measurementUnit == 'metric' ? 'imperial' : 'metric';
-    });
-  }
+  // ─── Language ─────────────────────────────────────────────────────────────
 
   void _showLanguageSelector(BuildContext context) {
     final localizations = AppLocalizations.of(context);
@@ -411,39 +301,39 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
           {'code': 'fr', 'name': localizations.french},
         ];
 
-        return Container(
+        return Padding(
           padding: EdgeInsets.all(4.w),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 localizations.selectLanguage,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               SizedBox(height: 2.h),
               ...languages.map((lang) {
-                final languageCode = lang['code']!;
-                final languageName = lang['name']!;
-                final currentLanguageCode = ref.watch(localeProvider).languageCode;
-                final isSelected = currentLanguageCode == languageCode;
+                final code = lang['code']!;
+                final name = lang['name']!;
+                final isSelected =
+                    ref.watch(localeProvider).languageCode == code;
 
                 return ListTile(
                   leading: Text(
-                    LocaleManager.getLanguageFlag(languageCode),
+                    LocaleManager.getLanguageFlag(code),
                     style: TextStyle(fontSize: 24.sp),
                   ),
-                  title: Text(languageName),
-                  trailing: isSelected ? const Icon(Icons.check_circle) : null,
+                  title: Text(name),
+                  trailing:
+                      isSelected ? const Icon(Icons.check_circle) : null,
                   onTap: () {
-                    final newLocale = Locale(languageCode);
-                    ref.read(settingsNotifierProvider.notifier).updateLocale(newLocale);
-
-                    // Apply language immediately by updating the parent MyApp state
-                    final myAppState = MyApp.of(context);
-                    if (myAppState != null) {
-                      myAppState.updateLocale(newLocale);
-                    }
-
+                    final newLocale = Locale(code);
+                    ref
+                        .read(settingsNotifierProvider.notifier)
+                        .updateLocale(newLocale);
+                    MyApp.of(context)?.updateLocale(newLocale);
                     Navigator.pop(context);
                   },
                 );
@@ -455,68 +345,18 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     );
   }
 
-  void _handleVisibilitySettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Visibility settings coming soon')),
-    );
+  // ─── Account ──────────────────────────────────────────────────────────────
+
+  void _handleEditProfile() {
+    Navigator.pushNamed(context, AppRoutes.editProfile);
   }
 
-  void _showExportOptions(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(4.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                localizations.exportDataFormat,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: 2.h),
-              ListTile(
-                leading: const Icon(Icons.picture_as_pdf),
-                title: Text(localizations.pdfReport),
-                subtitle: Text(localizations.comprehensiveWardrobeReport),
-                onTap: () {
-                  Navigator.pop(context);
-                  _handleExportData('PDF');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.table_chart),
-                title: Text(localizations.csvSpreadsheet),
-                subtitle: Text(localizations.rawDataAnalysis),
-                onTap: () {
-                  Navigator.pop(context);
-                  _handleExportData('CSV');
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _handleExportData(String format) {
-    final localizations = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${localizations.exportingData} $format...')));
-  }
-
-  void _handleBackupSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Backup settings coming soon')),
-    );
+  void _handleChangePassword() {
+    Navigator.pushNamed(context, AppRoutes.changePassword);
   }
 
   void _showDeleteAccountConfirmation(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-
     showDialog(
       context: context,
       builder: (context) => ConfirmationDialogWidget(
@@ -531,62 +371,86 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
   }
 
   void _handleDeleteAccount() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Account deletion initiated')));
+    // TODO: wire to auth delete
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Account deletion initiated')),
+    );
   }
+
+  // ─── Export ───────────────────────────────────────────────────────────────
+
+  void _showExportOptions(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Padding(
+        padding: EdgeInsets.all(4.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              localizations.exportDataFormat,
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 2.h),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf),
+              title: Text(localizations.pdfReport),
+              subtitle: Text(localizations.comprehensiveWardrobeReport),
+              onTap: () {
+                Navigator.pop(context);
+                _handleExportData('PDF');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.table_chart),
+              title: Text(localizations.csvSpreadsheet),
+              subtitle: Text(localizations.rawDataAnalysis),
+              onTap: () {
+                Navigator.pop(context);
+                _handleExportData('CSV');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleExportData(String format) {
+    final localizations = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${localizations.exportingData} $format...')),
+    );
+  }
+
+  // ─── Subscription ─────────────────────────────────────────────────────────
 
   void _handleViewSubscription() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Subscription details coming soon')),
-    );
-  }
-
-  void _handleBillingHistory() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Billing history coming soon')),
-    );
+    Navigator.pushNamed(context, AppRoutes.subscription);
   }
 
   void _handleUpgradePlan() {
     Navigator.pushNamed(context, AppRoutes.premiumUpgrade);
   }
 
+  // ─── Help ─────────────────────────────────────────────────────────────────
+
   void _handleHelpCenter() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Help center coming soon')));
+    Navigator.pushNamed(context, AppRoutes.helpCenter);
   }
 
   void _handleSendFeedback() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Feedback form coming soon')));
+    Navigator.pushNamed(context, AppRoutes.sendFeedback);
   }
 
-  void _handleAbout() {
-    final localizations = AppLocalizations.of(context);
+  // ─── Logout ───────────────────────────────────────────────────────────────
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(localizations.about),
-        content: Text(
-          '${localizations.appName} - ${localizations.aboutEverywear}\n\n${localizations.version}\n© 2026 ${localizations.appName}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(localizations.ok),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _handleLogout() {
-    final localizations = AppLocalizations.of(context);
-
+  void _handleLogout(BuildContext context, AppLocalizations localizations) {
     showDialog(
       context: context,
       builder: (context) => ConfirmationDialogWidget(
@@ -596,9 +460,8 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
         cancelText: localizations.cancel,
         isDestructive: false,
         onConfirm: () {
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil('/splash-screen', (route) => false);
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
         },
       ),
     );
