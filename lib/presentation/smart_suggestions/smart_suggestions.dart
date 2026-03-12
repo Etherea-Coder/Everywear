@@ -677,81 +677,125 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   void _showCoachPromptSheet() {
-    final prompts = [
-      'What should I wear to a job interview?',
-      'How can I style my navy blazer differently?',
-      'Do I own too many similar items?',
-      'What should I wear this weekend?',
-      'How can I make my wardrobe feel more versatile?',
-      'What piece should I buy next to complete more outfits?',
+    final topics = [
+      {'label': '👔 Outfit ideas', 'question': 'Give me outfit ideas based on my wardrobe and style profile.'},
+      {'label': '🛍 Shopping advice', 'question': 'What piece should I buy next to complete more outfits in my wardrobe?'},
+      {'label': '👗 My wardrobe', 'question': 'Give me an honest assessment of my wardrobe based on my data.'},
+      {'label': '📅 For an event', 'question': 'How should I dress for a special occasion based on my style?'},
+      {'label': '🔄 More variety', 'question': 'How can I create more outfit variety with what I already own?'},
+      {'label': '✨ Style upgrade', 'question': 'What is one thing I can change to elevate my everyday style?'},
     ];
+
+    final customController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.all(4.w),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: EdgeInsets.only(bottom: 2.h),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.all(4.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      margin: EdgeInsets.only(bottom: 2.h),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  'Ask your coach',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  Text(
+                    'Ask your coach',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                SizedBox(height: 0.8.h),
-                Text(
-                  'Choose a question to start your coaching flow.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  SizedBox(height: 0.5.h),
+                  Text(
+                    'Type your own question or pick a topic.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                SizedBox(height: 2.h),
-                ...prompts.map(
-                  (prompt) => Container(
-                    margin: EdgeInsets.only(bottom: 1.2.h),
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _askCoachQuestion(prompt);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
-                          vertical: 1.6.h,
-                        ),
-                        alignment: Alignment.centerLeft,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  SizedBox(height: 2.h),
+                  // Free text input
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: customController,
+                          decoration: InputDecoration(
+                            hintText: 'e.g. How do I look more confident?',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 4.w, vertical: 1.5.h,
+                            ),
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (val) {
+                            if (val.trim().isEmpty) return;
+                            Navigator.pop(context);
+                            _askCoachQuestion(val.trim());
+                          },
                         ),
                       ),
-                      child: Text(prompt),
+                      SizedBox(width: 2.w),
+                      IconButton(
+                        onPressed: () {
+                          final val = customController.text.trim();
+                          if (val.isEmpty) return;
+                          Navigator.pop(context);
+                          _askCoachQuestion(val);
+                        },
+                        icon: const Icon(Icons.send),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    'Or pick a topic',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-                SizedBox(height: 1.h),
-              ],
+                  SizedBox(height: 1.h),
+                  Wrap(
+                    spacing: 2.w,
+                    runSpacing: 1.h,
+                    children: topics.map((topic) => ActionChip(
+                      label: Text(topic['label']!),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _askCoachQuestion(topic['question']!);
+                      },
+                    )).toList(),
+                  ),
+                  SizedBox(height: 2.h),
+                ],
+              ),
             ),
           ),
         ),
@@ -771,8 +815,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          // Trigger load on first build
+          // Trigger load only once
           if (isLoading && coachData.isEmpty) {
+            isLoading = false; // prevent re-trigger
             _styleService.fetchEventCoaching(
               event: event,
               insights: _insights,
@@ -781,7 +826,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               if (context.mounted) {
                 setDialogState(() {
                   coachData = data;
-                  isLoading = false;
                 });
               }
             });
@@ -887,26 +931,28 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   void _askCoachQuestion(String question) async {
+    bool isLoading = true;
+    Map<String, dynamic> result = {};
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          bool isLoading = true;
-          Map<String, dynamic> result = {};
-
-          _styleService.askCoach(
-            question: question,
-            insights: _insights,
-            quizResult: _quizResult,
-          ).then((data) {
-            if (context.mounted) {
-              setDialogState(() {
-                result = data;
-                isLoading = false;
-              });
-            }
-          });
+          if (isLoading && result.isEmpty) {
+            isLoading = false; // prevent re-trigger
+            _styleService.askCoach(
+              question: question,
+              insights: _insights,
+              quizResult: _quizResult,
+            ).then((data) {
+              if (context.mounted) {
+                setDialogState(() {
+                  result = data;
+                });
+              }
+            });
+          }
 
           return AlertDialog(
             title: const Text('Style Coach'),
@@ -1388,6 +1434,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
     int currentQuestion = 0;
     final Map<String, String> answers = {};
+    final intentionController = TextEditingController();
 
     showDialog(
       context: context,
@@ -1434,6 +1481,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 onPressed: answers[q['question']] == null ? null : () async {
                   if (currentQuestion < questions.length - 1) {
                     setDialogState(() => currentQuestion++);
+                  } else if (currentQuestion == questions.length - 1) {
+                    setDialogState(() => currentQuestion++); // go to intention step
                   } else {
                     Navigator.pop(context);
                     final profile = _determineStyleProfile(answers);
@@ -1442,6 +1491,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       preferredColors: [answers[questions[1]['question']] ?? ''],
                       styleGoals: [answers[questions[2]['question']] ?? ''],
                       answers: answers,
+                      styleIntention: intentionController.text.trim(),
                     );
                     _loadData();
                   }

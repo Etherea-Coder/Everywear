@@ -50,7 +50,8 @@ IMPORTANT:
 USER PROFILE:
 - Style profile: ${userProfile?.styleProfile ?? 'Not set yet'}
 - Preferred colors: ${userProfile?.preferredColors ?? 'Not specified'}
-- Style goals: ${userProfile?.styleGoals ?? 'Not specified'}`
+- Style goals: ${userProfile?.styleGoals ?? 'Not specified'}
+- Style intention (in their own words): ${userProfile?.styleIntention ?? 'Not provided'}`
 
     const insightsBlock = `
 WARDROBE DATA:

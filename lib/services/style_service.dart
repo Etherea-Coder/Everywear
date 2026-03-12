@@ -195,6 +195,7 @@ class StyleService {
     required List<String> preferredColors,
     required List<String> styleGoals,
     required Map<String, dynamic> answers,
+    String? styleIntention,
   }) async {
     try {
       final userId = _client.auth.currentUser?.id;
@@ -205,6 +206,7 @@ class StyleService {
         'preferred_colors': preferredColors,
         'style_goals': styleGoals,
         'answers': answers,
+        'style_intention': styleIntention,
         'completed_at': DateTime.now().toIso8601String(),
       });
       return true;
@@ -223,6 +225,7 @@ class StyleService {
         'styleProfile': quizResult['style_profile'],
         'preferredColors': quizResult['preferred_colors']?.toString(),
         'styleGoals': quizResult['style_goals']?.toString(),
+        'styleIntention': quizResult['style_intention']?.toString(),
       } : null;
 
       final wardrobeSummary = _buildWardrobeSummary(insights);
@@ -257,6 +260,7 @@ class StyleService {
         'styleProfile': quizResult['style_profile'],
         'preferredColors': quizResult['preferred_colors']?.toString(),
         'styleGoals': quizResult['style_goals']?.toString(),
+        'styleIntention': quizResult['style_intention']?.toString(),
       } : null;
 
       final response = await _client.functions.invoke(
@@ -295,6 +299,7 @@ class StyleService {
         'styleProfile': quizResult['style_profile'],
         'preferredColors': quizResult['preferred_colors']?.toString(),
         'styleGoals': quizResult['style_goals']?.toString(),
+        'styleIntention': quizResult['style_intention']?.toString(),
       } : null;
 
       final response = await _client.functions.invoke(
