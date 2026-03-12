@@ -75,6 +75,15 @@ class AppRoutes {
   // PREMIUM & BILLING
   // ============================================
   static const String premiumUpgrade = '/premium-upgrade';
+  static const String subscription = '/premium-upgrade';
+
+  // ============================================
+  // PROFILE ACTIONS
+  // ============================================
+  static const String editProfile = '/settings-profile';
+  static const String changePassword = '/settings-profile';
+  static const String helpCenter = '/settings-profile';
+  static const String sendFeedback = '/settings-profile';
 
   // ============================================
   // ROUTE MAP
