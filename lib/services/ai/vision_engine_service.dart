@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import './cloud_vision_service.dart';
 import './model_download_service.dart';
 
@@ -176,14 +179,46 @@ class VisionEngineServiceMobile implements VisionEngineService {
       return await _analyzeWithLocalModel(imagePath);
     }
 
-    // Tier 2: Try cloud AI if online
-    final cloudResult = await _cloudService.analyzePhoto(imagePath);
-    if (cloudResult != null) {
-      return cloudResult;
+    // Tier 2: Try Gemini via Supabase Edge Function
+    final geminiResult = await _analyzeWithGemini(imagePath);
+    if (geminiResult != null) {
+      return geminiResult;
     }
 
-    // Tier 1: Fall back to basic analysis (manual entry encouraged)
+    // Tier 1: Fall back to basic analysis
     return _getBasicAnalysis();
+  }
+
+  Future<Map<String, dynamic>?> _analyzeWithGemini(String imagePath) async {
+    try {
+      final file = File(imagePath);
+      if (!await file.exists()) return null;
+
+      final bytes = await file.readAsBytes();
+      final base64Image = base64Encode(bytes);
+
+      final client = Supabase.instance.client;
+      final response = await client.functions.invoke(
+        'analyze-clothing',
+        body: {'imageBase64': base64Image},
+      );
+
+      if (response.data != null && response.data['success'] == true) {
+        return {
+          'category': response.data['category'] ?? 'Tops',
+          'confidence': (response.data['confidence'] ?? 0.8).toDouble(),
+          'color': response.data['color'] ?? 'Unknown',
+          'material': response.data['material'] ?? 'Cotton',
+          'style_vibe': response.data['style_vibe'] ?? 'Casual',
+          'tags': [response.data['category']?.toLowerCase() ?? 'tops', 'gemini-ai'],
+          'source': 'gemini',
+        };
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Gemini analysis failed: $e');
+      return null;
+    }
   }
 
   Future<Map<String, dynamic>> _analyzeWithLocalModel(String imagePath) async {
