@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/providers.dart';
 import '../../core/app_export.dart';
@@ -11,19 +10,18 @@ import '../../routes/app_routes.dart';
 import '../../main.dart';
 import '../../widgets/custom_app_bar.dart';
 import './widgets/confirmation_dialog_widget.dart';
-import './widgets/profile_header_widget.dart';
 import './widgets/settings_section_widget.dart';
 import './widgets/settings_tile_widget.dart';
 import './widgets/theme_selector_dialog.dart';
 
-class SettingsProfile extends ConsumerStatefulWidget {
-  const SettingsProfile({Key? key}) : super(key: key);
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SettingsProfile> createState() => _SettingsProfileState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsProfileState extends ConsumerState<SettingsProfile> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _morningAISuggestions = true;
   bool _analyticsOptIn = true;
 
@@ -32,37 +30,19 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     final theme = Theme.of(context);
     final localizations = AppLocalizations.of(context);
 
-    // Use new supabaseAuthProvider and userProfileProvider
-    final authState = ref.watch(supabaseAuthProvider);
-    final profileAsync = ref.watch(userProfileProvider);
-
-    final user = authState.value;
-
-    // Google OAuth stores these in userMetadata automatically
-    final displayName = user?.userMetadata?['full_name'] ?? user?.email ?? '';
-    final email = user?.email ?? '';
-    final avatarUrl = user?.userMetadata?['avatar_url'] ?? '';
-    final membershipTier = profileAsync.value?['membership_tier'] ?? 'Free';
-
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: localizations.settingsAndProfile,
+        title: 'Settings',
         variant: CustomAppBarVariant.standard,
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ProfileHeaderWidget(
-              name: displayName,
-              email: email,
-              avatarUrl: avatarUrl,
-              membershipTier: membershipTier,
-              onEditProfile: _handleEditProfile,
-            ),
             SizedBox(height: 2.h),
 
+            // General
             _buildSection(
               title: 'General',
               children: [
@@ -95,6 +75,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
             ),
             SizedBox(height: 2.h),
 
+            // Account & Security
             _buildSection(
               title: localizations.accountSettings,
               children: [
@@ -102,7 +83,8 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
                   icon: Icons.lock_outline,
                   title: localizations.changePassword,
                   subtitle: localizations.updatePassword,
-                  onTap: _handleChangePassword,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.changePassword),
                 ),
                 _buildNavTile(
                   icon: Icons.delete_outline,
@@ -115,6 +97,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
             ),
             SizedBox(height: 2.h),
 
+            // Privacy
             _buildSection(
               title: localizations.privacySettings,
               children: [
@@ -136,25 +119,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
             ),
             SizedBox(height: 2.h),
 
-            _buildSection(
-              title: localizations.subscription,
-              children: [
-                _buildNavTile(
-                  icon: Icons.card_membership,
-                  title: localizations.currentPlan,
-                  subtitle: membershipTier,
-                  onTap: _handleViewSubscription,
-                ),
-                _buildNavTile(
-                  icon: Icons.upgrade,
-                  title: localizations.upgradePlan,
-                  subtitle: localizations.unlockMoreFeatures,
-                  onTap: _handleUpgradePlan,
-                ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-
+            // Help
             _buildSection(
               title: localizations.helpAndSupport,
               children: [
@@ -162,18 +127,21 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
                   icon: Icons.help_outline,
                   title: localizations.helpCenter,
                   subtitle: localizations.faqsAndGuides,
-                  onTap: _handleHelpCenter,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.helpCenter),
                 ),
                 _buildNavTile(
                   icon: Icons.feedback_outlined,
                   title: localizations.sendFeedback,
                   subtitle: localizations.shareYourThoughts,
-                  onTap: _handleSendFeedback,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.sendFeedback),
                 ),
               ],
             ),
             SizedBox(height: 3.h),
 
+            // Logout
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: SizedBox(
@@ -200,11 +168,11 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
             ),
             SizedBox(height: 1.5.h),
 
+            // Version
             Text(
-              'Version 1.0.0',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
+              'Version 1.0.1',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.hintColor),
             ),
             SizedBox(height: 3.h),
           ],
@@ -218,9 +186,8 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
   Widget _buildSection({
     required String title,
     required List<Widget> children,
-  }) {
-    return SettingsSectionWidget(title: title, children: children);
-  }
+  }) =>
+      SettingsSectionWidget(title: title, children: children);
 
   Widget _buildNavTile({
     required IconData icon,
@@ -228,15 +195,14 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     required String subtitle,
     Color? titleColor,
     VoidCallback? onTap,
-  }) {
-    return SettingsTileWidget(
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      titleColor: titleColor,
-      onTap: onTap,
-    );
-  }
+  }) =>
+      SettingsTileWidget(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        titleColor: titleColor,
+        onTap: onTap,
+      );
 
   Widget _buildSwitchTile({
     required IconData icon,
@@ -244,31 +210,26 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
-  }) {
-    return SettingsTileWidget(
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-        activeThumbColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
-  }
+  }) =>
+      SettingsTileWidget(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        trailing: Switch(
+          value: value,
+          onChanged: onChanged,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
 
   // ─── Theme ────────────────────────────────────────────────────────────────
 
   String _getThemeLabel(String theme, AppLocalizations localizations) {
     switch (theme) {
-      case 'light':
-        return localizations.lightMode;
-      case 'dark':
-        return localizations.darkMode;
-      case 'auto':
-        return localizations.autoSystem;
-      default:
-        return localizations.lightMode;
+      case 'light': return localizations.lightMode;
+      case 'dark':  return localizations.darkMode;
+      case 'auto':  return localizations.autoSystem;
+      default:      return localizations.lightMode;
     }
   }
 
@@ -289,19 +250,14 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
         : themeMode == 'auto'
             ? ThemeMode.system
             : ThemeMode.light;
-
     await ref.read(settingsNotifierProvider.notifier).updateTheme(mode);
-
-    if (mounted) {
-      MyApp.of(context)?.updateThemeMode(themeMode);
-    }
+    if (mounted) MyApp.of(context)?.updateThemeMode(themeMode);
   }
 
   // ─── Language ─────────────────────────────────────────────────────────────
 
   void _showLanguageSelector(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -310,32 +266,23 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
           {'code': 'es', 'name': localizations.spanish},
           {'code': 'fr', 'name': localizations.french},
         ];
-
         return Padding(
           padding: EdgeInsets.all(4.w),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                localizations.selectLanguage,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text(localizations.selectLanguage,
+                  style: TextStyle(
+                      fontSize: 16.sp, fontWeight: FontWeight.w600)),
               SizedBox(height: 2.h),
               ...languages.map((lang) {
                 final code = lang['code']!;
-                final name = lang['name']!;
                 final isSelected =
                     ref.watch(localeProvider).languageCode == code;
-
                 return ListTile(
-                  leading: Text(
-                    LocaleManager.getLanguageFlag(code),
-                    style: TextStyle(fontSize: 24.sp),
-                  ),
-                  title: Text(name),
+                  leading: Text(LocaleManager.getLanguageFlag(code),
+                      style: TextStyle(fontSize: 24.sp)),
+                  title: Text(lang['name']!),
                   trailing:
                       isSelected ? const Icon(Icons.check_circle) : null,
                   onTap: () {
@@ -357,14 +304,6 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
 
   // ─── Account ──────────────────────────────────────────────────────────────
 
-  void _handleEditProfile() {
-    Navigator.pushNamed(context, AppRoutes.editProfile);
-  }
-
-  void _handleChangePassword() {
-    Navigator.pushNamed(context, AppRoutes.changePassword);
-  }
-
   void _showDeleteAccountConfirmation(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     showDialog(
@@ -382,9 +321,8 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
 
   void _handleDeleteAccount() async {
     try {
-      await Supabase.instance.client.auth.admin.deleteUser(
-        Supabase.instance.client.auth.currentUser!.id,
-      );
+      await Supabase.instance.client.auth.admin
+          .deleteUser(Supabase.instance.client.auth.currentUser!.id);
       if (mounted) {
         Navigator.of(context)
             .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
@@ -400,7 +338,6 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
 
   void _showExportOptions(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-
     showModalBottomSheet(
       context: context,
       builder: (context) => Padding(
@@ -408,13 +345,9 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              localizations.exportDataFormat,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            Text(localizations.exportDataFormat,
+                style: TextStyle(
+                    fontSize: 16.sp, fontWeight: FontWeight.w600)),
             SizedBox(height: 2.h),
             ListTile(
               leading: const Icon(Icons.picture_as_pdf),
@@ -447,26 +380,6 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     );
   }
 
-  // ─── Subscription ─────────────────────────────────────────────────────────
-
-  void _handleViewSubscription() {
-    Navigator.pushNamed(context, AppRoutes.subscription);
-  }
-
-  void _handleUpgradePlan() {
-    Navigator.pushNamed(context, AppRoutes.premiumUpgrade);
-  }
-
-  // ─── Help ─────────────────────────────────────────────────────────────────
-
-  void _handleHelpCenter() {
-    Navigator.pushNamed(context, AppRoutes.helpCenter);
-  }
-
-  void _handleSendFeedback() {
-    Navigator.pushNamed(context, AppRoutes.sendFeedback);
-  }
-
   // ─── Logout ───────────────────────────────────────────────────────────────
 
   void _handleLogout(BuildContext context, AppLocalizations localizations) {
@@ -478,9 +391,12 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
         confirmText: localizations.logout,
         cancelText: localizations.cancel,
         isDestructive: false,
-        onConfirm: () {
-          Navigator.of(context)
-              .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
+        onConfirm: () async {
+          await Supabase.instance.client.auth.signOut();
+          if (context.mounted) {
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
+          }
         },
       ),
     );

@@ -83,6 +83,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     // Weather card
                     _buildWeatherCard(theme),
                     SizedBox(height: 3.h),
+                    // Style Quiz section
+                    _buildQuizSection(theme),
+                    SizedBox(height: 3.h),
+                    // Coach section
+                    _buildSectionHeader(theme, 'Style Coach', Icons.psychology_alt),
+                    SizedBox(height: 1.h),
+                    _buildCoachSection(theme),
+                    SizedBox(height: 3.h),
                     // Events section
                     _buildSectionHeader(theme, 'Events', Icons.event,
                         onAdd: _showAddEventDialog),
@@ -93,9 +101,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     _buildSectionHeader(theme, 'Challenges', Icons.flag),
                     SizedBox(height: 1.h),
                     _buildChallengesSection(theme),
-                    SizedBox(height: 3.h),
-                    // Style Quiz section
-                    _buildQuizSection(theme),
                     SizedBox(height: 3.h),
                     // Insights section
                     _buildSectionHeader(theme, 'Style Insights', Icons.insights),
@@ -512,6 +517,341 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     );
   }
 
+    // ── COACH ───────────────────────────────────────────────
+  Widget _buildCoachSection(ThemeData theme) {
+    final passiveTip = _getPassiveCoachTip();
+    final nextEvent = _events.isNotEmpty ? _events.first : null;
+
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 12.w,
+                    height: 12.w,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  SizedBox(width: 3.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tip of the Week',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 0.3.h),
+                        Text(
+                          _quizResult != null
+                              ? _quizResult!['style_profile'] as String? ?? 'Personalized coaching'
+                              : 'Complete your quiz for better coaching',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                passiveTip,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 2.h),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _showCoachPromptSheet,
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('Ask your coach'),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 1.4.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 2.h),
+        Row(
+          children: [
+            Expanded(
+              child: _buildCoachMiniCard(
+                theme,
+                icon: Icons.question_answer_outlined,
+                title: 'Quick questions',
+                subtitle: 'Get help styling pieces you own',
+                onTap: _showCoachPromptSheet,
+              ),
+            ),
+            SizedBox(width: 3.w),
+            Expanded(
+              child: _buildCoachMiniCard(
+                theme,
+                icon: Icons.event_available,
+                title: 'Event coaching',
+                subtitle: nextEvent != null
+                    ? 'Suggestions for ${nextEvent['title']}'
+                    : 'Add an event to unlock this',
+                onTap: nextEvent != null
+                    ? () => _showEventCoachDialog(nextEvent)
+                    : _showAddEventDialog,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCoachMiniCard(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(4.w),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: theme.colorScheme.primary, size: 24),
+            SizedBox(height: 1.2.h),
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 0.5.h),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getPassiveCoachTip() {
+    final totalItems = _insights['totalItems'] ?? 0;
+    final topCategory = (_insights['topCategory'] ?? '').toString();
+    final topOccasion = (_insights['topOccasion'] ?? '').toString();
+    final profile = (_quizResult?['style_profile'] ?? '').toString().toLowerCase();
+
+    if (_quizResult == null && totalItems == 0) {
+      return 'Start by taking the style quiz and adding a few wardrobe pieces. Your coach will then tailor tips to your real style.';
+    }
+
+    if (_quizResult == null) {
+      return 'Your wardrobe is ready for coaching. Take the quiz to unlock more personal style advice based on your goals and preferences.';
+    }
+
+    if (totalItems == 0) {
+      return 'Your profile is set. Add more pieces to your wardrobe so your coach can suggest combinations that truly fit your style.';
+    }
+
+    if (profile.contains('classic')) {
+      return 'Your style leans polished and timeless. This week, try one softer or more textured piece to add depth without losing elegance.';
+    }
+
+    if (profile.contains('bold')) {
+      return 'You enjoy expressive style. Balance one statement piece with a simpler base outfit this week to make it stand out even more.';
+    }
+
+    if (profile.contains('sport')) {
+      return 'Your style is practical and active. Try elevating one everyday look with a more structured layer for a sharper finish.';
+    }
+
+    if (profile.contains('minimal')) {
+      return 'Your style is clean and intentional. Focus on contrast this week by pairing a simple outfit with one richer tone or texture.';
+    }
+
+    if (topCategory.isNotEmpty && topOccasion.isNotEmpty) {
+      return 'You wear a lot of $topCategory for $topOccasion looks. Try styling one familiar piece in a new way this week to expand your outfit range.';
+    }
+
+    return 'You tend to repeat what already works. This week, build one outfit around a piece you wear less often and keep the rest familiar.';
+  }
+
+  void _showCoachPromptSheet() {
+    final prompts = [
+      'What should I wear to a job interview?',
+      'How can I style my navy blazer differently?',
+      'Do I own too many similar items?',
+      'What should I wear this weekend?',
+      'How can I make my wardrobe feel more versatile?',
+      'What piece should I buy next to complete more outfits?',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.all(4.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 2.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Ask your coach',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 0.8.h),
+                Text(
+                  'Choose a question to start your coaching flow.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                ...prompts.map(
+                  (prompt) => Container(
+                    margin: EdgeInsets.only(bottom: 1.2.h),
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(prompt)),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 4.w,
+                          vertical: 1.6.h,
+                        ),
+                        alignment: Alignment.centerLeft,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(prompt),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 1.h),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEventCoachDialog(Map<String, dynamic> event) {
+    final date = DateTime.parse(event['event_date']);
+    final dateStr = DateFormat('MMM dd').format(date);
+    final eventType = event['event_type'] as String? ?? 'Other';
+    final dressCode = event['dress_code'] as String?;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(event['title'] as String),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('$dateStr · $eventType'),
+            if (dressCode != null) ...[
+              const SizedBox(height: 8),
+              Text('Dress code: $dressCode'),
+            ],
+            const SizedBox(height: 16),
+            const Text(
+              'Coach preview',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your coach will use your style profile, wardrobe pieces, and this event context to suggest outfits that feel appropriate and personal.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── INSIGHTS ────────────────────────────────────────────
   Widget _buildInsightsSection(ThemeData theme) {
     if (_insights['totalItems'] == 0) {
@@ -877,22 +1217,51 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   void _showQuizDialog() {
-    final questions = [
+        final questions = [
       {
-        'question': 'What is your go-to style?',
-        'options': ['Casual & Comfy', 'Classic & Elegant', 'Bold & Trendy', 'Sporty & Active'],
+        'question': 'Which outfits make you feel most like yourself?',
+        'options': [
+          'Relaxed and effortless',
+          'Polished and timeless',
+          'Creative and expressive',
+          'Practical and sporty',
+        ],
       },
       {
-        'question': 'Which colors do you wear most?',
-        'options': ['Neutrals (black, white, beige)', 'Earth tones (brown, green)', 'Bright & bold colors', 'Pastels & soft tones'],
+        'question': 'What colors dominate your wardrobe today?',
+        'options': [
+          'Mostly neutrals',
+          'Earth tones and warm shades',
+          'Bold colors and contrast',
+          'Soft tones and light shades',
+        ],
       },
       {
-        'question': 'What is your style goal?',
-        'options': ['Look more professional', 'Be more creative', 'Simplify my wardrobe', 'Feel more confident'],
+        'question': 'What do you want help with most right now?',
+        'options': [
+          'Looking more put together',
+          'Creating more outfit variety',
+          'Shopping more intentionally',
+          'Feeling more confident in what I wear',
+        ],
       },
       {
-        'question': 'How do you feel about fashion trends?',
-        'options': ['I follow them closely', 'I pick what suits me', 'I prefer timeless pieces', 'I dont really care'],
+        'question': 'How adventurous are you with styling?',
+        'options': [
+          'I stay with what I know works',
+          'I like small changes',
+          'I enjoy experimenting often',
+          'It depends on the occasion',
+        ],
+      },
+      {
+        'question': 'When choosing clothes, what matters most to you?',
+        'options': [
+          'Comfort',
+          'Elegance',
+          'Originality',
+          'Versatility',
+        ],
       },
     ];
 
@@ -967,10 +1336,30 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
   String _determineStyleProfile(Map<String, String> answers) {
     final style = answers.values.join(' ').toLowerCase();
-    if (style.contains('elegant') || style.contains('professional')) return 'Classic Elegance';
-    if (style.contains('bold') || style.contains('trendy')) return 'Bold & Trendy';
-    if (style.contains('sport') || style.contains('active')) return 'Active & Sporty';
-    if (style.contains('simple') || style.contains('minimali')) return 'Minimalist';
+
+    if (style.contains('polished') ||
+        style.contains('timeless') ||
+        style.contains('elegance')) {
+      return 'Classic Elegance';
+    }
+
+    if (style.contains('creative') ||
+        style.contains('expressive') ||
+        style.contains('experiment')) {
+      return 'Bold & Trendy';
+    }
+
+    if (style.contains('sporty') ||
+        style.contains('practical')) {
+      return 'Active & Sporty';
+    }
+
+    if (style.contains('versatility') ||
+        style.contains('small changes') ||
+        style.contains('what i know works')) {
+      return 'Minimalist';
+    }
+
     return 'Casual Chic';
   }
 }
