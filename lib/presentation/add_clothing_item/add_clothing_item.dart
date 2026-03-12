@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_icon_widget.dart';
 import '../../services/wardrobe_service.dart';
+import '../../services/storage_service.dart';
 import './widgets/item_details_form.dart';
 import './widgets/photo_capture_section.dart';
 import './widgets/purchase_info_section.dart';
@@ -24,6 +25,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
   final _priceController = TextEditingController();
   final _storeController = TextEditingController();
   final WardrobeService _wardrobeService = WardrobeService();
+  final StorageService _storageService = StorageService();
 
   List<String> _capturedPhotos = [];
   String? _selectedCategory;
@@ -130,11 +132,17 @@ class _AddClothingItemState extends State<AddClothingItem> {
           ? double.tryParse(_priceController.text.trim())
           : null;
 
+      // Upload image to Supabase Storage first
+      String? imageUrl;
+      if (_capturedPhotos.isNotEmpty) {
+        imageUrl = await _storageService.uploadWardrobeImage(_capturedPhotos.first);
+      }
+
       final savedItem = await _wardrobeService.addWardrobeItem(
         name: _itemNameController.text.trim(),
         category: _selectedCategory!, // We validated it's not null
         brand: _brandController.text.trim(),
-        imageUrl: _capturedPhotos.isNotEmpty ? _capturedPhotos.first : null,
+        imageUrl: imageUrl,
         semanticLabel: _aiAnalysisData != null 
             ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
             : null,
@@ -158,7 +166,6 @@ class _AddClothingItemState extends State<AddClothingItem> {
       }
     } catch (e) {
       if (mounted) {
-        final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Save error: $e'),
