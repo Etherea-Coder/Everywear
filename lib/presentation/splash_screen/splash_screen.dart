@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../services/supabase_service.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
@@ -601,15 +604,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
-
     try {
-      // TODO: Implement Google Sign-In with Supabase
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        HapticFeedback.mediumImpact();
-        _navigateToHome();
-      }
+      await SupabaseService.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'io.supabase.everywear://login-callback',
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
     } catch (e) {
       if (mounted) {
         _showErrorSnackBar('Google sign-in failed. Please try again.');
@@ -620,41 +620,36 @@ class _SplashScreenState extends State<SplashScreen>
       }
     }
   }
-
   Future<void> _handleEmailAuth() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
     try {
-      // TODO: Implement Email Auth with Supabase
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        HapticFeedback.mediumImpact();
-        _navigateToHome();
+      if (_isSignUp) {
+        await SupabaseService.instance.client.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+        if (mounted) {
+          _showErrorSnackBar('Check your email to confirm your account.');
+        }
+      } else {
+        await SupabaseService.instance.client.auth.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+        if (mounted) HapticFeedback.mediumImpact();
       }
+    } on AuthException catch (e) {
+      if (mounted) _showErrorSnackBar(e.message);
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar(
-          _isSignUp
-              ? 'Sign up failed. Please try again.'
-              : 'Sign in failed. Please check your credentials.',
-        );
+        _showErrorSnackBar(_isSignUp ? 'Sign up failed.' : 'Sign in failed. Check your credentials.');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _navigateToHome() {
-    Navigator.of(
-      context,
-      rootNavigator: true,
-    ).pushReplacementNamed('/home');
-  }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
