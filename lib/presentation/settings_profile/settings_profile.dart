@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/providers.dart';
 import '../../core/app_export.dart';
@@ -31,8 +32,17 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     final theme = Theme.of(context);
     final localizations = AppLocalizations.of(context);
 
-    // ⚠️ Adjust `currentUserProvider` to match your actual auth provider
-    final user = ref.watch(currentUserProvider);
+    // Use new supabaseAuthProvider and userProfileProvider
+    final authState = ref.watch(supabaseAuthProvider);
+    final profileAsync = ref.watch(userProfileProvider);
+
+    final user = authState.value;
+
+    // Google OAuth stores these in userMetadata automatically
+    final displayName = user?.userMetadata?['full_name'] ?? user?.email ?? '';
+    final email = user?.email ?? '';
+    final avatarUrl = user?.userMetadata?['avatar_url'] ?? '';
+    final membershipTier = profileAsync.value?['membership_tier'] ?? 'Free';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -45,10 +55,10 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ProfileHeaderWidget(
-              name: user?.displayName ?? '',
-              email: user?.email ?? '',
-              avatarUrl: user?.photoURL ?? '',
-              membershipTier: user?.membershipTier ?? 'Free',
+              name: displayName,
+              email: email,
+              avatarUrl: avatarUrl,
+              membershipTier: membershipTier,
               onEditProfile: _handleEditProfile,
             ),
             SizedBox(height: 2.h),
@@ -132,7 +142,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
                 _buildNavTile(
                   icon: Icons.card_membership,
                   title: localizations.currentPlan,
-                  subtitle: user?.membershipTier ?? 'Free',
+                  subtitle: membershipTier,
                   onTap: _handleViewSubscription,
                 ),
                 _buildNavTile(
@@ -370,11 +380,20 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     );
   }
 
-  void _handleDeleteAccount() {
-    // TODO: wire to auth delete
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Account deletion initiated')),
-    );
+  void _handleDeleteAccount() async {
+    try {
+      await Supabase.instance.client.auth.admin.deleteUser(
+        Supabase.instance.client.auth.currentUser!.id,
+      );
+      if (mounted) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting account: $e')),
+      );
+    }
   }
 
   // ─── Export ───────────────────────────────────────────────────────────────

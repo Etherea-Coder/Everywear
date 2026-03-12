@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../services/weather_service.dart';
 import '../../services/ai/stylist_engine_service.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
 import './widgets/empty_state_widget.dart';
@@ -25,14 +26,16 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   bool _showAIBubble = true; // Always show on initial load
   final List<String> _savedSuggestions = [];
   final StylistEngineService _stylistEngine = StylistEngineService();
+  final WeatherService _weatherService = WeatherService();
   List<Map<String, dynamic>> _aiGeneratedSuggestions = [];
 
-  // Mock weather data
-  final Map<String, dynamic> _weatherData = {
+  // Weather data (loaded from live API)
+  Map<String, dynamic> _weatherData = {
     "temperature": 72,
-    "condition": "Partly Cloudy",
+    "condition": "Loading...",
     "icon": "partly_cloudy_day",
-    "location": "San Francisco, CA",
+    "location": "Fetching location...",
+    "unit": "°F",
   };
 
   // Mock wardrobe data (in production, load from local storage)
@@ -220,7 +223,20 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   @override
   void initState() {
     super.initState();
+    _loadWeatherData();
     _generateAISuggestions();
+  }
+
+  /// Load weather data from live API
+  Future<void> _loadWeatherData() async {
+    try {
+      final weather = await _weatherService.getCurrentWeather();
+      setState(() {
+        _weatherData = weather;
+      });
+    } catch (e) {
+      // Keep default weather data on error
+    }
   }
 
   /// Generate AI-powered outfit suggestions
@@ -332,7 +348,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${_weatherData["temperature"]}°F - ${_weatherData["condition"]}',
+                              '${_weatherData["temperature"]}${_weatherData["unit"] ?? "°F"} - ${_weatherData["condition"]}',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w500,
                               ),
@@ -567,6 +583,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     setState(() {
       _isRefreshing = true;
     });
+
+    // Refresh weather data from live API
+    await _loadWeatherData();
 
     // Regenerate AI suggestions
     await _generateAISuggestions();

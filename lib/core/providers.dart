@@ -10,6 +10,35 @@ final wardrobeRepositoryProvider = Provider((ref) => WardrobeRepository());
 
 final userTierServiceProvider = Provider((ref) => UserTierService());
 
+// Auth user stream — reacts to sign-in/sign-out automatically
+final supabaseAuthProvider = StreamProvider<User?>((ref) {
+  if (!SupabaseService.isInitialized) {
+    return const Stream.empty();
+  }
+  return Supabase.instance.client.auth.onAuthStateChange
+      .map((data) => data.session?.user);
+});
+
+// Profile from your `profiles` table (membership tier, etc.)
+final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  final user = ref.watch(supabaseAuthProvider).value;
+  if (user == null) return null;
+
+  try {
+    final data = await Supabase.instance.client
+        .from('profiles')
+        .select('membership_tier')
+        .eq('id', user.id)
+        .single();
+
+    return data;
+  } catch (e) {
+    // Profile may not exist yet, return null
+    debugPrint('Profile not found for user ${user.id}: $e');
+    return null;
+  }
+});
+
 final authStateProvider = StreamProvider<AuthState>((ref) {
   // TODO: Ensure Supabase is initialized before accessing client
   if (!SupabaseService.isInitialized) {
