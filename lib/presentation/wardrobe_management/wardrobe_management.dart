@@ -245,6 +245,15 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true)
+              .pushNamed('/add-clothing-item')
+              .then((_) => ref.read(wardrobeItemsProvider.notifier).refresh());
+        },
+        backgroundColor: theme.colorScheme.primary,
+        child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+      ),
       body: Column(
         children: [
           // AppBar content - single title only
