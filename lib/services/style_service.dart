@@ -322,15 +322,14 @@ class StyleService {
           },
         },
       );
-
       if (response.data != null && response.data['success'] == true) {
         return response.data as Map<String, dynamic>;
       }
-      return {'error': 'ERROR: ${e.runtimeType}: ${e.toString()}'};
+      return {'error': 'Coach response unsuccessful'};
     } catch (e) {
-      debugPrint('Coach event error: $e');
-      return {'error': 'Error: ${e.toString()}'};
+      return {'error': 'ERROR: ${e.runtimeType}: ${e.toString()}'};
     }
+  }
   }
 
   String _buildWardrobeSummary(Map<String, dynamic> insights) {
