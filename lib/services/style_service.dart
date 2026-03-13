@@ -287,7 +287,7 @@ class StyleService {
       return {'answer': 'Coach error: $errMsg', 'next_step': ''};
     } catch (e) {
       debugPrint('Coach active error: $e');
-      return {'answer': 'Your coach is unavailable right now. Try again shortly.', 'next_step': ''};
+      return {'answer': 'ERROR: ${e.runtimeType}: ${e.toString()}', 'next_step': ''};
     }
   }
 
@@ -326,7 +326,7 @@ class StyleService {
       if (response.data != null && response.data['success'] == true) {
         return response.data as Map<String, dynamic>;
       }
-      return {'error': 'Coach unavailable right now.'};
+      return {'error': 'ERROR: ${e.runtimeType}: ${e.toString()}'};
     } catch (e) {
       debugPrint('Coach event error: $e');
       return {'error': 'Error: ${e.toString()}'};
