@@ -40,13 +40,16 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     'Shoes',
     'Outerwear',
     'Accessories',
+    'Dresses',
+    'Activewear',
   ];
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(() {
-      ref.read(wardrobeSearchQueryProvider.notifier).state = _searchController.text;
+      ref.read(wardrobeSearchQueryProvider.notifier).state =
+          _searchController.text;
     });
     _setupRealtimeSubscription();
   }
@@ -139,7 +142,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       builder: (context) {
         final localizations = AppLocalizations.of(context);
         return AlertDialog(
-          title: Text(localizations.deleteItem, style: theme.textTheme.titleLarge),
+          title:
+              Text(localizations.deleteItem, style: theme.textTheme.titleLarge),
           content: Text(
             localizations.deleteItemConfirmation,
             style: theme.textTheme.bodyMedium,
@@ -172,7 +176,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       _showSnackBar(localizations.itemDeletedSuccess);
     } catch (error) {
       final localizations = AppLocalizations.of(context);
-      _showSnackBar('${localizations.itemDeleteError}: $error', isError: true);
+      _showSnackBar('${localizations.itemDeleteError}: $error',
+          isError: true);
     }
   }
 
@@ -184,7 +189,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       builder: (context) {
         final localizations = AppLocalizations.of(context);
         return AlertDialog(
-          title: Text(localizations.deleteItems, style: theme.textTheme.titleLarge),
+          title:
+              Text(localizations.deleteItems, style: theme.textTheme.titleLarge),
           content: Text(
             '${localizations.delete} ${_selectedItems.length} ${localizations.selectedItems}?',
             style: theme.textTheme.bodyMedium,
@@ -221,7 +227,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       _showSnackBar(localizations.itemsDeletedSuccess);
     } catch (error) {
       final localizations = AppLocalizations.of(context);
-      _showSnackBar('${localizations.itemsDeleteError}: $error', isError: true);
+      _showSnackBar('${localizations.itemsDeleteError}: $error',
+          isError: true);
     }
   }
 
@@ -232,6 +239,326 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
         content: Text(message),
         backgroundColor: isError ? Theme.of(context).colorScheme.error : null,
         duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  String _getCategoryEmoji(String category) {
+    switch (category.toLowerCase()) {
+      case 'tops':
+        return '👕';
+      case 'bottoms':
+        return '👖';
+      case 'shoes':
+        return '👟';
+      case 'outerwear':
+        return '🧥';
+      case 'accessories':
+        return '👜';
+      case 'dresses':
+        return '👗';
+      case 'activewear':
+        return '🏃';
+      default:
+        return '👗';
+    }
+  }
+
+  Widget _buildPremiumHeader(
+    ThemeData theme,
+    AsyncValue<List<Map<String, dynamic>>> itemsAsync,
+    AsyncValue<Map<String, dynamic>?> tierInfoAsync,
+  ) {
+    return Container(
+      color: theme.appBarTheme.backgroundColor,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      localizations.wardrobe,
+                      style: theme.textTheme.headlineMedium,
+                    ),
+                  ),
+                  if (_isMultiSelectMode) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 3.w,
+                        vertical: 0.7.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        '${_selectedItems.length} selected',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 2.w),
+                    IconButton(
+                      onPressed: _handleBatchDelete,
+                      icon: CustomIconWidget(
+                        iconName: 'delete',
+                        color: theme.colorScheme.error,
+                        size: 24,
+                      ),
+                      tooltip: 'Delete selected',
+                    ),
+                    IconButton(
+                      onPressed: _toggleMultiSelect,
+                      icon: CustomIconWidget(
+                        iconName: 'close',
+                        color: theme.colorScheme.onSurface,
+                        size: 24,
+                      ),
+                      tooltip: 'Cancel selection',
+                    ),
+                  ] else
+                    IconButton(
+                      onPressed: () {},
+                      icon: CustomIconWidget(
+                        iconName: 'filter_list',
+                        color: theme.colorScheme.onSurface,
+                        size: 24,
+                      ),
+                      tooltip: 'Filter options',
+                    ),
+                ],
+              ),
+              SizedBox(height: 0.6.h),
+              Text(
+                'Your personal collection, ready to style anywhere.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              SizedBox(height: 1.8.h),
+              Row(
+                children: [
+                  tierInfoAsync.when(
+                    data: (tierInfo) => tierInfo != null
+                        ? Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 3.w,
+                              vertical: 0.7.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: tierInfo['tier'] == 'premium'
+                                  ? Colors.amber.withValues(alpha: 0.18)
+                                  : theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(14.0),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (tierInfo['tier'] == 'premium') ...[
+                                  const Text('✨'),
+                                  SizedBox(width: 1.5.w),
+                                ],
+                                Text(
+                                  '${tierInfo['items_count']}/${tierInfo['items_limit']} ${localizations.items}',
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: (tierInfo['items_count'] as int) >=
+                                            (tierInfo['items_limit'] as int)
+                                        ? theme.colorScheme.error
+                                        : theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                  SizedBox(width: 2.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 3.w,
+                      vertical: 0.7.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CustomIconWidget(
+                          iconName: 'sync',
+                          color: theme.colorScheme.primary,
+                          size: 16,
+                        ),
+                        SizedBox(width: 1.w),
+                        Text(
+                          'Updated everywhere',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 2.h),
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: localizations.wardrobeSearchHint,
+                  prefixIcon: CustomIconWidget(
+                    iconName: 'search',
+                    color: theme.colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: CustomIconWidget(
+                            iconName: 'clear',
+                            color: theme.colorScheme.onSurfaceVariant,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: theme.colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 4.w,
+                    vertical: 1.5.h,
+                  ),
+                ),
+              ),
+              SizedBox(height: 1.8.h),
+              itemsAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (items) => _buildCollectionSummary(theme, items),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollectionSummary(
+      ThemeData theme, List<Map<String, dynamic>> wardrobeItems) {
+    final total = wardrobeItems.length;
+
+    final counts = <String, int>{};
+    for (final category in _categories.where((c) => c != 'All')) {
+      counts[category] = 0;
+    }
+
+    for (final item in wardrobeItems) {
+      final category = (item['category'] as String?) ?? '';
+      if (counts.containsKey(category)) {
+        counts[category] = counts[category]! + 1;
+      }
+    }
+
+    final topCategoryEntry = counts.entries.isEmpty
+        ? null
+        : counts.entries.reduce((a, b) => a.value >= b.value ? a : b);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(3.5.w),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildSummaryPill(
+              theme,
+              icon: '👗',
+              label: 'Total pieces',
+              value: '$total',
+            ),
+          ),
+          SizedBox(width: 2.5.w),
+          Expanded(
+            child: _buildSummaryPill(
+              theme,
+              icon: topCategoryEntry != null
+                  ? _getCategoryEmoji(topCategoryEntry.key)
+                  : '✨',
+              label: 'Top category',
+              value: topCategoryEntry != null ? topCategoryEntry.key : '—',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryPill(
+    ThemeData theme, {
+    required String icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.2.h),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 20)),
+          SizedBox(width: 2.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }
@@ -256,156 +583,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       ),
       body: Column(
         children: [
-          // AppBar content - single title only
-          Container(
-            color: theme.appBarTheme.backgroundColor,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            localizations.wardrobe,
-                            style: theme.textTheme.headlineMedium,
-                          ),
-                        ),
-                        tierInfoAsync.when(
-                          data: (tierInfo) => tierInfo != null
-                              ? Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 3.w,
-                                    vertical: 0.5.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: tierInfo['tier'] == 'premium'
-                                        ? Colors.amber.withValues(alpha: 0.2)
-                                        : theme.colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                  child: Text(
-                                    '${tierInfo['items_count']}/${tierInfo['items_limit']} ${localizations.items}',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: (tierInfo['items_count'] as int) >=
-                                              (tierInfo['items_limit'] as int)
-                                          ? theme.colorScheme.error
-                                          : theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        ),
-                        SizedBox(width: 2.w),
-                        // Real-time sync indicator
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 2.w,
-                            vertical: 0.5.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CustomIconWidget(
-                                iconName: 'sync',
-                                color: theme.colorScheme.primary,
-                                size: 16,
-                              ),
-                              SizedBox(width: 1.w),
-                              Text(
-                                localizations.liveSync,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 2.w),
-                        if (_isMultiSelectMode) ...[
-                          IconButton(
-                            onPressed: _handleBatchDelete,
-                            icon: CustomIconWidget(
-                              iconName: 'delete',
-                              color: theme.colorScheme.error,
-                              size: 24,
-                            ),
-                            tooltip: 'Delete selected',
-                          ),
-                          IconButton(
-                            onPressed: _toggleMultiSelect,
-                            icon: CustomIconWidget(
-                              iconName: 'close',
-                              color: theme.colorScheme.onSurface,
-                              size: 24,
-                            ),
-                            tooltip: 'Cancel selection',
-                          ),
-                        ] else
-                          IconButton(
-                            onPressed: () {},
-                            icon: CustomIconWidget(
-                              iconName: 'filter_list',
-                              color: theme.colorScheme.onSurface,
-                              size: 24,
-                            ),
-                            tooltip: 'Filter options',
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: 2.h),
-                    // Search bar
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: localizations.wardrobeSearchHint,
-                        prefixIcon: CustomIconWidget(
-                          iconName: 'search',
-                          color: theme.colorScheme.onSurfaceVariant,
-                          size: 20,
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: CustomIconWidget(
-                                  iconName: 'clear',
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                },
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: theme.colorScheme.surface,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
-                          vertical: 1.5.h,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Category filter chips
+          _buildPremiumHeader(theme, itemsAsync, tierInfoAsync),
+
           Container(
             color: theme.scaffoldBackgroundColor,
             padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
@@ -422,7 +601,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
               ),
             ),
           ),
-          // Main content
+
           Expanded(
             child: itemsAsync.when(
               loading: () => const WardrobeShimmer(),
@@ -451,7 +630,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                     ),
                     SizedBox(height: 2.h),
                     ElevatedButton(
-                      onPressed: () => ref.read(wardrobeItemsProvider.notifier).refresh(),
+                      onPressed: () =>
+                          ref.read(wardrobeItemsProvider.notifier).refresh(),
                       child: Text(localizations.retry),
                     ),
                   ],
@@ -472,9 +652,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                       child: GridView.builder(
                         padding: EdgeInsets.all(4.w),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: MediaQuery.of(context).size.width > 600
-                              ? 3
-                              : 2,
+                          crossAxisCount:
+                              MediaQuery.of(context).size.width > 600 ? 3 : 2,
                           crossAxisSpacing: 3.w,
                           mainAxisSpacing: 2.h,
                           childAspectRatio: 0.75,
@@ -482,7 +661,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         itemCount: wardrobeItems.length,
                         itemBuilder: (context, index) {
                           final item = wardrobeItems[index];
-                          final isSelected = _selectedItems.contains(item['id']);
+                          final isSelected =
+                              _selectedItems.contains(item['id']);
                           return WardrobeItemCardWidget(
                             item: item,
                             isSelected: isSelected,
@@ -490,8 +670,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                             onTap: () => _handleItemTap(item),
                             onLongPress: () =>
                                 _handleItemLongPress(item['id'] as String),
-                            onDelete: () =>
-                                _showDeleteConfirmation(item['id'] as String),
+                            onDelete: () => _showDeleteConfirmation(
+                                item['id'] as String),
                           );
                         },
                       ),
