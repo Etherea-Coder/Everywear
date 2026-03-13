@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const GEMINI_MODEL = 'gemini-2.0-flash-lite'
+const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 Deno.serve(async (req) => {
@@ -91,7 +91,7 @@ ${question}
 
 TASK:
 Answer as their personal style coach. Prioritize items they already own.
-Keep the answer under 180 words. End with one small optional next step.
+Keep the answer under 180 words. The "next_step" must be a concrete action, never a question. Example: "Try pairing your blazer with white trousers this week".
 Output a JSON object with keys: "answer" and "next_step"`
 
     } else if (mode === 'event') {

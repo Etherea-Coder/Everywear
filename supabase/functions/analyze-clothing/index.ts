@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const GEMINI_MODEL = 'gemini-2.0-flash-lite'
+const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 Deno.serve(async (req) => {
