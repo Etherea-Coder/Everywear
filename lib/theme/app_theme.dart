@@ -390,7 +390,7 @@ class AppTheme {
       secondaryContainer: secondaryVariantDark,
       onSecondaryContainer: onSecondaryDark,
       tertiary: accentDark,
-      onTertiary: onTertiaryDark,
+      onTertiary: textHighEmphasisDark,
       tertiaryContainer: surfaceAltDark,
       onTertiaryContainer: onSurfaceDark,
       error: errorDark,
