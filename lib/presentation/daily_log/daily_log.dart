@@ -265,20 +265,23 @@ class _DailyLogState extends State<DailyLog> {
 
   // ── WEATHER ─────────────────────────────────────────────
   Widget _buildWeatherCard(ThemeData theme) {
-    final temp = _weather['temperature'] ?? '--';
+    final temp = _weather['temperature'];
     final condition = _weather['condition'] ?? 'Loading...';
     final location = _weather['location'] ?? '';
     final unit = _weather['unit'] ?? '°C';
+    final isError = _weather['error'] == true;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.7),
-          ],
+          colors: isError
+              ? [Colors.grey.shade500, Colors.grey.shade600]
+              : [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.7),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -286,14 +289,18 @@ class _DailyLogState extends State<DailyLog> {
       ),
       child: Row(
         children: [
-          Icon(Icons.wb_sunny, color: Colors.white, size: 48),
+          Icon(
+            isError ? Icons.location_off : Icons.wb_sunny,
+            color: Colors.white,
+            size: 48,
+          ),
           SizedBox(width: 4.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$temp$unit · $condition',
+                  isError ? condition : '$temp$unit · $condition',
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -306,21 +313,23 @@ class _DailyLogState extends State<DailyLog> {
                       color: Colors.white70,
                     ),
                   ),
-                SizedBox(height: 1.h),
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _getWeatherTip(condition),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
+                if (!isError) ...[
+                  SizedBox(height: 1.h),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _getWeatherTip(condition),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

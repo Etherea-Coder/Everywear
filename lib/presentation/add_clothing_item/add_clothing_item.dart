@@ -8,6 +8,7 @@ import '../../services/storage_service.dart';
 import './widgets/item_details_form.dart';
 import './widgets/photo_capture_section.dart';
 import './widgets/purchase_info_section.dart';
+import '../../services/purchase_service.dart';
 
 /// Add Clothing Item Screen
 /// Captures new wardrobe pieces through streamlined mobile form optimized for quick entry
@@ -23,6 +24,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
   final _itemNameController = TextEditingController();
   final _brandController = TextEditingController();
   final _priceController = TextEditingController();
+  final PurchaseService _purchaseService = PurchaseService();
   final _storeController = TextEditingController();
   final WardrobeService _wardrobeService = WardrobeService();
   final StorageService _storageService = StorageService();

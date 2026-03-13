@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 class WeatherService {
   // Open-Meteo is a free API that doesn't require an API key
   static const String _baseUrl = 'https://api.open-meteo.com/v1/forecast';
+  // Nominatim is a free reverse geocoding API
+  static const String _geocodingUrl = 'https://nominatim.openstreetmap.org/reverse';
 
   // Default fallback coordinates (San Francisco)
   double _latitude = 37.7749;
@@ -76,6 +78,65 @@ class WeatherService {
     }
   }
 
+  /// Reverse geocoding to get city name from coordinates
+  Future<String> _getLocationNameFromCoordinates(double lat, double lon) async {
+    try {
+      final uri = Uri.parse(
+        '$_geocodingUrl?lat=$lat&lon=$lon&format=json&addressdetails=1',
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'User-Agent': 'EverywearApp/1.0',
+        },
+      ).timeout(
+        const Duration(seconds: 5),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final address = data['address'] as Map<String, dynamic>?;
+        
+        if (address != null) {
+          // Try to get city name from different address fields
+          final city = address['city'] as String?;
+          final town = address['town'] as String?;
+          final village = address['village'] as String?;
+          final municipality = address['municipality'] as String?;
+          final county = address['county'] as String?;
+          final state = address['state'] as String?;
+          final country = address['country'] as String?;
+          
+          // Get the most specific location available
+          final locationCity = city ?? town ?? village ?? municipality ?? county;
+          
+          if (locationCity != null && state != null) {
+            return '$locationCity, $state';
+          } else if (locationCity != null) {
+            return locationCity;
+          } else if (country != null) {
+            return country;
+          }
+        }
+        
+        // Fallback to display name from response
+        final displayName = data['display_name'] as String?;
+        if (displayName != null && displayName.isNotEmpty) {
+          // Get just the city and country part
+          final parts = displayName.split(', ');
+          if (parts.length >= 2) {
+            return '${parts[0]}, ${parts[1]}';
+          }
+          return parts[0];
+        }
+      }
+    } catch (e) {
+      // Silently fail and return a default name
+    }
+    return 'Current Location';
+  }
+
   /// Fetches current weather data from Open-Meteo API
   Future<Map<String, dynamic>> getCurrentWeather() async {
     // Try to get device location
@@ -84,11 +145,23 @@ class WeatherService {
     if (position != null) {
       _latitude = position.latitude;
       _longitude = position.longitude;
-      _locationName = 'Current Location';
       _isUsingDeviceLocation = true;
+      
+      // Get actual city name via reverse geocoding
+      _locationName = await _getLocationNameFromCoordinates(_latitude, _longitude);
     } else {
-      // Use default location if device location unavailable
-      _isUsingDeviceLocation = false;
+      // Location unavailable - return error state
+      return {
+        'temperature': null,
+        'condition': 'Location unavailable',
+        'icon': 'location_off',
+        'location': 'Enable location services',
+        'unit': '°C',
+        'timestamp': DateTime.now().toIso8601String(),
+        'latitude': null,
+        'longitude': null,
+        'error': true,
+      };
     }
 
     try {

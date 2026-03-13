@@ -29,7 +29,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentIndex = 2;
+  int _currentIndex = 0;
 
   /// Screens for each tab - Insights moved to Profile screen
   /// for better organization and to reduce nav bar clutter

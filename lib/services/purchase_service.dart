@@ -82,4 +82,199 @@ class PurchaseService {
     if (wearCount == 0) return price;
     return price / wearCount;
   }
+  // ── BUDGET ──────────────────────────────────────────────
+  Future<Map<String, dynamic>> fetchBudget() async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return {'monthly_budget': 0.0, 'currency': 'EUR'};
+      final response = await _client
+          .from('user_budget')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+      if (response == null) return {'monthly_budget': 0.0, 'currency': 'EUR'};
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      debugPrint('Error fetching budget: $e');
+      return {'monthly_budget': 0.0, 'currency': 'EUR'};
+    }
+  }
+
+  Future<bool> saveBudget({
+    required double monthlyBudget,
+    String currency = 'EUR',
+  }) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return false;
+      await _client.from('user_budget').upsert({
+        'user_id': userId,
+        'monthly_budget': monthlyBudget,
+        'currency': currency,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      return true;
+    } catch (e) {
+      debugPrint('Error saving budget: $e');
+      return false;
+    }
+  }
+
+  // ── WISHLIST ─────────────────────────────────────────────
+  Future<List<Map<String, dynamic>>> fetchWishlist() async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return [];
+      final response = await _client
+          .from('wishlist')
+          .select()
+          .eq('user_id', userId)
+          .eq('is_purchased', false)
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('Error fetching wishlist: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> addWishlistItem({
+    required String name,
+    String? brand,
+    String? category,
+    double? targetPrice,
+    double? currentPrice,
+    String? url,
+    String? imageUrl,
+    String? notes,
+  }) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return null;
+      final response = await _client.from('wishlist').insert({
+        'user_id': userId,
+        'name': name,
+        'brand': brand,
+        'category': category,
+        'target_price': targetPrice,
+        'current_price': currentPrice,
+        'url': url,
+        'image_url': imageUrl,
+        'notes': notes,
+      }).select().single();
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      debugPrint('Error adding wishlist item: $e');
+      return null;
+    }
+  }
+
+  Future<bool> deleteWishlistItem(String id) async {
+    try {
+      await _client.from('wishlist').delete().eq('id', id);
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting wishlist item: $e');
+      return false;
+    }
+  }
+
+  Future<bool> markWishlistItemPurchased(String id, double finalPrice) async {
+    try {
+      await _client.from('wishlist').update({
+        'is_purchased': true,
+        'current_price': finalPrice,
+      }).eq('id', id);
+      return true;
+    } catch (e) {
+      debugPrint('Error marking wishlist item purchased: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateWishlistPrice(String id, double newPrice) async {
+    try {
+      await _client.from('wishlist').update({
+        'current_price': newPrice,
+      }).eq('id', id);
+      return true;
+    } catch (e) {
+      debugPrint('Error updating wishlist price: $e');
+      return false;
+    }
+  }
+
+  // ── REAL CPW ─────────────────────────────────────────────
+  Future<List<Map<String, dynamic>>> fetchCPWLeaderboard() async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      // Get purchases with wardrobe_item_id
+      final purchases = await _client
+          .from('purchases')
+          .select()
+          .eq('user_id', userId)
+          .not('wardrobe_item_id', 'is', null);
+
+      final result = <Map<String, dynamic>>[];
+
+      for (final purchase in purchases as List) {
+        final wardrobeItemId = purchase['wardrobe_item_id'] as String;
+        // Count wear times from outfit_items
+        final wearData = await _client
+            .from('outfit_items')
+            .select('id')
+            .eq('wardrobe_item_id', wardrobeItemId);
+
+        final wearCount = (wearData as List).length;
+        final price = (purchase['price'] as num).toDouble();
+        final cpw = wearCount > 0 ? price / wearCount : price;
+
+        result.add({
+          'id': purchase['id'],
+          'name': purchase['name'],
+          'brand': purchase['brand'],
+          'price': price,
+          'wearCount': wearCount,
+          'cpw': cpw,
+          'category': purchase['category'],
+          'image_url': purchase['image_url'],
+          'wardrobe_item_id': wardrobeItemId,
+        });
+      }
+
+      // Sort by CPW ascending (best value first)
+      result.sort((a, b) => (a['cpw'] as double).compareTo(b['cpw'] as double));
+      return result;
+    } catch (e) {
+      debugPrint('Error fetching CPW leaderboard: $e');
+      return [];
+    }
+  }
+
+  // Category spending breakdown
+  Future<Map<String, double>> fetchCategorySpending() async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return {};
+      final now = DateTime.now();
+      final start = DateTime(now.year, now.month, 1).toIso8601String();
+      final purchases = await _client
+          .from('purchases')
+          .select('category, price')
+          .eq('user_id', userId)
+          .gte('purchase_date', start);
+      final Map<String, double> result = {};
+      for (final p in purchases as List) {
+        final cat = p['category'] as String? ?? 'Other';
+        result[cat] = (result[cat] ?? 0) + (p['price'] as num).toDouble();
+      }
+      return result;
+    } catch (e) {
+      debugPrint('Error fetching category spending: $e');
+      return {};
+    }
+  }
+
 }
