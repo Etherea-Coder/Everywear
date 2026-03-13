@@ -274,13 +274,17 @@ class StyleService {
         },
       );
 
+      debugPrint('Coach response status: ${response.status}');
+      debugPrint('Coach response data: ${response.data}');
+
       if (response.data != null && response.data['success'] == true) {
         return {
           'answer': response.data['answer'] ?? response.data['tip'] ?? 'No answer received.',
           'next_step': response.data['next_step'] ?? '',
         };
       }
-      return {'answer': 'Your coach is unavailable right now. Try again shortly.', 'next_step': ''};
+      final errMsg = response.data?['error'] ?? 'Unknown error (status ${response.status})';
+      return {'answer': 'Coach error: $errMsg', 'next_step': ''};
     } catch (e) {
       debugPrint('Coach active error: $e');
       return {'answer': 'Your coach is unavailable right now. Try again shortly.', 'next_step': ''};
