@@ -330,7 +330,6 @@ class StyleService {
       return {'error': 'ERROR: ${e.runtimeType}: ${e.toString()}'};
     }
   }
-  }
 
   String _buildWardrobeSummary(Map<String, dynamic> insights) {
     final total = insights['totalItems'] ?? 0;
