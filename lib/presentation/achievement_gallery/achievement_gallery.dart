@@ -173,15 +173,15 @@ class _AchievementGalleryState extends State<AchievementGallery>
     return _achievements.where((achievement) {
       final matchesCategory =
           _selectedCategory == 'All' ||
-          achievement['category'] == _selectedCategory;
+              achievement['category'] == _selectedCategory;
       final matchesSearch =
           _searchQuery.isEmpty ||
-          achievement['title'].toString().toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ) ||
-          achievement['description'].toString().toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          );
+              achievement['title'].toString().toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ||
+              achievement['description'].toString().toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              );
       return matchesCategory && matchesSearch;
     }).toList();
   }
@@ -189,8 +189,11 @@ class _AchievementGalleryState extends State<AchievementGallery>
   int get _unlockedCount =>
       _achievements.where((a) => a['isUnlocked'] == true).length;
 
+  int get _lockedCount =>
+      _achievements.where((a) => a['isUnlocked'] != true).length;
+
   double get _completionPercentage =>
-      (_unlockedCount / _achievements.length) * 100;
+      _achievements.isEmpty ? 0 : (_unlockedCount / _achievements.length) * 100;
 
   String get _rarestBadge {
     final unlocked = _achievements.where((a) => a['isUnlocked'] == true);
@@ -203,6 +206,17 @@ class _AchievementGalleryState extends State<AchievementGallery>
       return aRarity > bRarity ? a : b;
     });
     return rarest['title'];
+  }
+
+  Map<String, dynamic>? get _nextAchievement {
+    final locked = _achievements
+        .where((a) => a['isUnlocked'] != true)
+        .toList()
+      ..sort((a, b) =>
+          (b['progress'] as double).compareTo(a['progress'] as double));
+
+    if (locked.isEmpty) return null;
+    return locked.first;
   }
 
   void _showAchievementDetail(Map<String, dynamic> achievement) {
@@ -252,6 +266,9 @@ class _AchievementGalleryState extends State<AchievementGallery>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildHeroCard(theme),
+                  SizedBox(height: 2.h),
+
                   AchievementStatsWidget(
                     totalAchievements: _achievements.length,
                     unlockedCount: _unlockedCount,
@@ -259,10 +276,17 @@ class _AchievementGalleryState extends State<AchievementGallery>
                     rarestBadge: _rarestBadge,
                   ),
                   SizedBox(height: 2.h),
+
+                  _buildSectionHeader('Browse by category', theme),
+                  SizedBox(height: 1.h),
                   _buildCategoryFilter(theme),
                   SizedBox(height: 2.h),
+
+                  if (_searchQuery.isNotEmpty)
+                    _buildSearchState(theme),
+
                   _buildAchievementGrid(theme),
-                  SizedBox(height: 2.h),
+                  SizedBox(height: 3.h),
                 ],
               ),
             ),
@@ -273,6 +297,154 @@ class _AchievementGalleryState extends State<AchievementGallery>
               onComplete: () => setState(() => _showCelebration = false),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeroCard(ThemeData theme) {
+    final nextAchievement = _nextAchievement;
+
+    String title = 'Your style journey is taking shape';
+    String subtitle =
+        'Track the milestones that reflect your consistency, creativity, and mindful wardrobe habits.';
+    String chip = '$_unlockedCount unlocked';
+
+    if (nextAchievement != null) {
+      final progress = ((nextAchievement['progress'] as double) * 100).round();
+      title = 'You are close to your next milestone';
+      subtitle =
+          '${nextAchievement['title']} is $progress% complete. Keep going to unlock your next achievement.';
+      chip = 'Next up';
+    }
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.78),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 13.w,
+            height: 13.w,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.emoji_events,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          SizedBox(width: 4.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 2.5.w,
+                    vertical: 0.4.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    chip,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 0.6.h),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchState(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(3.5.w),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.18),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.search,
+              size: 18,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            SizedBox(width: 2.w),
+            Expanded(
+              child: Text(
+                'Showing results for "$_searchQuery"',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _searchQuery = ''),
+              child: Text(
+                'Clear',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Text(
+        title,
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -332,7 +504,7 @@ class _AchievementGalleryState extends State<AchievementGallery>
         child: Column(
           children: [
             Icon(
-              Icons.search_off,
+              Icons.emoji_events_outlined,
               size: 64,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
@@ -345,7 +517,9 @@ class _AchievementGalleryState extends State<AchievementGallery>
             ),
             SizedBox(height: 1.h),
             Text(
-              'Try adjusting your filters or search',
+              _searchQuery.isNotEmpty
+                  ? 'Try a different search term or clear your current query.'
+                  : 'Try adjusting your category filter to explore more milestones.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
@@ -380,20 +554,24 @@ class _AchievementGalleryState extends State<AchievementGallery>
   }
 
   void _showSearchDialog(ThemeData theme) {
+    final controller = TextEditingController(text: _searchQuery);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Search Achievements'),
         content: TextField(
+          controller: controller,
           autofocus: true,
           decoration: InputDecoration(
             hintText: 'Enter achievement name...',
             prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onChanged: (value) {
             setState(() => _searchQuery = value);
-            Navigator.pop(context);
           },
         ),
         actions: [
@@ -404,13 +582,19 @@ class _AchievementGalleryState extends State<AchievementGallery>
             },
             child: const Text('Clear'),
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done'),
+          ),
         ],
       ),
     );
   }
 
   Future<void> _refreshAchievements() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {});
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (mounted) {
+      setState(() {});
+    }
   }
 }

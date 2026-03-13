@@ -271,7 +271,7 @@ class WardrobeService {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
-        throw Exception('User must be authenticated');
+        return _emptyStats();
       }
 
       final totalItemsData = await _client
@@ -294,7 +294,7 @@ class WardrobeService {
 
       final categoryCounts = <String, int>{};
       for (final item in categoryCountsResponse) {
-        final category = item['category'] as String;
+        final category = item['category'] as String? ?? 'Other';
         categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
       }
 
@@ -304,9 +304,16 @@ class WardrobeService {
         'category_counts': categoryCounts,
       };
     } catch (error) {
-      throw Exception('Failed to get wardrobe statistics: $error');
+      debugPrint('Error getting wardrobe statistics: $error');
+      return _emptyStats();
     }
   }
+
+  Map<String, dynamic> _emptyStats() => {
+    'total_items': 0,
+    'favorite_items': 0,
+    'category_counts': <String, int>{},
+  };
 
   /// Creates an outfit log with associated items
   Future<Map<String, dynamic>> createOutfitLog({
@@ -357,7 +364,7 @@ class WardrobeService {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
-        throw Exception('User must be authenticated');
+        return [];
       }
 
       final response = await _client
@@ -369,7 +376,8 @@ class WardrobeService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (error) {
-      throw Exception('Failed to fetch outfit history: $error');
+      debugPrint('Error fetching outfit history: $error');
+      return [];
     }
   }
 }

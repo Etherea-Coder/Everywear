@@ -19,14 +19,8 @@ class PremiumUpgrade extends StatefulWidget {
 }
 
 class _PremiumUpgradeState extends State<PremiumUpgrade> {
-  String _selectedPlan = 'annual';
+  String _selectedPlan = 'yearly';
   bool _isProcessingPayment = false;
-  bool _showPaymentSheet = false;
-
-  // Controllers for billing form
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
 
   final List<Map<String, dynamic>> _testimonials = [
     {
@@ -34,7 +28,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       'image':
           'https://img.rocket.new/generatedImages/rocket_gen_img_1559df74b-1766991425900.png',
       'text':
-          'Premium analytics helped me reduce impulse purchases by 60%. The AI suggestions are spot-on!',
+          'Premium analytics helped me reduce impulse purchases and get more value from the clothes I already own.',
       'rating': 5,
     },
     {
@@ -42,7 +36,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       'image':
           'https://img.rocket.new/generatedImages/rocket_gen_img_196e48b77-1764865098990.png',
       'text':
-          'The detailed cost-per-wear tracking changed how I shop. Worth every penny.',
+          'The AI suggestions and outfit variations made the app feel like a real personal stylist.',
       'rating': 5,
     },
     {
@@ -50,7 +44,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       'image':
           'https://img.rocket.new/generatedImages/rocket_gen_img_1852c4b53-1768226787988.png',
       'text':
-          'Learning modules taught me sustainable fashion practices I use daily.',
+          'Premium made the app much more useful day to day. More ideas, more guidance, no ads.',
       'rating': 5,
     },
   ];
@@ -59,45 +53,40 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
     {
       'question': 'Can I cancel anytime?',
       'answer':
-          'Yes! Cancel anytime from your account settings. No questions asked, no hidden fees.',
+          'Yes. Your subscription renews automatically, and you can cancel anytime from your Play Store or App Store subscription settings.',
     },
     {
-      'question': 'What happens to my data if I downgrade?',
+      'question': 'Is there a free trial?',
       'answer':
-          'Your data is never deleted. You\'ll retain access to all logged outfits, but premium analytics will be limited.',
+          'No. The free plan already lets you try the app. Premium simply gives you more suggestions, more interactions, and an ad-free experience.',
     },
     {
-      'question': 'Is the 7-day trial really free?',
+      'question': 'What happens if I cancel?',
       'answer':
-          'Absolutely! No credit card required for the trial. You\'ll only be charged if you continue after 7 days.',
+          'You will keep Premium access until the end of the current billing period, then your account will return to the free plan.',
     },
     {
-      'question': 'Can I share my subscription with family?',
+      'question': 'Can I restore my subscription?',
       'answer':
-          'Yes! Premium plans support family sharing on both iOS and Android platforms.',
+          'Yes. If you already purchased Premium on this account, you can restore your purchases at any time.',
     },
     {
-      'question': 'Do you offer student discounts?',
+      'question': 'Do you offer discount codes?',
       'answer':
-          'Yes! Students get 30% off annual plans. Contact support with your student ID for verification.',
+          'Occasionally, yes. Special discount codes may be shared through campaigns, partnerships, or selected creators.',
     },
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
+  String get _selectedPlanName =>
+      _selectedPlan == 'yearly' ? 'Yearly Plan' : 'Monthly Plan';
 
-  Future<void> _loadUserData() async {
-    final user = SupabaseService.instance.client.auth.currentUser;
-    if (user != null) {
-      setState(() {
-        _emailController.text = user.email ?? '';
-        _nameController.text = user.userMetadata?['full_name'] ?? '';
-      });
-    }
-  }
+  String get _selectedPlanPrice =>
+      _selectedPlan == 'yearly' ? '€69.90/year' : '€7.49/month';
+
+  String get _selectedBillingNote =>
+      _selectedPlan == 'yearly'
+          ? 'Billed yearly through the Play Store or App Store'
+          : 'Billed monthly through the Play Store or App Store';
 
   @override
   Widget build(BuildContext context) {
@@ -113,17 +102,14 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Hero Section
             const HeroSectionWidget(),
 
             SizedBox(height: 3.h),
 
-            // Feature Comparison
             const FeatureComparisonWidget(),
 
             SizedBox(height: 4.h),
 
-            // Pricing Plans
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
@@ -140,12 +126,13 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             SizedBox(height: 1.h),
 
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              padding: EdgeInsets.symmetric(horizontal: 6.w),
               child: Text(
-                'Start with a 7-day free trial',
+                'Upgrade when you want more suggestions, more coaching, more outfit variations, and no ads.',
                 style: TextStyle(
                   fontSize: 13.sp,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                  height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -153,17 +140,16 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 3.h),
 
-            // Monthly Plan
             PricingCardWidget(
               planName: 'Monthly',
-              price: '\$9.99',
+              price: '€7.49',
               period: '/month',
-              features: [
-                'Unlimited outfit logging',
-                'Advanced AI suggestions',
-                'Detailed analytics dashboard',
-                'Exclusive learning modules',
-                'Priority customer support',
+              features: const [
+                'More AI outfit suggestions',
+                'More coach interactions',
+                'More event outfit generations',
+                'Ad-free experience',
+                'Access to Premium features while subscribed',
               ],
               isSelected: _selectedPlan == 'monthly',
               onSelect: () => setState(() => _selectedPlan = 'monthly'),
@@ -172,28 +158,30 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 2.h),
 
-            // Annual Plan (Best Value)
             PricingCardWidget(
-              planName: 'Annual',
-              price: '\$99.99',
+              planName: 'Yearly',
+              price: '€69.90',
               period: '/year',
-              savings: 'Save \$20',
-              features: [
+              savings: '-22%',
+              features: const [
                 'Everything in Monthly',
-                'Family sharing (up to 5 members)',
-                'Early access to new features',
-                'Personalized style coaching',
-                'Annual sustainability report',
+                'Better yearly value',
+                'Fewer renewals to manage',
+                'Full Premium access all year',
+                'Best plan for regular users',
               ],
-              isSelected: _selectedPlan == 'annual',
+              isSelected: _selectedPlan == 'yearly',
               isBestValue: true,
-              onSelect: () => setState(() => _selectedPlan = 'annual'),
+              onSelect: () => setState(() => _selectedPlan = 'yearly'),
               onUpgrade: _handleUpgrade,
             ),
 
+            SizedBox(height: 3.h),
+
+            _buildStoreInfoCard(theme),
+
             SizedBox(height: 4.h),
 
-            // Testimonials
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
@@ -227,7 +215,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 4.h),
 
-            // FAQ Section
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
@@ -258,22 +245,21 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 3.h),
 
-            // Risk-Free Guarantee
             Container(
               margin: EdgeInsets.symmetric(horizontal: 4.w),
-              padding: EdgeInsets.all(3.w),
+              padding: EdgeInsets.all(3.5.w),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12.0),
                 border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.22),
                   width: 1,
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    Icons.verified_user,
+                    Icons.verified_user_outlined,
                     color: theme.colorScheme.primary,
                     size: 24.sp,
                   ),
@@ -283,7 +269,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Risk-Free Guarantee',
+                          'Secure Store Billing',
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -292,12 +278,13 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                         ),
                         SizedBox(height: 0.5.h),
                         Text(
-                          'Try premium features for 7 days. Cancel anytime with full refund if not satisfied.',
+                          'Subscriptions are handled securely through Google Play or the App Store on your device.',
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.7,
+                              alpha: 0.72,
                             ),
+                            height: 1.35,
                           ),
                         ),
                       ],
@@ -309,7 +296,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 2.h),
 
-            // Restore Purchases
             Center(
               child: TextButton(
                 onPressed: _handleRestorePurchases,
@@ -325,9 +311,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             ),
 
             SizedBox(height: 3.h),
-
-            // Payment Sheet Dialog
-            if (_showPaymentSheet) _buildPaymentSheet(theme),
           ],
         ),
       ),
@@ -363,9 +346,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _selectedPlan == 'annual'
-                                    ? 'Annual Plan'
-                                    : 'Monthly Plan',
+                                _selectedPlanName,
                                 style: TextStyle(
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.w600,
@@ -374,9 +355,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                               ),
                               SizedBox(height: 0.3.h),
                               Text(
-                                _selectedPlan == 'annual'
-                                    ? '\$99.99/year'
-                                    : '\$9.99/month',
+                                _selectedPlanPrice,
                                 style: TextStyle(
                                   fontSize: 18.sp,
                                   fontWeight: FontWeight.w800,
@@ -401,7 +380,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                               elevation: 2,
                             ),
                             child: Text(
-                              'Continue to Payment',
+                              'Continue',
                               style: TextStyle(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w700,
@@ -413,7 +392,18 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                     ),
                     SizedBox(height: 1.h),
                     Text(
-                      '7-day free trial • Cancel anytime',
+                      _selectedBillingNote,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 0.4.h),
+                    Text(
+                      'Auto-renewable subscription • Cancel anytime',
                       style: TextStyle(
                         fontSize: 11.sp,
                         color: theme.colorScheme.onSurface.withValues(
@@ -429,117 +419,48 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
     );
   }
 
-  Widget _buildPaymentSheet(ThemeData theme) {
+  Widget _buildStoreInfoCard(ThemeData theme) {
     return Container(
-      margin: EdgeInsets.all(4.w),
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.18),
+        ),
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: theme.colorScheme.primary,
+            size: 22,
+          ),
+          SizedBox(width: 3.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Payment Details',
-                  style: TextStyle(
-                    fontSize: 18.sp,
+                  'How billing works',
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    setState(() => _showPaymentSheet = false);
-                  },
+                SizedBox(height: 0.6.h),
+                Text(
+                  'Your subscription will be managed by Google Play or the App Store. No card form is required here — billing continues through your store account.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: 2.h),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Full Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your name';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 2.h),
-            TextFormField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty || !value.contains('@')) {
-                  return 'Please enter a valid email';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 2.h),
-            Text(
-              'Card Information',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            SizedBox(height: 1.h),
-            Text(
-              'Payment processing is not available in this version.',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            SizedBox(height: 3.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _processPayment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  padding: EdgeInsets.symmetric(vertical: 1.8.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                ),
-                child: Text(
-                  'Pay ${_selectedPlan == 'annual' ? '\$99.99' : '\$9.99'}',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -551,32 +472,55 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       return;
     }
 
-    setState(() => _showPaymentSheet = true);
-  }
-
-  Future<void> _processPayment() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
     setState(() => _isProcessingPayment = true);
 
     try {
-      final user = SupabaseService.instance.client.auth.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
+      // Store billing entry point.
+      // Connect this method to your Play Store / App Store purchase flow.
+      //
+      // Example mapping:
+      // monthly -> premium_monthly
+      // yearly  -> premium_yearly
+      //
+      // After a successful purchase:
+      // 1. validate receipt / purchase
+      // 2. update membership tier in your backend
+      // 3. refresh user tier locally
+      //
+      // This page is intentionally structured for store-based billing,
+      // not manual card entry inside the app.
 
-      // Payment processing is disabled
-      _showErrorDialog('Payment processing is not available in this version.');
-      return;
+      await Future.delayed(const Duration(milliseconds: 700));
+
+      _showErrorDialog(
+        'Store billing is not connected yet. Link this action to your in-app purchase service.',
+      );
     } catch (e) {
       _showErrorDialog(e.toString());
     } finally {
-      setState(() {
-        _isProcessingPayment = false;
-        _showPaymentSheet = false;
-      });
+      if (mounted) {
+        setState(() => _isProcessingPayment = false);
+      }
+    }
+  }
+
+  Future<void> _handleRestorePurchases() async {
+    setState(() => _isProcessingPayment = true);
+
+    try {
+      // Connect this method to your restore purchases flow.
+      // On success, refresh the user tier / entitlement state.
+      await Future.delayed(const Duration(milliseconds: 700));
+
+      _showErrorDialog(
+        'Restore purchases is not connected yet. Link this action to your store restore flow.',
+      );
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingPayment = false);
+      }
     }
   }
 
@@ -588,24 +532,13 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(width: 12),
+              const Icon(Icons.check_circle, color: Colors.green, size: 28),
+              const SizedBox(width: 12),
               const Text('Welcome to Premium!'),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Your payment was successful! You now have access to all premium features.',
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                'Plan: ${_selectedPlan == 'annual' ? 'Annual' : 'Monthly'}',
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-              ),
-            ],
+          content: Text(
+            'Your subscription is now active on the ${_selectedPlan == 'yearly' ? 'Yearly' : 'Monthly'} plan.',
           ),
           actions: [
             TextButton(
@@ -629,18 +562,5 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
         duration: const Duration(seconds: 4),
       ),
     );
-  }
-
-  void _handleRestorePurchases() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Checking for previous purchases...')),
-    );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    super.dispose();
   }
 }

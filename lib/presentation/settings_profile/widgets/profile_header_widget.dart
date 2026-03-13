@@ -22,13 +22,19 @@ class ProfileHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isFree = membershipTier.toLowerCase() == 'free';
 
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border(bottom: BorderSide(color: theme.dividerColor, width: 1)),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.dividerColor,
+            width: 1,
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -40,7 +46,9 @@ class ProfileHeaderWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: theme.colorScheme.primary,
+                    color: isFree
+                        ? theme.colorScheme.outline.withValues(alpha: 0.35)
+                        : _getMembershipAccentColor(membershipTier, theme),
                     width: 3,
                   ),
                 ),
@@ -70,7 +78,11 @@ class ProfileHeaderWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Icon(Icons.edit, size: 16.sp, color: Colors.white),
+                    child: Icon(
+                      Icons.edit,
+                      size: 16.sp,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -84,6 +96,7 @@ class ProfileHeaderWidget extends StatelessWidget {
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.onSurface,
             ),
+            textAlign: TextAlign.center,
           ),
           SizedBox(height: 0.5.h),
           Text(
@@ -92,13 +105,18 @@ class ProfileHeaderWidget extends StatelessWidget {
               fontSize: 13.sp,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
+            textAlign: TextAlign.center,
           ),
-          SizedBox(height: 1.h),
+          SizedBox(height: 1.2.h),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
+            padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 0.7.h),
             decoration: BoxDecoration(
-              color: _getMembershipColor(membershipTier, theme),
+              color: _getMembershipBackgroundColor(membershipTier, theme),
               borderRadius: BorderRadius.circular(20.0),
+              border: Border.all(
+                color: _getMembershipBorderColor(membershipTier, theme),
+                width: 1,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -106,15 +124,15 @@ class ProfileHeaderWidget extends StatelessWidget {
                 Icon(
                   _getMembershipIcon(membershipTier),
                   size: 14.sp,
-                  color: Colors.white,
+                  color: _getMembershipTextColor(membershipTier, theme),
                 ),
-                SizedBox(width: 1.w),
+                SizedBox(width: 1.2.w),
                 Text(
                   membershipTier,
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: _getMembershipTextColor(membershipTier, theme),
                   ),
                 ),
               ],
@@ -125,7 +143,7 @@ class ProfileHeaderWidget extends StatelessWidget {
     );
   }
 
-  Color _getMembershipColor(String tier, ThemeData theme) {
+  Color _getMembershipAccentColor(String tier, ThemeData theme) {
     switch (tier.toLowerCase()) {
       case 'premium':
         return const Color(0xFFD4AF37);
@@ -133,19 +151,55 @@ class ProfileHeaderWidget extends StatelessWidget {
         return theme.colorScheme.primary;
       case 'free':
       default:
-        return theme.colorScheme.secondary;
+        return theme.colorScheme.outline.withValues(alpha: 0.35);
+    }
+  }
+
+  Color _getMembershipBackgroundColor(String tier, ThemeData theme) {
+    switch (tier.toLowerCase()) {
+      case 'premium':
+        return const Color(0xFFD4AF37).withValues(alpha: 0.14);
+      case 'pro':
+        return theme.colorScheme.primary.withValues(alpha: 0.12);
+      case 'free':
+      default:
+        return theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55);
+    }
+  }
+
+  Color _getMembershipBorderColor(String tier, ThemeData theme) {
+    switch (tier.toLowerCase()) {
+      case 'premium':
+        return const Color(0xFFD4AF37).withValues(alpha: 0.35);
+      case 'pro':
+        return theme.colorScheme.primary.withValues(alpha: 0.25);
+      case 'free':
+      default:
+        return theme.colorScheme.outline.withValues(alpha: 0.18);
+    }
+  }
+
+  Color _getMembershipTextColor(String tier, ThemeData theme) {
+    switch (tier.toLowerCase()) {
+      case 'premium':
+        return const Color(0xFF8B6A00);
+      case 'pro':
+        return theme.colorScheme.primary;
+      case 'free':
+      default:
+        return theme.colorScheme.onSurfaceVariant;
     }
   }
 
   IconData _getMembershipIcon(String tier) {
     switch (tier.toLowerCase()) {
       case 'premium':
-        return Icons.star;
+        return Icons.star_rounded;
       case 'pro':
-        return Icons.workspace_premium;
+        return Icons.workspace_premium_rounded;
       case 'free':
       default:
-        return Icons.person;
+        return Icons.person_outline_rounded;
     }
   }
 }

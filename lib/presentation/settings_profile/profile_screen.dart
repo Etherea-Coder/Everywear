@@ -47,7 +47,6 @@ class ProfileScreen extends ConsumerWidget {
             ),
             SizedBox(height: 2.h),
 
-            // Insights & Analytics
             SettingsSectionWidget(
               title: 'Insights & Analytics',
               children: [
@@ -70,35 +69,30 @@ class ProfileScreen extends ConsumerWidget {
                   title: 'Progress Dashboard',
                   subtitle: 'Track your style evolution',
                   onTap: () => Navigator.pushNamed(
-                      context, AppRoutes.personalProgressDashboard),
+                    context,
+                    AppRoutes.personalProgressDashboard,
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 2.h),
 
-            // Subscription
             SettingsSectionWidget(
               title: localizations.subscription,
               children: [
                 SettingsTileWidget(
-                  icon: Icons.card_membership,
-                  title: localizations.currentPlan,
-                  subtitle: membershipTier,
+                  icon: Icons.workspace_premium_outlined,
+                  title: 'Membership',
+                  subtitle: membershipTier.toLowerCase() == 'free'
+                      ? 'Free plan · Unlock more features'
+                      : '$membershipTier plan',
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.subscription),
-                ),
-                SettingsTileWidget(
-                  icon: Icons.upgrade,
-                  title: localizations.upgradePlan,
-                  subtitle: localizations.unlockMoreFeatures,
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.premiumUpgrade),
                 ),
               ],
             ),
             SizedBox(height: 2.h),
 
-            // Settings entry point
             SettingsSectionWidget(
               title: '',
               children: [
