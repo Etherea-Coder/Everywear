@@ -87,7 +87,7 @@ class ProfileScreen extends ConsumerWidget {
                       ? 'Free plan · Unlock more features'
                       : '$membershipTier plan',
                   onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.subscription),
+                      Navigator.pushNamed(context, AppRoutes.premiumUpgrade),
                 ),
               ],
             ),
