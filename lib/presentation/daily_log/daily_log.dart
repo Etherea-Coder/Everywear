@@ -252,7 +252,7 @@ class _DailyLogState extends State<DailyLog> {
         _isAISuggestionLoading = false;
         if (result != null) {
           _suggestedOutfit = {
-            'title': result['title'] ?? 'Today's Style Idea',
+            'title': result['title'] ?? 'Today Style Idea',
             'description': result['description'] ?? '',
             'styling_note': result['styling_note'] ?? '',
             'anchor': result['anchor'] ?? _suggestedOutfit['anchor'],
