@@ -352,11 +352,18 @@ class _DailyLogState extends State<DailyLog> {
 
   // ── TODAY CONTROLS ──────────────────────────────────────
   Widget _buildSelectorSection(ThemeData theme) {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    final dayLabel = DateFormat('EEEE, MMMM d').format(DateTime.now());
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(greeting, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          SizedBox(height: 0.3.h),
+          Text(dayLabel, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          SizedBox(height: 2.h),
           Text(
             'Dressing for',
             style: theme.textTheme.titleSmall?.copyWith(
