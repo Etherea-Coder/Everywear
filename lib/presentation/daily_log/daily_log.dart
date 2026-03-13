@@ -4,9 +4,9 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/outfit_log_service.dart';
+import '../../services/style_service.dart';
 import '../../services/weather_service.dart';
 import '../../widgets/custom_app_bar.dart';
-import './widgets/calendar_header_widget.dart';
 import './widgets/outfit_entry_card_widget.dart';
 import './widgets/quick_log_button_widget.dart';
 import './widgets/stats_summary_widget.dart';
@@ -19,15 +19,14 @@ class DailyLog extends StatefulWidget {
 }
 
 class _DailyLogState extends State<DailyLog> {
-  DateTime _selectedDate = DateTime.now();
-  DateTime _focusedMonth = DateTime.now();
-  String _viewMode = 'calendar';
-
   final OutfitLogService _outfitLogService = OutfitLogService();
   final WeatherService _weatherService = WeatherService();
+  final StyleService _styleService = StyleService();
+
+  DateTime _selectedDate = DateTime.now();
 
   List<Map<String, dynamic>> _todayEntries = [];
-  Map<String, List<Map<String, dynamic>>> _monthEntries = {};
+  List<Map<String, dynamic>> _upcomingEvents = [];
   Map<String, dynamic> _monthlyStats = {
     'totalOutfits': 0,
     'uniqueItems': 0,
@@ -44,37 +43,21 @@ class _DailyLogState extends State<DailyLog> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+
     final results = await Future.wait([
-      _loadEntriesForDate(_selectedDate),
-      _loadMonthData(_focusedMonth),
+      _outfitLogService.fetchOutfitLogsForDate(_selectedDate),
+      _outfitLogService.fetchMonthlyStats(_selectedDate),
       _weatherService.getCurrentWeather(),
+      _styleService.fetchUpcomingEvents(),
     ]);
+
     if (mounted) {
       setState(() {
+        _todayEntries = results[0] as List<Map<String, dynamic>>;
+        _monthlyStats = results[1] as Map<String, dynamic>;
         _weather = (results[2] as Map<String, dynamic>?) ?? {};
+        _upcomingEvents = results[3] as List<Map<String, dynamic>>;
         _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _loadEntriesForDate(DateTime date) async {
-    final entries = await _outfitLogService.fetchOutfitLogsForDate(date);
-    if (mounted) {
-      setState(() => _todayEntries = entries);
-    }
-  }
-
-  Future<void> _loadMonthData(DateTime month) async {
-    final dates = await _outfitLogService.fetchLoggedDatesForMonth(month);
-    final stats = await _outfitLogService.fetchMonthlyStats(month);
-
-    if (mounted) {
-      setState(() {
-        _monthlyStats = stats;
-        // Build month entries map (just keys, for calendar dots)
-        _monthEntries = {
-          for (final date in dates) date: [],
-        };
       });
     }
   }
@@ -87,6 +70,7 @@ class _DailyLogState extends State<DailyLog> {
     final unit = _weather['unit'] ?? '°C';
 
     return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -123,7 +107,8 @@ class _DailyLogState extends State<DailyLog> {
                   ),
                 SizedBox(height: 1.h),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -147,30 +132,376 @@ class _DailyLogState extends State<DailyLog> {
     final c = condition.toLowerCase();
     if (c.contains('rain')) return '🌂 Bring a waterproof layer today';
     if (c.contains('snow')) return '🧥 Layer up, stay warm';
-    if (c.contains('sun') || c.contains('clear')) return '😎 Perfect for light layers';
+    if (c.contains('sun') || c.contains('clear')) {
+      return '😎 Perfect for light layers';
+    }
     if (c.contains('cloud')) return '🌤 A light jacket would work well';
     if (c.contains('wind')) return '💨 Try a fitted outfit today';
     return '👗 Dress for your day ahead';
   }
 
+  // ── TODAY SUGGESTION ────────────────────────────────────
+  Widget _buildTodaySuggestionCard(ThemeData theme) {
+    final suggestion = _getTodaySuggestion();
+    final subtitle = _getTodaySuggestionSubtitle();
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 12.w,
+                height: 12.w,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Today's Outfit",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 0.3.h),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            suggestion,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.4,
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _showQuickLogOptions,
+                  icon: const Icon(Icons.checkroom_outlined),
+                  label: const Text('Log outfit'),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 1.4.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _refreshSuggestion,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Refresh'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 1.4.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getTodaySuggestion() {
+    final condition = (_weather['condition'] ?? '').toString().toLowerCase();
+    final hasLoggedToday = _todayEntries.isNotEmpty;
+
+    if (condition.contains('rain')) {
+      return hasLoggedToday
+          ? 'You already logged a look today. If you head out again, a water-friendly outer layer would be a smart addition.'
+          : 'Go for a practical outfit today with a light waterproof layer and shoes that can handle wet weather comfortably.';
+    }
+
+    if (condition.contains('snow')) {
+      return hasLoggedToday
+          ? 'Your outfit is logged for today. If you need a second look, focus on warmth with extra layering and a cozy outer piece.'
+          : 'Build today’s outfit around warm layers and a comfortable outerwear piece. Keep the base simple and insulating.';
+    }
+
+    if (condition.contains('sun') || condition.contains('clear')) {
+      return hasLoggedToday
+          ? 'You already have today covered. If you switch later, keep the silhouette light and breathable for the clearer weather.'
+          : 'A lighter look would work well today. Start with breathable basics and add one polished layer if you want extra structure.';
+    }
+
+    if (condition.contains('cloud')) {
+      return hasLoggedToday
+          ? 'You have already logged today’s outfit. A light jacket or overshirt would still be a good add-on if the temperature drops.'
+          : 'Today is ideal for easy layering. Try a balanced outfit with a simple base and one light outer layer.';
+    }
+
+    return hasLoggedToday
+        ? 'You already logged an outfit today. If you want a second option later, keep it versatile and comfortable for the rest of the day.'
+        : 'Choose something comfortable, easy to move in, and adaptable through the day. A balanced everyday outfit will work best.';
+  }
+
+  String _getTodaySuggestionSubtitle() {
+    if (_todayEntries.isNotEmpty) {
+      return 'Based on today’s weather and your current activity';
+    }
+    return 'A simple daily suggestion to get you started';
+  }
+
+  void _refreshSuggestion() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Suggestion refreshed')),
+    );
+    setState(() {});
+  }
+
+  // ── QUICK TIP ───────────────────────────────────────────
+  Widget _buildQuickTipCard(ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.lightbulb_outline,
+            color: theme.colorScheme.primary,
+            size: 22,
+          ),
+          SizedBox(width: 3.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quick Tip',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 0.5.h),
+                Text(
+                  _getQuickTip(),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getQuickTip() {
+    final totalOutfits = _monthlyStats['totalOutfits'] as int? ?? 0;
+    final favoriteOccasion =
+        (_monthlyStats['favoriteOccasion'] ?? 'Everyday').toString();
+
+    if (totalOutfits == 0) {
+      return 'Start logging your outfits regularly to unlock more personal style patterns and smarter daily guidance.';
+    }
+
+    if (totalOutfits < 5) {
+      return 'You are building your outfit history. A few more logs will help the app understand your habits much better.';
+    }
+
+    return 'Your most common occasion this month is $favoriteOccasion. Keep one reliable version of that look ready for busy days.';
+    }
+
+  // ── UPCOMING EVENT ──────────────────────────────────────
+  Widget _buildUpcomingEventCard(ThemeData theme) {
+    if (_upcomingEvents.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final event = _upcomingEvents.first;
+    final date = DateTime.parse(event['event_date']);
+    final daysLeft = date.difference(DateTime.now()).inDays;
+    final eventType = event['event_type'] as String? ?? 'Other';
+    final dressCode = event['dress_code'] as String?;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 12.w,
+            height: 12.w,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.event,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          SizedBox(width: 3.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Upcoming Event',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 0.4.h),
+                Text(
+                  event['title'] as String,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 0.4.h),
+                Text(
+                  daysLeft <= 0
+                      ? 'Today · $eventType'
+                      : daysLeft == 1
+                          ? 'Tomorrow · $eventType'
+                          : 'In $daysLeft days · $eventType',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (dressCode != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 0.4.h),
+                    child: Text(
+                      'Dress code: $dressCode',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── SECTION HEADER ──────────────────────────────────────
+  Widget _buildSectionHeader(
+    ThemeData theme,
+    String title,
+    IconData icon, {
+    VoidCallback? onTap,
+    String? actionLabel,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary, size: 20),
+              SizedBox(width: 2.w),
+              Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          if (actionLabel != null && onTap != null)
+            GestureDetector(
+              onTap: onTap,
+              child: Text(
+                actionLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: 'Daily Log',
+        title: 'Today',
         actions: [
           IconButton(
             icon: Icon(
-              _viewMode == 'calendar' ? Icons.list : Icons.calendar_month,
+              Icons.refresh,
               color: Theme.of(context).colorScheme.primary,
             ),
-            onPressed: () {
-              setState(() {
-                _viewMode = _viewMode == 'calendar' ? 'list' : 'calendar';
-              });
-            },
+            onPressed: _loadData,
           ),
           IconButton(
             icon: Icon(
@@ -183,44 +514,45 @@ class _DailyLogState extends State<DailyLog> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadData,
-        child: Column(
-          children: [
-            // Weather Card
-            _buildWeatherCard(theme),
-            SizedBox(height: 2.h),
-            // Calendar
-            CalendarHeaderWidget(
-              focusedMonth: _focusedMonth,
-              selectedDate: _selectedDate,
-              outfitEntries: _monthEntries,
-              onDateSelected: (date) {
-                setState(() => _selectedDate = date);
-                _loadEntriesForDate(date);
-              },
-              onMonthChanged: (month) {
-                setState(() => _focusedMonth = month);
-                _loadMonthData(month);
-              },
-            ),
-
-            // Stats
-            StatsSummaryWidget(
-              totalOutfits: _monthlyStats['totalOutfits'] as int,
-              uniqueItems: _monthlyStats['uniqueItems'] as int,
-              favoriteOccasion: _monthlyStats['favoriteOccasion'] as String,
-            ),
-
-            // Outfit Entries
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _todayEntries.isEmpty
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: EdgeInsets.only(top: 2.h, bottom: 12.h),
+                children: [
+                  _buildTodaySuggestionCard(theme),
+                  SizedBox(height: 2.h),
+                  _buildWeatherCard(theme),
+                  SizedBox(height: 2.h),
+                  _buildQuickTipCard(theme),
+                  if (_upcomingEvents.isNotEmpty) ...[
+                    SizedBox(height: 2.h),
+                    _buildUpcomingEventCard(theme),
+                  ],
+                  SizedBox(height: 3.h),
+                  _buildSectionHeader(
+                    theme,
+                    "Today's Log",
+                    Icons.checkroom_outlined,
+                    actionLabel: 'See month',
+                    onTap: _showInsights,
+                  ),
+                  SizedBox(height: 1.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                    child: StatsSummaryWidget(
+                      totalOutfits: _monthlyStats['totalOutfits'] as int,
+                      uniqueItems: _monthlyStats['uniqueItems'] as int,
+                      favoriteOccasion:
+                          _monthlyStats['favoriteOccasion'] as String,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  _todayEntries.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 4.w,
-                            vertical: 2.h,
-                          ),
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                           itemCount: _todayEntries.length,
                           itemBuilder: (context, index) {
                             final entry = _todayEntries[index];
@@ -232,9 +564,8 @@ class _DailyLogState extends State<DailyLog> {
                             );
                           },
                         ),
-            ),
-          ],
-        ),
+                ],
+              ),
       ),
       floatingActionButton: QuickLogButtonWidget(
         onQuickLog: _showQuickLogOptions,
@@ -268,30 +599,48 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.calendar_today_outlined,
-            size: 64,
-            color: Colors.grey.shade400,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(6.w),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context)
+                .colorScheme
+                .outline
+                .withValues(alpha: 0.2),
           ),
-          SizedBox(height: 2.h),
-          Text(
-            'No outfits logged for this day',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.checkroom_outlined,
+              size: 56,
+              color: Colors.grey.shade350,
             ),
-          ),
-          SizedBox(height: 1.h),
-          Text(
-            'Tap the + button to log your outfit',
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade500),
-          ),
-        ],
+            SizedBox(height: 1.5.h),
+            Text(
+              'Nothing logged yet today',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 0.8.h),
+            Text(
+              'Use the quick log button to save today’s outfit and build your style history.',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -544,7 +893,7 @@ class _DailyLogState extends State<DailyLog> {
           children: [
             Icon(Icons.insights, color: Theme.of(context).colorScheme.primary),
             SizedBox(width: 2.w),
-            const Text('Monthly Insights'),
+            const Text('This Month'),
           ],
         ),
         content: Column(
@@ -552,10 +901,17 @@ class _DailyLogState extends State<DailyLog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInsightRow(
-                'Total Outfits', '${_monthlyStats['totalOutfits']}'),
-            _buildInsightRow('Unique Items', '${_monthlyStats['uniqueItems']}'),
+              'Total Outfits',
+              '${_monthlyStats['totalOutfits']}',
+            ),
             _buildInsightRow(
-                'Favorite Occasion', '${_monthlyStats['favoriteOccasion']}'),
+              'Unique Items',
+              '${_monthlyStats['uniqueItems']}',
+            ),
+            _buildInsightRow(
+              'Favorite Occasion',
+              '${_monthlyStats['favoriteOccasion']}',
+            ),
           ],
         ),
         actions: [
@@ -574,8 +930,10 @@ class _DailyLogState extends State<DailyLog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700),
+          ),
           Text(
             value,
             style: TextStyle(

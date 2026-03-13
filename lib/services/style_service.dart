@@ -329,7 +329,7 @@ class StyleService {
       return {'error': 'Coach unavailable right now.'};
     } catch (e) {
       debugPrint('Coach event error: $e');
-      return {'error': 'Coach unavailable right now.'};
+      return {'error': 'Error: ${e.toString()}'};
     }
   }
 
