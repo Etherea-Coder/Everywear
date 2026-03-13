@@ -619,7 +619,7 @@ class _DailyLogState extends State<DailyLog> {
             Icon(
               Icons.checkroom_outlined,
               size: 56,
-              color: Colors.grey.shade350,
+              color: Colors.grey.shade400,
             ),
             SizedBox(height: 1.5.h),
             Text(
