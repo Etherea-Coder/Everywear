@@ -476,7 +476,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
     }
     setState(() => _isProcessingPayment = true);
     try {
-      final offerings = await SubscriptionService.getOfferings();
+      final offerings = await _subscriptionService.getOfferings();
       if (offerings == null || offerings.current == null) {
         _showErrorDialog('No offerings available. Please try again later.');
         return;
@@ -494,7 +494,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
           orElse: () => packages.first,
         );
       }
-      final success = await SubscriptionService.purchase(selectedPackage);
+      final success = await _subscriptionService.purchase(selectedPackage);
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Welcome to Signature!')),
@@ -515,7 +515,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
   Future<void> _handleRestorePurchases() async {
     setState(() => _isProcessingPayment = true);
     try {
-      final hasAccess = await _SubscriptionService.restorePurchases();
+      final hasAccess = await _subscriptionService.restorePurchases();
       if (!mounted) return;
       if (hasAccess) {
         ScaffoldMessenger.of(context).showSnackBar(
