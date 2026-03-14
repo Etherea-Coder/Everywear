@@ -23,6 +23,7 @@ class ProfileHeaderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isFree = membershipTier.toLowerCase() == 'free';
+    final displayTier = _getDisplayTier(membershipTier);
 
     return Container(
       width: double.infinity,
@@ -128,7 +129,7 @@ class ProfileHeaderWidget extends StatelessWidget {
                 ),
                 SizedBox(width: 1.2.w),
                 Text(
-                  membershipTier,
+                  displayTier,
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
@@ -200,6 +201,20 @@ class ProfileHeaderWidget extends StatelessWidget {
       case 'free':
       default:
         return Icons.person_outline_rounded;
+    }
+  }
+
+  /// Maps stored membership tier to display name
+  String _getDisplayTier(String tier) {
+    switch (tier.toLowerCase()) {
+      case 'free':
+        return 'Essential';
+      case 'premium':
+        return 'Signature';
+      case 'pro':
+        return 'Signature';
+      default:
+        return tier; // Return original if unknown
     }
   }
 }

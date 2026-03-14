@@ -20,6 +20,10 @@ import '../presentation/personal_progress_dashboard/personal_progress_dashboard.
 import '../presentation/challenge_center/challenge_center.dart';
 import '../presentation/achievement_gallery/achievement_gallery.dart';
 import '../presentation/home_screen/home_screen.dart';
+import '../presentation/send_feedback_screen/send_feedback_screen.dart';
+import '../presentation/help_center_screen/help_center_screen.dart';
+import '../presentation/export_data_screen/export_data_screen.dart';
+
 
 class AppRoutes {
   AppRoutes._();
@@ -83,8 +87,9 @@ class AppRoutes {
   // ============================================
   static const String editProfile    = '/edit-profile';           // ← TODO: build screen
   static const String changePassword = '/change-password';        // ← TODO: build screen
-  static const String helpCenter     = '/help-center';            // ← TODO: build screen
-  static const String sendFeedback   = '/send-feedback';          // ← TODO: build screen
+  static const String helpCenter     = '/help-center';            
+  static const String sendFeedback   = '/send-feedback';
+  static const String exportData      = '/export-data';          // ← TODO: build screen
 
   // ============================================
   // ROUTE MAP
@@ -104,8 +109,9 @@ class AppRoutes {
 
     // Settings (pushed from Profile)
     settings:           (context) => const SettingsScreen(),       // ← new
-
-    // Insights & Analytics
+    helpCenter:         (context) => const HelpCenterScreen(),
+    sendFeedback:       (context) => const SendFeedbackScreen(),
+    exportData:          (context) => const ExportDataScreen(),
     insightsDashboard:         (context) => const InsightsDashboard(),
     personalProgressDashboard: (context) => const PersonalProgressDashboard(),
     achievementGallery:        (context) => const AchievementGallery(),

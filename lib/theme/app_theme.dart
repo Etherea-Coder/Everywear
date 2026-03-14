@@ -13,7 +13,7 @@ class AppTheme {
   static const Color secondaryLight = Color(0xFFB69C7A); // Soft bronze / sand
   static const Color secondaryVariantLight = Color(0xFF9D8466); // Darker sand
   static const Color backgroundLight = Color(0xFFF7F5F2); // Warm cream
-  static const Color surfaceLight = Color(0xFFFFFCF8); // Linen white
+  static const Color surfaceLight = Color(0xFFF8F6F2); // Linen white
   static const Color surfaceAltLight = Color(0xFFF2EEE8); // Soft studio beige
   static const Color errorLight = Color(0xFFB25D4F); // Muted terracotta
   static const Color successLight = Color(0xFF6E8A6A); // Soft sage success
@@ -51,7 +51,7 @@ class AppTheme {
   static const Color dialogLight = Color(0xFFFFFCF8);
   static const Color dialogDark = Color(0xFF2C2926);
 
-  static const Color shadowLight = Color(0x12000000);
+  static const Color shadowLight = Color(0x14000000);
   static const Color shadowDark = Color(0x26000000);
 
   static const Color dividerLight = Color(0x1A6D6256);
@@ -117,10 +117,10 @@ class AppTheme {
 
     cardTheme: CardThemeData(
       color: cardLight,
-      elevation: 0.8,
-      shadowColor: shadowLight,
+      elevation: 0,
+      shadowColor: const Color(0x14000000),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(16),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
@@ -427,10 +427,10 @@ class AppTheme {
 
     cardTheme: CardThemeData(
       color: cardDark,
-      elevation: 1.5,
-      shadowColor: shadowDark,
+      elevation: 0,
+      shadowColor: const Color(0x14000000),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(16),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),

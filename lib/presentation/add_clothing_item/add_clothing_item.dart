@@ -28,6 +28,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
   final _storeController = TextEditingController();
   final WardrobeService _wardrobeService = WardrobeService();
   final StorageService _storageService = StorageService();
+  String? _editingItemId;
 
   List<String> _capturedPhotos = [];
   String? _selectedCategory;
@@ -45,7 +46,6 @@ class _AddClothingItemState extends State<AddClothingItem> {
     'Shoes',
     'Accessories',
     'Activewear',
-    'Sleepwear',
   ];
 
   @override
@@ -55,6 +55,21 @@ class _AddClothingItemState extends State<AddClothingItem> {
     _brandController.addListener(_onFormChanged);
     _priceController.addListener(_onFormChanged);
     _storeController.addListener(_onFormChanged);
+    // Pre-populate if editing existing item
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map<String, dynamic> && args.containsKey('name')) {
+        setState(() {
+          _itemNameController.text = args['name'] as String? ?? '';
+          _brandController.text = args['brand'] as String? ?? '';
+          _selectedCategory = args['category'] as String?;
+          if (args['purchase_price'] != null) {
+            _priceController.text = args['purchase_price'].toString();
+          }
+          _editingItemId = args['id'] as String?;
+        });
+      }
+    });
   }
 
   @override
@@ -89,12 +104,18 @@ class _AddClothingItemState extends State<AddClothingItem> {
         _selectedCategory = aiCategory;
       }
 
-      // Auto-populate item name if empty
-      if (_itemNameController.text.trim().isEmpty) {
+      // Auto-populate item name if empty and AI is confident
+      final confidence = (analysisResult['confidence'] as num?)?.toDouble() ?? 0.0;
+      if (_itemNameController.text.trim().isEmpty && confidence > 0.6) {
         final color = analysisResult['color'] as String? ?? '';
         final material = analysisResult['material'] as String? ?? '';
-        final category = analysisResult['category'] as String? ?? 'Item';
-        _itemNameController.text = '$color $material $category';
+        final category = analysisResult['category'] as String? ?? '';
+        final parts = [color, material, category]
+            .where((s) => s.isNotEmpty && s.toLowerCase() != 'unknown')
+            .toList();
+        if (parts.isNotEmpty) {
+          _itemNameController.text = parts.join(' ');
+        }
       }
 
       _hasUnsavedChanges = true;

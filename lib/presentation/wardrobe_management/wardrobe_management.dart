@@ -118,7 +118,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       Navigator.of(
         context,
         rootNavigator: true,
-      ).pushNamed('/add-clothing-item', arguments: item);
+      ).pushNamed('/add-clothing-item', arguments: item)
+        .then((_) => ref.read(wardrobeItemsProvider.notifier).refresh());
     }
   }
 
@@ -644,7 +645,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         Navigator.of(
                           context,
                           rootNavigator: true,
-                        ).pushNamed('/add-clothing-item');
+                        ).pushNamed('/add-clothing-item')
+                        .then((_) => ref.read(wardrobeItemsProvider.notifier).refresh());
                       },
                     )
                   : RefreshIndicator(

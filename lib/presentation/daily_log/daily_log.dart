@@ -8,6 +8,7 @@ import '../../services/style_service.dart';
 import '../../services/today_suggestion_service.dart';
 import '../../services/weather_service.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/tinted_section_container.dart';
 import './widgets/outfit_entry_card_widget.dart';
 import './widgets/quick_log_button_widget.dart';
 import './widgets/stats_summary_widget.dart';
@@ -1312,35 +1313,59 @@ class _DailyLogState extends State<DailyLog> {
             : ListView(
                 padding: EdgeInsets.only(top: 2.h, bottom: 12.h),
                 children: [
-                  _buildWelcomeHeroCard(theme),
+                  // Morning Section
+                  TintedSectionContainer(
+                    padding: EdgeInsets.all(4.w),
+                    child: Column(
+                      children: [
+                        _buildWelcomeHeroCard(theme),
+                        SizedBox(height: 2.h),
+                        _buildContextCard(theme),
+                      ],
+                    ),
+                  ),
                   SizedBox(height: 2.h),
-                  _buildContextCard(theme),
-                  SizedBox(height: 2.h),
-                  _buildTodaySuggestionCard(theme),
-                  SizedBox(height: 2.h),
-                  _buildWeatherCard(theme),
-                  SizedBox(height: 2.h),
-                  _buildQuickTipCard(theme),
+                  
+                  // Suggestion Section
+                  TintedSectionContainer(
+                    padding: EdgeInsets.all(4.w),
+                    child: Column(
+                      children: [
+                        _buildTodaySuggestionCard(theme),
+                        SizedBox(height: 2.h),
+                        _buildWeatherCard(theme),
+                        SizedBox(height: 2.h),
+                        _buildQuickTipCard(theme),
+                      ],
+                    ),
+                  ),
                   if (_upcomingEvents.isNotEmpty) ...[
                     SizedBox(height: 2.h),
                     _buildUpcomingEventCard(theme),
                   ],
                   SizedBox(height: 3.h),
-                  _buildSectionHeader(
-                    theme,
-                    'Today\'s Log',
-                    Icons.checkroom_outlined,
-                    actionLabel: 'This month',
-                    onTap: _showInsights,
-                  ),
-                  SizedBox(height: 1.h),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.w),
-                    child: StatsSummaryWidget(
-                      totalOutfits: _monthlyStats['totalOutfits'] as int,
-                      uniqueItems: _monthlyStats['uniqueItems'] as int,
-                      favoriteOccasion:
-                          _monthlyStats['favoriteOccasion'] as String,
+                  
+                  // Log Section
+                  TintedSectionContainer(
+                    padding: EdgeInsets.all(4.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader(
+                          theme,
+                          'Today\'s Log',
+                          Icons.checkroom_outlined,
+                          actionLabel: 'This month',
+                          onTap: _showInsights,
+                        ),
+                        SizedBox(height: 1.h),
+                        StatsSummaryWidget(
+                          totalOutfits: _monthlyStats['totalOutfits'] as int,
+                          uniqueItems: _monthlyStats['uniqueItems'] as int,
+                          favoriteOccasion:
+                              _monthlyStats['favoriteOccasion'] as String,
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: 2.h),

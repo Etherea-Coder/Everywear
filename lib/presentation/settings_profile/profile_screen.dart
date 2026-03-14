@@ -26,6 +26,21 @@ class ProfileScreen extends ConsumerWidget {
     final email = user?.email ?? '';
     final avatarUrl = user?.userMetadata?['avatar_url'] ?? '';
     final membershipTier = profileAsync.value?['membership_tier'] ?? 'Free';
+    
+    // Map tier to display name
+    String getDisplayTier(String tier) {
+      switch (tier.toLowerCase()) {
+        case 'free':
+          return 'Essential';
+        case 'premium':
+          return 'Signature';
+        case 'pro':
+          return 'Signature';
+        default:
+          return tier;
+      }
+    }
+    final displayTier = getDisplayTier(membershipTier);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -84,8 +99,8 @@ class ProfileScreen extends ConsumerWidget {
                   icon: Icons.workspace_premium_outlined,
                   title: 'Membership',
                   subtitle: membershipTier.toLowerCase() == 'free'
-                      ? 'Free plan · Unlock more features'
-                      : '$membershipTier plan',
+                      ? 'Essential plan · Unlock more features'
+                      : '$displayTier plan',
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.premiumUpgrade),
                 ),
