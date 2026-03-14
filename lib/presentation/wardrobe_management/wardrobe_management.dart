@@ -119,7 +119,11 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
         context,
         rootNavigator: true,
       ).pushNamed('/add-clothing-item', arguments: item)
-        .then((_) => ref.read(wardrobeItemsProvider.notifier).refresh());
+        .then((result) {
+          if (result == true) {
+            ref.read(wardrobeItemsProvider.notifier).refresh();
+          }
+        });
     }
   }
 
@@ -268,6 +272,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   Widget _buildPremiumHeader(
     ThemeData theme,
     AsyncValue<List<Map<String, dynamic>>> itemsAsync,
+    AsyncValue<List<Map<String, dynamic>>> allItemsAsync,
     AsyncValue<Map<String, dynamic>?> tierInfoAsync,
   ) {
     return Container(
@@ -450,7 +455,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                 ),
               ),
               SizedBox(height: 1.8.h),
-              itemsAsync.when(
+              allItemsAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
                 data: (items) => _buildCollectionSummary(theme, items),
@@ -568,6 +573,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final itemsAsync = ref.watch(filteredWardrobeItemsProvider);
+    final allItemsAsync = ref.watch(wardrobeItemsProvider);
     final selectedCategory = ref.watch(wardrobeCategoryProvider);
     final tierInfoAsync = ref.watch(userTierProvider);
 
@@ -577,14 +583,18 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
         onPressed: () {
           Navigator.of(context, rootNavigator: true)
               .pushNamed('/add-clothing-item')
-              .then((_) => ref.read(wardrobeItemsProvider.notifier).refresh());
+              .then((result) {
+                if (result == true) {
+                  ref.read(wardrobeItemsProvider.notifier).refresh();
+                }
+              });
         },
         backgroundColor: theme.colorScheme.primary,
         child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       ),
       body: Column(
         children: [
-          _buildPremiumHeader(theme, itemsAsync, tierInfoAsync),
+          _buildPremiumHeader(theme, itemsAsync, allItemsAsync, tierInfoAsync),
 
           Container(
             color: theme.scaffoldBackgroundColor,
@@ -646,7 +656,11 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                           context,
                           rootNavigator: true,
                         ).pushNamed('/add-clothing-item')
-                        .then((_) => ref.read(wardrobeItemsProvider.notifier).refresh());
+                        .then((result) {
+                          if (result == true) {
+                            ref.read(wardrobeItemsProvider.notifier).refresh();
+                          }
+                        });
                       },
                     )
                   : RefreshIndicator(

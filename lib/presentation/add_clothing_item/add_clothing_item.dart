@@ -46,6 +46,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
     'Shoes',
     'Accessories',
     'Activewear',
+    'Sleepwear',
   ];
 
   @override
