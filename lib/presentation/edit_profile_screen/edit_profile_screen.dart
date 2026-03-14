@@ -1,52 +1,53 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/profile_service.dart';
 import 'package:sizer/sizer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../widgets/custom_app_bar.dart';
-import '../../services/supabase_service.dart';
+import '../../widgets/custom_image_widget.dart';
 
-class SendFeedbackScreen extends StatefulWidget {
-  const SendFeedbackScreen({Key? key}) : super(key: key);
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<SendFeedbackScreen> createState() => _SendFeedbackScreenState();
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
-  final ProfileService _profileService = ProfileService();
+class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  bool _isSubmitting = false;
-  String _selectedType = 'Suggestion';
-  int _selectedRating = 0;
-
-  final List<String> _feedbackTypes = [
-    'Suggestion',
-    'Bug',
-    'Design',
-    'AI suggestions',
-    'Other',
-  ];
+  bool _isSaving = false;
+  String _avatarUrl = '';
+  final ProfileService _profileService = ProfileService();
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _prefillEmail();
+    _loadUserData();
   }
 
-  void _prefillEmail() {
-    final user = SupabaseService.instance.client.auth.currentUser;
+  void _loadUserData() {
+    final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
+      _nameController.text =
+          user.userMetadata?['full_name'] ??
+          user.userMetadata?['name'] ??
+          '';
       _emailController.text = user.email ?? '';
+      _avatarUrl = user.userMetadata?['avatar_url'] ?? '';
+      setState(() {});
     }
   }
 
   @override
   void dispose() {
-    _messageController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     super.dispose();
   }
@@ -58,7 +59,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: const CustomAppBar(
-        title: 'Send Feedback',
+        title: 'Edit Profile',
         variant: CustomAppBarVariant.detail,
       ),
       body: SingleChildScrollView(
@@ -73,31 +74,23 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
 
               _buildSection(
                 theme,
-                title: 'What would you like to share?',
-                icon: Icons.chat_bubble_outline,
-                child: _buildTypeSelectorCard(theme),
+                title: 'Profile photo',
+                icon: Icons.camera_alt_outlined,
+                child: _buildPhotoCard(theme),
               ),
               SizedBox(height: 2.h),
 
               _buildSection(
                 theme,
-                title: 'Your message',
-                icon: Icons.edit_outlined,
-                child: _buildMessageCard(theme),
+                title: 'Display name',
+                icon: Icons.person_outline,
+                child: _buildNameCard(theme),
               ),
               SizedBox(height: 2.h),
 
               _buildSection(
                 theme,
-                title: 'How is your experience so far?',
-                icon: Icons.star_outline,
-                child: _buildRatingCard(theme),
-              ),
-              SizedBox(height: 2.h),
-
-              _buildSection(
-                theme,
-                title: 'Contact email',
+                title: 'Email',
                 icon: Icons.mail_outline,
                 child: _buildEmailCard(theme),
               ),
@@ -105,7 +98,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
 
               _buildSection(
                 theme,
-                title: 'A quick note',
+                title: 'Note',
                 icon: Icons.info_outline,
                 child: _buildInfoCard(theme),
               ),
@@ -116,8 +109,8 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _isSubmitting ? null : _submitFeedback,
-                    icon: _isSubmitting
+                    onPressed: _isSaving ? null : _handleSave,
+                    icon: _isSaving
                         ? SizedBox(
                             width: 4.w,
                             height: 4.w,
@@ -126,8 +119,8 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.send_outlined),
-                    label: Text(_isSubmitting ? 'Sending...' : 'Send Feedback'),
+                        : const Icon(Icons.check),
+                    label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 1.6.h),
                       shape: RoundedRectangleBorder(
@@ -173,7 +166,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
-              Icons.forum_outlined,
+              Icons.edit_outlined,
               color: theme.colorScheme.primary,
               size: 26,
             ),
@@ -184,14 +177,14 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'We would love to hear from you',
+                  'Your personal profile',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 SizedBox(height: 0.8.h),
                 Text(
-                  'Your ideas, bug reports, and reflections help shape Everywear into a more thoughtful wardrobe studio.',
+                  'Keep your profile simple, clear, and personal. Your email stays fixed, while your name and profile image can be updated here.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     height: 1.5,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -235,10 +228,10 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Widget _buildTypeSelectorCard(ThemeData theme) {
+  Widget _buildPhotoCard(ThemeData theme) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.all(5.w),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
@@ -250,48 +243,92 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
           ),
         ],
       ),
-      child: Wrap(
-        spacing: 2.w,
-        runSpacing: 1.2.h,
-        children: _feedbackTypes.map((type) {
-          final selected = _selectedType == type;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedType = type),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
-              decoration: BoxDecoration(
-                color: selected
-                    ? theme.colorScheme.primary.withValues(alpha: 0.14)
-                    : theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: selected
-                      ? theme.colorScheme.primary.withValues(alpha: 0.35)
-                      : theme.colorScheme.outline.withValues(alpha: 0.20),
-                  width: selected ? 1.4 : 1,
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Container(
+                width: 28.w,
+                height: 28.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    width: 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child: _avatarUrl.isNotEmpty
+                      ? CustomImageWidget(
+                          imageUrl: _avatarUrl,
+                          fit: BoxFit.cover,
+                          semanticLabel: 'Profile picture',
+                        )
+                      : Container(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                          child: Icon(
+                            Icons.person,
+                            size: 42,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
                 ),
               ),
-              child: Text(
-                type,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.88),
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: _pickAndUploadPhoto,
+                  child: Container(
+                    padding: EdgeInsets.all(2.w),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.edit,
+                      size: 16.sp,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
+              ),
+            ],
+          ),
+          SizedBox(height: 1.8.h),
+          Text(
+            'Tap the photo to update it',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          SizedBox(height: 1.6.h),
+          OutlinedButton.icon(
+            onPressed: _pickAndUploadPhoto,
+            icon: const Icon(Icons.photo_camera_outlined),
+            label: const Text('Change Photo'),
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMessageCard(ThemeData theme) {
+  Widget _buildNameCard(ThemeData theme) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
@@ -304,67 +341,20 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
         ],
       ),
       child: TextFormField(
-        controller: _messageController,
-        maxLines: 7,
+        controller: _nameController,
         decoration: const InputDecoration(
-          hintText:
-              'Tell us what happened, what you would improve, or what you would love to see next...',
+          hintText: 'Your name',
           border: InputBorder.none,
         ),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'Please write a message';
+            return 'Please enter your name';
           }
-          if (value.trim().length < 8) {
-            return 'Please add a little more detail';
+          if (value.trim().length < 2) {
+            return 'Please enter a valid name';
           }
           return null;
         },
-      ),
-    );
-  }
-
-  Widget _buildRatingCard(ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.16),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Optional, but helpful',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          SizedBox(height: 1.2.h),
-          Row(
-            children: List.generate(5, (index) {
-              final starIndex = index + 1;
-              final selected = _selectedRating >= starIndex;
-              return Padding(
-                padding: EdgeInsets.only(right: 1.w),
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedRating = starIndex),
-                  child: Icon(
-                    selected ? Icons.star : Icons.star_border,
-                    color: selected
-                        ? theme.colorScheme.secondary
-                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                    size: 28,
-                  ),
-                ),
-              );
-            }),
-          ),
-        ],
       ),
     );
   }
@@ -376,28 +366,36 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              _emailController.text,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          SizedBox(width: 2.w),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 2.8.w, vertical: 0.6.h),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Fixed',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
-      ),
-      child: TextFormField(
-        controller: _emailController,
-        keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(
-          hintText: 'your@email.com',
-          border: InputBorder.none,
-        ),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) return null;
-          if (!value.contains('@')) {
-            return 'Please enter a valid email';
-          }
-          return null;
-        },
       ),
     );
   }
@@ -414,7 +412,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
         ),
       ),
       child: Text(
-        'If you report a bug, a few details like where it happened, what you expected, and what happened instead will help a lot.',
+        'Your email address stays linked to your account sign-in. To keep things simple and reliable, only your display name and profile image are editable here.',
         style: theme.textTheme.bodyMedium?.copyWith(
           height: 1.5,
           color: theme.colorScheme.onSurfaceVariant,
@@ -423,32 +421,64 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Future<void> _submitFeedback() async {
+  Future<void> _pickAndUploadPhoto() async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+      setState(() => _isSaving = true);
+      final url = await _profileService.uploadProfilePhoto(picked.path);
+      if (url != null && mounted) {
+        setState(() => _avatarUrl = url);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile photo updated')),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not upload photo')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
+    setState(() => _isSaving = true);
 
     try {
-      final success = await _profileService.submitFeedback(
-        type: _selectedType,
-        message: _messageController.text.trim(),
-        rating: _selectedRating > 0 ? _selectedRating : null,
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(
+          data: {
+            'full_name': _nameController.text.trim(),
+          },
+        ),
       );
-      if (!success) throw Exception('Failed to save feedback');
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Thank you — your feedback has been sent'),
+          content: Text('Profile updated successfully'),
         ),
       );
-
-      _messageController.clear();
-      setState(() {
-        _selectedType = 'Suggestion';
-        _selectedRating = 0;
-      });
 
       Navigator.pop(context);
     } catch (e) {
@@ -456,13 +486,13 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not send feedback: $e'),
+          content: Text('Could not update profile: $e'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     } finally {
       if (mounted) {
-        setState(() => _isSubmitting = false);
+        setState(() => _isSaving = false);
       }
     }
   }

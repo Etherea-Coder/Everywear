@@ -23,6 +23,8 @@ import '../presentation/home_screen/home_screen.dart';
 import '../presentation/send_feedback_screen/send_feedback_screen.dart';
 import '../presentation/help_center_screen/help_center_screen.dart';
 import '../presentation/export_data_screen/export_data_screen.dart';
+import '../presentation/edit_profile_screen/edit_profile_screen.dart';
+import '../presentation/change_password_screen/change_password_screen.dart';
 
 
 class AppRoutes {
@@ -86,7 +88,7 @@ class AppRoutes {
   // These need their own screens — flagged as TODO
   // ============================================
   static const String editProfile    = '/edit-profile';           // ← TODO: build screen
-  static const String changePassword = '/change-password';        // ← TODO: build screen
+  static const String changePassword = '/change-password';
   static const String helpCenter     = '/help-center';            
   static const String sendFeedback   = '/send-feedback';
   static const String exportData      = '/export-data';          // ← TODO: build screen
@@ -131,6 +133,10 @@ class AppRoutes {
     aiIntelligence:  (context) => const AIIntelligence(),
     learningPaths:   (context) => const LearningPaths(),
     challengeCenter: (context) => const ChallengeCenter(),
+
+    // Profile Actions
+    editProfile:      (context) => const EditProfileScreen(),
+    changePassword:   (context) => const ChangePasswordScreen(),
 
     // Premium
     premiumUpgrade: (context) => const PremiumUpgrade(),

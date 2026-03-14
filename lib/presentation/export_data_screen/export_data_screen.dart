@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/profile_service.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
@@ -11,6 +12,7 @@ class ExportDataScreen extends StatefulWidget {
 }
 
 class _ExportDataScreenState extends State<ExportDataScreen> {
+  final ProfileService _profileService = ProfileService();
   String _selectedFormat = 'PDF';
   bool _isExporting = false;
 
