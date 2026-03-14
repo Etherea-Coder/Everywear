@@ -25,6 +25,9 @@ import '../presentation/help_center_screen/help_center_screen.dart';
 import '../presentation/export_data_screen/export_data_screen.dart';
 import '../presentation/edit_profile_screen/edit_profile_screen.dart';
 import '../presentation/change_password_screen/change_password_screen.dart';
+import '../presentation/legal/terms_screen.dart';
+import '../presentation/legal/privacy_policy_screen.dart';
+import '../presentation/support/contact_support_screen.dart';
 
 
 class AppRoutes {
