@@ -25,7 +25,8 @@ class _DailyLogState extends State<DailyLog> {
   final OutfitLogService _outfitLogService = OutfitLogService();
   final WeatherService _weatherService = WeatherService();
   final StyleService _styleService = StyleService();
-  final TodaySuggestionService _todaySuggestionService = TodaySuggestionService();
+  final TodaySuggestionService _todaySuggestionService =
+      TodaySuggestionService();
 
   List<Map<String, dynamic>> _todayEntries = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
@@ -115,10 +116,10 @@ class _DailyLogState extends State<DailyLog> {
         _weather = (results[2] as Map<String, dynamic>?) ?? {};
         _upcomingEvents = results[3] as List<Map<String, dynamic>>;
         _quizResult = results[4] as Map<String, dynamic>?;
-        _generateSuggestion(); // fallback while AI loads
+        _generateSuggestion();
         _isLoading = false;
       });
-      _loadAISuggestion(); // load real AI suggestion in background
+      _loadAISuggestion();
     }
   }
 
@@ -263,74 +264,86 @@ class _DailyLogState extends State<DailyLog> {
     }
   }
 
-  // ── WEATHER ─────────────────────────────────────────────
-  Widget _buildWeatherCard(ThemeData theme) {
+  Widget _buildWelcomeHeroCard(ThemeData theme) {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
+    final dayLabel = DateFormat('EEEE, MMMM d').format(DateTime.now());
+
+    final location = (_weather['location'] ?? '').toString();
+    final condition = (_weather['condition'] ?? '').toString();
     final temp = _weather['temperature'];
-    final condition = _weather['condition'] ?? 'Loading...';
-    final location = _weather['location'] ?? '';
-    final unit = _weather['unit'] ?? '°C';
-    final isError = _weather['error'] == true;
+    final unit = (_weather['unit'] ?? '°C').toString();
+    final hasWeather = temp != null && condition.isNotEmpty;
+    final weatherLabel = hasWeather ? '$temp$unit · $condition' : 'Style, your way';
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.all(4.5.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isError
-              ? [Colors.grey.shade500, Colors.grey.shade600]
-              : [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.primary.withValues(alpha: 0.7),
-                ],
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.14),
+            theme.colorScheme.secondary.withValues(alpha: 0.10),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.10),
+        ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            isError ? Icons.location_off : Icons.wb_sunny,
-            color: Colors.white,
-            size: 48,
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.6.h),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.40),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              weatherLabel,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          SizedBox(width: 4.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isError ? condition : '$temp$unit · $condition',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (location.isNotEmpty)
-                  Text(
-                    location,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white70,
-                    ),
-                  ),
-                if (!isError) ...[
-                  SizedBox(height: 1.h),
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _getWeatherTip(condition),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+          SizedBox(height: 2.h),
+          Text(
+            greeting,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              height: 1.0,
+            ),
+          ),
+          SizedBox(height: 0.6.h),
+          Text(
+            dayLabel,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (location.isNotEmpty) ...[
+            SizedBox(height: 0.4.h),
+            Text(
+              location,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          SizedBox(height: 2.h),
+          Text(
+            'A calm space to choose what feels right today — guided by your wardrobe, your plans, and your mood.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.45,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
             ),
           ),
         ],
@@ -338,31 +351,38 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  String _getWeatherTip(String condition) {
-    final c = condition.toLowerCase();
-    if (c.contains('rain')) return '🌂 Bring a waterproof layer today';
-    if (c.contains('snow')) return '🧥 Layer up, stay warm';
-    if (c.contains('sun') || c.contains('clear')) {
-      return '😎 Perfect for light layers';
-    }
-    if (c.contains('cloud')) return '🌤 A light jacket would work well';
-    if (c.contains('wind')) return '💨 Try a fitted outfit today';
-    return '👗 Dress for your day ahead';
-  }
-
-  // ── TODAY CONTROLS ──────────────────────────────────────
-  Widget _buildSelectorSection(ThemeData theme) {
-    final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-    final dayLabel = DateFormat('EEEE, MMMM d').format(DateTime.now());
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
+  Widget _buildContextCard(ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(greeting, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-          SizedBox(height: 0.3.h),
-          Text(dayLabel, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(
+            'Set today’s direction',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 0.6.h),
+          Text(
+            'Choose the occasion and vibe you want. Your suggestion updates around that.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
           SizedBox(height: 2.h),
           Text(
             'Dressing for',
@@ -373,13 +393,14 @@ class _DailyLogState extends State<DailyLog> {
           SizedBox(height: 1.h),
           Wrap(
             spacing: 2.w,
-            runSpacing: 1.h,
+            runSpacing: 1.2.h,
             children: _occasions.map((occasion) {
               final selected = _selectedOccasion == occasion;
-              return ChoiceChip(
-                label: Text(occasion),
+              return _buildWarmChoiceChip(
+                theme,
+                label: occasion,
                 selected: selected,
-                onSelected: (_) {
+                onTap: () {
                   setState(() {
                     _selectedOccasion = selected ? null : occasion;
                     _generateSuggestion();
@@ -389,9 +410,9 @@ class _DailyLogState extends State<DailyLog> {
               );
             }).toList(),
           ),
-          SizedBox(height: 2.h),
+          SizedBox(height: 2.2.h),
           Text(
-            'Today\'s vibe',
+            'Today’s vibe',
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -399,13 +420,14 @@ class _DailyLogState extends State<DailyLog> {
           SizedBox(height: 1.h),
           Wrap(
             spacing: 2.w,
-            runSpacing: 1.h,
+            runSpacing: 1.2.h,
             children: _moods.map((mood) {
               final selected = _selectedMood == mood;
-              return ChoiceChip(
-                label: Text(mood),
+              return _buildWarmChoiceChip(
+                theme,
+                label: mood,
                 selected: selected,
-                onSelected: (_) {
+                onTap: () {
                   setState(() {
                     _selectedMood = selected ? null : mood;
                     _generateSuggestion();
@@ -420,7 +442,123 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  // ── TODAY SUGGESTION ────────────────────────────────────
+  Widget _buildWarmChoiceChip(
+    ThemeData theme, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(horizontal: 4.2.w, vertical: 1.2.h),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primary.withValues(alpha: 0.14)
+              : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary.withValues(alpha: 0.35)
+                : theme.colorScheme.outline.withValues(alpha: 0.20),
+            width: selected ? 1.4 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.88),
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeatherCard(ThemeData theme) {
+    final temp = _weather['temperature'];
+    final condition = _weather['condition'] ?? 'Loading...';
+    final location = _weather['location'] ?? '';
+    final unit = _weather['unit'] ?? '°C';
+    final isError = _weather['error'] == true;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.10),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 13.w,
+            height: 13.w,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              isError ? Icons.location_off : Icons.wb_sunny_outlined,
+              color: theme.colorScheme.primary,
+              size: 28,
+            ),
+          ),
+          SizedBox(width: 3.5.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isError ? condition : '$temp$unit · $condition',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (location.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: 0.2.h),
+                    child: Text(
+                      location,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                if (!isError)
+                  Padding(
+                    padding: EdgeInsets.only(top: 0.6.h),
+                    child: Text(
+                      _getWeatherTip(condition),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getWeatherTip(String condition) {
+    final c = condition.toLowerCase();
+    if (c.contains('rain')) return 'Bring a waterproof layer today';
+    if (c.contains('snow')) return 'Layer up and keep the outfit warm';
+    if (c.contains('sun') || c.contains('clear')) return 'Perfect for lighter layers';
+    if (c.contains('cloud')) return 'A light jacket would work well';
+    if (c.contains('wind')) return 'A fitted layer will help on a windy day';
+    return 'Dress for your day ahead';
+  }
+
   Widget _buildTodaySuggestionCard(ThemeData theme) {
     final anchor = _suggestedOutfit['anchor'] as Map<String, dynamic>;
     final items = (_suggestedOutfit['items'] as List<dynamic>)
@@ -428,55 +566,72 @@ class _DailyLogState extends State<DailyLog> {
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.all(4.5.w),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          Text(
-            _suggestedOutfit['title'] as String? ?? 'Today\'s Style Idea',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 0.8.h),
-          Text(
-            _suggestedOutfit['description'] as String? ??
-                'A simple daily outfit suggestion.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      _suggestedOutfit['title'] as String? ??
+                          'Today\'s Style Idea',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 0.8.h),
+                    Text(
+                      _suggestedOutfit['description'] as String? ??
+                          'A simple daily outfit suggestion.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.45,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           if ((_suggestedOutfit['styling_note'] as String? ?? '').isNotEmpty) ...[
-            SizedBox(height: 1.h),
+            SizedBox(height: 1.6.h),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
+              padding: EdgeInsets.symmetric(horizontal: 3.5.w, vertical: 1.1.h),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(10),
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.auto_awesome, size: 14, color: theme.colorScheme.primary),
-                  SizedBox(width: 1.w),
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 14,
+                    color: theme.colorScheme.primary,
+                  ),
+                  SizedBox(width: 1.5.w),
                   Flexible(
                     child: Text(
                       _suggestedOutfit['styling_note'] as String,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontStyle: FontStyle.italic,
+                        height: 1.35,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -485,9 +640,8 @@ class _DailyLogState extends State<DailyLog> {
               ),
             ),
           ],
-          SizedBox(height: 2.5.h),
+          SizedBox(height: 2.8.h),
 
-          // Anchor piece
           GestureDetector(
             onTap: () => _showSwapItemSheet(anchor),
             child: Column(
@@ -497,36 +651,44 @@ class _DailyLogState extends State<DailyLog> {
                   item: anchor,
                   isAnchor: true,
                 ),
-                SizedBox(height: 0.8.h),
+                SizedBox(height: 1.h),
                 Text(
                   anchor['name'] as String? ?? '',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 0.3.h),
+                SizedBox(height: 0.4.h),
                 Text(
-                  'Tap to swap',
+                  'Anchor piece · tap to swap',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
 
-          SizedBox(height: 2.h),
-          Icon(
-            Icons.keyboard_arrow_down,
-            color: theme.colorScheme.onSurfaceVariant,
-            size: 24,
+          SizedBox(height: 2.2.h),
+          Container(
+            width: 12.w,
+            height: 12.w,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.keyboard_arrow_down,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
           ),
-          SizedBox(height: 1.h),
+          SizedBox(height: 1.8.h),
 
-          // Supporting pieces
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: items.map((item) {
               return Expanded(
                 child: Padding(
@@ -543,7 +705,7 @@ class _DailyLogState extends State<DailyLog> {
                         SizedBox(height: 0.8.h),
                         Text(
                           item['name'] as String? ?? '',
-                          style: theme.textTheme.bodySmall?.copyWith(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                           textAlign: TextAlign.center,
@@ -552,10 +714,11 @@ class _DailyLogState extends State<DailyLog> {
                         ),
                         SizedBox(height: 0.2.h),
                         Text(
-                          'Swap',
+                          'Tap to swap',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.primary,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -565,7 +728,7 @@ class _DailyLogState extends State<DailyLog> {
             }).toList(),
           ),
 
-          SizedBox(height: 2.5.h),
+          SizedBox(height: 2.6.h),
           Row(
             children: [
               Expanded(
@@ -574,9 +737,9 @@ class _DailyLogState extends State<DailyLog> {
                   icon: const Icon(Icons.checkroom_outlined),
                   label: const Text('Log outfit'),
                   style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 1.4.h),
+                    padding: EdgeInsets.symmetric(vertical: 1.45.h),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
@@ -588,12 +751,21 @@ class _DailyLogState extends State<DailyLog> {
                     setState(() => _generateSuggestion());
                     _loadAISuggestion();
                   },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Refresh'),
+                  icon: _isAISuggestionLoading
+                      ? SizedBox(
+                          width: 4.w,
+                          height: 4.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.refresh),
+                  label: Text(_isAISuggestionLoading ? 'Loading' : 'Refresh'),
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 1.4.h),
+                    padding: EdgeInsets.symmetric(vertical: 1.45.h),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
@@ -613,12 +785,17 @@ class _DailyLogState extends State<DailyLog> {
     final imageUrl = item['imageUrl'] as String? ?? '';
 
     return Container(
-      height: isAnchor ? 15.h : 10.h,
-      width: isAnchor ? 15.h : 10.h,
+      height: isAnchor ? 18.h : 11.5.h,
+      width: isAnchor ? 18.h : 11.5.h,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(isAnchor ? 18 : 14),
-        color: theme.colorScheme.primary.withValues(
-          alpha: isAnchor ? 0.10 : 0.06,
+        borderRadius: BorderRadius.circular(isAnchor ? 22 : 16),
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: isAnchor ? 0.12 : 0.08),
+            theme.colorScheme.secondary.withValues(alpha: isAnchor ? 0.06 : 0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         border: Border.all(
           color: theme.colorScheme.primary.withValues(
@@ -627,7 +804,7 @@ class _DailyLogState extends State<DailyLog> {
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(isAnchor ? 18 : 14),
+        borderRadius: BorderRadius.circular(isAnchor ? 22 : 16),
         child: imageUrl.isNotEmpty
             ? Image.network(
                 imageUrl,
@@ -652,7 +829,7 @@ class _DailyLogState extends State<DailyLog> {
     return Center(
       child: Icon(
         Icons.checkroom,
-        size: isAnchor ? 40 : 28,
+        size: isAnchor ? 46 : 28,
         color: theme.colorScheme.primary,
       ),
     );
@@ -664,9 +841,9 @@ class _DailyLogState extends State<DailyLog> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
       builder: (context) => Container(
         padding: EdgeInsets.all(4.w),
@@ -678,7 +855,7 @@ class _DailyLogState extends State<DailyLog> {
               height: 4,
               margin: EdgeInsets.only(bottom: 2.h),
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadius.circular(2.0),
               ),
             ),
@@ -694,7 +871,7 @@ class _DailyLogState extends State<DailyLog> {
               'Choose a different piece for this outfit idea',
               style: TextStyle(
                 fontSize: 12.sp,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             SizedBox(height: 2.h),
@@ -724,7 +901,7 @@ class _DailyLogState extends State<DailyLog> {
                   item['category'] as String? ?? '',
                   style: TextStyle(
                     fontSize: 11.sp,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 trailing: Icon(
@@ -894,25 +1071,32 @@ class _DailyLogState extends State<DailyLog> {
     });
   }
 
-  // ── QUICK TIP ───────────────────────────────────────────
   Widget _buildQuickTipCard(ThemeData theme) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          color: theme.colorScheme.outline.withValues(alpha: 0.18),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.lightbulb_outline,
-            color: theme.colorScheme.primary,
-            size: 22,
+          Container(
+            width: 11.w,
+            height: 11.w,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.secondary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.lightbulb_outline,
+              color: theme.colorScheme.secondary,
+              size: 20,
+            ),
           ),
           SizedBox(width: 3.w),
           Expanded(
@@ -930,7 +1114,7 @@ class _DailyLogState extends State<DailyLog> {
                   _getQuickTip(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
+                    height: 1.45,
                   ),
                 ),
               ],
@@ -965,7 +1149,6 @@ class _DailyLogState extends State<DailyLog> {
     return 'Your most common occasion this month is $favoriteOccasion. Keeping one reliable version of that look ready can save time on busy days.';
   }
 
-  // ── UPCOMING EVENT ──────────────────────────────────────
   Widget _buildUpcomingEventCard(ThemeData theme) {
     if (_upcomingEvents.isEmpty) {
       return const SizedBox.shrink();
@@ -982,10 +1165,10 @@ class _DailyLogState extends State<DailyLog> {
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -997,7 +1180,7 @@ class _DailyLogState extends State<DailyLog> {
             width: 12.w,
             height: 12.w,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -1057,7 +1240,6 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  // ── SECTION HEADER ──────────────────────────────────────
   Widget _buildSectionHeader(
     ThemeData theme,
     String title,
@@ -1098,7 +1280,6 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  // ── MAIN BUILD ──────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1131,7 +1312,9 @@ class _DailyLogState extends State<DailyLog> {
             : ListView(
                 padding: EdgeInsets.only(top: 2.h, bottom: 12.h),
                 children: [
-                  _buildSelectorSection(theme),
+                  _buildWelcomeHeroCard(theme),
+                  SizedBox(height: 2.h),
+                  _buildContextCard(theme),
                   SizedBox(height: 2.h),
                   _buildTodaySuggestionCard(theme),
                   SizedBox(height: 2.h),
@@ -1162,7 +1345,7 @@ class _DailyLogState extends State<DailyLog> {
                   ),
                   SizedBox(height: 2.h),
                   _todayEntries.isEmpty
-                      ? _buildEmptyState()
+                      ? _buildEmptyState(theme)
                       : ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -1188,7 +1371,6 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  /// Format Supabase entry for the card widget
   Map<String, dynamic> _formatEntry(Map<String, dynamic> entry) {
     final items = (entry['outfit_items'] as List<dynamic>? ?? [])
         .map((oi) => (oi['wardrobe_items']?['name'] ?? 'Unknown') as String)
@@ -1212,44 +1394,47 @@ class _DailyLogState extends State<DailyLog> {
     };
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(ThemeData theme) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.all(6.w),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Theme.of(context)
-                .colorScheme
-                .outline
-                .withValues(alpha: 0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.18),
           ),
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.checkroom_outlined,
-              size: 56,
-              color: Colors.grey.shade400,
+            Container(
+              width: 18.w,
+              height: 18.w,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.checkroom_outlined,
+                size: 34,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            SizedBox(height: 1.5.h),
+            SizedBox(height: 1.6.h),
             Text(
               'Nothing logged yet today',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: Colors.grey.shade600,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             SizedBox(height: 0.8.h),
             Text(
               'Use the quick log button to save today’s outfit and build your style history.',
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: Colors.grey.shade500,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.4,
               ),
               textAlign: TextAlign.center,
             ),
@@ -1262,9 +1447,9 @@ class _DailyLogState extends State<DailyLog> {
   void _showQuickLogOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
       builder: (context) => Container(
         padding: EdgeInsets.all(4.w),
@@ -1276,7 +1461,7 @@ class _DailyLogState extends State<DailyLog> {
               height: 4,
               margin: EdgeInsets.only(bottom: 2.h),
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadius.circular(2.0),
               ),
             ),
@@ -1329,7 +1514,7 @@ class _DailyLogState extends State<DailyLog> {
       leading: Container(
         padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withAlpha(26),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12.0),
         ),
         child: Icon(icon, color: Theme.of(context).colorScheme.primary),
@@ -1340,7 +1525,10 @@ class _DailyLogState extends State<DailyLog> {
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade600),
+        style: TextStyle(
+          fontSize: 13.sp,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
       onTap: onTap,
     );
@@ -1482,7 +1670,7 @@ class _DailyLogState extends State<DailyLog> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -1546,7 +1734,10 @@ class _DailyLogState extends State<DailyLog> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           Text(
             value,
