@@ -221,6 +221,10 @@ class AppLocalizations {
   String get faqsAndGuides => translate('faqs_and_guides');
   String get sendFeedback => translate('send_feedback');
   String get shareYourThoughts => translate('share_your_thoughts');
+  String get privacyPolicy => translate('privacy_policy');
+  String get viewPrivacyPolicy => translate('view_privacy_policy');
+  String get termsOfService => translate('terms_of_service');
+  String get viewTermsOfService => translate('view_terms_of_service');
   String get lightMode => translate('light_mode');
   String get darkMode => translate('dark_mode');
   String get autoSystem => translate('auto_system');
