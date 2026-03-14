@@ -81,17 +81,24 @@ class AppRoutes {
   // PREMIUM & BILLING
   // ============================================
   static const String premiumUpgrade = '/premium-upgrade';
-  static const String subscription   = '/subscription';           // ← no longer duplicate
+  static const String subscription   = '/subscription';           
 
   // ============================================
   // PROFILE ACTIONS
   // These need their own screens — flagged as TODO
   // ============================================
-  static const String editProfile    = '/edit-profile';           // ← TODO: build screen
+  static const String editProfile    = '/edit-profile';           
   static const String changePassword = '/change-password';
   static const String helpCenter     = '/help-center';            
   static const String sendFeedback   = '/send-feedback';
-  static const String exportData      = '/export-data';          // ← TODO: build screen
+  static const String exportData      = '/export-data';  
+
+  // ============================================
+  // LEGAL & SUPPORT
+  // ============================================
+  static const privacyPolicy = "/privacy-policy";
+  static const terms = "/terms";
+  static const contactSupport = "/contact-support";        
 
   // ============================================
   // ROUTE MAP
@@ -137,6 +144,11 @@ class AppRoutes {
     // Profile Actions
     editProfile:      (context) => const EditProfileScreen(),
     changePassword:   (context) => const ChangePasswordScreen(),
+
+    // Legal & Support
+    privacyPolicy: (context)    => const PrivacyPolicyScreen(),
+    terms: (context)            => const TermsScreen(),
+    contactSupport: (context)   => const ContactSupportScreen(),
 
     // Premium
     premiumUpgrade: (context) => const PremiumUpgrade(),

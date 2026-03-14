@@ -139,6 +139,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.sendFeedback),
                 ),
+                _buildNavTile(
+                  icon: Icons.policy_outlined,
+                  title: localizations.privacyPolicy,
+                  subtitle: localizations.viewPrivacyPolicy,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.privacyPolicy),
+                ),
+                _buildNavTile(
+                  icon: Icons.description_outlined,
+                  title: localizations.termsOfService,
+                  subtitle: localizations.viewTermsOfService,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.terms),
+                ),
               ],
             ),
             SizedBox(height: 3.h),

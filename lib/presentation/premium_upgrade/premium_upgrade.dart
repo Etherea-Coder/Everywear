@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import '../../services/subscription_service.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
@@ -471,56 +473,61 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       _showErrorDialog('Please login to continue');
       return;
     }
-
     setState(() => _isProcessingPayment = true);
-
     try {
-      // Store billing entry point.
-      // Connect this method to your Play Store / App Store purchase flow.
-      //
-      // Example mapping:
-      // monthly -> premium_monthly
-      // yearly  -> premium_yearly
-      //
-      // After a successful purchase:
-      // 1. validate receipt / purchase
-      // 2. update membership tier in your backend
-      // 3. refresh user tier locally
-      //
-      // This page is intentionally structured for store-based billing,
-      // not manual card entry inside the app.
-
-      await Future.delayed(const Duration(milliseconds: 700));
-
-      _showErrorDialog(
-        'Store billing is not connected yet. Link this action to your in-app purchase service.',
-      );
+      final offerings = await SubscriptionService.getOfferings();
+      if (offerings == null || offerings.current == null) {
+        _showErrorDialog('No offerings available. Please try again later.');
+        return;
+      }
+      final packages = offerings.current!.availablePackages;
+      Package? selectedPackage;
+      if (_selectedPlan == 'yearly') {
+        selectedPackage = packages.firstWhere(
+          (p) => p.packageType == PackageType.annual,
+          orElse: () => packages.first,
+        );
+      } else {
+        selectedPackage = packages.firstWhere(
+          (p) => p.packageType == PackageType.monthly,
+          orElse: () => packages.first,
+        );
+      }
+      final success = await SubscriptionService.purchase(selectedPackage);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Welcome to Signature!')),
+        );
+        Navigator.pop(context);
+      }
+    } on PurchasesErrorCode catch (e) {
+      if (e != PurchasesErrorCode.purchaseCancelledError) {
+        _showErrorDialog('Purchase failed: ${e.name}');
+      }
     } catch (e) {
       _showErrorDialog(e.toString());
     } finally {
-      if (mounted) {
-        setState(() => _isProcessingPayment = false);
-      }
+      if (mounted) setState(() => _isProcessingPayment = false);
     }
   }
 
   Future<void> _handleRestorePurchases() async {
     setState(() => _isProcessingPayment = true);
-
     try {
-      // Connect this method to your restore purchases flow.
-      // On success, refresh the user tier / entitlement state.
-      await Future.delayed(const Duration(milliseconds: 700));
-
-      _showErrorDialog(
-        'Restore purchases is not connected yet. Link this action to your store restore flow.',
-      );
-    } catch (e) {
-      _showErrorDialog(e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessingPayment = false);
+      final hasAccess = await SubscriptionService.restorePurchases();
+      if (!mounted) return;
+      if (hasAccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Purchases restored successfully!')),
+        );
+        Navigator.pop(context);
+      } else {
+        _showErrorDialog('No active subscription found to restore.');
       }
+    } catch (e) {
+      _showErrorDialog('Restore failed: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => _isProcessingPayment = false);
     }
   }
 
