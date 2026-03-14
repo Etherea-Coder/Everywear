@@ -199,15 +199,15 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
       // Notify parent widget
       widget.onAIAnalysisComplete?.call(result);
 
-      // Show success feedback
-      if (mounted) {
+      final confidence = (result['confidence'] as num?)?.toDouble() ?? 0.0;
+      final detectedCategory = result['category'] as String? ?? '';
+      final detectedColor = result['color'] as String? ?? '';
+      final isUnknown = detectedCategory.toLowerCase() == 'unknown' || detectedColor.toLowerCase() == 'unknown';
+      if (mounted && confidence > 0.6 && !isUnknown) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'AI detected: ${result['category']} (${(result['confidence'] * 100).toInt()}% confident)',
-            ),
+            content: Text('AI detected: $detectedColor $detectedCategory'),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -290,7 +290,9 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
-          if (_aiAnalysisResult != null) ...[
+          if (_aiAnalysisResult != null && 
+              ((_aiAnalysisResult!['confidence'] as num?)?.toDouble() ?? 0.0) > 0.6 &&
+              (_aiAnalysisResult!['category'] as String? ?? '').toLowerCase() != 'unknown') ...[
             SizedBox(height: 1.h),
             Container(
               padding: EdgeInsets.all(2.w),
@@ -403,8 +405,8 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
                       ),
                     ),
                   )
-                : Image.network(
-                    widget.photos[index],
+                : Image.file(
+                    File(widget.photos[index]),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: CustomIconWidget(
