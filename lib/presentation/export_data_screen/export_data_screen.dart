@@ -367,32 +367,30 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
   Future<void> _handleExport() async {
     setState(() => _isExporting = true);
-
     try {
-      await Future.delayed(const Duration(milliseconds: 1000));
-
+      final filePath = await _profileService.exportAsCSV();
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$_selectedFormat export is being prepared'),
-        ),
-      );
-
-      Navigator.pop(context);
+      if (filePath != null) {
+        await _profileService.shareFile(filePath);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not generate export'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not export data: $e'),
+          content: Text('Export error: $e'),
           backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isExporting = false);
-      }
+      if (mounted) setState(() => _isExporting = false);
     }
   }
 }
