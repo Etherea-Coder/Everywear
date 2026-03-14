@@ -23,6 +23,7 @@ class PremiumUpgrade extends StatefulWidget {
 class _PremiumUpgradeState extends State<PremiumUpgrade> {
   String _selectedPlan = 'yearly';
   bool _isProcessingPayment = false;
+  final _subscriptionService = SubscriptionService();
 
   final List<Map<String, dynamic>> _testimonials = [
     {
@@ -514,7 +515,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
   Future<void> _handleRestorePurchases() async {
     setState(() => _isProcessingPayment = true);
     try {
-      final hasAccess = await SubscriptionService.restorePurchases();
+      final hasAccess = await _SubscriptionService.restorePurchases();
       if (!mounted) return;
       if (hasAccess) {
         ScaffoldMessenger.of(context).showSnackBar(
