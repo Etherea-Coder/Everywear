@@ -11,10 +11,11 @@ class SubscriptionService {
 
   Future<bool> purchase(Package package) async {
     try {
-      final result = await Purchases.purchasePackage(package);
-      return result.entitlements.active.isNotEmpty;
+        await Purchases.purchasePackage(package);
+        final customerInfo = await Purchases.getCustomerInfo();
+        return customerInfo.entitlements.active.isNotEmpty;
     } catch (e) {
-      rethrow;
+        rethrow;
     }
   }
 
