@@ -13,6 +13,7 @@ import './core/utils/locale_manager.dart';
 import './core/providers.dart';
 import './services/payment_service.dart';
 import './services/supabase_service.dart';
+import './services/revenuecat_service.dart';
 import './widgets/custom_error_widget.dart';
 import './presentation/home_screen/home_screen.dart';
 import './presentation/splash_screen/splash_screen.dart';
@@ -84,6 +85,18 @@ Future<void> _initializeEssentialServices() async {
 Future<void> _initializeBackgroundServices() async {
   try {
     await PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
+  } catch (_) {}
+
+  try {
+    await RevenueCatService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
+  } catch (_) {}
+
+  // Log in to RevenueCat if user already has active session
+  try {
+    final user = SupabaseService.instance.client.auth.currentUser;
+    if (user != null) {
+      await RevenueCatService.logIn(user.id).timeout(const Duration(seconds: 5)).catchError((_) {});
+    }
   } catch (_) {}
 }
 

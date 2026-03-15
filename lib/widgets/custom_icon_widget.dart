@@ -53,6 +53,9 @@ class AppIcons {
   static const IconData glasses = Icons.remove_red_eye_outlined;
   static const IconData watch = Icons.watch_later_outlined;
   static const IconData belt = Icons.horizontal_rule;
+  // Additional shopping/style icons
+  static const IconData palette = Icons.palette;
+  static const IconData shopping_bag = Icons.shopping_bag;
 
   // ACTIONS & OPERATIONS
   static const IconData add = Icons.add;
@@ -111,6 +114,12 @@ class AppIcons {
   static const IconData progress = Icons.trending_up;
   static const IconData milestone = Icons.flag;
   static const IconData streak = Icons.local_fire_department;
+  // Additional achievement icons
+  static const IconData emoji_events = Icons.emoji_events;
+  static const IconData local_fire_department = Icons.local_fire_department;
+  static const IconData military_tech = Icons.military_tech;
+  static const IconData check_circle = Icons.check_circle;
+  static const IconData calendar_month = Icons.calendar_month;
 
   // SETTINGS & PROFILE
   static const IconData settings = Icons.settings;
@@ -247,6 +256,16 @@ class AppIcons {
     'medal': medal,
     'medal_outlined': medalOutlined,
     'streak': streak,
+    'emoji_events': emoji_events,
+    'local_fire_department': local_fire_department,
+    'military_tech': military_tech,
+    'check_circle': check_circle,
+    'calendar_month': calendar_month,
+
+    // Style & Shopping
+    'palette': palette,
+    'shopping_bag': shopping_bag,
+    'eco': sustainability,
 
     // Settings
     'settings': settings,
@@ -285,6 +304,11 @@ class AppIcons {
     'tag_outlined': tagOutlined,
     'arrow_back': arrowBack,
     'chevron_right': chevronRight,
+    'filter_list': filter,
+    'clear': close,
+    'sync': refresh,
+    'error_outline': error,
+    'help_outline': help,
 
     // Payment
     'payment': payment,

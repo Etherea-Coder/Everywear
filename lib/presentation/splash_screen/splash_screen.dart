@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/supabase_service.dart';
+import '../../services/revenuecat_service.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
@@ -186,9 +187,9 @@ class _SplashScreenState extends State<SplashScreen>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: CustomImageWidget(
-            imageUrl: 'assets/images/icon-1768225114910.png',
-            width: 70.w,
-            height: 70.w,
+            imageUrl: 'assets/images/splash-screen.png',
+            width: 90.w,
+            height: 90.w,
             fit: BoxFit.contain,
           ),
         ),
@@ -610,6 +611,8 @@ class _SplashScreenState extends State<SplashScreen>
         redirectTo: 'io.supabase.everywear://login-callback',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
+      // Note: RevenueCat login will happen after OAuth callback completes
+      // The app will receive the session and we handle it in the auth listener
     } catch (e) {
       if (mounted) {
         _showErrorSnackBar('Google sign-in failed. Please try again.');
@@ -637,6 +640,11 @@ class _SplashScreenState extends State<SplashScreen>
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+        // Log in to RevenueCat with Supabase user ID for webhook matching
+        final user = SupabaseService.instance.client.auth.currentUser;
+        if (user != null) {
+          await RevenueCatService.logIn(user.id);
+        }
         if (mounted) HapticFeedback.mediumImpact();
       }
     } on AuthException catch (e) {
