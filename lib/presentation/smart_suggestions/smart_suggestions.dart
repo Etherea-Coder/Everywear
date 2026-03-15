@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
-import '../../core/app_export.dart';
 import '../../services/style_service.dart';
+import '../../services/user_tier_service.dart';
+import '../../widgets/upgrade_prompt_widget.dart';
 
 class SmartSuggestions extends StatefulWidget {
   const SmartSuggestions({Key? key}) : super(key: key);
@@ -13,6 +14,14 @@ class SmartSuggestions extends StatefulWidget {
 
 class _SmartSuggestionsState extends State<SmartSuggestions> {
   final StyleService _styleService = StyleService();
+  final UserTierService _tierService = UserTierService();
+  bool _isPremium = false;
+  Map<String, dynamic> _coachingQuota = {
+    'used': 0,
+    'limit': 1,
+    'remaining': 1,
+    'period': 'this week',
+  };
 
   List<Map<String, dynamic>> _events = [];
   List<Map<String, dynamic>> _challenges = [];
@@ -26,6 +35,20 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   void initState() {
     super.initState();
     _loadData();
+    _loadTierInfo();
+  }
+
+  Future<void> _loadTierInfo() async {
+    final user = _styleService.client.auth.currentUser;
+    if (user == null) return;
+    final isPremium = await _tierService.isPremium();
+    final quota = await _tierService.getCoachingQuota(user.id);
+    if (mounted) {
+      setState(() {
+        _isPremium = isPremium;
+        _coachingQuota = quota;
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -676,7 +699,25 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     return 'You tend to repeat what already works. This week, build one outfit around a piece you wear less often and keep the rest familiar.';
   }
 
-  void _showCoachPromptSheet() {
+  void _showCoachPromptSheet() async {
+    final user = _styleService.client.auth.currentUser;
+    if (user == null) return;
+
+    // ── TIER CHECK ─────────────────────────────────────────
+    final canUse = await _tierService.canUseCoach(user.id);
+    if (!canUse) {
+      if (!mounted) return;
+      UpgradePromptWidget.show(
+        context,
+        title: 'Coach limit reached',
+        message: _isPremium
+            ? 'You have used all 50 coaching sessions this month. Your quota resets next month.'
+            : 'Essential plan includes 1 coaching session per week. Upgrade to Signature for 50 sessions per month.',
+      );
+      return;
+    }
+
+    // ── SHOW SHEET ─────────────────────────────────────────
     final topics = [
       {'label': '👔 Outfit ideas', 'question': 'Give me outfit ideas based on my wardrobe and style profile.'},
       {'label': '🛍 Shopping advice', 'question': 'What piece should I buy next to complete more outfits in my wardrobe?'},
@@ -717,11 +758,42 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       ),
                     ),
                   ),
-                  Text(
-                    'Ask your coach',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Ask your coach',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      // Show quota badge
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 3.w, vertical: 0.5.h),
+                        decoration: BoxDecoration(
+                          color: (_coachingQuota['remaining'] as int) > 0
+                              ? Colors.green.shade50
+                              : Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: (_coachingQuota['remaining'] as int) > 0
+                                ? Colors.green.shade200
+                                : Colors.red.shade200,
+                          ),
+                        ),
+                        child: Text(
+                          '${_coachingQuota['remaining']}/${_coachingQuota['limit']} ${_coachingQuota['period']}',
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: (_coachingQuota['remaining'] as int) > 0
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
@@ -731,7 +803,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  // Free text input
                   Row(
                     children: [
                       Expanded(
@@ -931,6 +1002,15 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   void _askCoachQuestion(String question) async {
+    final user = _styleService.client.auth.currentUser;
+
+    // Increment coaching count
+    if (user != null) {
+      await _tierService.incrementCoachingCount(user.id);
+      final quota = await _tierService.getCoachingQuota(user.id);
+      if (mounted) setState(() => _coachingQuota = quota);
+    }
+
     bool isLoading = true;
     Map<String, dynamic> result = {};
 

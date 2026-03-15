@@ -4,6 +4,9 @@ import './supabase_service.dart';
 
 class StyleService {
   SupabaseClient get _client => SupabaseService.instance.client;
+  
+  // Public getter for accessing client
+  SupabaseClient get client => _client;
 
   // ── EVENTS ──────────────────────────────────────────────
   Future<List<Map<String, dynamic>>> fetchUpcomingEvents() async {

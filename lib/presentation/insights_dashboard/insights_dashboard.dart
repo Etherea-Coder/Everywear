@@ -6,6 +6,8 @@ import '../../routes/app_routes.dart';
 import './widgets/metric_card_widget.dart';
 import './widgets/ai_insight_card_widget.dart';
 import '../../services/wardrobe_service.dart';
+import '../../services/user_tier_service.dart';
+import '../../widgets/upgrade_prompt_widget.dart';
 
 /// Insights Dashboard - AI-powered style analytics and wardrobe insights
 ///
@@ -27,8 +29,10 @@ class InsightsDashboard extends StatefulWidget {
 class _InsightsDashboardState extends State<InsightsDashboard> {
   int _selectedTimeRange = 1; // 0: Week, 1: Month, 2: Year
   bool _isLoading = true;
+  bool _isPremium = false;
 
   final WardrobeService _wardrobeService = WardrobeService();
+  final UserTierService _tierService = UserTierService();
 
   Map<String, dynamic> _rawStats = {};
   List<Map<String, dynamic>> _outfitHistory = [];
@@ -54,6 +58,12 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
   void initState() {
     super.initState();
     _loadStats();
+    _loadTier();
+  }
+
+  Future<void> _loadTier() async {
+    final isPremium = await _tierService.isPremium();
+    if (mounted) setState(() => _isPremium = isPremium);
   }
 
   Future<void> _loadStats() async {
@@ -466,15 +476,21 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
                     SizedBox(height: 3.h),
                     _buildSectionHeader('Best Value Pieces', theme),
                     SizedBox(height: 1.h),
-                    _buildCostPerWearSection(theme),
+                    _isPremium
+                        ? _buildCostPerWearSection(theme)
+                        : _buildSignatureLockedCard(theme, 'Cost-per-wear analysis'),
                     SizedBox(height: 3.h),
                     _buildSectionHeader('Sustainability Score', theme),
                     SizedBox(height: 1.h),
-                    _buildSustainabilitySection(theme),
+                    _isPremium
+                        ? _buildSustainabilitySection(theme)
+                        : _buildSignatureLockedCard(theme, 'Sustainability tracking'),
                     SizedBox(height: 3.h),
                     _buildSectionHeader('AI Insights', theme),
                     SizedBox(height: 1.h),
-                    _buildAIInsights(),
+                    _isPremium
+                        ? _buildAIInsights()
+                        : _buildSignatureLockedCard(theme, 'AI-powered insights'),
                     SizedBox(height: 2.h),
 
                     GestureDetector(
@@ -1147,6 +1163,14 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSignatureLockedCard(ThemeData theme, String feature) {
+    return UpgradePromptWidget(
+      compact: true,
+      title: 'Signature feature',
+      message: '$feature is available on the Signature plan. Upgrade to unlock deeper wardrobe intelligence.',
     );
   }
 

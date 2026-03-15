@@ -8,6 +8,7 @@ import '../../services/style_service.dart';
 import '../../services/today_suggestion_service.dart';
 import '../../services/weather_service.dart';
 import '../../services/supabase_service.dart';
+import '../../services/wardrobe_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/tinted_section_container.dart';
 import './widgets/outfit_entry_card_widget.dart';
@@ -31,6 +32,9 @@ class _DailyLogState extends State<DailyLog> {
   final StyleService _styleService = StyleService();
   final TodaySuggestionService _todaySuggestionService =
       TodaySuggestionService();
+  final WardrobeService _wardrobeService = WardrobeService();
+
+  List<Map<String, dynamic>> _wardrobeItems = [];
 
   List<Map<String, dynamic>> _todayEntries = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
@@ -126,6 +130,7 @@ class _DailyLogState extends State<DailyLog> {
       _weatherService.getCurrentWeather(),
       _styleService.fetchUpcomingEvents(),
       _styleService.fetchQuizResult(),
+      _wardrobeService.fetchWardrobeItems(),
     ]);
 
     if (mounted) {
@@ -135,6 +140,7 @@ class _DailyLogState extends State<DailyLog> {
         _weather = (results[2] as Map<String, dynamic>?) ?? {};
         _upcomingEvents = results[3] as List<Map<String, dynamic>>;
         _quizResult = results[4] as Map<String, dynamic>?;
+        _wardrobeItems = results[5] as List<Map<String, dynamic>>;
         _generateSuggestion();
         _isLoading = false;
       });
@@ -517,54 +523,50 @@ class _DailyLogState extends State<DailyLog> {
           color: theme.colorScheme.primary.withValues(alpha: 0.10),
         ),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Container(
-            width: 13.w,
-            height: 13.w,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(14),
-            ),
+          // Background icon
+          Positioned(
+            right: -2.w,
+            bottom: -2.w,
             child: Icon(
               isError ? Icons.location_off : Icons.wb_sunny_outlined,
-              color: theme.colorScheme.primary,
-              size: 28,
+              size: 95,
+              color: theme.colorScheme.primary.withValues(alpha: 0.08),
             ),
           ),
-          SizedBox(width: 3.5.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isError ? condition : '$temp$unit · $condition',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+
+          // Foreground content
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isError ? condition : '$temp$unit · $condition',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (location.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: 0.4.h),
+                  child: Text(
+                    location,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
-                if (location.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(top: 0.2.h),
-                    child: Text(
-                      location,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+              if (!isError)
+                Padding(
+                  padding: EdgeInsets.only(top: 0.8.h),
+                  child: Text(
+                    _getWeatherTip(condition),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
                     ),
                   ),
-                if (!isError)
-                  Padding(
-                    padding: EdgeInsets.only(top: 0.6.h),
-                    child: Text(
-                      _getWeatherTip(condition),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+                ),
+            ],
           ),
         ],
       ),
@@ -957,6 +959,48 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   List<Map<String, dynamic>> _getSwapAlternatives(String slot) {
+    // Map slot to category for filtering wardrobe
+    String? category;
+    switch (slot) {
+      case 'anchor':
+        category = 'Outerwear';
+        break;
+      case 'top':
+        category = 'Tops';
+        break;
+      case 'bottom':
+        category = 'Bottoms';
+        break;
+      case 'shoes':
+        category = 'Footwear';
+        break;
+      default:
+        category = null;
+    }
+
+    // Filter wardrobe items by category
+    final alternatives = _wardrobeItems.where((item) {
+      if (category == null) return true;
+      final itemCategory = (item['category'] as String? ?? '').toLowerCase();
+      return itemCategory.toLowerCase() == category.toLowerCase();
+    }).map((item) => {
+      'slot': slot,
+      'name': item['name'] ?? item['title'] ?? 'Unknown Item',
+      'imageUrl': item['image_url'] ?? item['imageUrl'] ?? '',
+      'category': item['category'] ?? 'Clothing',
+      'id': item['id'],
+    }).toList();
+
+    // If we have real items from wardrobe, return them
+    if (alternatives.isNotEmpty) {
+      return alternatives;
+    }
+
+    // Fallback to dummy data if no wardrobe items
+    return _getFallbackAlternatives(slot);
+  }
+
+  List<Map<String, dynamic>> _getFallbackAlternatives(String slot) {
     switch (slot) {
       case 'anchor':
         return [
@@ -1117,43 +1161,38 @@ class _DailyLogState extends State<DailyLog> {
           color: theme.colorScheme.outline.withValues(alpha: 0.18),
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Container(
-            width: 11.w,
-            height: 11.w,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.secondary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
+          // Background icon
+          Positioned(
+            right: -2.w,
+            bottom: -2.w,
             child: Icon(
               Icons.lightbulb_outline,
-              color: theme.colorScheme.secondary,
-              size: 20,
+              size: 90,
+              color: theme.colorScheme.secondary.withValues(alpha: 0.08),
             ),
           ),
-          SizedBox(width: 3.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Quick Tip',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+
+          // Foreground content
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Style Tip',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(height: 0.5.h),
-                Text(
-                  _getQuickTip(),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.45,
-                  ),
+              ),
+              SizedBox(height: 0.8.h),
+              Text(
+                _getQuickTip(),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.45,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

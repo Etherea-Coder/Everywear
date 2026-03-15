@@ -59,11 +59,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
           'Yes. Your subscription renews automatically, and you can cancel anytime from your Play Store or App Store subscription settings.',
     },
     {
-      'question': 'Is there a free trial?',
-      'answer':
-          'No. The free plan already lets you try the app. Premium simply gives you more suggestions, more interactions, and an ad-free experience.',
-    },
-    {
       'question': 'What happens if I cancel?',
       'answer':
           'You will keep Premium access until the end of the current billing period, then your account will return to the free plan.',
@@ -317,108 +312,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
           ],
         ),
       ),
-      bottomNavigationBar: _isProcessingPayment
-          ? Container(
-              padding: EdgeInsets.all(2.h),
-              child: Center(
-                child: CircularProgressIndicator(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            )
-          : Container(
-              padding: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 2.h),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _selectedPlanName,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              SizedBox(height: 0.3.h),
-                              Text(
-                                _selectedPlanPrice,
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 3.w),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: _handleUpgrade,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              padding: EdgeInsets.symmetric(vertical: 1.8.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              elevation: 2,
-                            ),
-                            child: Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 1.h),
-                    Text(
-                      _selectedBillingNote,
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 0.4.h),
-                    Text(
-                      'Auto-renewable subscription • Cancel anytime',
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
     );
   }
 

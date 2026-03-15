@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
+import './user_tier_service.dart';
 
 /// Service for managing outfit logs with Supabase
 class OutfitLogService {
@@ -142,6 +143,14 @@ class OutfitLogService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return null;
 
+      // ── TIER CHECK ───────────────────────────────────────
+      final tierService = UserTierService();
+      final canLog = await tierService.canLogOutfit(userId);
+      if (!canLog) {
+        // Return a special sentinel value the UI can check
+        return 'LIMIT_REACHED';
+      }
+
       // Insert outfit log
       final log = await _client
           .from('outfit_logs')
@@ -167,6 +176,9 @@ class OutfitLogService {
               .toList(),
         );
       }
+
+      // ── INCREMENT COUNT ──────────────────────────────────
+      await tierService.incrementOutfitLogCount(userId);
 
       return outfitId;
     } catch (e) {
