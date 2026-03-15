@@ -52,11 +52,33 @@ class ProfileService {
   Future<String?> uploadProfilePhoto(String filePath) async {
     try {
       final userId = _client.auth.currentUser?.id;
-      if (userId == null) return null;
+      if (userId == null) {
+        debugPrint('Upload photo error: No user logged in');
+        return null;
+      }
 
       final file = File(filePath);
+      if (!await file.exists()) {
+        debugPrint('Upload photo error: File does not exist');
+        return null;
+      }
+
       final ext = filePath.split('.').last.toLowerCase();
       final storagePath = 'avatars/$userId/avatar.$ext';
+
+      // Ensure bucket exists, create if not
+      try {
+        await _client.storage.getBucket('wardrobe-images');
+      } catch (e) {
+        // Bucket doesn't exist, try to create it
+        try {
+          await _client.storage.createBucket('wardrobe-images', const BucketOptions(
+            public: true,
+          ));
+        } catch (createError) {
+          debugPrint('Could not create bucket: $createError');
+        }
+      }
 
       await _client.storage.from('wardrobe-images').upload(
         storagePath,
