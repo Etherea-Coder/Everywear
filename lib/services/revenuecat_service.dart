@@ -3,15 +3,19 @@ import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 class RevenueCatService {
+  // Replace these with your actual keys from RevenueCat dashboard
+  static const _androidTestKey = 'test_zLfsCOHvuUGXXJxLixvMbkYPKTA';
+  static const _androidProdKey = 'your_android_prod_key_here';
+  static const _iosTestKey = 'test_zLfsCOHvuUGXXJxLixvMbkYPKTA';
+  static const _iosProdKey = 'your_ios_prod_key_here';
 
   static Future<void> initialize() async {
-
     String apiKey;
 
     if (Platform.isIOS) {
-      apiKey = "test_zLfsCOHvuUGXXJxLixvMbkYPKTA";
+      apiKey = kReleaseMode ? _iosProdKey : _iosTestKey;
     } else if (Platform.isAndroid) {
-      apiKey = "test_zLfsCOHvuUGXXJxLixvMbkYPKTA";
+      apiKey = kReleaseMode ? _androidProdKey : _androidTestKey;
     } else {
       throw UnsupportedError("Platform not supported");
     }
