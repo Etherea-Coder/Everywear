@@ -7,6 +7,7 @@ import '../../services/outfit_log_service.dart';
 import '../../services/style_service.dart';
 import '../../services/today_suggestion_service.dart';
 import '../../services/weather_service.dart';
+import '../../services/supabase_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/tinted_section_container.dart';
 import './widgets/outfit_entry_card_widget.dart';
@@ -22,6 +23,8 @@ class DailyLog extends StatefulWidget {
 
 class _DailyLogState extends State<DailyLog> {
   DateTime _selectedDate = DateTime.now();
+
+  String _displayName = '';
 
   final OutfitLogService _outfitLogService = OutfitLogService();
   final WeatherService _weatherService = WeatherService();
@@ -101,6 +104,21 @@ class _DailyLogState extends State<DailyLog> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+
+    // Load user's display name
+    try {
+      final user = SupabaseService.instance.client.auth.currentUser;
+      if (user != null) {
+        final response = await SupabaseService.instance.client
+            .from('user_profiles')
+            .select('display_name')
+            .eq('id', user.id)
+            .maybeSingle();
+        if (response != null && response['display_name'] != null) {
+          _displayName = response['display_name'].toString();
+        }
+      }
+    } catch (_) {}
 
     final results = await Future.wait([
       _outfitLogService.fetchOutfitLogsForDate(_selectedDate),
@@ -272,6 +290,12 @@ class _DailyLogState extends State<DailyLog> {
         : hour < 17
             ? 'Good afternoon'
             : 'Good evening';
+    
+    // Add display name to greeting if available
+    final fullGreeting = _displayName.isNotEmpty 
+        ? '$greeting, $_displayName' 
+        : greeting;
+    
     final dayLabel = DateFormat('EEEE, MMMM d').format(DateTime.now());
 
     final location = (_weather['location'] ?? '').toString();
@@ -314,7 +338,7 @@ class _DailyLogState extends State<DailyLog> {
           ),
           SizedBox(height: 2.h),
           Text(
-            greeting,
+            fullGreeting,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               height: 1.0,
