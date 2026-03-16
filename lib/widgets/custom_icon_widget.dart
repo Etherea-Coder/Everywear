@@ -337,7 +337,7 @@ class AppIcons {
     
     // Additional icon mappings
     'add_a_photo': add_a_photo,
-    'attach_money': attach_money,
+    'attach_money': costPerWear,
     'auto_awesome': style,
     'broken_image': broken_image,
     'calendar_today': calendar,
@@ -357,7 +357,6 @@ class AppIcons {
     'lock': privacy,
     'lock_outline': privacyOutlined,
     'auto_fix_high': magicWand,
-    'photo_library': gallery,
   };
 
   /// Get icon from string name (for API-driven icons)

@@ -131,7 +131,6 @@ class ProfileService {
       return publicUrl;
     } on StorageException catch (e) {
       debugPrint('❌ Storage error: ${e.message}');
-      debugPrint('❌ Error code: ${e.errorCode}');
       return null;
     } catch (e) {
       debugPrint('❌ Upload photo error: $e');

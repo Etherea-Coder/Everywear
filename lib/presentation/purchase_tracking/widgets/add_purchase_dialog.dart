@@ -74,7 +74,7 @@ class _AddPurchaseDialogState extends State<AddPurchaseDialog> {
         'purchaseDate': _purchaseDate,
         'category': _selectedCategory,
         'notes': _notesController.text.trim(),
-        'image': 'assets/images/placeholders/purchase_item.jpg',
+        'image': 'assets/images/no-image.jpg',
         'semanticLabel': '${_nameController.text} clothing item',
       });
     }

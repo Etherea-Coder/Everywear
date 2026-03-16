@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../routes/app_routes.dart';
+import '../../services/supabase_service.dart';
 import './widgets/lifestyle_context_step.dart';
 import './widgets/style_preference_step.dart';
 import './widgets/sustainability_goals_step.dart';
@@ -112,7 +113,7 @@ class _PersonalizationSetupState extends State<PersonalizationSetup> {
     setState(() => _isCompleting = true);
 
     try {
-      // Save user preferences
+      // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('selectedStyles', _selectedStyles);
       await prefs.setString('workEnvironment', _workEnvironment ?? '');
@@ -123,31 +124,38 @@ class _PersonalizationSetupState extends State<PersonalizationSetup> {
       await prefs.setDouble('environmentalImpact', _environmentalImpact);
       await prefs.setBool('hasSeenOnboarding', true);
 
-      // Simulate generating insights
-      await Future.delayed(const Duration(seconds: 1));
+      // Save to Supabase user_profiles
+      final client = SupabaseService.instance.client;
+      final userId = client.auth.currentUser?.id;
+      if (userId != null) {
+        await client.from('user_profiles').upsert({
+          'id': userId,
+          'style_preferences': _selectedStyles,
+          'work_environment': _workEnvironment,
+          'social_frequency': _socialFrequency,
+          'climate': _climate,
+          'purchase_frequency': _purchaseFrequency,
+          'budget_consciousness': _budgetConsciousness,
+          'environmental_impact': _environmentalImpact,
+          'onboarding_completed': true,
+        });
+      }
 
       if (mounted) {
-        // Navigate to main app
-        Navigator.of(
-          context,
-          rootNavigator: true,
-        ).pushReplacementNamed(AppRoutes.outfitCaptureFlow);
+        Navigator.of(context, rootNavigator: true)
+            .pushReplacementNamed(AppRoutes.outfitCaptureFlow);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-              'Failed to save preferences. Please try again.',
-            ),
+            content: const Text('Failed to save preferences. Please try again.'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isCompleting = false);
-      }
+      if (mounted) setState(() => _isCompleting = false);
     }
   }
 
