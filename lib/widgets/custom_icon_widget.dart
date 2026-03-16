@@ -138,6 +138,17 @@ class AppIcons {
   static const IconData info = Icons.info_outline;
   static const IconData about = Icons.info;
   static const IconData logout = Icons.logout;
+  
+  // Additional icon constants
+  static const IconData add_a_photo = Icons.add_a_photo;
+  static const IconData broken_image = Icons.broken_image;
+  static const IconData local_offer = Icons.local_offer;
+  static const IconData quiz = Icons.quiz;
+  static const IconData search_off = Icons.search_off;
+  static const IconData stars = Icons.stars;
+  static const IconData store = Icons.store;
+  static const IconData verified = Icons.verified;
+  static const IconData workspace_premium = Icons.workspace_premium;
 
   // WEATHER & CONDITIONS
   static const IconData sunny = Icons.wb_sunny;
@@ -323,6 +334,30 @@ class AppIcons {
     'upgrade': upgrade,
     'premium': premium,
     'premium_outlined': premiumOutlined,
+    
+    // Additional icon mappings
+    'add_a_photo': add_a_photo,
+    'attach_money': attach_money,
+    'auto_awesome': style,
+    'broken_image': broken_image,
+    'calendar_today': calendar,
+    'check': check,
+    'close': close,
+    'favorite_border': favoriteOutlined,
+    'info_outline': info,
+    'local_offer': local_offer,
+    'quiz': quiz,
+    'schedule': clock,
+    'search_off': search_off,
+    'stars': stars,
+    'store': store,
+    'verified': verified,
+    'warning': warning,
+    'workspace_premium': workspace_premium,
+    'lock': privacy,
+    'lock_outline': privacyOutlined,
+    'auto_fix_high': magicWand,
+    'photo_library': gallery,
   };
 
   /// Get icon from string name (for API-driven icons)
