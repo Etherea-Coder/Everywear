@@ -36,7 +36,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   List<CameraDescription> _cameras = [];
   bool _isCameraInitialized = false;
   bool _isCameraPermissionDenied = false;
-  bool _isCameraUnavailable = false;
   XFile? _capturedImage;
 
   // Wardrobe selection state
@@ -100,7 +99,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       if (_isCameraPermissionDenied) {
         setState(() {
           _isLoading = false;
-          _isCameraUnavailable = true;
         });
         return;
       }
@@ -109,10 +107,8 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       if (_cameras.isEmpty) {
         setState(() {
           _isLoading = false;
-          _isCameraUnavailable = true;
         });
         if (mounted) {
-          final localizations = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('No cameras available on this device'),
@@ -159,7 +155,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
         setState(() {
           _isCameraInitialized = true;
           _isLoading = false;
-          _isCameraUnavailable = false;
         });
       }
     } catch (e) {
@@ -167,9 +162,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _isCameraUnavailable = true;
         });
-        final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Camera initialization failed: ${e.toString()}'),

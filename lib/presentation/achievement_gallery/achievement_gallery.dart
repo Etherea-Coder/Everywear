@@ -189,9 +189,6 @@ class _AchievementGalleryState extends State<AchievementGallery>
   int get _unlockedCount =>
       _achievements.where((a) => a['isUnlocked'] == true).length;
 
-  int get _lockedCount =>
-      _achievements.where((a) => a['isUnlocked'] != true).length;
-
   double get _completionPercentage =>
       _achievements.isEmpty ? 0 : (_unlockedCount / _achievements.length) * 100;
 

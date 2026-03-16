@@ -10,7 +10,6 @@ import './supabase_service.dart';
 class WardrobeService {
   SupabaseClient get _client => SupabaseService.instance.client;
   final UserTierService _tierService = UserTierService();
-  RealtimeChannel? _realtimeChannel;
 
   /// Retry mechanism with exponential backoff
   Future<T> _retryOperation<T>(

@@ -103,12 +103,6 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
     Navigator.pushNamed(context, AppRoutes.challengeCenter);
   }
 
-  int get _completedChallenges {
-    return _activeChallenges
-        .where((challenge) => (challenge['progress'] as double) >= 1.0)
-        .length;
-  }
-
   Map<String, dynamic>? get _closestChallenge {
     if (_activeChallenges.isEmpty) return null;
 

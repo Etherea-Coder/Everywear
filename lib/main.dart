@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
 import './core/providers.dart';
@@ -64,7 +63,9 @@ Future<void> _initializeEssentialServices() async {
       options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
       options.debug = kDebugMode;
     });
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('⚠️ Sentry failed to init: $e');
+  }
 
   // Initialize Supabase and Hive sequentially to ensure stability
   try {
@@ -84,7 +85,9 @@ Future<void> _initializeEssentialServices() async {
 Future<void> _initializeBackgroundServices() async {
   try {
     await RevenueCatService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('⚠️ RevenueCat failed to init: $e');
+  }
 
   // Log in to RevenueCat if user already has active session
   try {
@@ -92,7 +95,9 @@ Future<void> _initializeBackgroundServices() async {
     if (user != null) {
       await RevenueCatService.logIn(user.id).timeout(const Duration(seconds: 5)).catchError((_) {});
     }
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('⚠️ RevenueCat login failed: $e');
+  }
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -148,7 +153,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         ref.read(themeModeProvider.notifier).state = _themeMode;
         ref.read(localeProvider.notifier).state = _locale!;
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('⚠️ App initialization failed: $e');
       if (mounted) {
         setState(() {
           _locale = const Locale('en');

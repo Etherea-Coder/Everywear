@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 /// Wardrobe Upload Step - Fourth step in personalization wizard
 /// Optional wardrobe photo upload for AI analysis
-class WardrobeUploadStep extends StatelessWidget {
+class WardrobeUploadStep extends StatefulWidget {
   final List<String> photos;
   final Function(List<String>) onPhotosChanged;
 
@@ -13,17 +15,53 @@ class WardrobeUploadStep extends StatelessWidget {
     required this.onPhotosChanged,
   }) : super(key: key);
 
-  void _addPhoto() {
-    // Simulate photo selection
-    final newPhotos = List<String>.from(photos);
-    newPhotos.add('assets/images/placeholders/wardrobe_upload.jpg');
-    onPhotosChanged(newPhotos);
+  @override
+  State<WardrobeUploadStep> createState() => _WardrobeUploadStepState();
+}
+
+class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
+
+  Future<void> _addPhoto() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+    );
+
+    if (picked != null) {
+      final newPhotos = List<String>.from(widget.photos);
+      newPhotos.add(picked.path);
+      widget.onPhotosChanged(newPhotos);
+    }
   }
 
   void _removePhoto(int index) {
-    final newPhotos = List<String>.from(photos);
+    final newPhotos = List<String>.from(widget.photos);
     newPhotos.removeAt(index);
-    onPhotosChanged(newPhotos);
+    widget.onPhotosChanged(newPhotos);
   }
 
   @override
@@ -79,7 +117,7 @@ class WardrobeUploadStep extends StatelessWidget {
           ),
           SizedBox(height: 3.h),
           // Photo grid
-          if (photos.isNotEmpty) ...[
+          if (widget.photos.isNotEmpty) ...[
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -89,7 +127,7 @@ class WardrobeUploadStep extends StatelessWidget {
                 mainAxisSpacing: 2.w,
                 childAspectRatio: 1,
               ),
-              itemCount: photos.length,
+              itemCount: widget.photos.length,
               itemBuilder: (context, index) {
                 return Stack(
                   children: [
@@ -98,7 +136,9 @@ class WardrobeUploadStep extends StatelessWidget {
                         color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(8.0),
                         image: DecorationImage(
-                          image: AssetImage(photos[index]),
+                          image: widget.photos[index].startsWith('assets/')
+                              ? AssetImage(widget.photos[index]) as ImageProvider
+                              : FileImage(File(widget.photos[index])),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -130,7 +170,7 @@ class WardrobeUploadStep extends StatelessWidget {
           ],
           // Upload button
           GestureDetector(
-            onTap: _addPhoto,
+            onTap: () async => await _addPhoto(),
             child: Container(
               height: 20.h,
               decoration: BoxDecoration(
@@ -175,7 +215,7 @@ class WardrobeUploadStep extends StatelessWidget {
             child: TextButton(
               onPressed: () {
                 // Clear photos to indicate skip
-                onPhotosChanged([]);
+                widget.onPhotosChanged([]);
               },
               child: Text(
                 'Skip this step',

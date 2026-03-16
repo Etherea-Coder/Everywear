@@ -595,7 +595,6 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       child: Column(
         children: List.generate(_faqItems.length, (index) {
           final item = _faqItems[index];
-          final isLast = index == _faqItems.length - 1;
 
           return ExpansionTile(
             tilePadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.3.h),

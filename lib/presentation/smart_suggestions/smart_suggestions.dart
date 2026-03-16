@@ -70,21 +70,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     }
   }
 
-  Future<void> _loadCoachTip() async {
-    if (_coachTip.isNotEmpty) return; // Don't reload if already loaded
-    setState(() => _isCoachTipLoading = true);
-    final tip = await _styleService.fetchPassiveCoachTip(
-      insights: _insights,
-      quizResult: _quizResult,
-    );
-    if (mounted) {
-      setState(() {
-        _coachTip = tip;
-        _isCoachTipLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -169,7 +154,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   Widget _buildEventCard(ThemeData theme, Map<String, dynamic> event) {
     final date = DateTime.parse(event['event_date']);
     final daysLeft = date.difference(DateTime.now()).inDays;
-    final dateStr = DateFormat('MMM dd').format(date);
     final eventType = event['event_type'] as String? ?? 'Other';
 
     return Container(
@@ -656,47 +640,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         ),
       ),
     );
-  }
-
-  String _getPassiveCoachTip() {
-    final totalItems = _insights['totalItems'] ?? 0;
-    final topCategory = (_insights['topCategory'] ?? '').toString();
-    final topOccasion = (_insights['topOccasion'] ?? '').toString();
-    final profile = (_quizResult?['style_profile'] ?? '').toString().toLowerCase();
-
-    if (_quizResult == null && totalItems == 0) {
-      return 'Start by taking the style quiz and adding a few wardrobe pieces. Your coach will then tailor tips to your real style.';
-    }
-
-    if (_quizResult == null) {
-      return 'Your wardrobe is ready for coaching. Take the quiz to unlock more personal style advice based on your goals and preferences.';
-    }
-
-    if (totalItems == 0) {
-      return 'Your profile is set. Add more pieces to your wardrobe so your coach can suggest combinations that truly fit your style.';
-    }
-
-    if (profile.contains('classic')) {
-      return 'Your style leans polished and timeless. This week, try one softer or more textured piece to add depth without losing elegance.';
-    }
-
-    if (profile.contains('bold')) {
-      return 'You enjoy expressive style. Balance one statement piece with a simpler base outfit this week to make it stand out even more.';
-    }
-
-    if (profile.contains('sport')) {
-      return 'Your style is practical and active. Try elevating one everyday look with a more structured layer for a sharper finish.';
-    }
-
-    if (profile.contains('minimal')) {
-      return 'Your style is clean and intentional. Focus on contrast this week by pairing a simple outfit with one richer tone or texture.';
-    }
-
-    if (topCategory.isNotEmpty && topOccasion.isNotEmpty) {
-      return 'You wear a lot of $topCategory for $topOccasion looks. Try styling one familiar piece in a new way this week to expand your outfit range.';
-    }
-
-    return 'You tend to repeat what already works. This week, build one outfit around a piece you wear less often and keep the rest familiar.';
   }
 
   void _showCoachPromptSheet() async {

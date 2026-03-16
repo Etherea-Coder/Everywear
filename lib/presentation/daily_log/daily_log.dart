@@ -10,7 +10,6 @@ import '../../services/weather_service.dart';
 import '../../services/supabase_service.dart';
 import '../../services/wardrobe_service.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/tinted_section_container.dart';
 import './widgets/outfit_entry_card_widget.dart';
 import './widgets/quick_log_button_widget.dart';
 import './widgets/stats_summary_widget.dart';
@@ -122,7 +121,9 @@ class _DailyLogState extends State<DailyLog> {
           _displayName = response['display_name'].toString();
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('⚠️ Daily log load failed: $e');
+    }
 
     final results = await Future.wait([
       _outfitLogService.fetchOutfitLogsForDate(_selectedDate),
@@ -1751,7 +1752,7 @@ class _DailyLogState extends State<DailyLog> {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
                 final success = await _outfitLogService.updateOutfitLog(
                   outfitId: entry['id'],
                   occasion: occasionController.text,

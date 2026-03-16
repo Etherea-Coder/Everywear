@@ -4,7 +4,6 @@ import '../../services/subscription_service.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
-import '../../services/user_tier_service.dart';
 import '../../services/supabase_service.dart';
 import './widgets/faq_item_widget.dart';
 import './widgets/feature_comparison_widget.dart';
@@ -21,7 +20,6 @@ class PremiumUpgrade extends StatefulWidget {
 
 class _PremiumUpgradeState extends State<PremiumUpgrade> {
   String _selectedPlan = 'yearly';
-  bool _isProcessingPayment = false;
   final _subscriptionService = SubscriptionService();
 
   final List<Map<String, dynamic>> _testimonials = [
@@ -70,17 +68,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
           'Occasionally, yes. Special discount codes may be shared through campaigns, partnerships, or selected creators.',
     },
   ];
-
-  String get _selectedPlanName =>
-      _selectedPlan == 'yearly' ? 'Yearly Plan' : 'Monthly Plan';
-
-  String get _selectedPlanPrice =>
-      _selectedPlan == 'yearly' ? '€69.90/year' : '€7.49/month';
-
-  String get _selectedBillingNote =>
-      _selectedPlan == 'yearly'
-          ? 'Billed yearly through the Play Store or App Store'
-          : 'Billed monthly through the Play Store or App Store';
 
   @override
   Widget build(BuildContext context) {
@@ -363,7 +350,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       _showErrorDialog('Please login to continue');
       return;
     }
-    setState(() => _isProcessingPayment = true);
     try {
       final offerings = await _subscriptionService.getOfferings();
       if (offerings == null || offerings.current == null) {
@@ -396,13 +382,10 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       }
     } catch (e) {
       _showErrorDialog(e.toString());
-    } finally {
-      if (mounted) setState(() => _isProcessingPayment = false);
     }
   }
 
   Future<void> _handleRestorePurchases() async {
-    setState(() => _isProcessingPayment = true);
     try {
       final hasAccess = await _subscriptionService.restorePurchases();
       if (!mounted) return;
@@ -416,39 +399,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       }
     } catch (e) {
       _showErrorDialog('Restore failed: ${e.toString()}');
-    } finally {
-      if (mounted) setState(() => _isProcessingPayment = false);
     }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 28),
-              const SizedBox(width: 12),
-              const Text('Welcome to Premium!'),
-            ],
-          ),
-          content: Text(
-            'Your subscription is now active on the ${_selectedPlan == 'yearly' ? 'Yearly' : 'Monthly'} plan.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Got it!'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _showErrorDialog(String message) {

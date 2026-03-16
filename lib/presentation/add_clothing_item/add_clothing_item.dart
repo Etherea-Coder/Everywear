@@ -28,7 +28,6 @@ class _AddClothingItemState extends State<AddClothingItem> {
   final _storeController = TextEditingController();
   final WardrobeService _wardrobeService = WardrobeService();
   final StorageService _storageService = StorageService();
-  String? _editingItemId;
 
   List<String> _capturedPhotos = [];
   String? _selectedCategory;
@@ -67,7 +66,6 @@ class _AddClothingItemState extends State<AddClothingItem> {
           if (args['purchase_price'] != null) {
             _priceController.text = args['purchase_price'].toString();
           }
-          _editingItemId = args['id'] as String?;
         });
       }
     });
