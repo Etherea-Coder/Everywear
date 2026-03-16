@@ -49,7 +49,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   final WardrobeService _wardrobeService = WardrobeService();
   String? _aiSuggestions;
   bool _isLoadingSuggestions = false;
-  String _selectedLanguage = 'EN';
 
   AppLocalizations get localizations => AppLocalizations.of(context);
 
@@ -292,7 +291,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
 
     final result = await _aiSuggestionsService.generateSuggestions(
       imageUrl: imageUrl,
-      language: _selectedLanguage,
+      language: 'EN',
       weatherContext: weatherContext,
       itemHistory: itemsContext,
     );
@@ -428,38 +427,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
                     ),
                   ],
                 ),
-                child: PopupMenuButton<String>(
-                  initialValue: _selectedLanguage,
-                  onSelected: (value) {
-                    setState(() {
-                      _selectedLanguage = value;
-                    });
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(value: 'EN', child: Text('🇬🇧 English')),
-                    PopupMenuItem(value: 'FR', child: Text('🇫🇷 Français')),
-                    PopupMenuItem(value: 'ES', child: Text('🇪🇸 Español')),
-                  ],
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 3.w,
-                      vertical: 1.h,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.language, size: 18.sp),
-                        SizedBox(width: 1.w),
-                        Text(
-                          _selectedLanguage,
-                          style: TextStyle(fontSize: 13.sp),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ),
-            ),
 
             // AI Suggestions trigger button (after photo capture)
             if (_capturedImage != null && !_isLoadingSuggestions)

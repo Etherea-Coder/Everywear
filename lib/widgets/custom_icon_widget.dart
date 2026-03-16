@@ -149,6 +149,11 @@ class AppIcons {
   static const IconData store = Icons.store;
   static const IconData verified = Icons.verified;
   static const IconData workspace_premium = Icons.workspace_premium;
+  
+  // Sentiment icons
+  static const IconData sentiment_dissatisfied = Icons.sentiment_dissatisfied;
+  static const IconData sentiment_neutral = Icons.sentiment_neutral;
+  static const IconData sentiment_very_satisfied = Icons.sentiment_very_satisfied;
 
   // WEATHER & CONDITIONS
   static const IconData sunny = Icons.wb_sunny;
@@ -301,6 +306,11 @@ class AppIcons {
     'flash_off': cloudy,
     'flip_camera_android': camera,
     'photo_library': gallery,
+    
+    // Sentiment
+    'sentiment_dissatisfied': sentiment_dissatisfied,
+    'sentiment_neutral': sentiment_neutral,
+    'sentiment_very_satisfied': sentiment_very_satisfied,
 
     // Categories
     'tops': tops,
