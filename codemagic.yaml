@@ -6,7 +6,7 @@ workflows:
       flutter: stable
       groups:
         - Supabase
-        - Stripe
+        - everywear_secret
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
@@ -15,7 +15,7 @@ workflows:
       - name: Print keystore SHA-1
         script: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null || echo "No debug keystore found"
       - name: Build APK
-        script: flutter build apk --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --dart-define=STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY
+        script: flutter build apk --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --dart-define=SENTRY_DSN=$SENTRY_DSN
       - name: Print APK signature
         script: keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk 2>/dev/null | grep SHA1 || echo "Could not read APK cert"
     artifacts:
@@ -27,11 +27,11 @@ workflows:
       flutter: stable
       groups:
         - Supabase
-        - Stripe
+        - everywear_secret
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
       - name: Build Web
-        script: flutter build web --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --dart-define=STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY
+        script: flutter build web --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --dart-define=SENTRY_DSN=$SENTRY_DSN
     artifacts:
       - build/web/**
