@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import './widgets/ai_download_prompt_widget.dart';
 
 /// Feature Overview Screen - Second onboarding screen
 /// Showcases core features of Everywear before personalization setup
@@ -14,7 +13,6 @@ class FeatureOverview extends StatefulWidget {
 class _FeatureOverviewState extends State<FeatureOverview> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  bool _showAIPrompt = false;
 
   final List<Map<String, dynamic>> _features = [
     {
@@ -57,36 +55,13 @@ class _FeatureOverviewState extends State<FeatureOverview> {
     setState(() => _currentPage = page);
   }
 
-  void _navigateToAIPrompt() {
-    setState(() => _showAIPrompt = true);
-  }
-
   void _navigateToPersonalization() {
     Navigator.of(context).pushReplacementNamed('/personalization-setup');
-  }
-
-  void _skipToPersonalization() {
-    _navigateToPersonalization();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Show AI download prompt after features
-    if (_showAIPrompt) {
-      return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        body: SafeArea(
-          child: AIDownloadPromptWidget(
-            onDownloadStarted: () {
-              // Download started, keep showing progress
-            },
-            onSkipped: _navigateToPersonalization,
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -99,7 +74,7 @@ class _FeatureOverviewState extends State<FeatureOverview> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: _skipToPersonalization,
+                  onPressed: _navigateToPersonalization,
                   child: Text(
                     'Skip',
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -176,7 +151,7 @@ class _FeatureOverviewState extends State<FeatureOverview> {
                             curve: Curves.easeInOut,
                           );
                         } else {
-                          _navigateToAIPrompt();
+                          _navigateToPersonalization();
                         }
                       },
                       style: ElevatedButton.styleFrom(

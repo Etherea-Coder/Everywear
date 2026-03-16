@@ -174,21 +174,14 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
     }
   }
 
-  /// Analyze photo using AI vision engine
+  /// Analyze photo using AI vision engine (cloud-based)
   Future<void> _analyzePhoto(String imagePath) async {
     setState(() {
       _isAnalyzing = true;
     });
 
     try {
-      // Initialize model if needed
-      final isModelReady = await _visionEngine.isModelDownloaded();
-      if (!isModelReady) {
-        // Model will be downloaded in background
-        await _visionEngine.downloadModel();
-      }
-
-      // Run AI analysis
+      // Run AI analysis (cloud-based via Gemini)
       final result = await _visionEngine.analyzeClothing(imagePath);
 
       setState(() {
