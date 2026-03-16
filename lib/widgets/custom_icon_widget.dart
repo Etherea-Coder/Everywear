@@ -241,6 +241,8 @@ class AppIcons {
     'favorite': favorite,
     'favorite_outline': favoriteOutlined,
     'camera': camera,
+    'camera_alt': camera,
+    'checkroom': wardrobe,
     'gallery': gallery,
     'search': search,
     'filter': filter,
@@ -284,6 +286,10 @@ class AppIcons {
     'cloudy': cloudy,
     'rainy': rainy,
     'cold': cold,
+    'flash_on': sunny,
+    'flash_off': cloudy,
+    'flip_camera_android': camera,
+    'photo_library': gallery,
 
     // Categories
     'tops': tops,

@@ -84,8 +84,7 @@ class AppRoutes {
   // PREMIUM & BILLING
   // ============================================
   static const String premiumUpgrade = '/premium-upgrade';
-  static const String subscription   = '/subscription';           
-
+         
   // ============================================
   // PROFILE ACTIONS
   // These need their own screens — flagged as TODO
@@ -155,7 +154,6 @@ class AppRoutes {
 
     // Premium
     premiumUpgrade: (context) => const PremiumUpgrade(),
-    // subscription: (context) => const SubscriptionScreen(), // ← TODO when built
   };
 
   // ============================================

@@ -4,7 +4,6 @@ import '../../services/subscription_service.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
-import '../../services/payment_service.dart';
 import '../../services/user_tier_service.dart';
 import '../../services/supabase_service.dart';
 import './widgets/faq_item_widget.dart';

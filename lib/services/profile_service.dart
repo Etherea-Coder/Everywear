@@ -68,41 +68,83 @@ class ProfileService {
 
       // Ensure bucket exists, create if not
       try {
-        await _client.storage.getBucket('wardrobe-images');
+        await _client.storage.getBucket('avatars');
       } catch (e) {
         // Bucket doesn't exist, try to create it
         try {
-          await _client.storage.createBucket('wardrobe-images', const BucketOptions(
+          await _client.storage.createBucket('avatars', const BucketOptions(
             public: true,
           ));
         } catch (createError) {
-          debugPrint('Could not create bucket: $createError');
+          debugPrint('Could not create avatars bucket: $createError');
         }
       }
 
-      await _client.storage.from('wardrobe-images').upload(
-        storagePath,
-        file,
-        fileOptions: const FileOptions(upsert: true),
-      );
+      // Try uploading to avatars bucket first
+      try {
+        await _client.storage.from('avatars').upload(
+          storagePath,
+          file,
+          fileOptions: const FileOptions(upsert: true),
+        );
 
-      final publicUrl = _client.storage
-          .from('wardrobe-images')
-          .getPublicUrl(storagePath);
+        final publicUrl = _client.storage
+            .from('avatars')
+            .getPublicUrl(storagePath);
 
-      // Save to user metadata
-      await _client.auth.updateUser(
-        UserAttributes(data: {'avatar_url': publicUrl}),
-      );
+        // Save to user metadata
+        await _client.auth.updateUser(
+          UserAttributes(data: {'avatar_url': publicUrl}),
+        );
 
-      // Also save to user_profiles table
-      await _client.from('user_profiles').upsert({
-        'id': userId,
-        'avatar_url': publicUrl,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+        // Also save to user_profiles table
+        await _client.from('user_profiles').upsert({
+          'id': userId,
+          'avatar_url': publicUrl,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
 
-      return publicUrl;
+        return publicUrl;
+      } catch (uploadError) {
+        debugPrint('Avatars bucket upload failed, trying wardrobe-images: $uploadError');
+        
+        // Fallback to wardrobe-images bucket
+        try {
+          await _client.storage.getBucket('wardrobe-images');
+        } catch (e) {
+          try {
+            await _client.storage.createBucket('wardrobe-images', const BucketOptions(
+              public: true,
+            ));
+          } catch (createError) {
+            debugPrint('Could not create wardrobe-images bucket: $createError');
+          }
+        }
+
+        await _client.storage.from('wardrobe-images').upload(
+          storagePath,
+          file,
+          fileOptions: const FileOptions(upsert: true),
+        );
+
+        final publicUrl = _client.storage
+            .from('wardrobe-images')
+            .getPublicUrl(storagePath);
+
+        // Save to user metadata
+        await _client.auth.updateUser(
+          UserAttributes(data: {'avatar_url': publicUrl}),
+        );
+
+        // Also save to user_profiles table
+        await _client.from('user_profiles').upsert({
+          'id': userId,
+          'avatar_url': publicUrl,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+
+        return publicUrl;
+      }
     } catch (e) {
       debugPrint('Upload photo error: $e');
       return null;

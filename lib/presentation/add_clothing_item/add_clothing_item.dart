@@ -175,6 +175,19 @@ class _AddClothingItemState extends State<AddClothingItem> {
         notes: _storeController.text.trim(), // Reusing store as notes for now
       );
 
+      // Also add to purchases table if price is provided
+      if (price != null && price > 0) {
+        await _purchaseService.addPurchase(
+          name: _itemNameController.text.trim(),
+          price: price,
+          purchaseDate: _purchaseDate ?? DateTime.now(),
+          brand: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
+          category: _selectedCategory,
+          imageUrl: imageUrl,
+          wardrobeItemId: savedItem['id']?.toString(),
+        );
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

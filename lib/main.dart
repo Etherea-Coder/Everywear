@@ -11,7 +11,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
 import './core/providers.dart';
-import './services/payment_service.dart';
 import './services/supabase_service.dart';
 import './services/revenuecat_service.dart';
 import './widgets/custom_error_widget.dart';
@@ -61,8 +60,8 @@ Future<void> _initializeEssentialServices() async {
   // Sentry tracking first
   try {
     await SentryFlutter.init((options) {
-      options.dsn = 'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
-      options.tracesSampleRate = 1.0;
+      options.dsn = const String.fromEnvironment('SENTRY_DSN');
+      options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
       options.debug = kDebugMode;
     });
   } catch (_) {}
@@ -83,10 +82,6 @@ Future<void> _initializeEssentialServices() async {
 
 // Non-critical services that can load while splash screen is showing
 Future<void> _initializeBackgroundServices() async {
-  try {
-    await PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
-  } catch (_) {}
-
   try {
     await RevenueCatService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
   } catch (_) {}

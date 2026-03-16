@@ -222,6 +222,11 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
 
   /// Build item preview card
   Widget _buildItemPreviewCard(ThemeData theme, Map<String, dynamic> item) {
+    final imageUrl = item['image'] as String? ?? '';
+    final name = item['name'] as String? ?? 'Unnamed item';
+    final category = item['category'] as String? ?? 'Uncategorized';
+    final semanticLabel = item['semanticLabel'] as String?;
+
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,
@@ -238,11 +243,11 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
             child: Hero(
               tag: 'wardrobe_item_${item['id']}',
               child: CustomImageWidget(
-                imageUrl: item['image'] as String,
+                imageUrl: imageUrl,
                 width: double.infinity,
                 height: 15.h,
                 fit: BoxFit.cover,
-                semanticLabel: item['semanticLabel'] as String,
+                semanticLabel: semanticLabel,
               ),
             ),
           ),
@@ -252,7 +257,7 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'] as String,
+                  name,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: theme.colorScheme.onSurface,
@@ -262,7 +267,7 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
                 ),
                 SizedBox(height: 0.5.h),
                 Text(
-                  item['category'] as String,
+                  category,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 10.sp,

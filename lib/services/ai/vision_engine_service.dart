@@ -75,18 +75,12 @@ class VisionEngineServiceWeb implements VisionEngineService {
 
   @override
   Future<Map<String, dynamic>> analyzeClothing(String imagePath) async {
-    // Tier 3: Check if on-device model available
+    // Tier 2: On-device model if downloaded
     if (await isModelDownloaded()) {
       return await _analyzeWithLocalModel(imagePath);
     }
 
-    // Tier 2: Try cloud AI
-    final cloudResult = await _cloudService.analyzePhoto(imagePath);
-    if (cloudResult != null) {
-      return cloudResult;
-    }
-
-    // Tier 1: Fall back to heuristic (manual entry will be primary)
+    // Tier 1: Basic heuristic fallback (web has no Gemini access)
     return _getHeuristicAnalysis();
   }
 
