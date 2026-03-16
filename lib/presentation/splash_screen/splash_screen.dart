@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../services/supabase_service.dart';
 import '../../services/revenuecat_service.dart';
 import 'package:flutter/services.dart';
@@ -234,17 +235,11 @@ class _SplashScreenState extends State<SplashScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
+              SvgPicture.asset(
+                'assets/icons/google_logo.svg',
                 width: 6.w,
                 height: 6.w,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      'https://cdn.cdnlogo.com/logos/g/35/google-icon.svg',
-                    ),
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                fit: BoxFit.contain,
               ),
               SizedBox(width: 3.w),
               Text(

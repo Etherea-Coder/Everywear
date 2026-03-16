@@ -44,8 +44,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Color preferences",
         "Comfort zones",
       ],
-      "image":
-          "https://images.unsplash.com/photo-1660150912355-83e1298d0115",
+      "image": "assets/images/learning/style_foundations.jpg",
       "semanticLabel":
           "Minimalist wardrobe with neutral colored clothing hanging on wooden rack against white wall",
     },
@@ -66,8 +65,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Quality vs quantity",
         "Investment pieces",
       ],
-      "image":
-          "https://images.unsplash.com/photo-1735377143405-0a936298221c",
+      "image": "assets/images/learning/cost_per_wear.jpg",
       "semanticLabel":
           "Close-up of clothing price tags and calculator on wooden surface with fabric swatches",
     },
@@ -88,8 +86,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Sustainable materials",
         "Circular fashion",
       ],
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_17ec43db6-1764655133593.png",
+      "image": "assets/images/learning/sustainable_fashion.png",
       "semanticLabel":
           "Eco-friendly clothing made from organic cotton and recycled materials on natural wooden background",
     },
@@ -110,8 +107,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Mix and match",
         "Seasonal transitions",
       ],
-      "image":
-          "https://images.unsplash.com/photo-1714386450125-4ffb8fad9ef7",
+      "image": "assets/images/learning/capsule_wardrobe.jpg",
       "semanticLabel":
           "Organized capsule wardrobe with coordinated neutral clothing items neatly arranged on shelves",
     },
@@ -132,8 +128,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Complementary colors",
         "Seasonal palettes",
       ],
-      "image":
-          "https://images.unsplash.com/photo-1655706512475-2c4f64dc15e1",
+      "image": "assets/images/learning/color_theory.jpg",
       "semanticLabel":
           "Colorful fabric swatches arranged in rainbow spectrum showing various textile colors and textures",
     },
@@ -154,8 +149,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Seasonal storage",
         "Outfit planning",
       ],
-      "image":
-          "https://images.unsplash.com/photo-1614990354198-b06764dcb13c",
+      "image": "assets/images/learning/wardrobe_rotation.jpg",
       "semanticLabel":
           "Well-organized closet with clothing arranged by category and color on wooden hangers",
     },
@@ -176,8 +170,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Storage methods",
         "Repair basics",
       ],
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_1f9d47d8d-1767708713635.png",
+      "image": "assets/images/learning/fabric_care.png",
       "semanticLabel":
           "Hands gently washing delicate fabric in basin with natural soap and water",
     },
@@ -198,8 +191,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Trend evaluation",
         "Budget planning",
       ],
-      "image":
-          "https://images.unsplash.com/photo-1687405181685-9f27883eb11b",
+      "image": "assets/images/learning/mindful_shopping.jpg",
       "semanticLabel":
           "Person thoughtfully examining clothing quality in minimalist boutique with natural lighting",
     },
@@ -220,8 +212,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Wardrobe updates",
         "Authentic expression",
       ],
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_17907d6fb-1768169633649.png",
+      "image": "assets/images/learning/style_evolution.png",
       "semanticLabel":
           "Fashion evolution concept with vintage and modern clothing styles displayed side by side",
     },
@@ -242,8 +233,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Layering techniques",
         "Accessory integration",
       ],
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_1c8e1ab76-1764798615891.png",
+      "image": "assets/images/learning/outfit_composition.png",
       "semanticLabel":
           "Stylish outfit flat lay with coordinated clothing pieces and accessories arranged artistically",
     },
@@ -264,8 +254,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Fair labor practices",
         "Brand evaluation",
       ],
-      "image":
-          "https://img.rocket.new/generatedImages/rocket_gen_img_155085adc-1767350981605.png",
+      "image": "assets/images/learning/ethical_fashion.png",
       "semanticLabel":
           "Ethical fashion concept with natural fabrics and sustainable clothing production materials",
     },
@@ -286,8 +275,7 @@ class _LearningPathsState extends State<LearningPaths> {
         "Long-term planning",
         "Community impact",
       ],
-      "image":
-          "https://images.unsplash.com/photo-1656332694799-5fd721c0c2d8",
+      "image": "assets/images/learning/style_mastery.jpg",
       "semanticLabel":
           "Confident person in signature personal style outfit standing in minimalist modern space",
     },

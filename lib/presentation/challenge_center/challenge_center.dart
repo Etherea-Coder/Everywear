@@ -23,7 +23,7 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
     'id': 'featured-1',
     'title': 'Sustainability Week',
     'description': 'Focus on sustainable fashion choices for 7 days.',
-    'imageUrl': 'https://images.unsplash.com/photo-1680731097148-be4d24e56752',
+    'imageUrl': 'assets/images/challenges/sustainability_week.jpg',
     'semanticLabel':
         'Green leaves and sustainable fashion items arranged on wooden surface',
     'duration': '7 days',

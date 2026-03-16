@@ -16,7 +16,7 @@ class WardrobeUploadStep extends StatelessWidget {
   void _addPhoto() {
     // Simulate photo selection
     final newPhotos = List<String>.from(photos);
-    newPhotos.add('https://images.unsplash.com/photo-1489987707025-afc232f7ea0f');
+    newPhotos.add('assets/images/placeholders/wardrobe_upload.jpg');
     onPhotosChanged(newPhotos);
   }
 
@@ -98,7 +98,7 @@ class WardrobeUploadStep extends StatelessWidget {
                         color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(8.0),
                         image: DecorationImage(
-                          image: NetworkImage(photos[index]),
+                          image: AssetImage(photos[index]),
                           fit: BoxFit.cover,
                         ),
                       ),

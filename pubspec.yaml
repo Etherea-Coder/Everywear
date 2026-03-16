@@ -59,6 +59,11 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/challenges/
+    - assets/images/learning/
+    - assets/images/testimonials/
+    - assets/images/placeholders/
+    - assets/icons/
 
 flutter_launcher_icons:
   android: true

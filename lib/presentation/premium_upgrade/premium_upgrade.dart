@@ -27,24 +27,21 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
   final List<Map<String, dynamic>> _testimonials = [
     {
       'name': 'Sarah Chen',
-      'image':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_1559df74b-1766991425900.png',
+      'image': 'assets/images/testimonials/sarah_chen.png',
       'text':
           'Premium analytics helped me reduce impulse purchases and get more value from the clothes I already own.',
       'rating': 5,
     },
     {
       'name': 'Marcus Johnson',
-      'image':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_196e48b77-1764865098990.png',
+      'image': 'assets/images/testimonials/marcus_johnson.png',
       'text':
           'The AI suggestions and outfit variations made the app feel like a real personal stylist.',
       'rating': 5,
     },
     {
       'name': 'Emma Rodriguez',
-      'image':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_1852c4b53-1768226787988.png',
+      'image': 'assets/images/testimonials/emma_rodriguez.png',
       'text':
           'Premium made the app much more useful day to day. More ideas, more guidance, no ads.',
       'rating': 5,
