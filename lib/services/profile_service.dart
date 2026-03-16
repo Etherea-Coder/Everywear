@@ -53,100 +53,88 @@ class ProfileService {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
-        debugPrint('Upload photo error: No user logged in');
+        debugPrint('❌ Upload photo error: No user logged in');
         return null;
       }
 
       final file = File(filePath);
       if (!await file.exists()) {
-        debugPrint('Upload photo error: File does not exist');
+        debugPrint('❌ Upload photo error: File does not exist at $filePath');
         return null;
       }
 
+      // Get file extension
       final ext = filePath.split('.').last.toLowerCase();
-      final storagePath = 'avatars/$userId/avatar.$ext';
+      
+      // Determine content type
+      String contentType;
+      switch (ext) {
+        case 'jpg':
+        case 'jpeg':
+          contentType = 'image/jpeg';
+          break;
+        case 'png':
+          contentType = 'image/png';
+          break;
+        case 'webp':
+          contentType = 'image/webp';
+          break;
+        case 'gif':
+          contentType = 'image/gif';
+          break;
+        default:
+          contentType = 'image/jpeg';
+      }
 
-      // Ensure bucket exists, create if not
+      // IMPORTANT: Path format must be userId/avatar.ext
+      // This matches the RLS policy: (storage.foldername(name))[1] = userId
+      final storagePath = '$userId/avatar.$ext';
+
+      debugPrint('📤 Uploading to avatars bucket: $storagePath');
+      debugPrint('📤 Content type: $contentType');
+
+      // Upload to avatars bucket
+      await _client.storage.from('avatars').upload(
+        storagePath,
+        file,
+        fileOptions: FileOptions(
+          upsert: true,
+          contentType: contentType,
+        ),
+      );
+
+      // Get public URL
+      final publicUrl = _client.storage
+          .from('avatars')
+          .getPublicUrl(storagePath);
+
+      debugPrint('✅ Upload successful! URL: $publicUrl');
+
+      // Save to user metadata
+      await _client.auth.updateUser(
+        UserAttributes(data: {'avatar_url': publicUrl}),
+      );
+
+      // Also save to user_profiles table
       try {
-        await _client.storage.getBucket('avatars');
+        await _client.from('user_profiles').upsert({
+          'id': userId,
+          'avatar_url': publicUrl,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+        debugPrint('✅ Updated user_profiles table');
       } catch (e) {
-        // Bucket doesn't exist, try to create it
-        try {
-          await _client.storage.createBucket('avatars', const BucketOptions(
-            public: true,
-          ));
-        } catch (createError) {
-          debugPrint('Could not create avatars bucket: $createError');
-        }
+        // Non-fatal: table might not exist or have different columns
+        debugPrint('⚠️ Could not update user_profiles table: $e');
       }
 
-      // Try uploading to avatars bucket first
-      try {
-        await _client.storage.from('avatars').upload(
-          storagePath,
-          file,
-          fileOptions: const FileOptions(upsert: true),
-        );
-
-        final publicUrl = _client.storage
-            .from('avatars')
-            .getPublicUrl(storagePath);
-
-        // Save to user metadata
-        await _client.auth.updateUser(
-          UserAttributes(data: {'avatar_url': publicUrl}),
-        );
-
-        // Also save to user_profiles table
-        await _client.from('user_profiles').upsert({
-          'id': userId,
-          'avatar_url': publicUrl,
-          'updated_at': DateTime.now().toIso8601String(),
-        });
-
-        return publicUrl;
-      } catch (uploadError) {
-        debugPrint('Avatars bucket upload failed, trying wardrobe-images: $uploadError');
-        
-        // Fallback to wardrobe-images bucket
-        try {
-          await _client.storage.getBucket('wardrobe-images');
-        } catch (e) {
-          try {
-            await _client.storage.createBucket('wardrobe-images', const BucketOptions(
-              public: true,
-            ));
-          } catch (createError) {
-            debugPrint('Could not create wardrobe-images bucket: $createError');
-          }
-        }
-
-        await _client.storage.from('wardrobe-images').upload(
-          storagePath,
-          file,
-          fileOptions: const FileOptions(upsert: true),
-        );
-
-        final publicUrl = _client.storage
-            .from('wardrobe-images')
-            .getPublicUrl(storagePath);
-
-        // Save to user metadata
-        await _client.auth.updateUser(
-          UserAttributes(data: {'avatar_url': publicUrl}),
-        );
-
-        // Also save to user_profiles table
-        await _client.from('user_profiles').upsert({
-          'id': userId,
-          'avatar_url': publicUrl,
-          'updated_at': DateTime.now().toIso8601String(),
-        });
-
-        return publicUrl;
-      }
+      return publicUrl;
+    } on StorageException catch (e) {
+      debugPrint('❌ Storage error: ${e.message}');
+      debugPrint('❌ Error code: ${e.errorCode}');
+      return null;
     } catch (e) {
-      debugPrint('Upload photo error: $e');
+      debugPrint('❌ Upload photo error: $e');
       return null;
     }
   }

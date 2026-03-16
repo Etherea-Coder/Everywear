@@ -278,7 +278,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: _pickAndUploadPhoto,
+                  onTap: _isSaving ? null : _pickAndUploadPhoto,
                   child: Container(
                     padding: EdgeInsets.all(2.w),
                     decoration: BoxDecoration(
@@ -311,7 +311,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           SizedBox(height: 1.6.h),
           OutlinedButton.icon(
-            onPressed: _pickAndUploadPhoto,
+            onPressed: _isSaving ? null : _pickAndUploadPhoto,
             icon: const Icon(Icons.photo_camera_outlined),
             label: const Text('Change Photo'),
             style: OutlinedButton.styleFrom(
@@ -430,22 +430,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         imageQuality: 85,
       );
       if (picked == null) return;
+
       setState(() => _isSaving = true);
+
+      // Debug: Check file exists
+      final file = File(picked.path);
+      if (!await file.exists()) {
+        throw Exception('Selected file does not exist');
+      }
+
+      // Debug: Log file info
+      debugPrint('Picked file: ${picked.path}');
+      debugPrint('File exists: ${await file.exists()}');
+
       final url = await _profileService.uploadProfilePhoto(picked.path);
+
+      debugPrint('Upload returned URL: $url');
+
       if (url != null && mounted) {
         setState(() => _avatarUrl = url);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo updated')),
+          const SnackBar(
+            content: Text('Profile photo updated'),
+            backgroundColor: Colors.green,
+          ),
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not upload photo')),
+          SnackBar(
+            content: const Text('Could not upload photo. Check debug console for details.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } catch (e) {
+      debugPrint('Pick/Upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } finally {

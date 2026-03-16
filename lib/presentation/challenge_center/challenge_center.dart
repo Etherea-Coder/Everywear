@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
-import '../../routes/app_routes.dart';
+import '../../services/style_service.dart';
 import './widgets/featured_challenge_banner_widget.dart';
 import './widgets/challenge_category_card_widget.dart';
 import './widgets/challenge_filter_chip_widget.dart';
 
-/// Challenge Center - Browse and accept personal challenges
 class ChallengeCenter extends StatefulWidget {
   const ChallengeCenter({Key? key}) : super(key: key);
 
@@ -16,92 +15,69 @@ class ChallengeCenter extends StatefulWidget {
 }
 
 class _ChallengeCenterState extends State<ChallengeCenter> {
+  final StyleService _styleService = StyleService();
+
   String _selectedFilter = 'all';
-  final String _selectedDifficulty = 'all';
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _challenges = [];
 
-  final Map<String, dynamic> _featuredChallenge = {
-    'id': 'featured-1',
-    'title': 'Sustainability Week',
-    'description': 'Focus on sustainable fashion choices for 7 days.',
-    'imageUrl': 'assets/images/challenges/sustainability_week.jpg',
-    'semanticLabel':
-        'Green leaves and sustainable fashion items arranged on wooden surface',
-    'duration': '7 days',
-    'points': 500,
-    'difficulty': 'medium',
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadChallenges();
+  }
 
-  final List<Map<String, dynamic>> _allChallenges = [
-    {
-      'id': '1',
-      'title': 'Daily Outfit Logger',
-      'description': 'Log your outfit every day for a week',
-      'type': 'daily',
-      'difficulty': 'easy',
-      'duration': '7 days',
-      'points': 50,
-      'icon': 'today',
-      'estimatedTime': '2 min/day',
-      'isActive': true,
-      'progress': 0.71,
-    },
-    {
-      'id': '2',
-      'title': 'Wardrobe Explorer',
-      'description': 'Try 3 new outfit combinations',
-      'type': 'weekly',
-      'difficulty': 'medium',
-      'duration': '1 week',
-      'points': 100,
-      'icon': 'explore',
-      'estimatedTime': '30 min',
-      'isActive': false,
-      'progress': 0.0,
-    },
-  ];
+  Future<void> _loadChallenges() async {
+    setState(() => _isLoading = true);
+    final challenges = await _styleService.fetchChallenges();
+    if (mounted) {
+      setState(() {
+        _challenges = challenges;
+        _isLoading = false;
+      });
+    }
+  }
 
   List<Map<String, dynamic>> get _filteredChallenges {
-    return _allChallenges.where((challenge) {
-      final matchesType =
-          _selectedFilter == 'all' || challenge['type'] == _selectedFilter;
-      final matchesDifficulty =
-          _selectedDifficulty == 'all' ||
-              challenge['difficulty'] == _selectedDifficulty;
-      return matchesType && matchesDifficulty;
-    }).toList();
+    if (_selectedFilter == 'all') return _challenges;
+    return _challenges
+        .where((c) => c['type'] == _selectedFilter)
+        .toList();
+  }
+
+  Map<String, dynamic>? get _featuredChallenge {
+    if (_challenges.isEmpty) return null;
+    // Show first active challenge as featured
+    return _challenges.firstWhere(
+      (c) => c['is_active'] == true || c['is_joined'] == true,
+      orElse: () => _challenges.first,
+    );
   }
 
   int get _activeCount =>
-      _allChallenges.where((challenge) => challenge['isActive'] == true).length;
+      _challenges.where((c) => c['is_joined'] == true).length;
 
   Map<String, dynamic>? get _closestChallenge {
-    final activeChallenges = _allChallenges
-        .where((challenge) => challenge['isActive'] == true)
+    final joined = _challenges
+        .where((c) => c['is_joined'] == true)
         .toList();
-
-    if (activeChallenges.isEmpty) return null;
-
-    activeChallenges.sort(
-      (a, b) => (b['progress'] as double).compareTo(a['progress'] as double),
-    );
-
-    return activeChallenges.first;
+    if (joined.isEmpty) return null;
+    joined.sort((a, b) =>
+        (b['progress'] as int).compareTo(a['progress'] as int));
+    return joined.first;
   }
 
-  void _acceptChallenge(String challengeId) {
-    setState(() {
-      final challenge = _allChallenges.firstWhere(
-        (c) => c['id'] == challengeId,
+  Future<void> _acceptChallenge(String challengeId) async {
+    final success = await _styleService.joinChallenge(challengeId);
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Challenge accepted! Good luck!'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
       );
-      challenge['isActive'] = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Challenge accepted! Good luck!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
+      _loadChallenges();
+    }
   }
 
   @override
@@ -115,68 +91,62 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
         variant: CustomAppBarVariant.detail,
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.delayed(const Duration(milliseconds: 700));
-          if (mounted) {
-            setState(() {});
-          }
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeroCard(theme),
-              SizedBox(height: 2.h),
-
-              FeaturedChallengeBannerWidget(
-                title: _featuredChallenge['title'],
-                description: _featuredChallenge['description'],
-                imageUrl: _featuredChallenge['imageUrl'],
-                semanticLabel: _featuredChallenge['semanticLabel'],
-                duration: _featuredChallenge['duration'],
-                points: _featuredChallenge['points'],
-                difficulty: _featuredChallenge['difficulty'],
-                onTap: () {},
+        onRefresh: _loadChallenges,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroCard(theme),
+                    SizedBox(height: 2.h),
+                    if (_featuredChallenge != null)
+                      FeaturedChallengeBannerWidget(
+                        title: _featuredChallenge!['title'] ?? '',
+                        description: _featuredChallenge!['description'] ?? '',
+                        imageUrl: 'assets/images/challenges/sustainability_week.jpg',
+                        semanticLabel: 'Featured challenge banner',
+                        duration: '${_featuredChallenge!['duration_days']} days',
+                        points: _featuredChallenge!['points'] ?? 100,
+                        difficulty: _featuredChallenge!['difficulty'] ?? 'medium',
+                        onTap: () {},
+                      ),
+                    SizedBox(height: 2.5.h),
+                    _buildSectionHeader(context, title: 'Browse by type'),
+                    SizedBox(height: 1.h),
+                    _buildFilterSection(theme),
+                    SizedBox(height: 2.5.h),
+                    _buildSectionHeader(
+                      context,
+                      title: 'Available Challenges',
+                      actionLabel:
+                          _activeCount > 0 ? '$_activeCount active' : null,
+                    ),
+                    SizedBox(height: 1.h),
+                    _buildChallengeList(theme),
+                    SizedBox(height: 3.h),
+                  ],
+                ),
               ),
-              SizedBox(height: 2.5.h),
-
-              _buildSectionHeader(
-                context,
-                title: 'Browse by type',
-              ),
-              SizedBox(height: 1.h),
-              _buildFilterSection(theme),
-              SizedBox(height: 2.5.h),
-
-              _buildSectionHeader(
-                context,
-                title: 'Available Challenges',
-                actionLabel: _activeCount > 0 ? '$_activeCount active' : null,
-              ),
-              SizedBox(height: 1.h),
-              _buildChallengeList(theme),
-              SizedBox(height: 3.h),
-            ],
-          ),
-        ),
       ),
     );
   }
 
   Widget _buildHeroCard(ThemeData theme) {
     final closest = _closestChallenge;
-
     String title = 'Build better style habits';
     String subtitle =
         'Take on focused challenges to improve consistency, creativity, and mindful wardrobe use.';
     String chip = _activeCount > 0 ? '$_activeCount active' : 'New goals';
 
     if (closest != null) {
-      final progress = ((closest['progress'] as double) * 100).round();
+      final progress = closest['progress'] as int? ?? 0;
+      final duration = closest['duration_days'] as int? ?? 1;
+      final pct = ((progress / duration) * 100).round();
       title = 'Your next milestone is in progress';
       subtitle =
-          '${closest['title']} is $progress% complete. Keep going and turn today’s effort into long-term progress.';
+          '${closest['title']} is $pct% complete. Keep going!';
       chip = 'Keep going';
     }
 
@@ -203,11 +173,8 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
               color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
-              Icons.flag_outlined,
-              color: Colors.white,
-              size: 28,
-            ),
+            child: const Icon(Icons.flag_outlined,
+                color: Colors.white, size: 28),
           ),
           SizedBox(width: 4.w),
           Expanded(
@@ -216,37 +183,26 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
               children: [
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 2.5.w,
-                    vertical: 0.4.h,
-                  ),
+                      horizontal: 2.5.w, vertical: 0.4.h),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(
-                    chip,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: Text(chip,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600)),
                 ),
                 SizedBox(height: 1.h),
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold)),
                 SizedBox(height: 0.6.h),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    height: 1.4,
-                  ),
-                ),
+                Text(subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        height: 1.4)),
               ],
             ),
           ),
@@ -255,41 +211,30 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
     );
   }
 
-  Widget _buildSectionHeader(
-    BuildContext context, {
-    required String title,
-    String? actionLabel,
-  }) {
+  Widget _buildSectionHeader(BuildContext context,
+      {required String title, String? actionLabel}) {
     final theme = Theme.of(context);
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(title,
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w600)),
           if (actionLabel != null)
             Container(
               padding: EdgeInsets.symmetric(
-                horizontal: 2.8.w,
-                vertical: 0.5.h,
-              ),
+                  horizontal: 2.8.w, vertical: 0.5.h),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                color:
+                    theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                actionLabel,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text(actionLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600)),
             ),
         ],
       ),
@@ -306,31 +251,19 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
             ChallengeFilterChipWidget(
               label: 'All',
               isSelected: _selectedFilter == 'all',
-              onTap: () {
-                setState(() {
-                  _selectedFilter = 'all';
-                });
-              },
+              onTap: () => setState(() => _selectedFilter = 'all'),
             ),
             SizedBox(width: 2.w),
             ChallengeFilterChipWidget(
               label: 'Daily',
               isSelected: _selectedFilter == 'daily',
-              onTap: () {
-                setState(() {
-                  _selectedFilter = 'daily';
-                });
-              },
+              onTap: () => setState(() => _selectedFilter = 'daily'),
             ),
             SizedBox(width: 2.w),
             ChallengeFilterChipWidget(
               label: 'Weekly',
               isSelected: _selectedFilter == 'weekly',
-              onTap: () {
-                setState(() {
-                  _selectedFilter = 'weekly';
-                });
-              },
+              onTap: () => setState(() => _selectedFilter = 'weekly'),
             ),
           ],
         ),
@@ -342,12 +275,35 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
     final challenges = _filteredChallenges;
 
     if (challenges.isEmpty) {
-      return _buildEmptyInfoCard(
-        theme,
-        icon: Icons.flag_outlined,
-        title: 'No challenges found',
-        subtitle:
-            'Try changing your current filter to explore more challenge options.',
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 4.w),
+        padding: EdgeInsets.all(5.w),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: theme.dividerColor.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.flag_outlined,
+                size: 40,
+                color: theme.colorScheme.onSurfaceVariant
+                    .withValues(alpha: 0.7)),
+            SizedBox(height: 1.5.h),
+            Text('No challenges found',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center),
+            SizedBox(height: 0.6.h),
+            Text(
+                'Try changing your filter to explore more challenge options.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4),
+                textAlign: TextAlign.center),
+          ],
+        ),
       );
     }
 
@@ -358,66 +314,23 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
       itemCount: challenges.length,
       itemBuilder: (context, index) {
         final challenge = challenges[index];
+        final progress = challenge['progress'] as int? ?? 0;
+        final duration = challenge['duration_days'] as int? ?? 1;
         return ChallengeCategoryCardWidget(
-          title: challenge['title'],
-          description: challenge['description'],
-          type: challenge['type'],
-          difficulty: challenge['difficulty'],
-          duration: challenge['duration'],
-          points: challenge['points'],
-          icon: challenge['icon'],
-          estimatedTime: challenge['estimatedTime'],
-          isActive: challenge['isActive'],
-          progress: challenge['progress'],
+          title: challenge['title'] ?? '',
+          description: challenge['description'] ?? '',
+          type: challenge['type'] ?? 'weekly',
+          difficulty: challenge['difficulty'] ?? 'medium',
+          duration: '${challenge['duration_days']} days',
+          points: challenge['points'] ?? 100,
+          icon: challenge['icon'] ?? 'flag',
+          estimatedTime: challenge['estimated_time'] ?? '30 min',
+          isActive: challenge['is_joined'] == true,
+          progress: duration > 0 ? progress / duration : 0.0,
           onTap: () {},
           onAccept: () => _acceptChallenge(challenge['id']),
         );
       },
-    );
-  }
-
-  Widget _buildEmptyInfoCard(
-    ThemeData theme, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.all(5.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            size: 40,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-          ),
-          SizedBox(height: 1.5.h),
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 0.6.h),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 }
