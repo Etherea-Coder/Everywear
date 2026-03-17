@@ -31,7 +31,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   RealtimeChannel? _realtimeChannel;
 
   final List<String> _categories = [
-    'filter_all',
+    'all',
     'tops',
     'bottoms',
     'shoes',
@@ -630,7 +630,15 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                   return CategoryFilterChipWidget(
                     label: category,
                     isSelected: selectedCategory == category,
-                    onSelected: () => _onCategorySelected(category),
+                    onSelected: () {
+                      if (category != 'All' && category != 'all') {
+                        ref.read(filteredWardrobeItemsProvider.notifier).state = ref.read(wardrobeItemsProvider).where((item) => 
+                          (item['category']?.toString().toLowerCase() ?? '') == category.toLowerCase()
+                        ).toList();
+                      } else {
+                        ref.read(filteredWardrobeItemsProvider.notifier).state = ref.read(wardrobeItemsProvider);
+                      }
+                    },
                   );
                 }).toList(),
               ),

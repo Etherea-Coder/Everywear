@@ -142,8 +142,10 @@ final filteredWardrobeItemsProvider = Provider<AsyncValue<List<Map<String, dynam
 
   return itemsAsync.whenData((items) {
     var filtered = items;
-    if (category != 'All') {
-      filtered = filtered.where((item) => item['category'] == category).toList();
+    if (category != 'All' && category != 'all') {
+      filtered = filtered.where((item) => 
+        (item['category']?.toString().toLowerCase() ?? '') == category.toLowerCase()
+      ).toList();
     }
     if (searchQuery.isNotEmpty) {
       final query = searchQuery.toLowerCase();
