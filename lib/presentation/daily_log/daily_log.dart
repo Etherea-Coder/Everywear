@@ -1622,6 +1622,15 @@ class _DailyLogState extends State<DailyLog> {
                 _repeatLastOutfit();
               },
             ),
+            _buildQuickOption(
+              icon: Icons.checkroom,
+              title: 'Save Displayed Outfit',
+              subtitle: 'Log the outfit shown above',
+              onTap: () {
+                Navigator.pop(context);
+                _saveDisplayedOutfit();
+              },
+            ),
             SizedBox(height: 2.h),
           ],
         ),
@@ -1674,6 +1683,58 @@ class _DailyLogState extends State<DailyLog> {
       return;
     }
     await _repeatEntry(_todayEntries.first['id']);
+  }
+
+  Future<void> _saveDisplayedOutfit() async {
+    final anchor = _suggestedOutfit['anchor'] as Map<String, dynamic>?;
+    final items = (_suggestedOutfit['items'] as List<dynamic>?)
+        ?.cast<Map<String, dynamic>>();
+
+    if (anchor == null || items == null || items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No outfit displayed to save')),
+      );
+      return;
+    }
+
+    try {
+      // Extract item IDs from the suggested outfit
+      final List<String> itemIds = [];
+      if (anchor['id'] != null) {
+        itemIds.add(anchor['id'] as String);
+      }
+      for (final item in items) {
+        if (item['id'] != null) {
+          itemIds.add(item['id'] as String);
+        }
+      }
+
+      if (itemIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No valid wardrobe items in the displayed outfit')),
+        );
+        return;
+      }
+
+      // Navigate to outfit capture flow with the item IDs
+      final result = await Navigator.pushNamed(
+        context,
+        AppRoutes.outfitCaptureFlow,
+        arguments: {
+          'preselectedItemIds': itemIds,
+          'outfitName': _suggestedOutfit['title'] ?? 'Today\'s Style Idea',
+        },
+      );
+
+      if (result == true && mounted) {
+        _loadData();
+      }
+    } catch (e) {
+      debugPrint('Error saving displayed outfit: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving outfit: $e')),
+      );
+    }
   }
 
   Future<void> _repeatEntry(String outfitId) async {
