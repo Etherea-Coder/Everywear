@@ -8,6 +8,8 @@ import './widgets/ai_insight_card_widget.dart';
 import '../../services/wardrobe_service.dart';
 import '../../services/user_tier_service.dart';
 import '../../widgets/upgrade_prompt_widget.dart';
+import '../../core/utils/app_localizations.dart';
+
 
 /// Insights Dashboard - AI-powered style analytics and wardrobe insights
 ///
@@ -1206,6 +1208,7 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
   }
 
   void _showFilterOptions() {
+    final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -1215,17 +1218,17 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
           children: [
             ListTile(
               leading: const Icon(Icons.category),
-              title: const Text('Filter by Category'),
+              title: Text(localizations.filterByCategory),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.date_range),
-              title: const Text('Custom Date Range'),
+              title: Text(localizations.customDateRange),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.download),
-              title: const Text('Export Data'),
+              title: Text(localizations.exportData),
               onTap: () => Navigator.pop(context),
             ),
           ],

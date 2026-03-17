@@ -36,6 +36,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
   Map<String, dynamic>? _aiAnalysisResult;
 
   Future<void> _showPhotoOptions() async {
+    final localizations = AppLocalizations.of(context);
     if (widget.photos.length >= _maxPhotos) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -63,7 +64,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
                   color: Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
-                title: const Text('Take Photo'),
+                title: Text(localizations.takePhoto),
                 onTap: () {
                   Navigator.pop(context);
                   _takePhoto();
@@ -75,7 +76,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
                   color: Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
-                title: const Text('Choose from Gallery'),
+                title: Text(localizations.chooseFromGallery),
                 onTap: () {
                   Navigator.pop(context);
                   _pickFromGallery();
@@ -89,7 +90,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
                   ).colorScheme.onSurface.withValues(alpha: 0.6),
                   size: 24,
                 ),
-                title: const Text('Skip Photo'),
+                title: Text(localizations.skipPhoto),
                 onTap: () => Navigator.pop(context),
               ),
             ],
@@ -100,13 +101,14 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
   }
 
   Future<void> _takePhoto() async {
+    final localizations = AppLocalizations.of(context);
     try {
       bool hasPermission = await _requestCameraPermission();
       if (!hasPermission) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Camera permission is required to take photos'),
+            SnackBar(
+              content: Text(localizations.cameraPermissionRequired),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -134,8 +136,8 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to capture photo. Please try again.'),
+          SnackBar(
+            content: Text(localizations.failedToCapturePhoto),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -144,6 +146,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
   }
 
   Future<void> _pickFromGallery() async {
+    final localizations = AppLocalizations.of(context);
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -165,10 +168,10 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to select photo. Please try again.'),
+          SnackBar(
+            content: Text(localizations.failedToSelectPhoto),
             behavior: SnackBarBehavior.floating,
-          ),
+          )
         );
       }
     }

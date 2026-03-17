@@ -7,6 +7,7 @@ import '../../services/supabase_service.dart';
 import './widgets/feedback_section_widget.dart';
 import './widgets/outfit_preview_widget.dart';
 import './widgets/rating_stars_widget.dart';
+import '../../core/utils/app_localizations.dart';
 
 class OutfitRating extends StatefulWidget {
   const OutfitRating({Key? key}) : super(key: key);
@@ -58,11 +59,12 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Future<void> _saveRating() async {
+    final localizations = AppLocalizations.of(context);
     if (_overallRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please provide an overall rating'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(localizations.pleaseProvideRating),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -131,6 +133,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context); 
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -188,6 +191,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Widget _buildOverallRatingSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     return Card(
       elevation: 2,
       child: Padding(
@@ -195,11 +199,11 @@ class _OutfitRatingState extends State<OutfitRating> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Overall Rating',
+            Text(localizations.overallRating,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w600)),
             SizedBox(height: 1.h),
-            Text('How did you feel in this outfit?',
+            Text(localizations.howDidYouFeel,
                 style: theme.textTheme.bodyMedium?.copyWith(
                     color:
                         theme.colorScheme.onSurface.withValues(alpha: 0.7))),
@@ -219,6 +223,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Widget _buildDetailedRatingsSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     return Card(
       elevation: 2,
       child: Padding(
@@ -226,17 +231,17 @@ class _OutfitRatingState extends State<OutfitRating> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Detailed Ratings',
+            Text(localizations.detailedRatings,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w600)),
             SizedBox(height: 2.h),
-            _buildRatingRow(theme, 'Comfort', _comfortRating,
+            _buildRatingRow(theme, localizations.comfort, _comfortRating,
                 (r) => setState(() => _comfortRating = r)),
             SizedBox(height: 2.h),
-            _buildRatingRow(theme, 'Style', _styleRating,
+            _buildRatingRow(theme, localizations.style, _styleRating,
                 (r) => setState(() => _styleRating = r)),
             SizedBox(height: 2.h),
-            _buildRatingRow(theme, 'Versatility', _versatilityRating,
+            _buildRatingRow(theme, localizations.versatility, _versatilityRating,
                 (r) => setState(() => _versatilityRating = r)),
           ],
         ),
@@ -260,6 +265,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Widget _buildOccasionSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     return Card(
       elevation: 2,
       child: Padding(
@@ -267,7 +273,7 @@ class _OutfitRatingState extends State<OutfitRating> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Occasion',
+            Text(localizations.occasion,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w600)),
             SizedBox(height: 2.h),
@@ -298,6 +304,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Widget _buildWouldWearAgainSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     return Card(
       elevation: 2,
       child: Padding(
@@ -309,11 +316,11 @@ class _OutfitRatingState extends State<OutfitRating> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Would wear again?',
+                  Text(localizations.wouldWearAgain,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w600)),
                   SizedBox(height: 0.5.h),
-                  Text('Help us learn your preferences',
+                  Text(localizations.helpUsLearn,
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface
                               .withValues(alpha: 0.7))),
@@ -332,6 +339,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Widget _buildSaveButton(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(

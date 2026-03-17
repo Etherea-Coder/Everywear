@@ -67,6 +67,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context); 
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -1205,6 +1206,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
       text: (item['current_price'] as num?)?.toStringAsFixed(2) ?? '',
     );
     final currency = _budget['currency'] as String? ?? 'EUR';
+    final localizations = AppLocalizations.of(context);
 
     showDialog(
       context: context,
@@ -1214,12 +1216,12 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
           controller: controller,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-              labelText: 'Current price', prefixText: '$currency '),
+              labelText: localizations.currentPrice, prefixText: '$currency '),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              child: Text(localizations.cancel)),
           ElevatedButton(
             onPressed: () async {
               final price = double.tryParse(controller.text);
@@ -1240,6 +1242,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
       text: (item['current_price'] as num?)?.toStringAsFixed(2) ?? '',
     );
     final currency = _budget['currency'] as String? ?? 'EUR';
+    final localizations = AppLocalizations.of(context);
 
     showDialog(
       context: context,
@@ -1254,14 +1257,14 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
               controller: controller,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                  labelText: 'Final price', prefixText: '$currency '),
+                  labelText: localizations.finalPrice, prefixText: '$currency '),
             ),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              child: Text(localizations.cancel)),
           ElevatedButton(
             onPressed: () async {
               final price = double.tryParse(controller.text) ?? 0.0;
@@ -1292,14 +1295,14 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.of(context).cancel)),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await _purchaseService.deleteWishlistItem(id);
               _loadData();
             },
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context).delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -1315,7 +1318,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.of(context).cancel)),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);

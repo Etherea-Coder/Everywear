@@ -31,14 +31,14 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   RealtimeChannel? _realtimeChannel;
 
   final List<String> _categories = [
-    'All',
-    'Tops',
-    'Bottoms',
-    'Shoes',
-    'Outerwear',
-    'Accessories',
-    'Dresses',
-    'Activewear',
+    'filter_all',
+    'tops',
+    'bottoms',
+    'shoes',
+    'outerwear',
+    'accessories',
+    'dresses',
+    'activewear',
   ];
 
   @override
@@ -67,17 +67,17 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
         onInsert: (payload) {
           if (!mounted) return;
           ref.read(wardrobeItemsProvider.notifier).refresh();
-          _showSnackBar('New item added to wardrobe');
+          _showSnackBar(localizations.itemAddedToWardrobe);
         },
         onUpdate: (payload) {
           if (!mounted) return;
           ref.read(wardrobeItemsProvider.notifier).refresh();
-          _showSnackBar('Item updated');
+          _showSnackBar(localizations.itemUpdated);
         },
         onDelete: (payload) {
           if (!mounted) return;
           ref.read(wardrobeItemsProvider.notifier).refresh();
-          _showSnackBar('Item deleted from wardrobe');
+          _showSnackBar(localizations.itemDeletedSuccess);
         },
       );
     } catch (error) {
@@ -270,6 +270,27 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     }
   }
 
+  String _getLocalizedCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'tops':
+        return localizations.translate('tops');
+      case 'bottoms':
+        return localizations.translate('bottoms');
+      case 'shoes':
+        return localizations.translate('shoes');
+      case 'outerwear':
+        return localizations.translate('outerwear');
+      case 'accessories':
+        return localizations.translate('accessories');
+      case 'dresses':
+        return localizations.translate('dresses');
+      case 'activewear':
+        return localizations.translate('activewear');
+      default:
+        return category;
+    }
+  }
+
   Widget _buildPremiumHeader(
     ThemeData theme,
     AsyncValue<List<Map<String, dynamic>>> itemsAsync,
@@ -304,7 +325,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Text(
-                        '${_selectedItems.length} selected',
+                        '${_selectedItems.length} ${localizations.selectedItems}',
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
@@ -319,7 +340,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         color: theme.colorScheme.error,
                         size: 24,
                       ),
-                      tooltip: 'Delete selected',
+                      tooltip: localizations.delete,
                     ),
                     IconButton(
                       onPressed: _toggleMultiSelect,
@@ -328,7 +349,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         color: theme.colorScheme.onSurface,
                         size: 24,
                       ),
-                      tooltip: 'Cancel selection',
+                      tooltip: localizations.cancel,
                     ),
                   ] else
                     IconButton(
@@ -338,13 +359,13 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         color: theme.colorScheme.onSurface,
                         size: 24,
                       ),
-                      tooltip: 'Filter options',
+                      tooltip: localizations.filter,
                     ),
                 ],
               ),
               SizedBox(height: 0.6.h),
               Text(
-                'Your personal collection, ready to style anywhere.',
+                localizations.yourPersonalCollection,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -473,7 +494,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     final total = wardrobeItems.length;
 
     final counts = <String, int>{};
-    for (final category in _categories.where((c) => c != 'All')) {
+    for (final category in _categories.where((c) => c != 'filter_all')) {
       counts[category] = 0;
     }
 
@@ -508,7 +529,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
             child: _buildSummaryPill(
               theme,
               icon: '👗',
-              label: 'Total pieces',
+              label: localizations.items,
               value: '$total',
             ),
           ),
@@ -519,8 +540,10 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
               icon: topCategoryEntry != null
                   ? _getCategoryEmoji(topCategoryEntry.key)
                   : '✨',
-              label: 'Top category',
-              value: topCategoryEntry != null ? topCategoryEntry.key : '—',
+              label: localizations.filter,
+              value: topCategoryEntry != null 
+                  ? _getLocalizedCategory(topCategoryEntry.key)
+                  : '—',
             ),
           ),
         ],

@@ -74,6 +74,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: RefreshIndicator(
@@ -105,23 +106,23 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     _buildQuizSection(theme),
                     SizedBox(height: 3.h),
                     // Coach section
-                    _buildSectionHeader(theme, 'Style Coach', Icons.psychology_alt),
+                    _buildSectionHeader(theme, localizations.styleCoach, Icons.psychology_alt),
                     SizedBox(height: 1.h),
                     _buildCoachSection(theme),
                     SizedBox(height: 3.h),
                     // Events section
-                    _buildSectionHeader(theme, 'Events', Icons.event,
+                    _buildSectionHeader(theme, localizations.events, Icons.event,
                         onAdd: _showAddEventDialog),
                     SizedBox(height: 1.h),
                     _buildEventsSection(theme),
                     SizedBox(height: 3.h),
                     // Challenges section
-                    _buildSectionHeader(theme, 'Challenges', Icons.flag),
+                    _buildSectionHeader(theme, localizations.challenges, Icons.flag),
                     SizedBox(height: 1.h),
                     _buildChallengesSection(theme),
                     SizedBox(height: 3.h),
                     // Insights section
-                    _buildSectionHeader(theme, 'Style Insights', Icons.insights),
+                    _buildSectionHeader(theme, localizations.insights, Icons.insights),
                     SizedBox(height: 1.h),
                     _buildInsightsSection(theme),
                     SizedBox(height: 10.h),
@@ -136,13 +137,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
   // ── EVENTS ──────────────────────────────────────────────
   Widget _buildEventsSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     if (_events.isEmpty) {
       return _buildEmptyCard(
         theme,
         icon: Icons.event_available,
-        title: 'No upcoming events',
-        subtitle: 'Add an event to get outfit suggestions',
-        actionLabel: 'Add Event',
+        title: localizations.noUpcomingEvents,
+        subtitle: localizations.addEventForSuggestions,
+        actionLabel: localizations.addEvent,
         onAction: _showAddEventDialog,
       );
     }
@@ -153,6 +155,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   Widget _buildEventCard(ThemeData theme, Map<String, dynamic> event) {
+    final localizations = AppLocalizations.of(context);
     final date = DateTime.parse(event['event_date']);
     final daysLeft = date.difference(DateTime.now()).inDays;
     final eventType = event['event_type'] as String? ?? 'Other';
@@ -228,8 +231,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                daysLeft == 0 ? 'Today!' :
-                daysLeft == 1 ? 'Tomorrow' : 'In $daysLeft days',
+                daysLeft == 0 ? localizations.today + '!' :
+                daysLeft == 1 ? localizations.tomorrow : 'In $daysLeft ${localizations.days}',
                 style: TextStyle(
                   fontSize: 11.sp,
                   color: daysLeft <= 3
@@ -268,12 +271,13 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
   // ── CHALLENGES ──────────────────────────────────────────
   Widget _buildChallengesSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     if (_challenges.isEmpty) {
       return _buildEmptyCard(
         theme,
         icon: Icons.flag_outlined,
-        title: 'No challenges available',
-        subtitle: 'Check back soon for new style challenges',
+        title: localizations.noChallengesAvailable,
+        subtitle: localizations.checkBackSoon,
       );
     }
 

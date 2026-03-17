@@ -301,7 +301,85 @@ class AppLocalizations {
   // Wardrobe Management
   String get yourPersonalCollection => translate('your_personal_collection');
   String get updatedEverywhere => translate('updated_everywhere');
+  String get itemUpdated => translate('item_updated');
+  String get unsavedChanges => translate('unsaved_changes');
+  String get discard => translate('discard');
+  String get editItem => translate('edit_item');
+  String get changes => translate('changes');
 
+  // Smart Suggestions
+  String get challenges => translate('challenges');
+  String get noUpcomingEvents => translate('no_upcoming_events');
+  String get addEventForSuggestions => translate('add_event_for_suggestions');
+  String get noChallengesAvailable => translate('no_challenges_available');
+  String get checkBackSoon => translate('check_back_soon');
+  String get today => translate('today');
+  String get tomorrow => translate('tomorrow');
+  String get days => translate('days');
+
+  // Outfit Rating
+  String get overallRating => translate('overall_rating');
+  String get howDidYouFeel => translate('how_did_you_feel');
+  String get detailedRatings => translate('detailed_ratings');
+  String get comfort => translate('comfort');
+  String get style => translate('style');
+  String get versatility => translate('versatility');
+  String get occasion => translate('occasion');
+  String get wouldWearAgain => translate('would_wear_again');
+  String get helpUsLearn => translate('help_us_learn');
+  String get saveRating => translate('save_rating');
+
+  // Photo Capture
+  String get chooseFromGallery => translate('choose_from_gallery');
+  String get skipPhoto => translate('skip_photo');
+  String get failedToCapturePhoto => translate('failed_to_capture_photo');
+  String get saveError => translate('save_error');
+
+  // Purchase Tracking
+  String get finalPrice => translate('final_price');
+  String get currentPrice => translate('current_price');
+  String get filterByCategory => translate('filter_by_category');
+  String get customDateRange => translate('custom_date_range');
+  
+  // Additional strings
+  String get maximumPhotosAllowed => translate('maximum_photos_allowed');
+  String get failedToSelectPhoto => translate('failed_to_select_photo');
+  String get aiDetected => translate('ai_detected');
+  String get shareAchievement => translate('share_achievement');
+  String get searchAchievements => translate('search_achievements');
+  String get addFirstItem => translate('add_first_item');
+  String get couldNotGenerateExport => translate('could_not_generate_export');
+  String get exportError => translate('export_error');
+  String get failedToSavePreferences => translate('failed_to_save_preferences');
+  String get pleaseProvideRating => translate('please_provide_rating');
+  String get ratingSavedSuccessfully => translate('rating_saved_successfully');
+  String get failedToSaveRating => translate('failed_to_save_rating');
+  String get savingYourRating => translate('saving_your_rating');
+  String get welcomeToSignature => translate('welcome_to_signature');
+  String get purchasesRestored => translate('purchases_restored');
+  String get keyLearnings => translate('key_learnings');
+  String get moduleLocked => translate('module_locked');
+  String get aboutLearningPaths => translate('about_learning_paths');
+  String get howItWorks => translate('how_it_works');
+  String get newAiInsightsGenerated => translate('new_ai_insights_generated');
+  String get sendMessage => translate('send_message');
+  String get feedbackSent => translate('feedback_sent');
+  String get couldNotSendFeedback => translate('could_not_send_feedback');
+  String get changePhoto => translate('change_photo');
+  String get profilePhotoUpdated => translate('profile_photo_updated');
+  String get couldNotUploadPhoto => translate('could_not_upload_photo');
+  String get profileUpdatedSuccessfully => translate('profile_updated_successfully');
+  String get couldNotUpdateProfile => translate('could_not_update_profile');
+  String get wearThis => translate('wear_this');
+  String get logFirstOutfit => translate('log_first_outfit');
+  String get challengeAccepted => translate('challenge_accepted');
+  String get noChallengesFound => translate('no_challenges_found');
+  String get passwordUpdated => translate('password_updated');
+  String get couldNotUpdatePassword => translate('could_not_update_password');
+  String get updatePasswordBtn => translate('update_password_btn');
+  String get morningAiSuggestions => translate('morning_ai_suggestions');
+  String get dailyOutfitIdeas => translate('daily_outfit_ideas');
+  String get events => translate('events');
 }
 
 class _AppLocalizationsDelegate

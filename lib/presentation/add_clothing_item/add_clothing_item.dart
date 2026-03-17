@@ -240,7 +240,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Save error: $e'),
+            content: Text('${localizations.saveError}: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -259,19 +259,19 @@ class _AddClothingItemState extends State<AddClothingItem> {
     final shouldPop = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Discard changes?'),
-        content: const Text(
-          'You have unsaved changes. Are you sure you want to leave?',
+        title: Text('${localizations.discard} ${localizations.changes}?'),
+        content: Text(
+          localizations.unsavedChanges,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(localizations.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
-              'Discard',
+              localizations.discard,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -299,13 +299,14 @@ class _AddClothingItemState extends State<AddClothingItem> {
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text('Add Clothing Item'),
+          title: Text(_existingItemId != null ? localizations.editItem : localizations.addItem),
           leading: IconButton(
             icon: CustomIconWidget(
               iconName: 'close',
               color: theme.colorScheme.onSurface,
               size: 24,
             ),
+            tooltip: localizations.cancel,
             onPressed: () async {
               if (await _onWillPop()) {
                 if (mounted) {
@@ -313,7 +314,6 @@ class _AddClothingItemState extends State<AddClothingItem> {
                 }
               }
             },
-            tooltip: 'Cancel',
           ),
           actions: [
             Padding(
@@ -336,7 +336,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
                           ),
                         ),
                       )
-                    : const Text('Save'),
+                    : Text(localizations.save),
               ),
             ),
           ],
