@@ -455,7 +455,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       Text(
                         hasResult
                             ? _quizResult!['style_profile'] as String? ??
-                                localizations.completed
+                                localizations.yourStyleProfile
                             : localizations.takeQuizToPersonalise,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,

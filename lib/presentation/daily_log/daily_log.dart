@@ -22,6 +22,10 @@ class DailyLog extends StatefulWidget {
 }
 
 class _DailyLogState extends State<DailyLog> {
+  /// Shorthand so all methods can use `loc.xxx` without repeating
+  /// AppLocalizations.of(context) on every line.
+  AppLocalizations get loc => AppLocalizations.of(context);
+
   DateTime _selectedDate = DateTime.now();
 
   String _displayName = '';
@@ -219,8 +223,8 @@ class _DailyLogState extends State<DailyLog> {
     }
 
     if (_selectedMood == 'Surprise') {
-      anchorName = loc.itemUnderusedJacket;
-      topName = loc.itemNeutralBaseTop;
+      anchorName = loc.itemDenimJacket;
+      topName = loc.itemCleanNeutralTop;
       bottomName = loc.itemWideLegPants;
       shoesName = loc.itemChunkySneakers;
       description = loc.surpriseSuggestionDesc;
@@ -1117,7 +1121,7 @@ class _DailyLogState extends State<DailyLog> {
           },
           {
             'slot': 'anchor',
-            'name': loc.itemUnderusedJacket,
+            'name': loc.itemDenimJacket,
             'imageUrl': '',
             'category': loc.catAnchor,
           },
@@ -1133,7 +1137,7 @@ class _DailyLogState extends State<DailyLog> {
           },
           {
             'slot': 'top',
-            'name': loc.itemNeutralBaseTop,
+            'name': loc.itemCleanNeutralTop,
             'imageUrl': '',
             'category': loc.catTop,
           },
