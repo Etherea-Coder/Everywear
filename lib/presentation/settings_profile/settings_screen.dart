@@ -345,7 +345,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting account: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
       );
     }
   }

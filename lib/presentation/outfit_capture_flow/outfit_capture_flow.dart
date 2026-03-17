@@ -2,11 +2,14 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../core/utils/app_localizations.dart';
+import '../../core/providers.dart';
 import '../../services/ai_suggestions_service.dart';
 import '../../services/wardrobe_service.dart';
 import '../../services/weather_service.dart';
@@ -18,14 +21,14 @@ import './widgets/wardrobe_selection_widget.dart';
 
 /// Outfit Capture Flow screen for quick outfit photography and item selection
 /// Implements streamlined mobile interface with camera integration and wardrobe selection
-class OutfitCaptureFlow extends StatefulWidget {
+class OutfitCaptureFlow extends ConsumerStatefulWidget {
   const OutfitCaptureFlow({Key? key}) : super(key: key);
 
   @override
-  State<OutfitCaptureFlow> createState() => _OutfitCaptureFlowState();
+  ConsumerState<OutfitCaptureFlow> createState() => _OutfitCaptureFlowState();
 }
 
-class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
+class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
   // Flow state management
   int _currentStep =
       0; // 0: Method selection, 1: Camera/Wardrobe, 2: Confirmation
@@ -110,7 +113,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('No cameras available on this device'),
+              content: Text(AppLocalizations.of(context).cameraInitError),
               duration: const Duration(seconds: 3),
             ),
           );
@@ -164,7 +167,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Camera initialization failed: ${e.toString()}'),
+            content: Text('${AppLocalizations.of(context).cameraInitError}: ${e.toString()}'),
             duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: 'Retry',
@@ -238,7 +241,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save outfit: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
         );
       }
     }
@@ -291,7 +294,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
 
     final result = await _aiSuggestionsService.generateSuggestions(
       imageUrl: imageUrl,
-      language: 'EN',
+      language: ref.read(localeProvider).languageCode.toUpperCase(),
       weatherContext: weatherContext,
       itemHistory: itemsContext,
     );
@@ -408,24 +411,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
                       ],
                     ),
                   ),
-                ),
-              ),
-
-            // Language selector button
-            Positioned(
-              top: 12.h,
-              right: 4.w,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(26),
-                      blurRadius: 8.0,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
                 ),
               ),
 

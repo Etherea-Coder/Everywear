@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/app_localizations.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../services/purchase_service.dart';
 import './widgets/spending_chart_widget.dart';
@@ -835,7 +836,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Update price'),
+                  child: Text(AppLocalizations.of(context).updatePrice),
                 ),
               ),
               SizedBox(width: 2.w),
@@ -847,7 +848,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Bought it!'),
+                  child: Text(AppLocalizations.of(context).boughtIt),
                 ),
               ),
               SizedBox(width: 2.w),
@@ -981,7 +982,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Monthly Budget'),
+          title: Text(AppLocalizations.of(context).monthlyBudget),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1007,7 +1008,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context).cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -1017,7 +1018,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
                     monthlyBudget: amount, currency: currency);
                 _loadData();
               },
-              child: const Text('Save'),
+              child: Text(AppLocalizations.of(context).save),
             ),
           ],
         ),
@@ -1044,7 +1045,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
           if (!mounted) return;
           if (result != null) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('${purchaseData['name']} added to your wardrobe log'),
+              content: Text('${purchaseData['name']} ${AppLocalizations.of(context).addedToWardrobeLog}'),
               behavior: SnackBarBehavior.floating,
             ));
             _loadData();
@@ -1096,7 +1097,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
                       ),
                     ),
                   ),
-                  Text('Add to Style Wishlist',
+                  Text(AppLocalizations.of(context).addToWishlist,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           )),
@@ -1186,7 +1187,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Add to Wishlist'),
+                      child: Text(AppLocalizations.of(context).addToWishlist),
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -1208,7 +1209,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Update price for ${item['name']}'),
+        title: Text('${AppLocalizations.of(context).updatePrice}: ${item['name']}'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -1227,7 +1228,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
               await _purchaseService.updateWishlistPrice(item['id'], price);
               _loadData();
             },
-            child: const Text('Update'),
+            child: Text(AppLocalizations.of(context).updatePrice),
           ),
         ],
       ),
@@ -1243,11 +1244,11 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Mark as Purchased'),
+        title: Text(AppLocalizations.of(context).markAsPurchased),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('How much did you pay for ${item['name']}?'),
+            Text('${AppLocalizations.of(context).howMuchDidYouPay} ${item['name']}?'),
             SizedBox(height: 2.h),
             TextField(
               controller: controller,
@@ -1275,7 +1276,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
               );
               _loadData();
             },
-            child: const Text('Confirm'),
+            child: Text(AppLocalizations.of(context).confirmPurchase),
           ),
         ],
       ),
@@ -1286,8 +1287,8 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove from Wishlist'),
-        content: const Text('Remove this item from your style wishlist?'),
+        title: Text(AppLocalizations.of(context).removeFromWishlist),
+        content: Text(AppLocalizations.of(context).removeFromWishlist),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
@@ -1309,8 +1310,8 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Purchase'),
-        content: const Text('Are you sure you want to delete this purchase?'),
+        title: Text(AppLocalizations.of(context).deletePurchase),
+        content: Text(AppLocalizations.of(context).deletePurchase),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
@@ -1321,7 +1322,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
               await _purchaseService.deletePurchase(id);
               _loadData();
             },
-            child: Text('Delete',
+            child: Text(AppLocalizations.of(context).delete,
                 style:
                     TextStyle(color: Theme.of(context).colorScheme.error)),
           ),

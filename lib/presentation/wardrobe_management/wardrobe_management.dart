@@ -175,6 +175,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     try {
       final localizations = AppLocalizations.of(context);
       await _wardrobeService.deleteWardrobeItem(itemId);
+      // Refresh the wardrobe items provider to update UI
+      ref.read(wardrobeItemsProvider.notifier).refresh();
       _showSnackBar(localizations.itemDeletedSuccess);
     } catch (error) {
       final localizations = AppLocalizations.of(context);
@@ -222,6 +224,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     try {
       final localizations = AppLocalizations.of(context);
       await _wardrobeService.deleteMultipleItems(_selectedItems.toList());
+      // Refresh the wardrobe items provider to update UI
+      ref.read(wardrobeItemsProvider.notifier).refresh();
       setState(() {
         _selectedItems.clear();
         _isMultiSelectMode = false;

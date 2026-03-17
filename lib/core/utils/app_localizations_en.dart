@@ -225,4 +225,45 @@ const Map<String, String> appLocalizationsEn = {
   'items_delete_error': 'Failed to delete items',
   'item_added_to_wardrobe': 'added to wardrobe',
   'item_save_error': 'Failed to save item. Please try again.',
+
+  // Daily Log
+  'good_morning': 'Good morning',
+  'good_afternoon': 'Good afternoon',
+  'good_evening': 'Good evening',
+  'log_outfit_btn': 'Log outfit',
+  'repeat_outfit': 'Repeat Outfit',
+  'repeat_outfit_question': 'Log this outfit again for today?',
+  'outfit_repeated': 'Outfit repeated for today!',
+  'edit_outfit': 'Edit Outfit',
+  'delete_outfit': 'Delete Outfit',
+  'delete_outfit_confirmation': 'Are you sure you want to delete this outfit?',
+  'outfit_deleted': 'Outfit deleted',
+  'outfit_updated': 'Outfit updated!',
+  'this_month': 'This Month',
+  'rating': 'Rating: ',
+
+  // Smart Suggestions
+  'style_title': 'Style',
+  'ask_your_coach': 'Ask your coach',
+  'add_event': 'Add Event',
+  'delete_event': 'Delete Event',
+  'remove_event_question': 'Remove this event?',
+  'style_coach': 'Style Coach',
+  'or_pick_a_topic': 'Or pick a topic',
+
+  // Purchase Tracking
+  'monthly_budget': 'Monthly Budget',
+  'add_to_wishlist': 'Add to Style Wishlist',
+  'update_price': 'Update price',
+  'mark_as_purchased': 'Mark as Purchased',
+  'remove_from_wishlist': 'Remove from Wishlist',
+  'delete_purchase': 'Delete Purchase',
+  'bought_it': 'Bought it!',
+  'confirm_purchase': 'Confirm',
+  'how_much_did_you_pay': 'How much did you pay for',
+  'added_to_wardrobe_log': 'added to your wardrobe log',
+
+  // Wardrobe
+  'your_personal_collection': 'Your personal collection, ready to style anywhere.',
+  'updated_everywhere': 'Updated everywhere',
 };

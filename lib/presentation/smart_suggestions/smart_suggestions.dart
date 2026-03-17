@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 import '../../services/style_service.dart';
 import '../../services/user_tier_service.dart';
 import '../../widgets/upgrade_prompt_widget.dart';
+import '../../core/utils/app_localizations.dart';
 
 class SmartSuggestions extends StatefulWidget {
   const SmartSuggestions({Key? key}) : super(key: key);
@@ -83,7 +84,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               floating: true,
               backgroundColor: theme.scaffoldBackgroundColor,
               elevation: 0,
-              title: Text('Style', style: theme.textTheme.headlineMedium),
+              title: Text(AppLocalizations.of(context).styleTitle, style: theme.textTheme.headlineMedium),
               actions: [
                 IconButton(
                   icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
@@ -387,7 +388,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: Text('Join', style: TextStyle(fontSize: 12.sp)),
+                child: Text(AppLocalizations.of(context).continueText, style: TextStyle(fontSize: 12.sp)),
               ),
             ),
         ],
@@ -550,7 +551,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 child: OutlinedButton.icon(
                   onPressed: _showCoachPromptSheet,
                   icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text('Ask your coach'),
+                  label: Text(AppLocalizations.of(context).askYourCoach),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 1.4.h),
                     shape: RoundedRectangleBorder(
@@ -908,7 +909,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
+                child: Text(AppLocalizations.of(context).done),
               ),
             ],
           );
@@ -978,7 +979,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
           }
 
           return AlertDialog(
-            title: const Text('Style Coach'),
+            title: Text(AppLocalizations.of(context).styleCoach),
             content: SizedBox(
               width: double.maxFinite,
               child: isLoading
@@ -1033,7 +1034,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
+                child: Text(AppLocalizations.of(context).done),
               ),
             ],
           );
@@ -1280,7 +1281,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     ),
                   ),
                 ),
-                Text('Add Event',
+                Text(AppLocalizations.of(context).addEvent,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     )),
@@ -1365,7 +1366,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Add Event'),
+                    child: Text(AppLocalizations.of(context).addEvent),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -1381,13 +1382,13 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Event'),
-        content: const Text('Remove this event?'),
+        title: Text(AppLocalizations.of(context).deleteEvent),
+        content: Text(AppLocalizations.of(context).removeEventQuestion),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.of(context).cancel)),
           TextButton(onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red))),
+              child: Text(AppLocalizations.of(context).delete, style: const TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -1498,7 +1499,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               if (currentQuestion > 0)
                 TextButton(
                   onPressed: () => setDialogState(() => currentQuestion--),
-                  child: const Text('Back'),
+                  child: Text(AppLocalizations.of(context).back),
                 ),
               ElevatedButton(
                 onPressed: answers[q['question']] == null ? null : () async {

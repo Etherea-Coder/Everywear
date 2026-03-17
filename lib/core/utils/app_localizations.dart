@@ -260,6 +260,48 @@ class AppLocalizations {
       translate('ai_bubble_message_found')
           .replaceAll('{count}', count.toString())
           .replaceAll('{confidence}', confidence.toString());
+
+  // Daily Log
+  String get goodMorning => translate('good_morning');
+  String get goodAfternoon => translate('good_afternoon');
+  String get goodEvening => translate('good_evening');
+  String get logOutfitBtn => translate('log_outfit_btn');
+  String get repeatOutfit => translate('repeat_outfit');
+  String get repeatOutfitQuestion => translate('repeat_outfit_question');
+  String get outfitRepeated => translate('outfit_repeated');
+  String get editOutfit => translate('edit_outfit');
+  String get deleteOutfit => translate('delete_outfit');
+  String get deleteOutfitConfirmation => translate('delete_outfit_confirmation');
+  String get outfitDeleted => translate('outfit_deleted');
+  String get outfitUpdated => translate('outfit_updated');
+  String get thisMonth => translate('this_month');
+  String get rating => translate('rating');
+
+  // Smart Suggestions
+  String get styleTitle => translate('style_title');
+  String get askYourCoach => translate('ask_your_coach');
+  String get addEvent => translate('add_event');
+  String get deleteEvent => translate('delete_event');
+  String get removeEventQuestion => translate('remove_event_question');
+  String get styleCoach => translate('style_coach');
+  String get orPickATopic => translate('or_pick_a_topic');
+
+  // Purchase Tracking
+  String get monthlyBudget => translate('monthly_budget');
+  String get addToWishlist => translate('add_to_wishlist');
+  String get updatePrice => translate('update_price');
+  String get markAsPurchased => translate('mark_as_purchased');
+  String get removeFromWishlist => translate('remove_from_wishlist');
+  String get deletePurchase => translate('delete_purchase');
+  String get boughtIt => translate('bought_it');
+  String get confirmPurchase => translate('confirm_purchase');
+  String get howMuchDidYouPay => translate('how_much_did_you_pay');
+  String get addedToWardrobeLog => translate('added_to_wardrobe_log');
+
+  // Wardrobe Management
+  String get yourPersonalCollection => translate('your_personal_collection');
+  String get updatedEverywhere => translate('updated_everywhere');
+
 }
 
 class _AppLocalizationsDelegate

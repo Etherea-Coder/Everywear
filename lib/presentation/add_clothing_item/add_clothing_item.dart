@@ -29,6 +29,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
   final WardrobeService _wardrobeService = WardrobeService();
   final StorageService _storageService = StorageService();
 
+  // Track if we're editing an existing item
+  String? _existingItemId;
+
   List<String> _capturedPhotos = [];
   String? _selectedCategory;
   DateTime? _purchaseDate;
@@ -60,11 +63,19 @@ class _AddClothingItemState extends State<AddClothingItem> {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Map<String, dynamic> && args.containsKey('name')) {
         setState(() {
+          // Store the item ID if editing
+          _existingItemId = args['id'] as String?;
           _itemNameController.text = args['name'] as String? ?? '';
           _brandController.text = args['brand'] as String? ?? '';
           _selectedCategory = args['category'] as String?;
           if (args['purchase_price'] != null) {
             _priceController.text = args['purchase_price'].toString();
+          }
+          if (args['image_url'] != null) {
+            _capturedPhotos = [args['image_url'] as String];
+          }
+          if (args['notes'] != null) {
+            _storeController.text = args['notes'] as String;
           }
         });
       }
@@ -154,27 +165,51 @@ class _AddClothingItemState extends State<AddClothingItem> {
           ? double.tryParse(_priceController.text.trim())
           : null;
 
-      // Upload image to Supabase Storage first
+      // Upload image to Supabase Storage first (only if new photo captured)
       String? imageUrl;
-      if (_capturedPhotos.isNotEmpty) {
+      if (_capturedPhotos.isNotEmpty && !_capturedPhotos.first.startsWith('http')) {
         imageUrl = await _storageService.uploadWardrobeImage(_capturedPhotos.first);
+      } else if (_capturedPhotos.isNotEmpty) {
+        // Keep existing image URL
+        imageUrl = _capturedPhotos.first;
       }
 
-      final savedItem = await _wardrobeService.addWardrobeItem(
-        name: _itemNameController.text.trim(),
-        category: _selectedCategory!, // We validated it's not null
-        brand: _brandController.text.trim(),
-        imageUrl: imageUrl,
-        semanticLabel: _aiAnalysisData != null 
-            ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
-            : null,
-        purchasePrice: price,
-        purchaseDate: _purchaseDate,
-        notes: _storeController.text.trim(), // Reusing store as notes for now
-      );
+      Map<String, dynamic> savedItem;
+      final bool isEditing = _existingItemId != null;
 
-      // Also add to purchases table if price is provided
-      if (price != null && price > 0) {
+      if (isEditing) {
+        // Update existing item
+        savedItem = await _wardrobeService.updateWardrobeItem(
+          itemId: _existingItemId!,
+          name: _itemNameController.text.trim(),
+          category: _selectedCategory!,
+          brand: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
+          imageUrl: imageUrl,
+          semanticLabel: _aiAnalysisData != null 
+              ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
+              : null,
+          purchasePrice: price,
+          purchaseDate: _purchaseDate,
+          notes: _storeController.text.trim().isNotEmpty ? _storeController.text.trim() : null,
+        );
+      } else {
+        // Create new item
+        savedItem = await _wardrobeService.addWardrobeItem(
+          name: _itemNameController.text.trim(),
+          category: _selectedCategory!, // We validated it's not null
+          brand: _brandController.text.trim(),
+          imageUrl: imageUrl,
+          semanticLabel: _aiAnalysisData != null 
+              ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
+              : null,
+          purchasePrice: price,
+          purchaseDate: _purchaseDate,
+          notes: _storeController.text.trim(), // Reusing store as notes for now
+        );
+      }
+
+      // Also add to purchases table if price is provided and it's a new item
+      if (!isEditing && price != null && price > 0) {
         await _purchaseService.addPurchase(
           name: _itemNameController.text.trim(),
           price: price,
@@ -189,7 +224,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_itemNameController.text} ${localizations.itemAddedToWardrobe}'),
+            content: Text(isEditing 
+                ? '${_itemNameController.text} updated successfully'
+                : '${_itemNameController.text} ${localizations.itemAddedToWardrobe}'),
             backgroundColor: theme.colorScheme.primary,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),

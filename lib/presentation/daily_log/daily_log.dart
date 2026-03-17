@@ -112,6 +112,7 @@ class _DailyLogState extends State<DailyLog> {
     try {
       final user = SupabaseService.instance.client.auth.currentUser;
       if (user != null) {
+        // Try user_profiles first
         final response = await SupabaseService.instance.client
             .from('user_profiles')
             .select('display_name')
@@ -119,10 +120,16 @@ class _DailyLogState extends State<DailyLog> {
             .maybeSingle();
         if (response != null && response['display_name'] != null) {
           _displayName = response['display_name'].toString();
+        } else {
+          // Fallback to auth metadata
+          final meta = user.userMetadata;
+          _displayName = meta?['full_name'] as String? ??
+              meta?['name'] as String? ??
+              user.email?.split('@').first ?? '';
         }
       }
     } catch (e) {
-      debugPrint('⚠️ Daily log load failed: $e');
+      debugPrint('⚠️ Display name load failed: $e');
     }
 
     final results = await Future.wait([
@@ -291,12 +298,13 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Widget _buildWelcomeHeroCard(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     final hour = DateTime.now().hour;
     final greeting = hour < 12
-        ? 'Good morning'
+        ? localizations.goodMorning
         : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+            ? localizations.goodAfternoon
+            : localizations.goodEvening;
     
     // Add display name to greeting if available
     final fullGreeting = _displayName.isNotEmpty 
@@ -1661,7 +1669,7 @@ class _DailyLogState extends State<DailyLog> {
   Future<void> _repeatLastOutfit() async {
     if (_todayEntries.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No recent outfit to repeat')),
+        SnackBar(content: Text(AppLocalizations.of(context).retry)),
       );
       return;
     }
@@ -1672,16 +1680,16 @@ class _DailyLogState extends State<DailyLog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Repeat Outfit'),
-        content: const Text('Log this outfit again for today?'),
+        title: Text(AppLocalizations.of(context).repeatOutfit),
+        content: Text(AppLocalizations.of(context).repeatOutfitQuestion),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Repeat'),
+            child: Text(AppLocalizations.of(context).repeatOutfit),
           ),
         ],
       ),
@@ -1692,12 +1700,12 @@ class _DailyLogState extends State<DailyLog> {
     final newId = await _outfitLogService.repeatOutfitLog(outfitId);
     if (newId != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Outfit repeated for today!')),
+        SnackBar(content: Text(AppLocalizations.of(context).outfitRepeated)),
       );
       _loadData();
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to repeat outfit')),
+        SnackBar(content: Text(AppLocalizations.of(context).error)),
       );
     }
   }
@@ -1713,7 +1721,7 @@ class _DailyLogState extends State<DailyLog> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Edit Outfit'),
+          title: Text(AppLocalizations.of(context).editOutfit),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1730,7 +1738,7 @@ class _DailyLogState extends State<DailyLog> {
               SizedBox(height: 2.h),
               Row(
                 children: [
-                  Text('Rating: ', style: TextStyle(fontSize: 14.sp)),
+                  Text(AppLocalizations.of(context).rating, style: TextStyle(fontSize: 14.sp)),
                   ...List.generate(5, (index) {
                     return GestureDetector(
                       onTap: () => setDialogState(() => rating = index + 1),
@@ -1748,7 +1756,7 @@ class _DailyLogState extends State<DailyLog> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context).cancel),
             ),
             TextButton(
               onPressed: () async {
@@ -1761,12 +1769,12 @@ class _DailyLogState extends State<DailyLog> {
                 );
                 if (success && mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Outfit updated!')),
+                    SnackBar(content: Text(AppLocalizations.of(context).outfitUpdated)),
                   );
                   _loadData();
                 }
               },
-              child: const Text('Save'),
+              child: Text(AppLocalizations.of(context).save),
             ),
           ],
         ),
@@ -1778,16 +1786,16 @@ class _DailyLogState extends State<DailyLog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Outfit'),
-        content: const Text('Are you sure you want to delete this outfit?'),
+        title: Text(AppLocalizations.of(context).deleteOutfit),
+        content: Text(AppLocalizations.of(context).deleteOutfitConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context).delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -1798,7 +1806,7 @@ class _DailyLogState extends State<DailyLog> {
     final success = await _outfitLogService.deleteOutfitLog(id);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Outfit deleted')),
+        SnackBar(content: Text(AppLocalizations.of(context).outfitDeleted)),
       );
       _loadData();
     }
@@ -1812,7 +1820,7 @@ class _DailyLogState extends State<DailyLog> {
           children: [
             Icon(Icons.insights, color: Theme.of(context).colorScheme.primary),
             SizedBox(width: 2.w),
-            const Text('This Month'),
+            Text(AppLocalizations.of(context).thisMonth),
           ],
         ),
         content: Column(
@@ -1836,7 +1844,7 @@ class _DailyLogState extends State<DailyLog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(AppLocalizations.of(context).done),
           ),
         ],
       ),
