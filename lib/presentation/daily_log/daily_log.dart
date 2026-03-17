@@ -1056,30 +1056,31 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   List<Map<String, dynamic>> _getSwapAlternatives(String slot) {
-    // Map slot to category for filtering wardrobe
-    String? category;
+    // Match against the English category keywords stored in Supabase.
+    // We never use translated strings here because wardrobe data is stored
+    // in English regardless of the app's display language.
+    final List<String> categoryKeywords;
     switch (slot) {
       case 'anchor':
-        category = loc.catOuterwear;
+        categoryKeywords = ['outerwear', 'jacket', 'coat', 'blazer', 'cardigan', 'overshirt'];
         break;
       case 'top':
-        category = loc.catTop;
+        categoryKeywords = ['top', 'tops', 'shirt', 'blouse', 'tee', 'sweater', 'jumper', 'knitwear'];
         break;
       case 'bottom':
-        category = loc.catBottom;
+        categoryKeywords = ['bottom', 'bottoms', 'jeans', 'trousers', 'pants', 'skirt', 'shorts', 'denim'];
         break;
       case 'shoes':
-        category = loc.catFootwear;
+        categoryKeywords = ['shoes', 'footwear', 'boots', 'sneakers', 'loafers', 'heels', 'trainers'];
         break;
       default:
-        category = null;
+        categoryKeywords = [];
     }
 
-    // Filter wardrobe items by category
     final alternatives = _wardrobeItems.where((item) {
-      if (category == null) return true;
+      if (categoryKeywords.isEmpty) return true;
       final itemCategory = (item['category'] as String? ?? '').toLowerCase();
-      return itemCategory.toLowerCase() == category.toLowerCase();
+      return categoryKeywords.any((kw) => itemCategory.contains(kw));
     }).map((item) => {
       'slot': slot,
       'name': item['name'] ?? item['title'] ?? loc.unknownItem,
@@ -1088,12 +1089,9 @@ class _DailyLogState extends State<DailyLog> {
       'id': item['id'],
     }).toList();
 
-    // If we have real items from wardrobe, return them
-    if (alternatives.isNotEmpty) {
-      return alternatives;
-    }
+    if (alternatives.isNotEmpty) return alternatives;
 
-    // Fallback to dummy data if no wardrobe items
+    // Only fall back to dummy data if the wardrobe has no matching items at all
     return _getFallbackAlternatives(slot);
   }
 
@@ -1679,63 +1677,73 @@ class _DailyLogState extends State<DailyLog> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
-      builder: (sheetContext) => Container(
-        padding: EdgeInsets.all(4.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: EdgeInsets.only(bottom: 2.h),
-              decoration: BoxDecoration(
-                color: Theme.of(sheetContext).dividerColor,
-                borderRadius: BorderRadius.circular(2.0),
-              ),
+      isScrollControlled: true,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.4,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (_, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 4.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: 2.h),
+                  decoration: BoxDecoration(
+                    color: Theme.of(sheetContext).dividerColor,
+                    borderRadius: BorderRadius.circular(2.0),
+                  ),
+                ),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 2.h),
+                _buildQuickOption(
+                  icon: Icons.camera_alt,
+                  title: photoTitle,
+                  subtitle: photoSub,
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    Navigator.pushNamed(context, AppRoutes.outfitCaptureFlow);
+                  },
+                ),
+                _buildQuickOption(
+                  icon: Icons.history,
+                  title: prevTitle,
+                  subtitle: prevSub,
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _navigateToFullLog();
+                  },
+                ),
+                _buildQuickOption(
+                  icon: Icons.repeat,
+                  title: repeatTitle,
+                  subtitle: repeatSub,
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _repeatLastOutfit();
+                  },
+                ),
+                _buildQuickOption(
+                  icon: Icons.checkroom,
+                  title: saveTitle,
+                  subtitle: saveSub,
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _saveDisplayedOutfit();
+                  },
+                ),
+                SizedBox(height: 2.h),
+              ],
             ),
-            Text(
-              title,
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 2.h),
-            _buildQuickOption(
-              icon: Icons.camera_alt,
-              title: photoTitle,
-              subtitle: photoSub,
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.pushNamed(context, AppRoutes.outfitCaptureFlow);
-              },
-            ),
-            _buildQuickOption(
-              icon: Icons.history,
-              title: prevTitle,
-              subtitle: prevSub,
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _navigateToFullLog();
-              },
-            ),
-            _buildQuickOption(
-              icon: Icons.repeat,
-              title: repeatTitle,
-              subtitle: repeatSub,
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _repeatLastOutfit();
-              },
-            ),
-            _buildQuickOption(
-              icon: Icons.checkroom,
-              title: saveTitle,
-              subtitle: saveSub,
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _saveDisplayedOutfit();
-              },
-            ),
-            SizedBox(height: 2.h),
-          ],
+          ),
         ),
       ),
     );
