@@ -225,7 +225,7 @@ class _DailyLogState extends State<DailyLog> {
     if (_selectedMood == 'Surprise') {
       anchorName = loc.itemDenimJacket;
       topName = loc.itemCleanNeutralTop;
-      bottomName = loc.itemWideLegPants;
+      bottomName = loc.itemRelaxedPants;
       shoesName = loc.itemChunkySneakers;
       description = loc.surpriseSuggestionDesc;
     }
@@ -1171,7 +1171,7 @@ class _DailyLogState extends State<DailyLog> {
           },
           {
             'slot': 'bottom',
-            'name': loc.itemWideLegPants,
+            'name': loc.itemRelaxedPants,
             'imageUrl': '',
             'category': loc.catBottom,
           },
