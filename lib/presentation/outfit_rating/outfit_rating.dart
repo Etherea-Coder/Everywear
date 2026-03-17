@@ -133,9 +133,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final localizations = AppLocalizations.of(context); 
-
-    return Scaffold(
+      return Scaffold(
       appBar: CustomAppBar(
         title: 'Rate Your Outfit',
         variant: CustomAppBarVariant.detail,
@@ -339,7 +337,6 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Widget _buildSaveButton(ThemeData theme) {
-    final localizations = AppLocalizations.of(context);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(

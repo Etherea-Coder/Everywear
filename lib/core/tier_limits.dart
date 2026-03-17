@@ -16,16 +16,19 @@ class TierLimits {
   static const int signatureCoachingPerMonth = 50;
 
   // ── WARDROBE ITEMS ──────────────────────────────────────
-  static const int essentialItemsLimit = 30;
-  static const int signatureItemsLimit = 100;
+  // Items are unlimited for both tiers as of v1
+  // Limits apply to outfit logs instead
+  // (Removed: essentialItemsLimit = 30)
+  // (Removed: signatureItemsLimit = 100)
 
   /// Returns the outfit log limit for a given tier
   static int outfitLogLimit(String tier) =>
       tier == 'premium' ? signatureOutfitLogs : essentialOutfitLogs;
 
-  /// Returns the items limit for a given tier
+  /// Items are unlimited — this method returns a very large number
+  /// but the actual enforcement should check against unlimited
   static int itemsLimit(String tier) =>
-      tier == 'premium' ? signatureItemsLimit : essentialItemsLimit;
+      tier == 'premium' ? 999999 : 999999;
 
   /// Returns the daily suggestion limit for a given tier
   static int dailySuggestionLimit(String tier) =>

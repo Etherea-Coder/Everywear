@@ -394,12 +394,12 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                                   SizedBox(width: 1.5.w),
                                 ],
                                 Text(
-                                  '${tierInfo['items_count']}/${tierInfo['items_limit']} ${localizations.items}',
+                                  '${tierInfo['outfit_logs_count']}/${tierInfo['outfit_logs_limit']} ${localizations.outfits}',
                                   style: TextStyle(
                                     fontSize: 11.sp,
                                     fontWeight: FontWeight.w700,
-                                    color: (tierInfo['items_count'] as int) >=
-                                            (tierInfo['items_limit'] as int)
+                                    color: (tierInfo['outfit_logs_count'] as int) >=
+                                            (tierInfo['outfit_logs_limit'] as int)
                                         ? theme.colorScheme.error
                                         : theme.colorScheme.onSurfaceVariant,
                                   ),
@@ -630,15 +630,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                   return CategoryFilterChipWidget(
                     label: category,
                     isSelected: selectedCategory == category,
-                    onSelected: () {
-                      if (category != 'All' && category != 'all') {
-                        ref.read(filteredWardrobeItemsProvider.notifier).state = ref.read(wardrobeItemsProvider).where((item) => 
-                          (item['category']?.toString().toLowerCase() ?? '') == category.toLowerCase()
-                        ).toList();
-                      } else {
-                        ref.read(filteredWardrobeItemsProvider.notifier).state = ref.read(wardrobeItemsProvider);
-                      }
-                    },
+                    onSelected: () => _onCategorySelected(category),
                   );
                 }).toList(),
               ),

@@ -2,15 +2,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 
-import '../services/user_tier_service.dart';
 import './supabase_service.dart';
 
 /// Service layer for wardrobe management with real-time synchronization
 /// Provides CRUD operations and real-time subscription capabilities
 class WardrobeService {
   SupabaseClient get _client => SupabaseService.instance.client;
-  final UserTierService _tierService = UserTierService();
-
+  
   /// Retry mechanism with exponential backoff
   Future<T> _retryOperation<T>(
     Future<T> Function() operation, {
@@ -53,7 +51,7 @@ class WardrobeService {
         
         var query = _client
             .from('wardrobe_items')
-            .select()
+            .select('*, image_url')
             .eq('user_id', userId);
 
         if (category != null && category != 'All') {
@@ -127,25 +125,12 @@ class WardrobeService {
         .subscribe();
   }
 
-  /// Create new wardrobe item with tier limit checking
+  /// Create new wardrobe item
   Future<Map<String, dynamic>> createItem(Map<String, dynamic> itemData) async {
     try {
       final user = _client.auth.currentUser;
       if (user == null) {
         throw Exception('User not authenticated');
-      }
-
-      // Check tier limit before allowing item creation
-      final canAdd = await _tierService.canAddItem(user.id);
-      if (!canAdd) {
-        final tierInfo = await _tierService.getUserTierInfo(user.id);
-        final tier = tierInfo['tier'] as String;
-        final limit = tierInfo['items_limit'] as int;
-
-        throw Exception(
-          'Item limit reached. You have reached your $tier tier limit of $limit items. '
-          'Upgrade to premium for 100 items.',
-        );
       }
 
       final response = await _client.from('wardrobe_items').insert({

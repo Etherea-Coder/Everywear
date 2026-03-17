@@ -31,25 +31,6 @@ class UserTierService {
     return tier == 'premium';
   }
 
-  // ── WARDROBE ITEMS ──────────────────────────────────────
-
-  Future<bool> canAddItem(String userId) async {
-    try {
-      final response = await _supabase
-          .from('user_profiles')
-          .select('tier, items_count, items_limit')
-          .eq('id', userId)
-          .single();
-      final tier = response['tier'] as String? ?? 'free';
-      final itemsCount = response['items_count'] as int? ?? 0;
-      final itemsLimit = response['items_limit'] as int? ??
-          TierLimits.itemsLimit(tier);
-      return itemsCount < itemsLimit;
-    } catch (e) {
-      return true;
-    }
-  }
-
   // ── OUTFIT LOGS ─────────────────────────────────────────
 
   /// Returns true if user can still create a new outfit log
@@ -230,7 +211,7 @@ class UserTierService {
       final response = await _supabase
           .from('user_profiles')
           .select(
-            'tier, items_count, items_limit, daily_suggestions_used, '
+            'tier, daily_suggestions_used, '
             'suggestions_reset_at, coaching_sessions_used, coaching_reset_at, '
             'outfit_logs_count',
           )
@@ -238,8 +219,6 @@ class UserTierService {
           .single();
 
       final tier = response['tier'] as String? ?? 'free';
-      final itemsCount = response['items_count'] as int? ?? 0;
-      final itemsLimit = TierLimits.itemsLimit(tier);
       final suggestionsUsed = response['daily_suggestions_used'] as int? ?? 0;
       final suggestionsLimit = TierLimits.dailySuggestionLimit(tier);
       final coachingUsed = response['coaching_sessions_used'] as int? ?? 0;
@@ -250,9 +229,6 @@ class UserTierService {
       return {
         'tier': tier,
         'isPremium': tier == 'premium',
-        'items_count': itemsCount,
-        'items_limit': itemsLimit,
-        'items_remaining': itemsLimit - itemsCount,
         'daily_suggestions_used': suggestionsUsed,
         'suggestions_limit': suggestionsLimit,
         'suggestions_remaining': suggestionsLimit - suggestionsUsed,
@@ -268,9 +244,6 @@ class UserTierService {
       return {
         'tier': 'free',
         'isPremium': false,
-        'items_count': 0,
-        'items_limit': TierLimits.essentialItemsLimit,
-        'items_remaining': TierLimits.essentialItemsLimit,
         'daily_suggestions_used': 0,
         'suggestions_limit': TierLimits.essentialDailySuggestions,
         'suggestions_remaining': TierLimits.essentialDailySuggestions,
@@ -290,7 +263,6 @@ class UserTierService {
     try {
       await _supabase.from('user_profiles').update({
         'tier': 'premium',
-        'items_limit': TierLimits.signatureItemsLimit,
       }).eq('id', userId);
       return true;
     } catch (e) {
