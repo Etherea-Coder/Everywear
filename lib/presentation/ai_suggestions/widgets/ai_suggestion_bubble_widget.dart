@@ -22,22 +22,12 @@ class AiSuggestionBubbleWidget extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
       padding: EdgeInsets.all(3.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: theme.colorScheme.secondary.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10.0,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(
+          color: theme.colorScheme.secondary.withValues(alpha: 0.20),
+          width: 1.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,12 +38,13 @@ class AiSuggestionBubbleWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                  Icon(Icons.auto_awesome,
+                      color: theme.colorScheme.secondary, size: 20),
                   SizedBox(width: 2.w),
                   Text(
                     localizations.aiStylingAssistant,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -61,7 +52,8 @@ class AiSuggestionBubbleWidget extends StatelessWidget {
                 ],
               ),
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 18),
+                icon: Icon(Icons.close,
+                    color: theme.colorScheme.onSurfaceVariant, size: 18),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: onDismiss,
@@ -72,28 +64,28 @@ class AiSuggestionBubbleWidget extends StatelessWidget {
           SizedBox(height: 1.h),
           Text(
             suggestions,
-            style: TextStyle(color: Colors.white, fontSize: 13.sp, height: 1.5),
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
           ),
           SizedBox(height: 1.5.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: theme.colorScheme.secondary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.lightbulb_outline,
-                  color: Colors.white,
+                  color: theme.colorScheme.secondary,
                   size: 14,
                 ),
                 SizedBox(width: 1.w),
                 Text(
                   localizations.poweredByAi,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: theme.colorScheme.secondary,
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w500,
                   ),

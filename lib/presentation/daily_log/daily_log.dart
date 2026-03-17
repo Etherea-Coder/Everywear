@@ -659,7 +659,7 @@ class _DailyLogState extends State<DailyLog> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 3.5.w, vertical: 1.1.h),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                color: theme.colorScheme.secondary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
@@ -668,14 +668,14 @@ class _DailyLogState extends State<DailyLog> {
                   Icon(
                     Icons.auto_awesome,
                     size: 14,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.secondary,
                   ),
                   SizedBox(width: 1.5.w),
                   Flexible(
                     child: Text(
                       _suggestedOutfit['styling_note'] as String,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
+                        color: theme.colorScheme.secondary,
                         fontStyle: FontStyle.italic,
                         height: 1.35,
                       ),

@@ -407,58 +407,84 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     return GestureDetector(
       onTap: hasResult ? null : _startQuiz,
       child: Container(
-        padding: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: hasResult
-                ? [Colors.purple.shade400, Colors.purple.shade700]
-                : [Colors.orange.shade400, Colors.deepOrange.shade600],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: theme.colorScheme.secondary.withValues(alpha: 0.18),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Row(
-          children: [
-            Text(
-              hasResult ? '✨' : '🎯',
-              style: const TextStyle(fontSize: 40),
-            ),
-            SizedBox(width: 4.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    hasResult ? 'Your Style Profile' : 'Discover Your Style',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 0.5.h),
-                  Text(
-                    hasResult
-                        ? _quizResult!['style_profile'] as String? ?? 'Complete'
-                        : 'Take the quiz to personalize your AI suggestions',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Row(
+            children: [
+              // Soft pink accent strip
+              Container(
+                width: 4,
+                height: 80,
+                color: theme.colorScheme.secondary.withValues(alpha: 0.45),
               ),
-            ),
-            if (!hasResult)
-              Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
-            if (hasResult)
-              TextButton(
-                onPressed: _startQuiz,
-                child: Text(
-                  'Retake',
-                  style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+              SizedBox(width: 4.w),
+              Text(
+                hasResult ? '✨' : '🎯',
+                style: const TextStyle(fontSize: 36),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 3.5.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hasResult ? 'Your Style Profile' : 'Discover Your Style',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 0.4.h),
+                      Text(
+                        hasResult
+                            ? _quizResult!['style_profile'] as String? ?? 'Complete'
+                            : 'Take the quiz to personalise your AI suggestions',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-          ],
+              if (!hasResult)
+                Padding(
+                  padding: EdgeInsets.only(right: 3.w),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: theme.colorScheme.secondary,
+                    size: 18,
+                  ),
+                ),
+              if (hasResult)
+                TextButton(
+                  onPressed: _startQuiz,
+                  child: Text(
+                    'Retake',
+                    style: TextStyle(
+                      color: theme.colorScheme.secondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -493,12 +519,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     width: 12.w,
                     height: 12.w,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      color: theme.colorScheme.secondary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
                       Icons.auto_awesome,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.secondary,
                       size: 24,
                     ),
                   ),
@@ -624,7 +650,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 24),
+            Icon(icon, color: theme.colorScheme.secondary, size: 24),
             SizedBox(height: 1.2.h),
             Text(
               title,
@@ -872,41 +898,46 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 : coachData.containsKey('error')
                   ? Text(coachData['error'] as String)
                   : SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (coachData['intro'] != null) ...[
-                            Text(coachData['intro'] as String),
-                            const SizedBox(height: 12),
-                          ],
-                          if (coachData['outfit_1'] != null)
-                            _buildOutfitSuggestion('1', coachData['outfit_1'] as String),
-                          if (coachData['outfit_2'] != null)
-                            _buildOutfitSuggestion('2', coachData['outfit_2'] as String),
-                          if (coachData['outfit_3'] != null)
-                            _buildOutfitSuggestion('3', coachData['outfit_3'] as String),
-                          if (coachData['prep_tip'] != null) ...[
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('💡 ', style: TextStyle(fontSize: 14)),
-                                  Expanded(child: Text(coachData['prep_tip'] as String,
-                                    style: const TextStyle(fontSize: 13))),
-                                ],
-                              ),
-                            ),
-                          ],
-                          if (coachData['tip'] != null)
-                            Text(coachData['tip'] as String),
-                        ],
+                      child: Builder(
+                        builder: (ctx) {
+                          final dlgTheme = Theme.of(ctx);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (coachData['intro'] != null) ...[
+                                Text(coachData['intro'] as String),
+                                const SizedBox(height: 12),
+                              ],
+                              if (coachData['outfit_1'] != null)
+                                _buildOutfitSuggestion(dlgTheme, '1', coachData['outfit_1'] as String),
+                              if (coachData['outfit_2'] != null)
+                                _buildOutfitSuggestion(dlgTheme, '2', coachData['outfit_2'] as String),
+                              if (coachData['outfit_3'] != null)
+                                _buildOutfitSuggestion(dlgTheme, '3', coachData['outfit_3'] as String),
+                              if (coachData['prep_tip'] != null) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('💡 ', style: TextStyle(fontSize: 14)),
+                                      Expanded(child: Text(coachData['prep_tip'] as String,
+                                        style: const TextStyle(fontSize: 13))),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              if (coachData['tip'] != null)
+                                Text(coachData['tip'] as String),
+                            ],
+                          );
+                        },
                       ),
                     ),
             ),
@@ -922,7 +953,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     );
   }
 
-  Widget _buildOutfitSuggestion(String number, String text) {
+  Widget _buildOutfitSuggestion(ThemeData theme, String number, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -931,14 +962,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
           Container(
             width: 24, height: 24,
             decoration: BoxDecoration(
-              color: Colors.deepPurple.shade100,
+              color: theme.colorScheme.secondary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Text(number, style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple.shade700,
+                color: theme.colorScheme.secondary,
               )),
             ),
           ),

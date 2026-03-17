@@ -19,7 +19,7 @@ class AIInsightCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = _getColors();
+    final colors = _getColors(context);
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
@@ -67,39 +67,46 @@ class AIInsightCardWidget extends StatelessWidget {
     );
   }
 
-  Map<String, Color> _getColors() {
+  Map<String, Color> _getColors(BuildContext context) {
+    final theme = Theme.of(context);
+    final secondary = theme.colorScheme.secondary;
+    final primary = theme.colorScheme.primary;
+    final onSurface = theme.colorScheme.onSurface;
     switch (type) {
+      // Positive = AI-observed improvement → pink tint (intelligence)
       case 'positive':
         return {
-          'background': Colors.green.shade50,
-          'border': Colors.green.shade200,
-          'iconBg': Colors.green.shade100,
-          'icon': Colors.green.shade700,
-          'text': Colors.green.shade900,
+          'background': secondary.withValues(alpha: 0.07),
+          'border': secondary.withValues(alpha: 0.20),
+          'iconBg': secondary.withValues(alpha: 0.12),
+          'icon': secondary,
+          'text': onSurface,
         };
+      // Suggestion = AI recommendation → pink tint (intelligence)
       case 'suggestion':
         return {
-          'background': Colors.blue.shade50,
-          'border': Colors.blue.shade200,
-          'iconBg': Colors.blue.shade100,
-          'icon': Colors.blue.shade700,
-          'text': Colors.blue.shade900,
+          'background': secondary.withValues(alpha: 0.06),
+          'border': secondary.withValues(alpha: 0.16),
+          'iconBg': secondary.withValues(alpha: 0.10),
+          'icon': secondary,
+          'text': onSurface,
         };
+      // Achievement = confirmed milestone → green tint (confirmation)
       case 'achievement':
         return {
-          'background': Colors.purple.shade50,
-          'border': Colors.purple.shade200,
-          'iconBg': Colors.purple.shade100,
-          'icon': Colors.purple.shade700,
-          'text': Colors.purple.shade900,
+          'background': primary.withValues(alpha: 0.06),
+          'border': primary.withValues(alpha: 0.18),
+          'iconBg': primary.withValues(alpha: 0.10),
+          'icon': primary,
+          'text': onSurface,
         };
       default:
         return {
-          'background': Colors.grey.shade50,
-          'border': Colors.grey.shade200,
-          'iconBg': Colors.grey.shade100,
-          'icon': Colors.grey.shade700,
-          'text': Colors.grey.shade900,
+          'background': theme.colorScheme.surface,
+          'border': theme.dividerColor,
+          'iconBg': theme.colorScheme.surfaceContainerHighest,
+          'icon': theme.colorScheme.onSurfaceVariant,
+          'text': onSurface,
         };
     }
   }

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
-import '../../../theme/app_theme.dart';
-
 class AIHeroSectionWidget extends StatelessWidget {
   final int confidenceScore;
   final String styleProfile;
@@ -24,15 +22,15 @@ class AIHeroSectionWidget extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryLight.withValues(alpha: 0.1),
-            AppTheme.accentLight.withValues(alpha: 0.1),
+            theme.colorScheme.secondary.withValues(alpha: 0.10),
+            theme.colorScheme.secondary.withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: AppTheme.primaryLight.withValues(alpha: 0.3),
+          color: theme.colorScheme.secondary.withValues(alpha: 0.20),
           width: 1.5,
         ),
       ),
@@ -40,13 +38,14 @@ class AIHeroSectionWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome, color: AppTheme.primaryLight, size: 28),
+              Icon(Icons.auto_awesome,
+                  color: theme.colorScheme.secondary, size: 28),
               SizedBox(width: 2.w),
               Text(
                 'AI Wardrobe Intelligence',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryLight,
+                  color: theme.colorScheme.secondary,
                 ),
               ),
             ],
@@ -75,7 +74,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                 '$confidenceScore',
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryLight,
+                  color: theme.colorScheme.secondary,
                 ),
               ),
               Text(
@@ -86,8 +85,8 @@ class AIHeroSectionWidget extends StatelessWidget {
               ),
             ],
           ),
-          progressColor: AppTheme.primaryLight,
-          backgroundColor: AppTheme.primaryLight.withValues(alpha: 0.2),
+          progressColor: theme.colorScheme.secondary,
+          backgroundColor: theme.colorScheme.secondary.withValues(alpha: 0.15),
           circularStrokeCap: CircularStrokeCap.round,
         ),
         SizedBox(height: 1.h),
@@ -119,7 +118,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.person_outline,
-                    color: AppTheme.secondaryLight,
+                    color: theme.colorScheme.onSurfaceVariant,
                     size: 20,
                   ),
                   SizedBox(width: 2.w),
@@ -136,14 +135,13 @@ class AIHeroSectionWidget extends StatelessWidget {
                 styleProfile,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.secondaryLight,
                 ),
               ),
               SizedBox(height: 1.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(6.0),
                 ),
                 child: Text(
@@ -151,7 +149,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.green,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),

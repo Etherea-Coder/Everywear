@@ -504,18 +504,15 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
                         margin: EdgeInsets.symmetric(horizontal: 4.w),
                         padding: EdgeInsets.all(4.w),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              theme.colorScheme.secondary,
-                              theme.colorScheme.secondary.withValues(alpha: 0.8),
-                            ],
-                          ),
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.07),
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.colorScheme.secondary.withValues(alpha: 0.18),
+                            width: 1.2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.shadowColor.withValues(alpha: 0.1),
+                              color: theme.shadowColor.withValues(alpha: 0.06),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -526,14 +523,12 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
                             Container(
                               padding: EdgeInsets.all(3.w),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.onSecondary.withValues(
-                                  alpha: 0.2,
-                                ),
+                                color: theme.colorScheme.secondary.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.emoji_events,
-                                color: theme.colorScheme.onSecondary,
+                                color: theme.colorScheme.secondary,
                                 size: 28,
                               ),
                             ),
@@ -545,7 +540,6 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
                                   Text(
                                     'Achievement Gallery',
                                     style: theme.textTheme.titleMedium?.copyWith(
-                                      color: theme.colorScheme.onSecondary,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -553,10 +547,7 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
                                   Text(
                                     'View your earned badges and milestones',
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color:
-                                          theme.colorScheme.onSecondary.withValues(
-                                        alpha: 0.9,
-                                      ),
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -564,8 +555,8 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
                             ),
                             Icon(
                               Icons.arrow_forward_ios,
-                              color: theme.colorScheme.onSecondary,
-                              size: 20,
+                              color: theme.colorScheme.secondary,
+                              size: 18,
                             ),
                           ],
                         ),
@@ -604,57 +595,73 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.78),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 13.w,
-            height: 13.w,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.auto_awesome,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          SizedBox(width: 4.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 0.6.h),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
+        border: Border.all(
+          color: theme.colorScheme.secondary.withValues(alpha: 0.15),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          children: [
+            // Soft pink left accent stripe
+            Container(
+              width: 4,
+              color: theme.colorScheme.secondary.withValues(alpha: 0.45),
+            ),
+            SizedBox(width: 4.w),
+            Container(
+              width: 13.w,
+              height: 13.w,
+              margin: EdgeInsets.symmetric(vertical: 4.w),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                Icons.auto_awesome,
+                color: theme.colorScheme.secondary,
+                size: 26,
+              ),
+            ),
+            SizedBox(width: 3.w),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 0.6.h),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: 3.w),
+          ],
+        ),
       ),
     );
   }

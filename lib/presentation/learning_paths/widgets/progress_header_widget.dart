@@ -26,152 +26,161 @@ class ProgressHeaderWidget extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.all(4.w),
-      padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.8),
-          ],
-        ),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.secondary.withValues(alpha: 0.15),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
+            color: theme.shadowColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Soft pink top accent strip
+            Container(
+              height: 3,
+              color: theme.colorScheme.secondary.withValues(alpha: 0.40),
+            ),
+            Padding(
+              padding: EdgeInsets.all(4.w),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Your Progress',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Progress',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Text(
+                            'Keep learning to unlock more!',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: theme.colorScheme.secondary.withValues(alpha: 0.20),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CustomIconWidget(
+                              iconName: 'workspace_premium',
+                              size: 20,
+                              color: theme.colorScheme.secondary,
+                            ),
+                            SizedBox(width: 1.w),
+                            Text(
+                              'Level $currentLevel',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.secondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 0.5.h),
-                  Text(
-                    'Keep learning to unlock more!',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
-                    ),
+                  SizedBox(height: 3.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Overall Progress',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  '${(overallProgress * 100).toInt()}%',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.secondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 1.h),
+                            LinearPercentIndicator(
+                              padding: EdgeInsets.zero,
+                              lineHeight: 1.h,
+                              percent: overallProgress,
+                              backgroundColor: theme.colorScheme.secondary.withValues(
+                                alpha: 0.10,
+                              ),
+                              progressColor: theme.colorScheme.secondary,
+                              barRadius: const Radius.circular(10),
+                              animation: true,
+                              animationDuration: 1000,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 2.h),
+                  Row(
+                    children: [
+                      _buildStatItem(
+                        context,
+                        icon: 'check_circle',
+                        label: 'Completed',
+                        value: '$totalModulesCompleted',
+                      ),
+                      SizedBox(width: 4.w),
+                      _buildStatItem(
+                        context,
+                        icon: 'auto_stories',
+                        label: 'Total Modules',
+                        value: '$totalModules',
+                      ),
+                      SizedBox(width: 4.w),
+                      _buildStatItem(
+                        context,
+                        icon: 'trending_up',
+                        label: 'Next Level',
+                        value: '${totalModulesCompleted + 3}',
+                      ),
+                    ],
                   ),
                 ],
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: theme.colorScheme.onPrimary.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CustomIconWidget(
-                      iconName: 'workspace_premium',
-                      size: 20,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                    SizedBox(width: 1.w),
-                    Text(
-                      'Level $currentLevel',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 3.h),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Overall Progress',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimary.withValues(
-                              alpha: 0.9,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${(overallProgress * 100).toInt()}%',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 1.h),
-                    LinearPercentIndicator(
-                      padding: EdgeInsets.zero,
-                      lineHeight: 1.h,
-                      percent: overallProgress,
-                      backgroundColor: theme.colorScheme.onPrimary.withValues(
-                        alpha: 0.3,
-                      ),
-                      progressColor: theme.colorScheme.onPrimary,
-                      barRadius: const Radius.circular(10),
-                      animation: true,
-                      animationDuration: 1000,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 2.h),
-          Row(
-            children: [
-              _buildStatItem(
-                context,
-                icon: 'check_circle',
-                label: 'Completed',
-                value: '$totalModulesCompleted',
-              ),
-              SizedBox(width: 4.w),
-              _buildStatItem(
-                context,
-                icon: 'auto_stories',
-                label: 'Total Modules',
-                value: '$totalModules',
-              ),
-              SizedBox(width: 4.w),
-              _buildStatItem(
-                context,
-                icon: 'trending_up',
-                label: 'Next Level',
-                value: '${totalModulesCompleted + 3}',
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -188,7 +197,7 @@ class ProgressHeaderWidget extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onPrimary.withValues(alpha: 0.15),
+          color: theme.colorScheme.secondary.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -196,20 +205,19 @@ class ProgressHeaderWidget extends StatelessWidget {
             CustomIconWidget(
               iconName: icon,
               size: 24,
-              color: theme.colorScheme.onPrimary,
+              color: theme.colorScheme.secondary,
             ),
             SizedBox(height: 0.5.h),
             Text(
               value,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
             Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 10.sp,
               ),
               textAlign: TextAlign.center,
