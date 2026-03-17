@@ -141,7 +141,7 @@ class AIHeroSectionWidget extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6.0),
                 ),
                 child: Text(
@@ -149,7 +149,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.secondary,
                   ),
                 ),
               ),

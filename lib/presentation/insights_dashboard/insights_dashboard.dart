@@ -504,10 +504,10 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
                         margin: EdgeInsets.symmetric(horizontal: 4.w),
                         padding: EdgeInsets.all(4.w),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.secondary.withValues(alpha: 0.07),
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: theme.colorScheme.secondary.withValues(alpha: 0.18),
+                            color: theme.colorScheme.secondary.withValues(alpha: 0.14),
                             width: 1.2,
                           ),
                           boxShadow: [
@@ -596,10 +596,10 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: theme.colorScheme.secondary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.secondary.withValues(alpha: 0.15),
+          color: theme.colorScheme.secondary.withValues(alpha: 0.14),
           width: 1.2,
         ),
         boxShadow: [

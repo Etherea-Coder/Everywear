@@ -380,6 +380,226 @@ class AppLocalizations {
   String get morningAiSuggestions => translate('morning_ai_suggestions');
   String get dailyOutfitIdeas => translate('daily_outfit_ideas');
   String get events => translate('events');
+
+  // Today Page (Daily Log) specific
+  String get weatherFallbackLabel => translate('weather_fallback_label');
+  String get dailyLogWelcomeSubtitle => translate('daily_log_welcome_subtitle');
+  String get setTodaysDirection => translate('set_todays_direction');
+  String get setDirectionSubtitle => translate('set_direction_subtitle');
+  String get dressingFor => translate('dressing_for');
+  String get todaysVibe => translate('todays_vibe');
+  
+  String get occasionWork => translate('occasion_work');
+  String get occasionCasual => translate('occasion_casual');
+  String get occasionDinner => translate('occasion_dinner');
+  String get occasionEvent => translate('occasion_event');
+  String get occasionTravel => translate('occasion_travel');
+  
+  String get moodCasual => translate('mood_casual');
+  String get moodPolished => translate('mood_polished');
+  String get moodComfort => translate('mood_comfort');
+  String get moodBold => translate('mood_bold');
+  String get moodSurprise => translate('mood_surprise');
+  
+  String get weatherTipRain => translate('weather_tip_rain');
+  String get weatherTipSnow => translate('weather_tip_snow');
+  String get weatherTipSun => translate('weather_tip_sun');
+  String get weatherTipCloud => translate('weather_tip_cloud');
+  String get weatherTipWind => translate('weather_tip_wind');
+  String get weatherTipDefault => translate('weather_tip_default');
+  
+  String get todaysStyleIdea => translate('todays_style_idea');
+  String get simpleDailySuggestion => translate('simple_daily_suggestion');
+  String get anchorPieceTapToSwap => translate('anchor_piece_tap_to_swap');
+  String get tapToSwap => translate('tap_to_swap');
+  String get refresh => translate('refresh');
+  String get unknown => translate('unknown');
+  String get outfitLabel => translate('outfit_label');
+  
+  String get slotAnchor => translate('slot_anchor');
+  String get slotTop => translate('slot_top');
+  String get slotBottom => translate('slot_bottom');
+  String get slotShoes => translate('slot_shoes');
+  String get slotItem => translate('slot_item');
+  
+  String get fallbackSuggestionDesc => translate('fallback_suggestion_desc');
+  String get workSuggestionDesc => translate('work_suggestion_desc');
+  String get dinnerSuggestionDesc => translate('dinner_suggestion_desc');
+  String get travelSuggestionDesc => translate('travel_suggestion_desc');
+  String get eventSuggestionDesc => translate('event_suggestion_desc');
+  String get rainSuggestionDesc => translate('rain_suggestion_desc');
+  String get sunSuggestionDesc => translate('sun_suggestion_desc');
+  String get polishedSuggestionDesc => translate('polished_suggestion_desc');
+  String get boldSuggestionDesc => translate('bold_suggestion_desc');
+  String get surpriseSuggestionDesc => translate('surprise_suggestion_desc');
+  
+  String get logOutfitBtn => translate('log_outfit_btn');
+  String get styleTip => translate('style_tip');
+  String get styleTipNoLogs => translate('style_tip_no_logs');
+  String get styleTipFewLogs => translate('style_tip_few_logs');
+  String get styleTipBold => translate('style_tip_bold');
+  String get styleTipComfort => translate('style_tip_comfort');
+  String styleTipFavoriteOccasion(String occasion) => translate('style_tip_favorite_occasion').replaceAll('{occasion}', occasion);
+  
+  String get upcomingEvent => translate('upcoming_event');
+  String inDaysLeft(int days) => translate('in_days_left').replaceAll('{days}', days.toString());
+  String dressCodeFormat(String dressCode) => translate('dress_code_format').replaceAll('{dressCode}', dressCode);
+  
+  // Mock Item Names for Today Page
+  String get itemDenimJacket => translate('item_denim_jacket');
+  String get itemWhiteTee => translate('item_white_tee');
+  String get itemBlackJeans => translate('item_black_jeans');
+  String get itemSneakers => translate('item_sneakers');
+  String get itemNavyBlazer => translate('item_navy_blazer');
+  String get itemWhiteShirt => translate('item_white_shirt');
+  String get itemTailoredTrousers => translate('item_tailored_trousers');
+  String get itemLeatherShoes => translate('item_leather_shoes');
+  String get itemStatementJacket => translate('item_statement_jacket');
+  String get itemSilkTop => translate('item_silk_top');
+  String get itemDarkTrousers => translate('item_dark_trousers');
+  String get itemLowHeels => translate('item_low_heels');
+  String get itemChelseaBoots => translate('item_chelsea_boots');
+  String get itemLightOvershirt => translate('item_light_overshirt');
+  String get itemBreathableTee => translate('item_breathable_tee');
+  String get itemRelaxedPants => translate('item_relaxed_pants');
+  String get itemComfortSneakers => translate('item_comfort_sneakers');
+  String get itemStructuredBlazer => translate('item_structured_blazer');
+  String get itemRefinedTop => translate('item_refined_top');
+  String get itemTailoredBottoms => translate('item_tailored_bottoms');
+  String get itemDressShoes => translate('item_dress_shoes');
+  String get itemWaterproofJacket => translate('item_waterproof_jacket');
+  String get itemSoftTee => translate('item_soft_tee');
+  String get itemDarkJeans => translate('item_dark_jeans');
+  String get itemWeatherproofSneakers => translate('item_weatherproof_sneakers');
+  String get itemLightCardigan => translate('item_light_cardigan');
+  String get itemCottonTee => translate('item_cotton_tee');
+  String get itemRelaxedTrousers => translate('item_relaxed_trousers');
+  String get itemWhiteSneakers => translate('item_white_sneakers');
+  String get itemTailoredOvershirt => translate('item_tailored_overshirt');
+  String get itemCleanNeutralTop => translate('item_clean_neutral_top');
+  String get itemStraightTrousers => translate('item_straight_trousers');
+  String get itemMinimalLoafers => translate('item_minimal_loafers');
+  String get itemSoftKnitTop => translate('item_soft_knit_top');
+  String get itemStatementLayer => translate('item_statement_layer');
+  String get itemContrastTop => translate('item_contrast_top');
+  String get itemDarkDenim => translate('item_dark_denim');
+  String get itemBoldSneakers => translate('item_bold_sneakers');
+  String get itemChunkySneakers => translate('item_chunky_sneakers');
+  String get itemBlackTee => translate('item_black_tee');
+  String get itemSoftBlouse => translate('item_soft_blouse');
+  String get itemStraightJeans => translate('item_straight_jeans');
+  String get itemTailoredShorts => translate('item_tailored_shorts');
+  String get itemLeatherLoafers => translate('item_leather_loafers');
+  String get itemMinimalTrainers => translate('item_minimal_trainers');
+  String get occasionEveryday => translate('occasion_everyday');
+  String get eventTypeOther => translate('event_type_other');
+
+  // Categories
+  String get catOuterwear => translate('cat_outerwear');
+  String get catTop => translate('cat_top');
+  String get catBottom => translate('cat_bottom');
+  String get catShoes => translate('cat_shoes');
+  String get catFootwear => translate('cat_footwear');
+  String get catAnchor => translate('cat_anchor');
+  String get catClothing => translate('cat_clothing');
+  String get unknownItem => translate('unknown_item');
+  
+  String get todaysLogSection => translate('todays_log_section');
+  String get nothingLoggedToday => translate('nothing_logged_today');
+  String get quickLogPrompt => translate('quick_log_prompt');
+  
+  String swapItemTitle(String item) => translate('swap_item_title').replaceAll('{item}', item);
+  String get chooseDifferentPiece => translate('choose_different_piece');
+  String get quickLogOptions => translate('quick_log_options');
+  String get quickLogTakePhotoTitle => translate('quick_log_take_photo_title');
+  String get quickLogTakePhotoSubtitle => translate('quick_log_take_photo_subtitle');
+  String get quickLogPreviousTitle => translate('quick_log_previous_title');
+  String get quickLogPreviousSubtitle => translate('quick_log_previous_subtitle');
+  String get quickLogRepeatTitle => translate('quick_log_repeat_title');
+  String get quickLogRepeatSubtitle => translate('quick_log_repeat_subtitle');
+  String get quickLogSaveDisplayedTitle => translate('quick_log_save_displayed_title');
+  String get quickLogSaveDisplayedSubtitle => translate('quick_log_save_displayed_subtitle');
+  
+  String get totalOutfits => translate('total_outfits');
+  String get uniqueItems => translate('unique_items');
+  String get favoriteOccasion => translate('favorite_occasion');
+  String get notes => translate('notes');
+  String get noOutfitDisplayedError => translate('no_outfit_displayed_error');
+  String get noValidWardrobeItemsError => translate('no_valid_wardrobe_items_error');
+  
+  String get outfitImageLabel => translate('outfit_image_label');
+  String get repeatOutfitTooltip => translate('repeat_outfit_tooltip');
+  String get editOutfitTooltip => translate('edit_outfit_tooltip');
+  String get deleteOutfitTooltip => translate('delete_outfit_tooltip');
+  String get outfitLabel => translate('outfit_label');
+  String get outfitsLabel => translate('outfits_label');
+  String get itemsLabel => translate('items_label');
+  String get topLabel => translate('top_label');
+  
+  // AI Coach (Smart Suggestions)
+  String get tipOfTheWeek => translate('tip_of_the_week');
+  String get personalizedCoaching => translate('personalized_coaching');
+  String get completeQuizForCoaching => translate('complete_quiz_for_coaching');
+  String get coachIsThinking => translate('coach_is_thinking');
+  String get coachIsPreparingTip => translate('coach_is_preparing_tip');
+  String get discoverYourStyle => translate('discover_your_style');
+  String get retake => translate('retake');
+  String get takeQuizToPersonalise => translate('take_quiz_to_personalise');
+  String get quickQuestions => translate('quick_questions');
+  String get getHelpStylingPieces => translate('get_help_styling_pieces');
+  String get eventCoaching => translate('event_coaching');
+  String suggestionsFor(String title) => translate('suggestions_for').replaceAll('{title}', title);
+  String get addEventToUnlock => translate('add_event_to_unlock');
+  String get coachLimitReached => translate('coach_limit_reached');
+  String get premiumCoachLimitMsg => translate('premium_coach_limit_msg');
+  String get freeCoachLimitMsg => translate('free_coach_limit_msg');
+  String get askYourCoach => translate('ask_your_coach');
+  String get orPickATopic => translate('or_pick_a_topic');
+  String get typeQuestionOrPickTopic => translate('type_question_or_pick_topic');
+  String get coachHintText => translate('coach_hint_text');
+  String get eventName => translate('event_name');
+  String get hintWedding => translate('hint_wedding');
+  String get dateLabel => translate('date_label');
+  String get dressCodeOptional => translate('dress_code_optional');
+  String get next => translate('next');
+  String get finish => translate('finish');
+  String get styleQuiz => translate('style_quiz');
+  
+  // Style Profiles
+  String get profileClassic => translate('profile_classic');
+  String get profileBold => translate('profile_bold');
+  String get profileActive => translate('profile_active');
+  String get profileMinimalist => translate('profile_minimalist');
+  String get profileStyle => translate('profile_style');
+  
+  // Insights
+  String get noInsightsYet => translate('no_insights_yet');
+  String get addItemsForInsights => translate('add_items_for_insights');
+  String get totalItemsLabel => translate('total_items');
+  String get outfitsLoggedLabel => translate('outfits_logged');
+  String get topCategoryLabel => translate('top_category');
+  String get topOccasionLabel => translate('top_occasion');
+  
+  // Quiz
+  String get qStyleAdventures => translate('q_style_adventures');
+  String get qStyleAdventurousSmall => translate('q_style_adv_small');
+  String get qStyleAdventurousOften => translate('q_style_adv_often');
+  String get qStyleAdventurousDepends => translate('q_style_adv_depends');
+  String get qStyleAdventurousWorks => translate('q_style_adv_works');
+  String get topicOutfitIdeas => translate('topic_outfit_ideas');
+  String get topicShoppingAdvice => translate('topic_shopping_advice');
+  String get topicMyWardrobe => translate('topic_my_wardrobe');
+  String get topicForAnEvent => translate('topic_for_an_event');
+  String get topicMoreVariety => translate('topic_more_variety');
+  String get topicStyleUpgrade => translate('topic_style_upgrade');
+  
+  // Coach Questions
+  String get qOutfitIdeas => translate('q_outfit_ideas');
+  String get qShoppingAdvice => translate('q_shopping_advice');
+  String get qMyWardrobe => translate('q_my_wardrobe');
+  String get qForAnEvent => translate('q_for_an_event');
+  String get qMoreVariety => translate('q_more_variety');
+  String get qStyleUpgrade => translate('q_style_upgrade');
 }
 
 class _AppLocalizationsDelegate

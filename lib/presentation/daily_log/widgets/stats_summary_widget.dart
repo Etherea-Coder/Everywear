@@ -37,19 +37,19 @@ class StatsSummaryWidget extends StatelessWidget {
         children: [
           _buildStatItem(
             icon: Icons.checkroom,
-            label: 'Outfits',
+            label: AppLocalizations.of(context).outfitsLabel,
             value: '$totalOutfits',
           ),
           Container(width: 1, height: 40, color: Colors.grey.shade300),
           _buildStatItem(
             icon: Icons.style,
-            label: 'Items',
+            label: AppLocalizations.of(context).itemsLabel,
             value: '$uniqueItems',
           ),
           Container(width: 1, height: 40, color: Colors.grey.shade300),
           _buildStatItem(
             icon: Icons.favorite,
-            label: 'Top',
+            label: AppLocalizations.of(context).topLabel,
             value: favoriteOccasion,
             isText: true,
           ),

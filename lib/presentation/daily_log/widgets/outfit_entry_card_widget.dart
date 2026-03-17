@@ -53,7 +53,7 @@ class OutfitEntryCardWidget extends StatelessWidget {
                     height: 25.h,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    semanticLabel: entry['semanticLabel'] ?? 'Outfit image',
+                    semanticLabel: entry['semanticLabel'] ?? AppLocalizations.of(context).outfitImageLabel,
                   ),
                 ),
                 Positioned(
@@ -115,7 +115,7 @@ class OutfitEntryCardWidget extends StatelessWidget {
                             color: theme.colorScheme.primary),
                         SizedBox(width: 2.w),
                         Text(
-                          entry['occasion'] ?? 'Outfit',
+                          entry['occasion'] ?? AppLocalizations.of(context).outfitLabel,
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
@@ -131,7 +131,7 @@ class OutfitEntryCardWidget extends StatelessWidget {
                           onPressed: onRepeat,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          tooltip: 'Repeat outfit today',
+                          tooltip: AppLocalizations.of(context).repeatOutfitTooltip,
                         ),
                         SizedBox(width: 2.w),
                         // Edit button
@@ -140,7 +140,7 @@ class OutfitEntryCardWidget extends StatelessWidget {
                           onPressed: onEdit,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          tooltip: 'Edit outfit',
+                          tooltip: AppLocalizations.of(context).editOutfitTooltip,
                         ),
                         SizedBox(width: 2.w),
                         // Delete button
@@ -150,7 +150,7 @@ class OutfitEntryCardWidget extends StatelessWidget {
                           onPressed: onDelete,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          tooltip: 'Delete outfit',
+                          tooltip: AppLocalizations.of(context).deleteOutfitTooltip,
                         ),
                       ],
                     ),

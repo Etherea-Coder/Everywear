@@ -74,8 +74,8 @@ class FeatureComparisonWidget extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.10),
-                  theme.colorScheme.secondary.withValues(alpha: 0.06),
+                  theme.colorScheme.secondary.withValues(alpha: 0.12),
+                  theme.colorScheme.secondary.withValues(alpha: 0.04),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -201,16 +201,16 @@ class FeatureComparisonWidget extends StatelessWidget {
                         vertical: 0.8.h,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                        color: theme.colorScheme.secondary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.12),
                         ),
                       ),
                       child: Text(
                         signatureValue,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
+                          color: theme.colorScheme.secondary,
                           fontWeight: FontWeight.w700,
                           height: 1.35,
                         ),

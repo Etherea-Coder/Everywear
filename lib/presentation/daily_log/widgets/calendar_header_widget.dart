@@ -52,7 +52,7 @@ class CalendarHeaderWidget extends StatelessWidget {
                 },
               ),
               Text(
-                DateFormat('MMMM yyyy').format(focusedMonth),
+                DateFormat('MMMM yyyy', Localizations.localeOf(context).toString()).format(focusedMonth),
                 style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
               IconButton(
@@ -71,7 +71,9 @@ class CalendarHeaderWidget extends StatelessWidget {
           // Week Days
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+            children: (DateFormat.allLocalesWithSymbols().contains(Localizations.localeOf(context).toString()) 
+                ? DateFormat(null, Localizations.localeOf(context).toString()).dateSymbols.narrowWeekdays 
+                : ['S', 'M', 'T', 'W', 'T', 'F', 'S'])
                 .map(
                   (day) => SizedBox(
                     width: 12.w,
@@ -117,7 +119,7 @@ class CalendarHeaderWidget extends StatelessWidget {
     // Add day widgets
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(focusedMonth.year, focusedMonth.month, day);
-      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      final dateKey = DateFormat('yyyy-MM-dd', 'en_US').format(date); // Use stable key format
       final hasEntries =
           outfitEntries.containsKey(dateKey) &&
           outfitEntries[dateKey]!.isNotEmpty;

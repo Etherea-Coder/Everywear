@@ -40,7 +40,7 @@ class PricingCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: isSelected
-                ? theme.colorScheme.primary.withValues(alpha: 0.35)
+                ? theme.colorScheme.secondary.withValues(alpha: 0.35)
                 : theme.colorScheme.outline.withValues(alpha: 0.14),
             width: isSelected ? 1.8 : 1,
           ),
@@ -55,7 +55,7 @@ class PricingCardWidget extends StatelessWidget {
               ? LinearGradient(
                   colors: [
                     theme.cardColor,
-                    theme.colorScheme.primary.withValues(alpha: 0.05),
+                    theme.colorScheme.secondary.withValues(alpha: 0.08),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -163,14 +163,14 @@ class PricingCardWidget extends StatelessWidget {
                   vertical: 0.5.h,
                 ),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.09),
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   savings!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.secondary,
                   ),
                 ),
               ),

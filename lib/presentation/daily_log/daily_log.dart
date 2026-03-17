@@ -159,110 +159,100 @@ class _DailyLogState extends State<DailyLog> {
   void _generateSuggestion() {
     final condition = (_weather['condition'] ?? '').toString().toLowerCase();
 
-    String anchorName = 'Denim Jacket';
-    String topName = 'White Tee';
-    String bottomName = 'Black Jeans';
-    String shoesName = 'Sneakers';
-    String description =
-        'A versatile everyday outfit idea built around one easy anchor piece.';
+    String anchorName = loc.itemDenimJacket;
+    String topName = loc.itemWhiteTee;
+    String bottomName = loc.itemBlackJeans;
+    String shoesName = loc.itemSneakers;
+    String description = loc.fallbackSuggestionDesc;
 
     if (_selectedOccasion == 'Work') {
-      anchorName = 'Navy Blazer';
-      topName = _selectedMood == 'Comfort' ? 'Soft Knit Top' : 'White Shirt';
+      anchorName = loc.itemNavyBlazer;
+      topName = _selectedMood == 'Comfort' ? loc.itemSoftKnitTop : loc.itemWhiteShirt;
       bottomName =
-          _selectedMood == 'Casual' ? 'Dark Jeans' : 'Tailored Trousers';
-      shoesName = _selectedMood == 'Comfort' ? 'Loafers' : 'Leather Shoes';
-      description =
-          'A polished work-ready outfit that keeps things structured without feeling too rigid.';
+          _selectedMood == 'Casual' ? loc.itemDarkJeans : loc.itemTailoredTrousers;
+      shoesName = _selectedMood == 'Comfort' ? loc.itemMinimalLoafers : loc.itemLeatherShoes;
+      description = loc.workSuggestionDesc;
     } else if (_selectedOccasion == 'Dinner') {
-      anchorName = 'Statement Jacket';
-      topName = 'Silk Top';
-      bottomName = 'Dark Trousers';
-      shoesName = _selectedMood == 'Comfort' ? 'Low Heels' : 'Chelsea Boots';
-      description =
-          'A slightly elevated evening look that feels intentional but still wearable.';
+      anchorName = loc.itemStatementJacket;
+      topName = loc.itemSilkTop;
+      bottomName = loc.itemDarkTrousers;
+      shoesName = _selectedMood == 'Comfort' ? loc.itemLowHeels : loc.itemChelseaBoots;
+      description = loc.dinnerSuggestionDesc;
     } else if (_selectedOccasion == 'Travel') {
-      anchorName = 'Light Overshirt';
-      topName = 'Breathable Tee';
-      bottomName = 'Relaxed Pants';
-      shoesName = 'Comfort Sneakers';
-      description =
-          'A practical travel outfit that keeps movement and layering in mind.';
+      anchorName = loc.itemLightOvershirt;
+      topName = loc.itemBreathableTee;
+      bottomName = loc.itemRelaxedPants;
+      shoesName = loc.itemComfortSneakers;
+      description = loc.travelSuggestionDesc;
     } else if (_selectedOccasion == 'Event') {
-      anchorName = 'Structured Blazer';
-      topName = 'Refined Top';
-      bottomName = 'Tailored Bottoms';
-      shoesName = 'Dress Shoes';
-      description =
-          'A more occasion-ready combination designed to look sharp and put together.';
+      anchorName = loc.itemStructuredBlazer;
+      topName = loc.itemRefinedTop;
+      bottomName = loc.itemTailoredBottoms;
+      shoesName = loc.itemDressShoes;
+      description = loc.eventSuggestionDesc;
     } else {
       if (condition.contains('rain')) {
-        anchorName = 'Waterproof Jacket';
-        topName = 'Soft Tee';
-        bottomName = 'Dark Jeans';
-        shoesName = 'Weatherproof Sneakers';
-        description =
-            'A practical weather-aware outfit that stays comfortable in wet conditions.';
+        anchorName = loc.itemWaterproofJacket;
+        topName = loc.itemSoftTee;
+        bottomName = loc.itemDarkJeans;
+        shoesName = loc.itemWeatherproofSneakers;
+        description = loc.rainSuggestionDesc;
       } else if (condition.contains('sun') || condition.contains('clear')) {
-        anchorName = 'Light Cardigan';
-        topName = 'Cotton Tee';
-        bottomName = 'Relaxed Trousers';
-        shoesName = 'White Sneakers';
-        description =
-            'A lighter outfit idea that works well for a brighter day and easy movement.';
+        anchorName = loc.itemLightCardigan;
+        topName = loc.itemCottonTee;
+        bottomName = loc.itemRelaxedTrousers;
+        shoesName = loc.itemWhiteSneakers;
+        description = loc.sunSuggestionDesc;
       } else if (_selectedMood == 'Polished') {
-        anchorName = 'Tailored Overshirt';
-        topName = 'Clean Neutral Top';
-        bottomName = 'Straight Trousers';
-        shoesName = 'Minimal Loafers';
-        description =
-            'A clean, polished outfit idea that sharpens the overall look without overdoing it.';
+        anchorName = loc.itemTailoredOvershirt;
+        topName = loc.itemCleanNeutralTop;
+        bottomName = loc.itemStraightTrousers;
+        shoesName = loc.itemMinimalLoafers;
+        description = loc.polishedSuggestionDesc;
       } else if (_selectedMood == 'Bold') {
-        anchorName = 'Statement Layer';
-        topName = 'Contrast Top';
-        bottomName = 'Dark Denim';
-        shoesName = 'Bold Sneakers';
-        description =
-            'A more expressive combination that keeps the silhouette simple while letting one piece stand out.';
+        anchorName = loc.itemStatementLayer;
+        topName = loc.itemContrastTop;
+        bottomName = loc.itemDarkDenim;
+        shoesName = loc.itemBoldSneakers;
+        description = loc.boldSuggestionDesc;
       }
     }
 
     if (_selectedMood == 'Surprise') {
-      anchorName = 'Underused Jacket';
-      topName = 'Neutral Base Top';
-      bottomName = 'Wide-Leg Pants';
-      shoesName = 'Chunky Sneakers';
-      description =
-          'A fresher combination designed to help you wear something a little less expected today.';
+      anchorName = loc.itemUnderusedJacket;
+      topName = loc.itemNeutralBaseTop;
+      bottomName = loc.itemWideLegPants;
+      shoesName = loc.itemChunkySneakers;
+      description = loc.surpriseSuggestionDesc;
     }
 
     _suggestedOutfit = {
-      'title': 'Today\'s Style Idea',
+      'title': loc.todaysStyleIdea,
       'description': description,
       'anchor': {
         'slot': 'anchor',
         'name': anchorName,
         'imageUrl': '',
-        'category': 'Anchor',
+        'category': loc.catAnchor,
       },
       'items': [
         {
           'slot': 'top',
           'name': topName,
           'imageUrl': '',
-          'category': 'Top',
+          'category': loc.catTop,
         },
         {
           'slot': 'bottom',
           'name': bottomName,
           'imageUrl': '',
-          'category': 'Bottom',
+          'category': loc.catBottom,
         },
         {
           'slot': 'shoes',
           'name': shoesName,
           'imageUrl': '',
-          'category': 'Shoes',
+          'category': loc.catShoes,
         },
       ],
     };
@@ -286,7 +276,7 @@ class _DailyLogState extends State<DailyLog> {
         _isAISuggestionLoading = false;
         if (result != null) {
           _suggestedOutfit = {
-            'title': result['title'] ?? 'Today Style Idea',
+            'title': result['title'] ?? loc.todaysStyleIdea,
             'description': result['description'] ?? '',
             'styling_note': result['styling_note'] ?? '',
             'anchor': result['anchor'] ?? _suggestedOutfit['anchor'],
@@ -318,7 +308,7 @@ class _DailyLogState extends State<DailyLog> {
     final temp = _weather['temperature'];
     final unit = (_weather['unit'] ?? '°C').toString();
     final hasWeather = temp != null && condition.isNotEmpty;
-    final weatherLabel = hasWeather ? '$temp$unit · $condition' : 'Style, your way';
+    final weatherLabel = hasWeather ? '$temp$unit · $condition' : localizations.weatherFallbackLabel;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
@@ -377,7 +367,7 @@ class _DailyLogState extends State<DailyLog> {
           ],
           SizedBox(height: 2.h),
           Text(
-            'A calm space to choose what feels right today — guided by your wardrobe, your plans, and your mood.',
+            localizations.dailyLogWelcomeSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               height: 1.45,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
@@ -389,6 +379,30 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Widget _buildContextCard(ThemeData theme) {
+    final loc = AppLocalizations.of(context);
+
+    String getLocalizedOccasion(String occasion) {
+      switch (occasion) {
+        case 'Work': return loc.occasionWork;
+        case 'Casual': return loc.occasionCasual;
+        case 'Dinner': return loc.occasionDinner;
+        case 'Event': return loc.occasionEvent;
+        case 'Travel': return loc.occasionTravel;
+        default: return occasion;
+      }
+    }
+
+    String getLocalizedMood(String mood) {
+      switch (mood) {
+        case 'Casual': return loc.moodCasual;
+        case 'Polished': return loc.moodPolished;
+        case 'Comfort': return loc.moodComfort;
+        case 'Bold': return loc.moodBold;
+        case 'Surprise': return loc.moodSurprise;
+        default: return mood;
+      }
+    }
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
@@ -407,14 +421,14 @@ class _DailyLogState extends State<DailyLog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Set today’s direction',
+            loc.setTodaysDirection,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 0.6.h),
           Text(
-            'Choose the occasion and vibe you want. Your suggestion updates around that.',
+            loc.setDirectionSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -422,7 +436,7 @@ class _DailyLogState extends State<DailyLog> {
           ),
           SizedBox(height: 2.h),
           Text(
-            'Dressing for',
+            loc.dressingFor,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -435,7 +449,7 @@ class _DailyLogState extends State<DailyLog> {
               final selected = _selectedOccasion == occasion;
               return _buildWarmChoiceChip(
                 theme,
-                label: occasion,
+                label: getLocalizedOccasion(occasion),
                 selected: selected,
                 onTap: () {
                   setState(() {
@@ -449,7 +463,7 @@ class _DailyLogState extends State<DailyLog> {
           ),
           SizedBox(height: 2.2.h),
           Text(
-            'Today’s vibe',
+            loc.todaysVibe,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -462,7 +476,7 @@ class _DailyLogState extends State<DailyLog> {
               final selected = _selectedMood == mood;
               return _buildWarmChoiceChip(
                 theme,
-                label: mood,
+                label: getLocalizedMood(mood),
                 selected: selected,
                 onTap: () {
                   setState(() {
@@ -516,8 +530,9 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Widget _buildWeatherCard(ThemeData theme) {
+    final loc = AppLocalizations.of(context);
     final temp = _weather['temperature'];
-    final condition = _weather['condition'] ?? 'Loading...';
+    final condition = _weather['condition'] ?? loc.loading;
     final location = _weather['location'] ?? '';
     final unit = _weather['unit'] ?? '°C';
     final isError = _weather['error'] == true;
@@ -569,7 +584,7 @@ class _DailyLogState extends State<DailyLog> {
                 Padding(
                   padding: EdgeInsets.only(top: 0.8.h),
                   child: Text(
-                    _getWeatherTip(condition),
+                    _getWeatherTip(loc, condition),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
                     ),
@@ -582,17 +597,18 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  String _getWeatherTip(String condition) {
+  String _getWeatherTip(AppLocalizations loc, String condition) {
     final c = condition.toLowerCase();
-    if (c.contains('rain')) return 'Bring a waterproof layer today';
-    if (c.contains('snow')) return 'Layer up and keep the outfit warm';
-    if (c.contains('sun') || c.contains('clear')) return 'Perfect for lighter layers';
-    if (c.contains('cloud')) return 'A light jacket would work well';
-    if (c.contains('wind')) return 'A fitted layer will help on a windy day';
-    return 'Dress for your day ahead';
+    if (c.contains('rain')) return loc.weatherTipRain;
+    if (c.contains('snow')) return loc.weatherTipSnow;
+    if (c.contains('sun') || c.contains('clear')) return loc.weatherTipSun;
+    if (c.contains('cloud')) return loc.weatherTipCloud;
+    if (c.contains('wind')) return loc.weatherTipWind;
+    return loc.weatherTipDefault;
   }
 
   Widget _buildTodaySuggestionCard(ThemeData theme) {
+    final loc = AppLocalizations.of(context);
     final anchor = _suggestedOutfit['anchor'] as Map<String, dynamic>;
     final items = (_suggestedOutfit['items'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
@@ -604,12 +620,16 @@ class _DailyLogState extends State<DailyLog> {
         gradient: LinearGradient(
           colors: [
             theme.cardColor,
-            theme.colorScheme.primary.withValues(alpha: 0.08),
+            theme.colorScheme.secondary.withValues(alpha: 0.06),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: theme.colorScheme.secondary.withValues(alpha: 0.14),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -631,7 +651,7 @@ class _DailyLogState extends State<DailyLog> {
                         const Text('✨ ', style: TextStyle(fontSize: 18)),
                         Text(
                           _suggestedOutfit['title'] as String? ??
-                              "Today's Style Idea",
+                              loc.todaysStyleIdea,
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -642,7 +662,7 @@ class _DailyLogState extends State<DailyLog> {
                     SizedBox(height: 0.8.h),
                     Text(
                       _suggestedOutfit['description'] as String? ??
-                          'A simple daily outfit suggestion.',
+                          loc.simpleDailySuggestion,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         height: 1.45,
@@ -707,9 +727,9 @@ class _DailyLogState extends State<DailyLog> {
                 ),
                 SizedBox(height: 0.4.h),
                 Text(
-                  'Anchor piece · tap to swap',
+                  loc.anchorPieceTapToSwap,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.secondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -722,12 +742,12 @@ class _DailyLogState extends State<DailyLog> {
             width: 12.w,
             height: 12.w,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              color: theme.colorScheme.secondary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.keyboard_arrow_down,
-              color: theme.colorScheme.primary,
+              color: theme.colorScheme.secondary,
               size: 24,
             ),
           ),
@@ -760,9 +780,9 @@ class _DailyLogState extends State<DailyLog> {
                         ),
                         SizedBox(height: 0.2.h),
                         Text(
-                          'Tap to swap',
+                          loc.tapToSwap,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
+                            color: theme.colorScheme.secondary,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -781,7 +801,7 @@ class _DailyLogState extends State<DailyLog> {
                 child: OutlinedButton.icon(
                   onPressed: _showQuickLogOptions,
                   icon: const Icon(Icons.checkroom_outlined),
-                  label: const Text('Log outfit'),
+                  label: Text(loc.logOutfitBtn),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 1.45.h),
                     shape: RoundedRectangleBorder(
@@ -807,7 +827,7 @@ class _DailyLogState extends State<DailyLog> {
                           ),
                         )
                       : const Icon(Icons.refresh),
-                  label: Text(_isAISuggestionLoading ? 'Loading' : 'Refresh'),
+                  label: Text(_isAISuggestionLoading ? loc.loading : loc.refresh),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 1.45.h),
                     shape: RoundedRectangleBorder(
@@ -837,15 +857,15 @@ class _DailyLogState extends State<DailyLog> {
         borderRadius: BorderRadius.circular(isAnchor ? 22 : 16),
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primary.withValues(alpha: isAnchor ? 0.12 : 0.08),
-            theme.colorScheme.secondary.withValues(alpha: isAnchor ? 0.06 : 0.04),
+            theme.colorScheme.secondary.withValues(alpha: isAnchor ? 0.08 : 0.05),
+            theme.colorScheme.secondary.withValues(alpha: isAnchor ? 0.04 : 0.02),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: theme.colorScheme.primary.withValues(
-            alpha: isAnchor ? 0.18 : 0.10,
+          color: theme.colorScheme.secondary.withValues(
+            alpha: isAnchor ? 0.14 : 0.10,
           ),
         ),
       ),
@@ -876,12 +896,13 @@ class _DailyLogState extends State<DailyLog> {
       child: Icon(
         Icons.checkroom,
         size: isAnchor ? 46 : 28,
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.secondary,
       ),
     );
   }
 
   void _showSwapItemSheet(Map<String, dynamic> currentItem) {
+    final loc = AppLocalizations.of(context);
     final slot = currentItem['slot'] as String? ?? 'item';
     final alternatives = _getSwapAlternatives(slot);
 
@@ -906,7 +927,7 @@ class _DailyLogState extends State<DailyLog> {
               ),
             ),
             Text(
-              'Swap ${_getSlotTitle(slot)}',
+              loc.swapItemTitle(_getLocalizedSlotTitle(loc, slot)),
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -914,7 +935,7 @@ class _DailyLogState extends State<DailyLog> {
             ),
             SizedBox(height: 0.8.h),
             Text(
-              'Choose a different piece for this outfit idea',
+              loc.chooseDifferentPiece,
               style: TextStyle(
                 fontSize: 12.sp,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -972,16 +993,16 @@ class _DailyLogState extends State<DailyLog> {
     String? category;
     switch (slot) {
       case 'anchor':
-        category = 'Outerwear';
+        category = loc.catOuterwear;
         break;
       case 'top':
-        category = 'Tops';
+        category = loc.catTop;
         break;
       case 'bottom':
-        category = 'Bottoms';
+        category = loc.catBottom;
         break;
       case 'shoes':
-        category = 'Footwear';
+        category = loc.catFootwear;
         break;
       default:
         category = null;
@@ -994,9 +1015,9 @@ class _DailyLogState extends State<DailyLog> {
       return itemCategory.toLowerCase() == category.toLowerCase();
     }).map((item) => {
       'slot': slot,
-      'name': item['name'] ?? item['title'] ?? 'Unknown Item',
+      'name': item['name'] ?? item['title'] ?? loc.unknownItem,
       'imageUrl': item['image_url'] ?? item['imageUrl'] ?? '',
-      'category': item['category'] ?? 'Clothing',
+      'category': item['category'] ?? loc.catClothing,
       'id': item['id'],
     }).toList();
 
@@ -1015,27 +1036,27 @@ class _DailyLogState extends State<DailyLog> {
         return [
           {
             'slot': 'anchor',
-            'name': 'Tailored Overshirt',
+            'name': loc.itemTailoredOvershirt,
             'imageUrl': '',
-            'category': 'Anchor',
+            'category': loc.catAnchor,
           },
           {
             'slot': 'anchor',
-            'name': 'Light Cardigan',
+            'name': loc.itemLightCardigan,
             'imageUrl': '',
-            'category': 'Anchor',
+            'category': loc.catAnchor,
           },
           {
             'slot': 'anchor',
-            'name': 'Structured Blazer',
+            'name': loc.itemStructuredBlazer,
             'imageUrl': '',
-            'category': 'Anchor',
+            'category': loc.catAnchor,
           },
           {
             'slot': 'anchor',
-            'name': 'Bomber Jacket',
+            'name': loc.itemUnderusedJacket,
             'imageUrl': '',
-            'category': 'Anchor',
+            'category': loc.catAnchor,
           },
         ];
 
@@ -1043,27 +1064,27 @@ class _DailyLogState extends State<DailyLog> {
         return [
           {
             'slot': 'top',
-            'name': 'White Shirt',
+            'name': loc.itemWhiteShirt,
             'imageUrl': '',
-            'category': 'Top',
+            'category': loc.catTop,
           },
           {
             'slot': 'top',
-            'name': 'Neutral Knit Top',
+            'name': loc.itemNeutralBaseTop,
             'imageUrl': '',
-            'category': 'Top',
+            'category': loc.catTop,
           },
           {
             'slot': 'top',
-            'name': 'Black Tee',
+            'name': loc.itemBlackTee,
             'imageUrl': '',
-            'category': 'Top',
+            'category': loc.catTop,
           },
           {
             'slot': 'top',
-            'name': 'Soft Blouse',
+            'name': loc.itemSoftBlouse,
             'imageUrl': '',
-            'category': 'Top',
+            'category': loc.catTop,
           },
         ];
 
@@ -1071,55 +1092,54 @@ class _DailyLogState extends State<DailyLog> {
         return [
           {
             'slot': 'bottom',
-            'name': 'Dark Trousers',
+            'name': loc.itemDarkTrousers,
             'imageUrl': '',
-            'category': 'Bottom',
+            'category': loc.catBottom,
           },
           {
             'slot': 'bottom',
-            'name': 'Straight Jeans',
+            'name': loc.itemStraightJeans,
             'imageUrl': '',
-            'category': 'Bottom',
+            'category': loc.catBottom,
           },
           {
             'slot': 'bottom',
-            'name': 'Wide-Leg Pants',
+            'name': loc.itemWideLegPants,
             'imageUrl': '',
-            'category': 'Bottom',
+            'category': loc.catBottom,
           },
           {
             'slot': 'bottom',
-            'name': 'Tailored Shorts',
+            'name': loc.itemTailoredShorts,
             'imageUrl': '',
-            'category': 'Bottom',
+            'category': loc.catBottom,
           },
         ];
-
       case 'shoes':
         return [
           {
             'slot': 'shoes',
-            'name': 'White Sneakers',
+            'name': loc.itemWhiteSneakers,
             'imageUrl': '',
-            'category': 'Shoes',
+            'category': loc.catShoes,
           },
           {
             'slot': 'shoes',
-            'name': 'Leather Loafers',
+            'name': loc.itemLeatherLoafers,
             'imageUrl': '',
-            'category': 'Shoes',
+            'category': loc.catShoes,
           },
           {
             'slot': 'shoes',
-            'name': 'Chelsea Boots',
+            'name': loc.itemChelseaBoots,
             'imageUrl': '',
-            'category': 'Shoes',
+            'category': loc.catShoes,
           },
           {
             'slot': 'shoes',
-            'name': 'Minimal Trainers',
+            'name': loc.itemMinimalTrainers,
             'imageUrl': '',
-            'category': 'Shoes',
+            'category': loc.catShoes,
           },
         ];
 
@@ -1128,18 +1148,18 @@ class _DailyLogState extends State<DailyLog> {
     }
   }
 
-  String _getSlotTitle(String slot) {
+  String _getLocalizedSlotTitle(AppLocalizations loc, String slot) {
     switch (slot) {
       case 'anchor':
-        return 'anchor piece';
+        return loc.slotAnchor;
       case 'top':
-        return 'top';
+        return loc.slotTop;
       case 'bottom':
-        return 'bottom';
+        return loc.slotBottom;
       case 'shoes':
-        return 'shoes';
+        return loc.slotShoes;
       default:
-        return 'item';
+        return loc.slotItem;
     }
   }
 
@@ -1160,14 +1180,15 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Widget _buildQuickTipCard(ThemeData theme) {
+    final loc = AppLocalizations.of(context);
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(18),
+        color: theme.colorScheme.secondary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.18),
+          color: theme.colorScheme.secondary.withValues(alpha: 0.14),
         ),
       ),
       child: Stack(
@@ -1188,14 +1209,15 @@ class _DailyLogState extends State<DailyLog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Style Tip',
+                loc.styleTip,
                 style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.secondary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               SizedBox(height: 0.8.h),
               Text(
-                _getQuickTip(),
+                _getQuickTip(loc),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   height: 1.45,
@@ -1208,31 +1230,32 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  String _getQuickTip() {
+  String _getQuickTip(AppLocalizations loc) {
     final totalOutfits = _monthlyStats['totalOutfits'] as int? ?? 0;
     final favoriteOccasion =
-        (_monthlyStats['favoriteOccasion'] ?? 'Everyday').toString();
+        (_monthlyStats['favoriteOccasion'] ?? loc.occasionEveryday).toString();
 
     if (totalOutfits == 0) {
-      return 'Start logging your outfits regularly to unlock more personal style patterns and smarter daily guidance.';
+      return loc.styleTipNoLogs;
     }
 
     if (totalOutfits < 5) {
-      return 'You are still building your outfit history. A few more logs will make your suggestions more personal and more varied.';
+      return loc.styleTipFewLogs;
     }
 
     if (_selectedMood == 'Bold') {
-      return 'Since you want a bolder look today, keep one standout piece and let the rest of the outfit stay more balanced.';
+      return loc.styleTipBold;
     }
 
     if (_selectedMood == 'Comfort') {
-      return 'Comfort works best when the outfit still feels intentional. Try keeping the base soft and the outer layer more structured.';
+      return loc.styleTipComfort;
     }
 
-    return 'Your most common occasion this month is $favoriteOccasion. Keeping one reliable version of that look ready can save time on busy days.';
+    return loc.styleTipFavoriteOccasion(favoriteOccasion);
   }
 
   Widget _buildUpcomingEventCard(ThemeData theme) {
+    final loc = AppLocalizations.of(context);
     if (_upcomingEvents.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -1240,7 +1263,7 @@ class _DailyLogState extends State<DailyLog> {
     final event = _upcomingEvents.first;
     final date = DateTime.parse(event['event_date']);
     final daysLeft = date.difference(DateTime.now()).inDays;
-    final eventType = event['event_type'] as String? ?? 'Other';
+    final eventType = event['event_type'] as String? ?? loc.eventTypeOther;
     final dressCode = event['dress_code'] as String?;
 
     return Container(
@@ -1277,7 +1300,7 @@ class _DailyLogState extends State<DailyLog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Upcoming Event',
+                  loc.upcomingEvent,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -1292,10 +1315,10 @@ class _DailyLogState extends State<DailyLog> {
                 SizedBox(height: 0.4.h),
                 Text(
                   daysLeft <= 0
-                      ? 'Today · $eventType'
+                      ? '${loc.today} · $eventType'
                       : daysLeft == 1
-                          ? 'Tomorrow · $eventType'
-                          : 'In $daysLeft days · $eventType',
+                          ? '${loc.tomorrow} · $eventType'
+                          : '${loc.inDaysLeft(daysLeft)} · $eventType',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -1304,7 +1327,7 @@ class _DailyLogState extends State<DailyLog> {
                   Padding(
                     padding: EdgeInsets.only(top: 0.4.h),
                     child: Text(
-                      'Dress code: $dressCode',
+                      loc.dressCodeFormat(dressCode),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -1394,7 +1417,7 @@ class _DailyLogState extends State<DailyLog> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: 'Today',
+        title: loc.today,
         actions: [
           IconButton(
             icon: Icon(
@@ -1426,7 +1449,7 @@ class _DailyLogState extends State<DailyLog> {
                   SizedBox(height: 2.h),
                   
                   // Set Today's Direction Section
-                  _buildSectionTitle(theme, "Set today's direction"),
+                  _buildSectionTitle(theme, loc.setTodaysDirection),
                   SizedBox(height: 1.2.h),
                   _buildContextCard(theme),
                   SizedBox(height: 2.h),
@@ -1453,9 +1476,9 @@ class _DailyLogState extends State<DailyLog> {
                   // Log Section
                   _buildSectionHeader(
                     theme,
-                    'Today\'s Log',
+                    loc.todaysLogSection,
                     Icons.checkroom_outlined,
-                    actionLabel: 'This month',
+                    actionLabel: loc.thisMonth,
                     onTap: _showInsights,
                   ),
                   SizedBox(height: 1.h),
@@ -1498,7 +1521,7 @@ class _DailyLogState extends State<DailyLog> {
 
   Map<String, dynamic> _formatEntry(Map<String, dynamic> entry) {
     final items = (entry['outfit_items'] as List<dynamic>? ?? [])
-        .map((oi) => (oi['wardrobe_items']?['name'] ?? 'Unknown') as String)
+        .map((oi) => (oi['wardrobe_items']?['name'] ?? loc.unknown) as String)
         .toList();
 
     final imageUrl = (entry['outfit_items'] as List<dynamic>? ?? [])
@@ -1510,10 +1533,10 @@ class _DailyLogState extends State<DailyLog> {
     return {
       'id': entry['id'],
       'time': DateFormat('hh:mm a').format(wornDate),
-      'occasion': entry['occasion'] ?? 'Outfit',
+      'occasion': entry['occasion'] ?? loc.outfitLabel,
       'items': items,
       'imageUrl': imageUrl ?? '',
-      'semanticLabel': entry['outfit_name'] ?? 'Outfit',
+      'semanticLabel': entry['outfit_name'] ?? loc.outfitLabel,
       'rating': entry['rating'] ?? 0,
       'notes': entry['notes'] ?? '',
     };
@@ -1549,14 +1572,14 @@ class _DailyLogState extends State<DailyLog> {
             ),
             SizedBox(height: 1.6.h),
             Text(
-              'Nothing logged yet today',
+              loc.nothingLoggedToday,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             SizedBox(height: 0.8.h),
             Text(
-              'Use the quick log button to save today’s outfit and build your style history.',
+              loc.quickLogPrompt,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.4,
@@ -1591,14 +1614,14 @@ class _DailyLogState extends State<DailyLog> {
               ),
             ),
             Text(
-              'Quick Log Options',
+              loc.quickLogOptions,
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 2.h),
             _buildQuickOption(
               icon: Icons.camera_alt,
-              title: 'Take Photo',
-              subtitle: 'Capture your outfit now',
+              title: loc.quickLogTakePhotoTitle,
+              subtitle: loc.quickLogTakePhotoSubtitle,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, AppRoutes.outfitCaptureFlow);
@@ -1606,8 +1629,8 @@ class _DailyLogState extends State<DailyLog> {
             ),
             _buildQuickOption(
               icon: Icons.history,
-              title: 'Log Previous Outfit',
-              subtitle: 'Add outfit from earlier today',
+              title: loc.quickLogPreviousTitle,
+              subtitle: loc.quickLogPreviousSubtitle,
               onTap: () {
                 Navigator.pop(context);
                 _navigateToFullLog();
@@ -1615,8 +1638,8 @@ class _DailyLogState extends State<DailyLog> {
             ),
             _buildQuickOption(
               icon: Icons.repeat,
-              title: 'Repeat Last Outfit',
-              subtitle: 'Log your most recent outfit again',
+              title: loc.quickLogRepeatTitle,
+              subtitle: loc.quickLogRepeatSubtitle,
               onTap: () {
                 Navigator.pop(context);
                 _repeatLastOutfit();
@@ -1624,8 +1647,8 @@ class _DailyLogState extends State<DailyLog> {
             ),
             _buildQuickOption(
               icon: Icons.checkroom,
-              title: 'Save Displayed Outfit',
-              subtitle: 'Log the outfit shown above',
+              title: loc.quickLogSaveDisplayedTitle,
+              subtitle: loc.quickLogSaveDisplayedSubtitle,
               onTap: () {
                 Navigator.pop(context);
                 _saveDisplayedOutfit();
@@ -1692,7 +1715,7 @@ class _DailyLogState extends State<DailyLog> {
 
     if (anchor == null || items == null || items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No outfit displayed to save')),
+        SnackBar(content: Text(AppLocalizations.of(context).noOutfitDisplayedError)),
       );
       return;
     }
@@ -1711,7 +1734,7 @@ class _DailyLogState extends State<DailyLog> {
 
       if (itemIds.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No valid wardrobe items in the displayed outfit')),
+          SnackBar(content: Text(AppLocalizations.of(context).noValidWardrobeItemsError)),
         );
         return;
       }
@@ -1722,7 +1745,7 @@ class _DailyLogState extends State<DailyLog> {
         AppRoutes.outfitCaptureFlow,
         arguments: {
           'preselectedItemIds': itemIds,
-          'outfitName': _suggestedOutfit['title'] ?? 'Today\'s Style Idea',
+          'outfitName': _suggestedOutfit['title'] ?? loc.todaysStyleIdea,
         },
       );
 
@@ -1732,7 +1755,7 @@ class _DailyLogState extends State<DailyLog> {
     } catch (e) {
       debugPrint('Error saving displayed outfit: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving outfit: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
       );
     }
   }
@@ -1788,12 +1811,12 @@ class _DailyLogState extends State<DailyLog> {
             children: [
               TextField(
                 controller: occasionController,
-                decoration: const InputDecoration(labelText: 'Occasion'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).occasion),
               ),
               SizedBox(height: 2.h),
               TextField(
                 controller: notesController,
-                decoration: const InputDecoration(labelText: 'Notes'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).notes),
                 maxLines: 2,
               ),
               SizedBox(height: 2.h),
@@ -1889,15 +1912,15 @@ class _DailyLogState extends State<DailyLog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInsightRow(
-              'Total Outfits',
+              AppLocalizations.of(context).totalOutfits,
               '${_monthlyStats['totalOutfits']}',
             ),
             _buildInsightRow(
-              'Unique Items',
+              AppLocalizations.of(context).uniqueItems,
               '${_monthlyStats['uniqueItems']}',
             ),
             _buildInsightRow(
-              'Favorite Occasion',
+              AppLocalizations.of(context).favoriteOccasion,
               '${_monthlyStats['favoriteOccasion']}',
             ),
           ],

@@ -445,7 +445,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        hasResult ? 'Your Style Profile' : 'Discover Your Style',
+                        hasResult ? localizations.yourStyleProfile : localizations.discoverYourStyle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -453,8 +453,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       SizedBox(height: 0.4.h),
                       Text(
                         hasResult
-                            ? _quizResult!['style_profile'] as String? ?? 'Complete'
-                            : 'Take the quiz to personalise your AI suggestions',
+                            ? _quizResult!['style_profile'] as String? ?? localizations.completed
+                            : localizations.takeQuizToPersonalise,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -476,7 +476,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 TextButton(
                   onPressed: _startQuiz,
                   child: Text(
-                    'Retake',
+                    localizations.retake,
                     style: TextStyle(
                       color: theme.colorScheme.secondary,
                       fontSize: 12.sp,
@@ -500,8 +500,11 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
           width: double.infinity,
           padding: EdgeInsets.all(4.w),
           decoration: BoxDecoration(
-            color: theme.cardColor,
+            color: theme.colorScheme.secondary.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: theme.colorScheme.secondary.withValues(alpha: 0.14),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.06),
@@ -534,7 +537,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tip of the Week',
+                        Text(
+                          localizations.tipOfTheWeek,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -542,8 +546,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         SizedBox(height: 0.3.h),
                         Text(
                           _quizResult != null
-                              ? _quizResult!['style_profile'] as String? ?? 'Personalized coaching'
-                              : 'Complete your quiz for better coaching',
+                              ? _quizResult!['style_profile'] as String? ?? localizations.personalizedCoaching
+                              : localizations.completeQuizForCoaching,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -563,7 +567,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       ),
                       SizedBox(width: 2.w),
                       Text(
-                        'Your coach is thinking...',
+                        localizations.coachIsThinking,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontStyle: FontStyle.italic,
@@ -572,7 +576,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     ],
                   )
                 : Text(
-                    _coachTip.isNotEmpty ? _coachTip : 'Your coach is preparing a tip for you...',
+                    _coachTip.isNotEmpty ? _coachTip : localizations.coachIsPreparingTip,
                     style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                   ),
               SizedBox(height: 2.h),
@@ -600,8 +604,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               child: _buildCoachMiniCard(
                 theme,
                 icon: Icons.question_answer_outlined,
-                title: 'Quick questions',
-                subtitle: 'Get help styling pieces you own',
+                title: localizations.quickQuestions,
+                subtitle: localizations.getHelpStylingPieces,
                 onTap: _showCoachPromptSheet,
               ),
             ),
@@ -610,10 +614,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               child: _buildCoachMiniCard(
                 theme,
                 icon: Icons.event_available,
-                title: 'Event coaching',
+                title: localizations.eventCoaching,
                 subtitle: nextEvent != null
-                    ? 'Suggestions for ${nextEvent['title']}'
-                    : 'Add an event to unlock this',
+                    ? localizations.suggestionsFor(nextEvent['title'] as String)
+                    : localizations.addEventToUnlock,
                 onTap: nextEvent != null
                     ? () => _showEventCoachDialog(nextEvent)
                     : _showAddEventDialog,
@@ -683,22 +687,22 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       if (!mounted) return;
       UpgradePromptWidget.show(
         context,
-        title: 'Coach limit reached',
+        title: localizations.coachLimitReached,
         message: _isPremium
-            ? 'You have used all 50 coaching sessions this month. Your quota resets next month.'
-            : 'Essential plan includes 1 coaching session per week. Upgrade to Signature for 50 sessions per month.',
+            ? localizations.premiumCoachLimitMsg
+            : localizations.freeCoachLimitMsg,
       );
       return;
     }
 
     // ── SHOW SHEET ─────────────────────────────────────────
     final topics = [
-      {'label': '👔 Outfit ideas', 'question': 'Give me outfit ideas based on my wardrobe and style profile.'},
-      {'label': '🛍 Shopping advice', 'question': 'What piece should I buy next to complete more outfits in my wardrobe?'},
-      {'label': '👗 My wardrobe', 'question': 'Give me an honest assessment of my wardrobe based on my data.'},
-      {'label': '📅 For an event', 'question': 'How should I dress for a special occasion based on my style?'},
-      {'label': '🔄 More variety', 'question': 'How can I create more outfit variety with what I already own?'},
-      {'label': '✨ Style upgrade', 'question': 'What is one thing I can change to elevate my everyday style?'},
+      {'label': localizations.topicOutfitIdeas, 'question': localizations.qOutfitIdeas},
+      {'label': localizations.topicShoppingAdvice, 'question': localizations.qShoppingAdvice},
+      {'label': localizations.topicMyWardrobe, 'question': localizations.qMyWardrobe},
+      {'label': localizations.topicForAnEvent, 'question': localizations.qForAnEvent},
+      {'label': localizations.topicMoreVariety, 'question': localizations.qMoreVariety},
+      {'label': localizations.topicStyleUpgrade, 'question': localizations.qStyleUpgrade},
     ];
 
     final customController = TextEditingController();
@@ -736,8 +740,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Ask your coach',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        localizations.askYourCoach,
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -771,9 +775,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
-                    'Type your own question or pick a topic.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    localizations.typeQuestionOrPickTopic,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -783,7 +787,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         child: TextField(
                           controller: customController,
                           decoration: InputDecoration(
-                            hintText: 'e.g. How do I look more confident?',
+                            hintText: localizations.coachHintText,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -820,9 +824,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    'Or pick a topic',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    localizations.orPickATopic,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1029,24 +1033,31 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       children: [
                         Text(
                           question,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontStyle: FontStyle.italic,
-                            color: Colors.grey,
+                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                             fontSize: 13,
                           ),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           result['answer'] as String? ?? '',
-                          style: const TextStyle(fontSize: 14, height: 1.5),
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
                         if ((result['next_step'] as String? ?? '').isNotEmpty) ...[
                           const SizedBox(height: 12),
                           Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(8),
+                              color: theme.colorScheme.secondary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: theme.colorScheme.secondary.withValues(alpha: 0.14),
+                              ),
                             ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1084,8 +1095,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       return _buildEmptyCard(
         theme,
         icon: Icons.insights_outlined,
-        title: 'No insights yet',
-        subtitle: 'Add items to your wardrobe to see your style insights',
+        title: localizations.noInsightsYet,
+        subtitle: localizations.addItemsForInsights,
       );
     }
 
@@ -1097,7 +1108,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               child: _buildInsightCard(
                 theme,
                 icon: '👗',
-                label: 'Total Items',
+                label: localizations.totalItemsLabel,
                 value: '${_insights['totalItems']}',
               ),
             ),
@@ -1106,7 +1117,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               child: _buildInsightCard(
                 theme,
                 icon: '📊',
-                label: 'Outfits Logged',
+                label: localizations.outfitsLoggedLabel,
                 value: '${_insights['totalOutfitsLogged']}',
               ),
             ),
@@ -1119,7 +1130,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               child: _buildInsightCard(
                 theme,
                 icon: '🏆',
-                label: 'Top Category',
+                label: localizations.topCategoryLabel,
                 value: '${_insights['topCategory']}',
               ),
             ),
@@ -1128,7 +1139,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               child: _buildInsightCard(
                 theme,
                 icon: '🎯',
-                label: 'Top Occasion',
+                label: localizations.topOccasionLabel,
                 value: '${_insights['topOccasion']}',
               ),
             ),
@@ -1323,10 +1334,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 SizedBox(height: 2.h),
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Event Name',
-                    hintText: 'e.g. Sarahs Wedding',
-                    prefixIcon: Icon(Icons.event),
+                  decoration: InputDecoration(
+                    labelText: localizations.eventName,
+                    hintText: localizations.hintWedding,
+                    prefixIcon: const Icon(Icons.event),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -1346,7 +1357,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   child: AbsorbPointer(
                     child: TextField(
                       decoration: InputDecoration(
-                        labelText: 'Date',
+                        labelText: localizations.dateLabel,
                         prefixIcon: const Icon(Icons.calendar_today),
                         hintText: DateFormat('MMM dd, yyyy').format(selectedDate),
                       ),
@@ -1372,9 +1383,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 // Dress code
                 DropdownButtonFormField<String>(
                   value: dressCode,
-                  decoration: const InputDecoration(
-                    labelText: 'Dress Code (optional)',
-                    prefixIcon: Icon(Icons.checkroom),
+                  decoration: InputDecoration(
+                    labelText: localizations.dressCodeOptional,
+                    prefixIcon: const Icon(Icons.checkroom),
                   ),
                   items: dressCodes.map((d) =>
                     DropdownMenuItem(value: d, child: Text(d))).toList(),
@@ -1472,12 +1483,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         ],
       },
       {
-        'question': 'How adventurous are you with styling?',
+        'question': localizations.qStyleAdventures,
         'options': [
-          'I stay with what I know works',
-          'I like small changes',
-          'I enjoy experimenting often',
-          'It depends on the occasion',
+          localizations.qStyleAdventurousWorks,
+          localizations.qStyleAdventurousSmall,
+          localizations.qStyleAdventurousOften,
+          localizations.qStyleAdventurousDepends,
         ],
       },
       {
@@ -1506,7 +1517,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Style Quiz ${currentQuestion + 1}/${questions.length}',
+                  '${localizations.styleQuiz} ${currentQuestion + 1}/${questions.length}',
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 LinearProgressIndicator(
@@ -1555,7 +1566,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     _loadData();
                   }
                 },
-                child: Text(currentQuestion < questions.length - 1 ? 'Next' : 'Finish'),
+                child: Text(currentQuestion < questions.length - 1 ? localizations.next : localizations.finish),
               ),
             ],
           );

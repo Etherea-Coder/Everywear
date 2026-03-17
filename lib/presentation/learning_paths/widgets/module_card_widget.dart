@@ -214,14 +214,14 @@ class ModuleCardWidget extends StatelessWidget {
                             Text(
                               'In Progress',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.secondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
                               '${(progress * 100).toInt()}%',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.secondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -234,7 +234,7 @@ class ModuleCardWidget extends StatelessWidget {
                           percent: progress,
                           backgroundColor:
                               theme.colorScheme.surfaceContainerHighest,
-                          progressColor: theme.colorScheme.primary,
+                          progressColor: theme.colorScheme.secondary,
                           barRadius: const Radius.circular(10),
                         ),
                         SizedBox(height: 1.5.h),
@@ -304,7 +304,7 @@ class ModuleCardWidget extends StatelessWidget {
                           vertical: 0.5.h,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

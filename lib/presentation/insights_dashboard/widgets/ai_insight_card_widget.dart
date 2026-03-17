@@ -76,17 +76,17 @@ class AIInsightCardWidget extends StatelessWidget {
       // Positive = AI-observed improvement → pink tint (intelligence)
       case 'positive':
         return {
-          'background': secondary.withValues(alpha: 0.07),
-          'border': secondary.withValues(alpha: 0.20),
-          'iconBg': secondary.withValues(alpha: 0.12),
+          'background': secondary.withValues(alpha: 0.05),
+          'border': secondary.withValues(alpha: 0.14),
+          'iconBg': secondary.withValues(alpha: 0.10),
           'icon': secondary,
           'text': onSurface,
         };
       // Suggestion = AI recommendation → pink tint (intelligence)
       case 'suggestion':
         return {
-          'background': secondary.withValues(alpha: 0.06),
-          'border': secondary.withValues(alpha: 0.16),
+          'background': secondary.withValues(alpha: 0.05),
+          'border': secondary.withValues(alpha: 0.14),
           'iconBg': secondary.withValues(alpha: 0.10),
           'icon': secondary,
           'text': onSurface,

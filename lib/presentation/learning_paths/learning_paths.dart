@@ -184,15 +184,15 @@ class _LearningPathsState extends State<LearningPaths> {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 3.w, vertical: 0.5.h),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer
-                                  .withValues(alpha: 0.3),
+                              color: theme.colorScheme.secondary
+                                  .withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               '$_completedModules/$_totalModules completed',
                               style: theme.textTheme.bodySmall
                                   ?.copyWith(
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.secondary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
