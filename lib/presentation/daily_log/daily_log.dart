@@ -938,19 +938,47 @@ class _DailyLogState extends State<DailyLog> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(isAnchor ? 22 : 16),
-        child: imageUrl.isNotEmpty
-            ? Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildSuggestionFallbackIcon(
-                  theme,
-                  isAnchor: isAnchor,
+        child: Stack(
+          children: [
+            // Image or fallback
+            Positioned.fill(
+              child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _buildSuggestionFallbackIcon(
+                        theme,
+                        isAnchor: isAnchor,
+                      ),
+                    )
+                  : _buildSuggestionFallbackIcon(
+                      theme,
+                      isAnchor: isAnchor,
+                    ),
+            ),
+            // DEBUG OVERLAY — remove once images are confirmed working
+            Positioned(
+              bottom: 2,
+              left: 2,
+              right: 2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                color: Colors.black54,
+                child: Text(
+                  imageUrl.isNotEmpty
+                      ? '✓ ${imageUrl.length}ch'
+                      : '✗ no url',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              )
-            : _buildSuggestionFallbackIcon(
-                theme,
-                isAnchor: isAnchor,
               ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1660,13 +1688,26 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   void _showQuickLogOptions() {
+    // Capture all strings from the state context BEFORE entering the
+    // bottom-sheet builder, which receives its own context that may not
+    // carry the correct locale in some Flutter/localizations setups.
+    final title         = loc.quickLogOptions;
+    final photoTitle    = loc.quickLogTakePhotoTitle;
+    final photoSub      = loc.quickLogTakePhotoSubtitle;
+    final prevTitle     = loc.quickLogPreviousTitle;
+    final prevSub       = loc.quickLogPreviousSubtitle;
+    final repeatTitle   = loc.quickLogRepeatTitle;
+    final repeatSub     = loc.quickLogRepeatSubtitle;
+    final saveTitle     = loc.quickLogSaveDisplayedTitle;
+    final saveSub       = loc.quickLogSaveDisplayedSubtitle;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
-      builder: (context) => Container(
+      builder: (sheetContext) => Container(
         padding: EdgeInsets.all(4.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1676,48 +1717,48 @@ class _DailyLogState extends State<DailyLog> {
               height: 4,
               margin: EdgeInsets.only(bottom: 2.h),
               decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor,
+                color: Theme.of(sheetContext).dividerColor,
                 borderRadius: BorderRadius.circular(2.0),
               ),
             ),
             Text(
-              loc.quickLogOptions,
+              title,
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 2.h),
             _buildQuickOption(
               icon: Icons.camera_alt,
-              title: loc.quickLogTakePhotoTitle,
-              subtitle: loc.quickLogTakePhotoSubtitle,
+              title: photoTitle,
+              subtitle: photoSub,
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 Navigator.pushNamed(context, AppRoutes.outfitCaptureFlow);
               },
             ),
             _buildQuickOption(
               icon: Icons.history,
-              title: loc.quickLogPreviousTitle,
-              subtitle: loc.quickLogPreviousSubtitle,
+              title: prevTitle,
+              subtitle: prevSub,
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 _navigateToFullLog();
               },
             ),
             _buildQuickOption(
               icon: Icons.repeat,
-              title: loc.quickLogRepeatTitle,
-              subtitle: loc.quickLogRepeatSubtitle,
+              title: repeatTitle,
+              subtitle: repeatSub,
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 _repeatLastOutfit();
               },
             ),
             _buildQuickOption(
               icon: Icons.checkroom,
-              title: loc.quickLogSaveDisplayedTitle,
-              subtitle: loc.quickLogSaveDisplayedSubtitle,
+              title: saveTitle,
+              subtitle: saveSub,
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 _saveDisplayedOutfit();
               },
             ),
