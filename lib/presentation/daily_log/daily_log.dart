@@ -226,35 +226,94 @@ class _DailyLogState extends State<DailyLog> {
       description = loc.surpriseSuggestionDesc;
     }
 
-    _suggestedOutfit = {
-      'title': loc.todaysStyleIdea,
-      'description': description,
-      'anchor': {
-        'slot': 'anchor',
-        'name': anchorName,
-        'imageUrl': '',
-        'category': loc.catAnchor,
+    // Preserve existing imageUrls by matching names against wardrobe
+    _suggestedOutfit = _mergeImageUrls(
+      {
+        'title': loc.todaysStyleIdea,
+        'description': description,
+        'anchor': {
+          'slot': 'anchor',
+          'name': anchorName,
+          'imageUrl': '',
+          'category': loc.catAnchor,
+        },
+        'items': [
+          {
+            'slot': 'top',
+            'name': topName,
+            'imageUrl': '',
+            'category': loc.catTop,
+          },
+          {
+            'slot': 'bottom',
+            'name': bottomName,
+            'imageUrl': '',
+            'category': loc.catBottom,
+          },
+          {
+            'slot': 'shoes',
+            'name': shoesName,
+            'imageUrl': '',
+            'category': loc.catShoes,
+          },
+        ],
       },
-      'items': [
-        {
-          'slot': 'top',
-          'name': topName,
-          'imageUrl': '',
-          'category': loc.catTop,
-        },
-        {
-          'slot': 'bottom',
-          'name': bottomName,
-          'imageUrl': '',
-          'category': loc.catBottom,
-        },
-        {
-          'slot': 'shoes',
-          'name': shoesName,
-          'imageUrl': '',
-          'category': loc.catShoes,
-        },
-      ],
+      _suggestedOutfit,
+    );
+  }
+
+  // ─── FIX 1: Image URL preservation helpers ───────────────────────────────
+
+  /// Tries to find a wardrobe image for [itemName], falling back to
+  /// [fallbackUrl] (the URL the item already had before refresh).
+  String _resolveImageUrl(String? itemName, String fallbackUrl) {
+    if (itemName == null || itemName.isEmpty) return fallbackUrl;
+    final name = itemName.toLowerCase();
+    for (final w in _wardrobeItems) {
+      final wName = (w['name'] ?? w['title'] ?? '').toString().toLowerCase();
+      if (wName == name || wName.contains(name) || name.contains(wName)) {
+        final url = (w['image_url'] ?? w['imageUrl'] ?? '').toString();
+        if (url.isNotEmpty) return url;
+      }
+    }
+    return fallbackUrl;
+  }
+
+  /// Overlays wardrobe-resolved (or previously loaded) imageUrls onto
+  /// [newOutfit], so images never regress to empty strings on refresh.
+  Map<String, dynamic> _mergeImageUrls(
+    Map<String, dynamic> newOutfit,
+    Map<String, dynamic> prevOutfit,
+  ) {
+    // --- anchor ---
+    final newAnchor =
+        Map<String, dynamic>.from(newOutfit['anchor'] as Map? ?? {});
+    final prevAnchor =
+        Map<String, dynamic>.from(prevOutfit['anchor'] as Map? ?? {});
+    newAnchor['imageUrl'] = _resolveImageUrl(
+      newAnchor['name'] as String?,
+      (prevAnchor['imageUrl'] ?? '').toString(),
+    );
+
+    // --- items ---
+    final prevItems =
+        ((prevOutfit['items'] as List?)?.cast<Map<String, dynamic>>() ?? [])
+            .asMap();
+    final newItems =
+        ((newOutfit['items'] as List?)?.cast<Map<String, dynamic>>() ?? [])
+            .asMap()
+            .map((i, item) {
+      final mutable = Map<String, dynamic>.from(item);
+      final prevUrl = (prevItems[i]?['imageUrl'] ?? '').toString();
+      mutable['imageUrl'] =
+          _resolveImageUrl(mutable['name'] as String?, prevUrl);
+      return MapEntry(i, mutable);
+    });
+
+    return {
+      ...newOutfit,
+      'anchor': newAnchor,
+      'items': newItems.values.toList(),
     };
   }
 
@@ -275,13 +334,17 @@ class _DailyLogState extends State<DailyLog> {
       setState(() {
         _isAISuggestionLoading = false;
         if (result != null) {
-          _suggestedOutfit = {
-            'title': result['title'] ?? loc.todaysStyleIdea,
-            'description': result['description'] ?? '',
-            'styling_note': result['styling_note'] ?? '',
-            'anchor': result['anchor'] ?? _suggestedOutfit['anchor'],
-            'items': result['items'] ?? _suggestedOutfit['items'],
-          };
+          // Merge imageUrls from wardrobe / previous state so they never disappear
+          _suggestedOutfit = _mergeImageUrls(
+            {
+              'title': result['title'] ?? loc.todaysStyleIdea,
+              'description': result['description'] ?? '',
+              'styling_note': result['styling_note'] ?? '',
+              'anchor': result['anchor'] ?? _suggestedOutfit['anchor'],
+              'items': result['items'] ?? _suggestedOutfit['items'],
+            },
+            _suggestedOutfit,
+          );
         }
       });
     }
@@ -1708,6 +1771,8 @@ class _DailyLogState extends State<DailyLog> {
     await _repeatEntry(_todayEntries.first['id']);
   }
 
+  // ─── FIX 2: Save Displayed Outfit — logs directly, no navigation ─────────
+
   Future<void> _saveDisplayedOutfit() async {
     final anchor = _suggestedOutfit['anchor'] as Map<String, dynamic>?;
     final items = (_suggestedOutfit['items'] as List<dynamic>?)
@@ -1715,48 +1780,196 @@ class _DailyLogState extends State<DailyLog> {
 
     if (anchor == null || items == null || items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).noOutfitDisplayedError)),
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context).noOutfitDisplayedError)),
       );
       return;
     }
 
-    try {
-      // Extract item IDs from the suggested outfit
-      final List<String> itemIds = [];
-      if (anchor['id'] != null) {
-        itemIds.add(anchor['id'] as String);
-      }
-      for (final item in items) {
-        if (item['id'] != null) {
-          itemIds.add(item['id'] as String);
-        }
-      }
+    // Collect wardrobe IDs for items that were matched to real wardrobe entries
+    final List<String> itemIds = [
+      if (anchor['id'] != null) anchor['id'] as String,
+      ...items
+          .where((i) => i['id'] != null)
+          .map((i) => i['id'] as String),
+    ];
 
-      if (itemIds.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).noValidWardrobeItemsError)),
-        );
-        return;
-      }
+    // Ask the user for occasion + optional notes before saving
+    String? selectedOccasion = _selectedOccasion ?? 'Casual';
+    final notesController = TextEditingController();
 
-      // Navigate to outfit capture flow with the item IDs
-      final result = await Navigator.pushNamed(
-        context,
-        AppRoutes.outfitCaptureFlow,
-        arguments: {
-          'preselectedItemIds': itemIds,
-          'outfitName': _suggestedOutfit['title'] ?? loc.todaysStyleIdea,
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final loc = AppLocalizations.of(context);
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.checkroom,
+                    color: Theme.of(context).colorScheme.primary),
+                SizedBox(width: 2.w),
+                Expanded(
+                  child: Text(
+                    _suggestedOutfit['title'] as String? ??
+                        loc.todaysStyleIdea,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Outfit item names summary
+                Text(
+                  [
+                    anchor['name'] as String? ?? '',
+                    ...items.map((i) => i['name'] as String? ?? ''),
+                  ]
+                      .where((n) => n.isNotEmpty)
+                      .join(' · '),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                // Occasion picker
+                Text(loc.dressingFor,
+                    style: TextStyle(
+                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                SizedBox(height: 1.h),
+                Wrap(
+                  spacing: 2.w,
+                  runSpacing: 1.h,
+                  children: _occasions.map((occ) {
+                    final sel = selectedOccasion == occ;
+                    return GestureDetector(
+                      onTap: () =>
+                          setDialogState(() => selectedOccasion = occ),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 3.w, vertical: 0.8.h),
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.14)
+                              : Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: sel
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.4)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .outline
+                                    .withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Text(
+                          occ,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: sel
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: sel
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 2.h),
+                TextField(
+                  controller: notesController,
+                  decoration: InputDecoration(
+                    labelText: loc.notes,
+                    hintText: loc.optionalNotesHint,
+                    border: const OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: 3.w, vertical: 1.2.h),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(AppLocalizations.of(context).cancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(AppLocalizations.of(context).save),
+              ),
+            ],
+          );
         },
-      );
+      ),
+    );
 
-      if (result == true && mounted) {
+    if (confirmed != true || !mounted) return;
+
+    // If no wardrobe IDs were matched, log the outfit by name only
+    // (outfit_log without item links — adjust to your service API as needed)
+    try {
+      String? newId;
+
+      if (itemIds.isNotEmpty) {
+        newId = await _outfitLogService.logOutfitWithItems(
+          wornDate: DateTime.now(),
+          itemIds: itemIds,
+          occasion: selectedOccasion ?? 'Casual',
+          notes: notesController.text.trim(),
+          outfitName:
+              _suggestedOutfit['title'] as String? ?? loc.todaysStyleIdea,
+        );
+      } else {
+        // Fallback: log outfit by name when items aren't in wardrobe yet
+        newId = await _outfitLogService.logOutfitByName(
+          wornDate: DateTime.now(),
+          outfitName:
+              _suggestedOutfit['title'] as String? ?? loc.todaysStyleIdea,
+          occasion: selectedOccasion ?? 'Casual',
+          notes: notesController.text.trim(),
+          itemNames: [
+            anchor['name'] as String? ?? '',
+            ...items.map((i) => i['name'] as String? ?? ''),
+          ].where((n) => n.isNotEmpty).toList(),
+        );
+      }
+
+      if (newId != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context).outfitLoggedSuccess)),
+        );
         _loadData();
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).error)),
+        );
       }
     } catch (e) {
       debugPrint('Error saving displayed outfit: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  '${AppLocalizations.of(context).error}: $e')),
+        );
+      }
     }
   }
 

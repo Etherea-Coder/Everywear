@@ -80,12 +80,78 @@ class TodaySuggestionService {
       debugPrint('Today suggestion response: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
-        return Map<String, dynamic>.from(response.data);
+        final result = Map<String, dynamic>.from(response.data);
+        // Re-attach wardrobe image URLs and IDs to every item the AI picked.
+        // The Edge Function returns names but loses the image_url — we fix
+        // that here by matching each returned item name back to the wardrobe
+        // index we already have in memory.
+        return _reattachWardrobeData(result, wardrobeItems);
       }
       return null;
     } catch (e) {
       debugPrint('Today suggestion error: $e');
       return null;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Wardrobe data reattachment
+  // ---------------------------------------------------------------------------
+
+  /// Builds a case-insensitive name → wardrobe item lookup once, then uses it
+  /// to enrich every slot (anchor + items) in the AI response.
+  Map<String, dynamic> _reattachWardrobeData(
+    Map<String, dynamic> result,
+    List<Map<String, dynamic>> wardrobeItems,
+  ) {
+    // Build lookup: lowercased name → wardrobe row
+    final lookup = <String, Map<String, dynamic>>{};
+    for (final w in wardrobeItems) {
+      final name = (w['name'] ?? '').toString().toLowerCase().trim();
+      if (name.isNotEmpty) lookup[name] = w;
+    }
+
+    Map<String, dynamic> enrich(Map<String, dynamic> item) {
+      final mutable = Map<String, dynamic>.from(item);
+      final name = (mutable['name'] ?? '').toString().toLowerCase().trim();
+
+      // Try exact match first, then partial
+      final match = lookup[name] ??
+          lookup.entries
+              .firstWhere(
+                (e) => e.key.contains(name) || name.contains(e.key),
+                orElse: () => const MapEntry('', {}),
+              )
+              .value;
+
+      if (match.isNotEmpty) {
+        final imageUrl = (match['image_url'] ?? match['imageUrl'] ?? '').toString();
+        if (imageUrl.isNotEmpty) mutable['imageUrl'] = imageUrl;
+        // Also carry the wardrobe ID so "Save Displayed Outfit" can log it
+        mutable['id'] ??= match['id'];
+      }
+      return mutable;
+    }
+
+    // Enrich anchor
+    if (result['anchor'] is Map) {
+      result = {
+        ...result,
+        'anchor': enrich(Map<String, dynamic>.from(result['anchor'] as Map)),
+      };
+    }
+
+    // Enrich item slots
+    if (result['items'] is List) {
+      result = {
+        ...result,
+        'items': (result['items'] as List)
+            .cast<Map<String, dynamic>>()
+            .map(enrich)
+            .toList(),
+      };
+    }
+
+    return result;
   }
 }

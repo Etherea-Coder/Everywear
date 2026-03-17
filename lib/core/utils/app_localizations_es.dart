@@ -111,6 +111,7 @@ const Map<String, String> appLocalizationsEs = {
   'outfits': 'Atuendos',
   'daily_log': 'Registro diario',
   'insights': 'Perspectivas',
+  'your_style_profile': 'Tu Perfil de Estilo',
 
   // Language names
   'english': 'Inglés',
@@ -184,6 +185,8 @@ const Map<String, String> appLocalizationsEs = {
   'retake': 'Volver a tomar',
   'rate_outfit_error': 'Por favor, califica tu atuendo antes de guardar',
   'outfit_preview': 'Vista Previa del Atuendo',
+  'outfit_logged_success': '¡Atuendo registrado con éxito!',
+  'optional_notes_hint': 'Agrega algunas notas sobre este atuendo...',
   'no_image_captured': 'No se capturó ninguna imagen',
   'selected_items_count': 'Artículos Seleccionados ({count})',
   'outfit_name_optional': 'Nombre del Atuendo (Opcional)',

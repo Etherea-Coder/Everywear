@@ -525,6 +525,8 @@ class AppLocalizations {
   String get notes => translate('notes');
   String get noOutfitDisplayedError => translate('no_outfit_displayed_error');
   String get noValidWardrobeItemsError => translate('no_valid_wardrobe_items_error');
+  String get outfitLoggedSuccess => translate('outfit_logged_success');
+  String get optionalNotesHint => translate('optional_notes_hint');
   
   String get outfitImageLabel => translate('outfit_image_label');
   String get repeatOutfitTooltip => translate('repeat_outfit_tooltip');
@@ -541,6 +543,7 @@ class AppLocalizations {
   String get coachIsThinking => translate('coach_is_thinking');
   String get coachIsPreparingTip => translate('coach_is_preparing_tip');
   String get discoverYourStyle => translate('discover_your_style');
+  String get yourStyleProfile => translate('your_style_profile');
   String get takeQuizToPersonalise => translate('take_quiz_to_personalise');
   String get quickQuestions => translate('quick_questions');
   String get getHelpStylingPieces => translate('get_help_styling_pieces');

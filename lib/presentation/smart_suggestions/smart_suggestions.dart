@@ -85,7 +85,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               floating: true,
               backgroundColor: theme.scaffoldBackgroundColor,
               elevation: 0,
-              title: Text(AppLocalizations.of(context).styleTitle, style: theme.textTheme.headlineMedium),
+              title: Text(localizations.styleTitle, style: theme.textTheme.headlineMedium),
               actions: [
                 IconButton(
                   icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
@@ -102,26 +102,21 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 padding: EdgeInsets.symmetric(horizontal: 4.w),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Style Quiz section
                     _buildQuizSection(theme),
                     SizedBox(height: 3.h),
-                    // Coach section
                     _buildSectionHeader(theme, localizations.styleCoach, Icons.psychology_alt),
                     SizedBox(height: 1.h),
                     _buildCoachSection(theme),
                     SizedBox(height: 3.h),
-                    // Events section
                     _buildSectionHeader(theme, localizations.events, Icons.event,
                         onAdd: _showAddEventDialog),
                     SizedBox(height: 1.h),
                     _buildEventsSection(theme),
                     SizedBox(height: 3.h),
-                    // Challenges section
                     _buildSectionHeader(theme, localizations.challenges, Icons.flag),
                     SizedBox(height: 1.h),
                     _buildChallengesSection(theme),
                     SizedBox(height: 3.h),
-                    // Insights section
                     _buildSectionHeader(theme, localizations.insights, Icons.insights),
                     SizedBox(height: 1.h),
                     _buildInsightsSection(theme),
@@ -148,7 +143,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         onAction: _showAddEventDialog,
       );
     }
-
     return Column(
       children: _events.map((event) => _buildEventCard(theme, event)).toList(),
     );
@@ -231,8 +225,11 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                daysLeft == 0 ? localizations.today + '!' :
-                daysLeft == 1 ? localizations.tomorrow : 'In $daysLeft ${localizations.days}',
+                daysLeft == 0
+                    ? '${localizations.today}!'
+                    : daysLeft == 1
+                        ? localizations.tomorrow
+                        : 'In $daysLeft ${localizations.days}',
                 style: TextStyle(
                   fontSize: 11.sp,
                   color: daysLeft <= 3
@@ -280,7 +277,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         subtitle: localizations.checkBackSoon,
       );
     }
-
     return SizedBox(
       height: 22.h,
       child: ListView.builder(
@@ -392,7 +388,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: Text(AppLocalizations.of(context).continueText, style: TextStyle(fontSize: 12.sp)),
+                child: Text(
+                  AppLocalizations.of(context).continueText,
+                  style: TextStyle(fontSize: 12.sp),
+                ),
               ),
             ),
         ],
@@ -402,6 +401,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
   // ── QUIZ ────────────────────────────────────────────────
   Widget _buildQuizSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     final hasResult = _quizResult != null;
 
     return GestureDetector(
@@ -426,7 +426,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
           borderRadius: BorderRadius.circular(20),
           child: Row(
             children: [
-              // Soft pink accent strip
               Container(
                 width: 4,
                 height: 80,
@@ -445,7 +444,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        hasResult ? localizations.yourStyleProfile : localizations.discoverYourStyle,
+                        hasResult
+                            ? localizations.yourStyleProfile
+                            : localizations.discoverYourStyle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -453,7 +454,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       SizedBox(height: 0.4.h),
                       Text(
                         hasResult
-                            ? _quizResult!['style_profile'] as String? ?? localizations.completed
+                            ? _quizResult!['style_profile'] as String? ??
+                                localizations.completed
                             : localizations.takeQuizToPersonalise,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -490,8 +492,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     );
   }
 
-    // ── COACH ───────────────────────────────────────────────
+  // ── COACH ───────────────────────────────────────────────
   Widget _buildCoachSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     final nextEvent = _events.isNotEmpty ? _events.first : null;
 
     return Column(
@@ -536,7 +539,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        // FIX: removed the duplicate `Text(` wrapper that was here
                         Text(
                           localizations.tipOfTheWeek,
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -546,7 +549,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         SizedBox(height: 0.3.h),
                         Text(
                           _quizResult != null
-                              ? _quizResult!['style_profile'] as String? ?? localizations.personalizedCoaching
+                              ? _quizResult!['style_profile'] as String? ??
+                                  localizations.personalizedCoaching
                               : localizations.completeQuizForCoaching,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
@@ -559,33 +563,36 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               ),
               SizedBox(height: 2.h),
               _isCoachTipLoading
-                ? Row(
-                    children: [
-                      SizedBox(
-                        width: 16, height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      SizedBox(width: 2.w),
-                      Text(
-                        localizations.coachIsThinking,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontStyle: FontStyle.italic,
+                  ? Row(
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                      ),
-                    ],
-                  )
-                : Text(
-                    _coachTip.isNotEmpty ? _coachTip : localizations.coachIsPreparingTip,
-                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
-                  ),
+                        SizedBox(width: 2.w),
+                        Text(
+                          localizations.coachIsThinking,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      _coachTip.isNotEmpty
+                          ? _coachTip
+                          : localizations.coachIsPreparingTip,
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                    ),
               SizedBox(height: 2.h),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _showCoachPromptSheet,
                   icon: const Icon(Icons.chat_bubble_outline),
-                  label: Text(AppLocalizations.of(context).askYourCoach),
+                  label: Text(localizations.askYourCoach),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 1.4.h),
                     shape: RoundedRectangleBorder(
@@ -678,10 +685,11 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   void _showCoachPromptSheet() async {
+    final localizations = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final user = _styleService.client.auth.currentUser;
     if (user == null) return;
 
-    // ── TIER CHECK ─────────────────────────────────────────
     final canUse = await _tierService.canUseCoach(user.id);
     if (!canUse) {
       if (!mounted) return;
@@ -695,7 +703,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       return;
     }
 
-    // ── SHOW SHEET ─────────────────────────────────────────
     final topics = [
       {'label': localizations.topicOutfitIdeas, 'question': localizations.qOutfitIdeas},
       {'label': localizations.topicShoppingAdvice, 'question': localizations.qShoppingAdvice},
@@ -728,7 +735,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 children: [
                   Center(
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       margin: EdgeInsets.only(bottom: 2.h),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade300,
@@ -745,7 +753,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Show quota badge
                       Container(
                         padding: EdgeInsets.symmetric(
                             horizontal: 3.w, vertical: 0.5.h),
@@ -792,7 +799,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             contentPadding: EdgeInsets.symmetric(
-                              horizontal: 4.w, vertical: 1.5.h,
+                              horizontal: 4.w,
+                              vertical: 1.5.h,
                             ),
                           ),
                           textInputAction: TextInputAction.send,
@@ -813,7 +821,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         },
                         icon: const Icon(Icons.send),
                         style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: theme.colorScheme.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -834,13 +842,15 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   Wrap(
                     spacing: 2.w,
                     runSpacing: 1.h,
-                    children: topics.map((topic) => ActionChip(
-                      label: Text(topic['label']!),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _askCoachQuestion(topic['question']!);
-                      },
-                    )).toList(),
+                    children: topics
+                        .map((topic) => ActionChip(
+                              label: Text(topic['label']!),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _askCoachQuestion(topic['question']!);
+                              },
+                            ))
+                        .toList(),
                   ),
                   SizedBox(height: 2.h),
                 ],
@@ -864,18 +874,15 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          // Trigger load only once
           if (isLoading && coachData.isEmpty) {
-            isLoading = false; // prevent re-trigger
+            isLoading = false;
             _styleService.fetchEventCoaching(
               event: event,
               insights: _insights,
               quizResult: _quizResult,
             ).then((data) {
               if (context.mounted) {
-                setDialogState(() {
-                  coachData = data;
-                });
+                setDialogState(() => coachData = data);
               }
             });
           }
@@ -888,62 +895,74 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 Text(event['title'] as String),
                 Text(
                   '$dateStr · $eventType${dressCode != null ? " · $dressCode" : ""}',
-                  style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.normal),
+                  style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.normal),
                 ),
               ],
             ),
             content: SizedBox(
               width: double.maxFinite,
               child: isLoading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                : coachData.containsKey('error')
-                  ? Text(coachData['error'] as String)
-                  : SingleChildScrollView(
-                      child: Builder(
-                        builder: (ctx) {
-                          final dlgTheme = Theme.of(ctx);
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (coachData['intro'] != null) ...[
-                                Text(coachData['intro'] as String),
-                                const SizedBox(height: 12),
-                              ],
-                              if (coachData['outfit_1'] != null)
-                                _buildOutfitSuggestion(dlgTheme, '1', coachData['outfit_1'] as String),
-                              if (coachData['outfit_2'] != null)
-                                _buildOutfitSuggestion(dlgTheme, '2', coachData['outfit_2'] as String),
-                              if (coachData['outfit_3'] != null)
-                                _buildOutfitSuggestion(dlgTheme, '3', coachData['outfit_3'] as String),
-                              if (coachData['prep_tip'] != null) ...[
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text('💡 ', style: TextStyle(fontSize: 14)),
-                                      Expanded(child: Text(coachData['prep_tip'] as String,
-                                        style: const TextStyle(fontSize: 13))),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              if (coachData['tip'] != null)
-                                Text(coachData['tip'] as String),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : coachData.containsKey('error')
+                      ? Text(coachData['error'] as String)
+                      : SingleChildScrollView(
+                          child: Builder(
+                            builder: (ctx) {
+                              final dlgTheme = Theme.of(ctx);
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (coachData['intro'] != null) ...[
+                                    Text(coachData['intro'] as String),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  if (coachData['outfit_1'] != null)
+                                    _buildOutfitSuggestion(
+                                        dlgTheme, '1', coachData['outfit_1'] as String),
+                                  if (coachData['outfit_2'] != null)
+                                    _buildOutfitSuggestion(
+                                        dlgTheme, '2', coachData['outfit_2'] as String),
+                                  if (coachData['outfit_3'] != null)
+                                    _buildOutfitSuggestion(
+                                        dlgTheme, '3', coachData['outfit_3'] as String),
+                                  if (coachData['prep_tip'] != null) ...[
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.shade50,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('💡 ',
+                                              style: TextStyle(fontSize: 14)),
+                                          Expanded(
+                                            child: Text(
+                                              coachData['prep_tip'] as String,
+                                              style: const TextStyle(fontSize: 13),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  if (coachData['tip'] != null)
+                                    Text(coachData['tip'] as String),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
             ),
             actions: [
               TextButton(
@@ -964,21 +983,28 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 24, height: 24,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               color: theme.colorScheme.secondary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: Text(number, style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.secondary,
-              )),
+              child: Text(
+                number,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.secondary,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, height: 1.4))),
+          Expanded(
+            child: Text(text,
+                style: const TextStyle(fontSize: 13, height: 1.4)),
+          ),
         ],
       ),
     );
@@ -987,7 +1013,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   void _askCoachQuestion(String question) async {
     final user = _styleService.client.auth.currentUser;
 
-    // Increment coaching count
     if (user != null) {
       await _tierService.incrementCoachingCount(user.id);
       final quota = await _tierService.getCoachingQuota(user.id);
@@ -1002,17 +1027,16 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
+          final theme = Theme.of(context);
           if (isLoading && result.isEmpty) {
-            isLoading = false; // prevent re-trigger
+            isLoading = false;
             _styleService.askCoach(
               question: question,
               insights: _insights,
               quizResult: _quizResult,
             ).then((data) {
               if (context.mounted) {
-                setDialogState(() {
-                  result = data;
-                });
+                setDialogState(() => result = data);
               }
             });
           }
@@ -1022,60 +1046,64 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             content: SizedBox(
               width: double.maxFinite,
               child: isLoading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                : SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          question,
-                          style: TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                            fontSize: 13,
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            question,
+                            style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.7),
+                              fontSize: 13,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          result['answer'] as String? ?? '',
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        if ((result['next_step'] as String? ?? '').isNotEmpty) ...[
                           const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.secondary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: theme.colorScheme.secondary.withValues(alpha: 0.14),
+                          Text(
+                            result['answer'] as String? ?? '',
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          if ((result['next_step'] as String? ?? '').isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondary
+                                    .withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: theme.colorScheme.secondary
+                                      .withValues(alpha: 0.14),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('👣 ',
+                                      style: TextStyle(fontSize: 14)),
+                                  Expanded(
+                                    child: Text(
+                                      result['next_step'] as String,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('👣 ', style: TextStyle(fontSize: 14)),
-                                Expanded(
-                                  child: Text(
-                                    result['next_step'] as String,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
             ),
             actions: [
               TextButton(
@@ -1091,6 +1119,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
   // ── INSIGHTS ────────────────────────────────────────────
   Widget _buildInsightsSection(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     if (_insights['totalItems'] == 0) {
       return _buildEmptyCard(
         theme,
@@ -1149,7 +1178,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     );
   }
 
-  Widget _buildInsightCard(ThemeData theme, {
+  Widget _buildInsightCard(
+    ThemeData theme, {
     required String icon,
     required String label,
     required String value,
@@ -1242,7 +1272,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     );
   }
 
-  Widget _buildEmptyCard(ThemeData theme, {
+  Widget _buildEmptyCard(
+    ThemeData theme, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -1295,8 +1326,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     String selectedType = 'Dinner';
     String? dressCode;
 
-    final eventTypes = ['Wedding', 'Dinner', 'Work', 'Party', 'Travel', 'Sport', 'Other'];
-    final dressCodes = ['Casual', 'Smart Casual', 'Formal', 'Black Tie', 'Sporty'];
+    final eventTypes = [
+      'Wedding', 'Dinner', 'Work', 'Party', 'Travel', 'Sport', 'Other'
+    ];
+    final dressCodes = [
+      'Casual', 'Smart Casual', 'Formal', 'Black Tie', 'Sporty'
+    ];
+
+    final localizations = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -1319,7 +1356,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               children: [
                 Center(
                   child: Container(
-                    width: 40, height: 4,
+                    width: 40,
+                    height: 4,
                     margin: EdgeInsets.only(bottom: 2.h),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade300,
@@ -1327,10 +1365,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     ),
                   ),
                 ),
-                Text(AppLocalizations.of(context).addEvent,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    )),
+                Text(
+                  localizations.addEvent,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
                 SizedBox(height: 2.h),
                 TextField(
                   controller: titleController,
@@ -1341,14 +1381,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   ),
                 ),
                 SizedBox(height: 2.h),
-                // Date picker
                 GestureDetector(
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
                       initialDate: selectedDate,
                       firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      lastDate:
+                          DateTime.now().add(const Duration(days: 365)),
                     );
                     if (picked != null) {
                       setSheetState(() => selectedDate = picked);
@@ -1359,7 +1399,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       decoration: InputDecoration(
                         labelText: localizations.dateLabel,
                         prefixIcon: const Icon(Icons.calendar_today),
-                        hintText: DateFormat('MMM dd, yyyy').format(selectedDate),
+                        hintText:
+                            DateFormat('MMM dd, yyyy').format(selectedDate),
                       ),
                       controller: TextEditingController(
                         text: DateFormat('MMM dd, yyyy').format(selectedDate),
@@ -1368,27 +1409,30 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   ),
                 ),
                 SizedBox(height: 2.h),
-                // Event type
                 DropdownButtonFormField<String>(
                   value: selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Event Type',
                     prefixIcon: Icon(Icons.category),
                   ),
-                  items: eventTypes.map((t) =>
-                    DropdownMenuItem(value: t, child: Text(t))).toList(),
-                  onChanged: (v) => setSheetState(() => selectedType = v!),
+                  items: eventTypes
+                      .map((t) =>
+                          DropdownMenuItem(value: t, child: Text(t)))
+                      .toList(),
+                  onChanged: (v) =>
+                      setSheetState(() => selectedType = v!),
                 ),
                 SizedBox(height: 2.h),
-                // Dress code
                 DropdownButtonFormField<String>(
                   value: dressCode,
                   decoration: InputDecoration(
                     labelText: localizations.dressCodeOptional,
                     prefixIcon: const Icon(Icons.checkroom),
                   ),
-                  items: dressCodes.map((d) =>
-                    DropdownMenuItem(value: d, child: Text(d))).toList(),
+                  items: dressCodes
+                      .map((d) =>
+                          DropdownMenuItem(value: d, child: Text(d)))
+                      .toList(),
                   onChanged: (v) => setSheetState(() => dressCode = v),
                 ),
                 SizedBox(height: 3.h),
@@ -1412,7 +1456,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(AppLocalizations.of(context).addEvent),
+                    child: Text(localizations.addEvent),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -1431,10 +1475,17 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         title: Text(AppLocalizations.of(context).deleteEvent),
         content: Text(AppLocalizations.of(context).removeEventQuestion),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false),
-              child: Text(AppLocalizations.of(context).cancel)),
-          TextButton(onPressed: () => Navigator.pop(context, true),
-              child: Text(AppLocalizations.of(context).delete, style: const TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context).cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              AppLocalizations.of(context).delete,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
         ],
       ),
     );
@@ -1449,12 +1500,11 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     if (success) _loadData();
   }
 
-  void _startQuiz() {
-    _showQuizDialog();
-  }
+  void _startQuiz() => _showQuizDialog();
 
   void _showQuizDialog() {
-        final questions = [
+    final localizations = AppLocalizations.of(context);
+    final questions = [
       {
         'question': 'Which outfits make you feel most like yourself?',
         'options': [
@@ -1529,44 +1579,61 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
-              children: (q['options'] as List<String>).map((option) =>
-                ListTile(
-                  title: Text(option),
-                  leading: Radio<String>(
-                    value: option,
-                    groupValue: answers[q['question']],
-                    onChanged: (v) => setDialogState(() => answers[q['question'] as String] = v!),
-                  ),
-                  onTap: () => setDialogState(() => answers[q['question'] as String] = option),
-                ),
-              ).toList(),
+              children: (q['options'] as List<String>)
+                  .map((option) => ListTile(
+                        title: Text(option),
+                        leading: Radio<String>(
+                          value: option,
+                          groupValue: answers[q['question']],
+                          onChanged: (v) => setDialogState(
+                              () => answers[q['question'] as String] = v!),
+                        ),
+                        onTap: () => setDialogState(
+                            () => answers[q['question'] as String] = option),
+                      ))
+                  .toList(),
             ),
             actions: [
               if (currentQuestion > 0)
                 TextButton(
-                  onPressed: () => setDialogState(() => currentQuestion--),
-                  child: Text(AppLocalizations.of(context).back),
+                  onPressed: () =>
+                      setDialogState(() => currentQuestion--),
+                  child: Text(localizations.back),
                 ),
               ElevatedButton(
-                onPressed: answers[q['question']] == null ? null : () async {
-                  if (currentQuestion < questions.length - 1) {
-                    setDialogState(() => currentQuestion++);
-                  } else if (currentQuestion == questions.length - 1) {
-                    setDialogState(() => currentQuestion++); // go to intention step
-                  } else {
-                    Navigator.pop(context);
-                    final profile = _determineStyleProfile(answers);
-                    await _styleService.saveQuizResult(
-                      styleProfile: profile,
-                      preferredColors: [answers[questions[1]['question']] ?? ''],
-                      styleGoals: [answers[questions[2]['question']] ?? ''],
-                      answers: answers,
-                      styleIntention: intentionController.text.trim(),
-                    );
-                    _loadData();
-                  }
-                },
-                child: Text(currentQuestion < questions.length - 1 ? localizations.next : localizations.finish),
+                onPressed: answers[q['question']] == null
+                    ? null
+                    : () async {
+                        if (currentQuestion < questions.length - 1) {
+                          setDialogState(() => currentQuestion++);
+                        } else if (currentQuestion ==
+                            questions.length - 1) {
+                          setDialogState(() =>
+                              currentQuestion++); // go to intention step
+                        } else {
+                          Navigator.pop(context);
+                          final profile =
+                              _determineStyleProfile(answers);
+                          await _styleService.saveQuizResult(
+                            styleProfile: profile,
+                            preferredColors: [
+                              answers[questions[1]['question']] ?? ''
+                            ],
+                            styleGoals: [
+                              answers[questions[2]['question']] ?? ''
+                            ],
+                            answers: answers,
+                            styleIntention:
+                                intentionController.text.trim(),
+                          );
+                          _loadData();
+                        }
+                      },
+                child: Text(
+                  currentQuestion < questions.length - 1
+                      ? localizations.next
+                      : localizations.finish,
+                ),
               ),
             ],
           );
@@ -1583,24 +1650,19 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         style.contains('elegance')) {
       return 'Classic Elegance';
     }
-
     if (style.contains('creative') ||
         style.contains('expressive') ||
         style.contains('experiment')) {
       return 'Bold & Trendy';
     }
-
-    if (style.contains('sporty') ||
-        style.contains('practical')) {
+    if (style.contains('sporty') || style.contains('practical')) {
       return 'Active & Sporty';
     }
-
     if (style.contains('versatility') ||
         style.contains('small changes') ||
         style.contains('what i know works')) {
       return 'Minimalist';
     }
-
     return 'Casual Chic';
   }
 }

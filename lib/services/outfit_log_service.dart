@@ -187,6 +187,52 @@ class OutfitLogService {
     }
   }
 
+  /// Log the currently displayed outfit suggestion using known wardrobe item
+  /// IDs. Called by "Save Displayed Outfit" when items were matched to real
+  /// wardrobe entries.
+  Future<String?> logOutfitWithItems({
+    required DateTime wornDate,
+    required List<String> itemIds,
+    required String occasion,
+    String? notes,
+    String? outfitName,
+  }) =>
+      createOutfitLog(
+        occasion: occasion,
+        itemIds: itemIds,
+        wornDate: wornDate,
+        notes: notes,
+        outfitName: outfitName,
+      );
+
+  /// Log the currently displayed outfit suggestion by name only, when the AI
+  /// suggested items that are not yet in the user's wardrobe. Stores the item
+  /// names as a JSON note so nothing is lost, but creates no outfit_items rows.
+  Future<String?> logOutfitByName({
+    required DateTime wornDate,
+    required String outfitName,
+    required String occasion,
+    required List<String> itemNames,
+    String? notes,
+  }) {
+    // Append the item names to the notes field so the log is still meaningful
+    final itemSummary = itemNames.isNotEmpty
+        ? 'Items: ${itemNames.join(', ')}'
+        : null;
+    final combinedNotes = [
+      if (notes != null && notes.isNotEmpty) notes,
+      if (itemSummary != null) itemSummary,
+    ].join('\n');
+
+    return createOutfitLog(
+      occasion: occasion,
+      itemIds: const [],       // no wardrobe links — items aren't in wardrobe yet
+      wornDate: wornDate,
+      notes: combinedNotes.isNotEmpty ? combinedNotes : null,
+      outfitName: outfitName,
+    );
+  }
+
   /// Update an existing outfit log
   Future<bool> updateOutfitLog({
     required String outfitId,

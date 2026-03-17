@@ -111,6 +111,7 @@ const Map<String, String> appLocalizationsFr = {
   'outfits': 'Tenues',
   'daily_log': 'Journal quotidien',
   'insights': 'Aperçus',
+  'your_style_profile': 'Votre Profil de Style',
 
   // Language names
   'english': 'Anglais',
@@ -184,6 +185,8 @@ const Map<String, String> appLocalizationsFr = {
   'retake': 'Recommencer',
   'rate_outfit_error': 'Veuillez évaluer votre tenue avant de l\'enregistrer',
   'outfit_preview': 'Aperçu de la Tenue',
+  'outfit_logged_success': 'Tenue enregistrée avec succès !',
+  'optional_notes_hint': 'Ajoutez des notes sur cette tenue...',
   'no_image_captured': 'Aucune image capturée',
   'selected_items_count': 'Articles Sélectionnés ({count})',
   'outfit_name_optional': 'Nom de la Tenue (Optionnel)',

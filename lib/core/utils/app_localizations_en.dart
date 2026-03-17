@@ -111,6 +111,7 @@ const Map<String, String> appLocalizationsEn = {
   'outfits': 'Outfits',
   'daily_log': 'Daily Log',
   'insights': 'Insights',
+  'your_style_profile': 'Your Style Profile',
 
   // Language names
   'english': 'English',
@@ -184,6 +185,8 @@ const Map<String, String> appLocalizationsEn = {
   'retake': 'Retake',
   'rate_outfit_error': 'Please rate your outfit before saving',
   'outfit_preview': 'Outfit Preview',
+  'outfit_logged_success': 'Outfit logged successfully!',
+  'optional_notes_hint': 'Add some notes about this outfit...',
   'no_image_captured': 'No image captured',
   'selected_items_count': 'Selected Items ({count})',
   'outfit_name_optional': 'Outfit Name (Optional)',
