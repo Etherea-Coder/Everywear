@@ -433,7 +433,6 @@ class AppLocalizations {
   String get boldSuggestionDesc => translate('bold_suggestion_desc');
   String get surpriseSuggestionDesc => translate('surprise_suggestion_desc');
   
-  String get logOutfitBtn => translate('log_outfit_btn');
   String get styleTip => translate('style_tip');
   String get styleTipNoLogs => translate('style_tip_no_logs');
   String get styleTipFewLogs => translate('style_tip_few_logs');
@@ -531,7 +530,6 @@ class AppLocalizations {
   String get repeatOutfitTooltip => translate('repeat_outfit_tooltip');
   String get editOutfitTooltip => translate('edit_outfit_tooltip');
   String get deleteOutfitTooltip => translate('delete_outfit_tooltip');
-  String get outfitLabel => translate('outfit_label');
   String get outfitsLabel => translate('outfits_label');
   String get itemsLabel => translate('items_label');
   String get topLabel => translate('top_label');
@@ -543,7 +541,6 @@ class AppLocalizations {
   String get coachIsThinking => translate('coach_is_thinking');
   String get coachIsPreparingTip => translate('coach_is_preparing_tip');
   String get discoverYourStyle => translate('discover_your_style');
-  String get retake => translate('retake');
   String get takeQuizToPersonalise => translate('take_quiz_to_personalise');
   String get quickQuestions => translate('quick_questions');
   String get getHelpStylingPieces => translate('get_help_styling_pieces');
@@ -553,15 +550,12 @@ class AppLocalizations {
   String get coachLimitReached => translate('coach_limit_reached');
   String get premiumCoachLimitMsg => translate('premium_coach_limit_msg');
   String get freeCoachLimitMsg => translate('free_coach_limit_msg');
-  String get askYourCoach => translate('ask_your_coach');
-  String get orPickATopic => translate('or_pick_a_topic');
   String get typeQuestionOrPickTopic => translate('type_question_or_pick_topic');
   String get coachHintText => translate('coach_hint_text');
   String get eventName => translate('event_name');
   String get hintWedding => translate('hint_wedding');
   String get dateLabel => translate('date_label');
   String get dressCodeOptional => translate('dress_code_optional');
-  String get next => translate('next');
   String get finish => translate('finish');
   String get styleQuiz => translate('style_quiz');
   
