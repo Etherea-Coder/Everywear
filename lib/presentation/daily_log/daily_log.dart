@@ -938,47 +938,19 @@ class _DailyLogState extends State<DailyLog> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(isAnchor ? 22 : 16),
-        child: Stack(
-          children: [
-            // Image or fallback
-            Positioned.fill(
-              child: imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildSuggestionFallbackIcon(
-                        theme,
-                        isAnchor: isAnchor,
-                      ),
-                    )
-                  : _buildSuggestionFallbackIcon(
-                      theme,
-                      isAnchor: isAnchor,
-                    ),
-            ),
-            // DEBUG OVERLAY — remove once images are confirmed working
-            Positioned(
-              bottom: 2,
-              left: 2,
-              right: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                color: Colors.black54,
-                child: Text(
-                  imageUrl.isNotEmpty
-                      ? '✓ ${imageUrl.length}ch'
-                      : '✗ no url',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+        child: imageUrl.isNotEmpty
+            ? Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _buildSuggestionFallbackIcon(
+                  theme,
+                  isAnchor: isAnchor,
                 ),
+              )
+            : _buildSuggestionFallbackIcon(
+                theme,
+                isAnchor: isAnchor,
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -17,11 +17,10 @@ class TodaySuggestionService {
     String? mood,
   }) async {
     try {
-      // Load wardrobe items
       final wardrobeItems = await _wardrobeService.fetchWardrobeItems();
       if (wardrobeItems.isEmpty) return null;
 
-      // Load recent outfit logs to get recently worn items
+      // Recent items to nudge Gemini away from repeats
       final recentLogs = await _outfitLogService.fetchOutfitLogsForDate(
         DateTime.now().subtract(const Duration(days: 3)),
       );
@@ -32,7 +31,6 @@ class TodaySuggestionService {
           .toSet()
           .toList();
 
-      // Build compact wardrobe list for prompt
       final compactWardrobe = wardrobeItems.map((item) => {
         'id': item['id'],
         'name': item['name'],
@@ -43,7 +41,6 @@ class TodaySuggestionService {
         'last_worn': item['last_worn'],
       }).toList();
 
-      // Build user profile from quiz
       final profile = quizResult != null ? {
         'styleProfile': quizResult['style_profile'],
         'preferredColors': quizResult['preferred_colors']?.toString(),
@@ -51,7 +48,6 @@ class TodaySuggestionService {
         'styleIntention': quizResult['style_intention']?.toString(),
       } : null;
 
-      // Build next event summary
       Map<String, dynamic>? eventSummary;
       if (nextEvent != null) {
         final date = DateTime.parse(nextEvent['event_date']);
@@ -81,11 +77,7 @@ class TodaySuggestionService {
 
       if (response.data != null && response.data['success'] == true) {
         final result = Map<String, dynamic>.from(response.data);
-        // Re-attach wardrobe image URLs and IDs to every item the AI picked.
-        // The Edge Function returns names but loses the image_url — we fix
-        // that here by matching each returned item name back to the wardrobe
-        // index we already have in memory.
-        return _reattachWardrobeData(result, wardrobeItems);
+        return _clientSidePatch(result, wardrobeItems);
       }
       return null;
     } catch (e) {
@@ -94,64 +86,38 @@ class TodaySuggestionService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Wardrobe data reattachment
-  // ---------------------------------------------------------------------------
-
-  /// Builds a case-insensitive name → wardrobe item lookup once, then uses it
-  /// to enrich every slot (anchor + items) in the AI response.
-  Map<String, dynamic> _reattachWardrobeData(
+  /// Client-side safety net: if Edge Function returned empty imageUrl for a
+  /// known id, fill it from the wardrobe list already in memory.
+  Map<String, dynamic> _clientSidePatch(
     Map<String, dynamic> result,
     List<Map<String, dynamic>> wardrobeItems,
   ) {
-    // Build lookup: lowercased name → wardrobe row
-    final lookup = <String, Map<String, dynamic>>{};
-    for (final w in wardrobeItems) {
-      final name = (w['name'] ?? '').toString().toLowerCase().trim();
-      if (name.isNotEmpty) lookup[name] = w;
+    final byId = <String, Map<String, dynamic>>{
+      for (final w in wardrobeItems)
+        if ((w['id'] ?? '').toString().isNotEmpty)
+          w['id'].toString(): w,
+    };
+
+    Map<String, dynamic> patch(Map<String, dynamic> item) {
+      final id = (item['id'] ?? '').toString();
+      if (id.isEmpty) return item;
+      final row = byId[id];
+      if (row == null) return item;
+      final url = (row['image_url'] ?? row['imageUrl'] ?? '').toString();
+      if (url.isEmpty) return item;
+      if ((item['imageUrl'] ?? '').toString().isNotEmpty) return item;
+      return {...item, 'imageUrl': url};
     }
 
-    Map<String, dynamic> enrich(Map<String, dynamic> item) {
-      final mutable = Map<String, dynamic>.from(item);
-      final name = (mutable['name'] ?? '').toString().toLowerCase().trim();
-
-      // Try exact match first, then partial
-      final match = lookup[name] ??
-          lookup.entries
-              .firstWhere(
-                (e) => e.key.contains(name) || name.contains(e.key),
-                orElse: () => const MapEntry('', {}),
-              )
-              .value;
-
-      if (match.isNotEmpty) {
-        final imageUrl = (match['image_url'] ?? match['imageUrl'] ?? '').toString();
-        if (imageUrl.isNotEmpty) mutable['imageUrl'] = imageUrl;
-        // Also carry the wardrobe ID so "Save Displayed Outfit" can log it
-        mutable['id'] ??= match['id'];
-      }
-      return mutable;
-    }
-
-    // Enrich anchor
-    if (result['anchor'] is Map) {
-      result = {
-        ...result,
-        'anchor': enrich(Map<String, dynamic>.from(result['anchor'] as Map)),
-      };
-    }
-
-    // Enrich item slots
-    if (result['items'] is List) {
-      result = {
-        ...result,
+    return {
+      ...result,
+      if (result['anchor'] is Map)
+        'anchor': patch(Map<String, dynamic>.from(result['anchor'] as Map)),
+      if (result['items'] is List)
         'items': (result['items'] as List)
             .cast<Map<String, dynamic>>()
-            .map(enrich)
+            .map(patch)
             .toList(),
-      };
-    }
-
-    return result;
+    };
   }
 }
