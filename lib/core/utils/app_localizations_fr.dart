@@ -204,6 +204,32 @@ const Map<String, String> appLocalizationsFr = {
   'cost_per_wear': 'Coût par usage',
   'per_wear': '/usage',
 
+  // Progress Dashborad
+  'my_progress': 'Ma Progression',
+  'challenge_center': 'Centre de Défis',
+  'challenge_center_subtitle': 'Parcourez et rejoignez de nouveaux défis de style.',
+  'active_challenges': 'Défis en Cours',
+  'your_statistics': 'Vos Statistiques',
+  'view_all': 'Voir Tout',
+  'day_streak': 'jours consécutifs',
+  'progress_hero_title': 'Votre progression prend de l\'élan',
+  'progress_hero_no_logs': 'Commencez à enregistrer des tenues pour suivre votre parcours.',
+  'progress_hero_start': 'Enregistrez votre première tenue pour commencer.',
+  'progress_hero_default': 'Continuez à construire votre historique de style.',
+  'outfits_logged_so_far': 'tenues enregistrées',
+  'challenges_active': 'défis actifs.',
+  'motivation_start': 'Commencez votre série aujourd\'hui — enregistrez votre première tenue.',
+  'motivation_building': 'Bon début — continuez !',
+  'motivation_going': 'Vous construisez de bonnes habitudes de style.',
+  'motivation_strong': 'Série impressionnante — vous êtes en pleine forme !',
+  'no_active_challenges': 'Aucun défi actif en ce moment',
+  'no_active_challenges_hint': 'Visitez le Centre de Défis pour rejoindre un objectif.',
+  'browse_challenges': 'Voir les Défis',
+  'wardrobe_items': 'Articles Dressing',
+  'total_spent': 'Total Dépensé',
+  'wardrobe_utilization': 'Articles Portés',
+  'purchases_this_month': 'Achats ce Mois',
+
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 Salut ! J\'ai analysé votre Dressing et trouvé {count} combinaisons de tenues parfaites pour vous aujourd\'hui ! Chaque suggestion est personnalisée en fonction de vos préférences de style, des conditions météorologiques et de vos favoris passés.',

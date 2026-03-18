@@ -204,6 +204,32 @@ const Map<String, String> appLocalizationsEs = {
   'cost_per_wear': 'Costo por uso',
   'per_wear': '/uso',
 
+  // Progress Dashborad
+  'my_progress': 'Mi Progreso',
+  'challenge_center': 'Centro de Desafíos',
+  'challenge_center_subtitle': 'Explora y únete a nuevos desafíos de estilo.',
+  'active_challenges': 'Desafíos Activos',
+  'your_statistics': 'Tus Estadísticas',
+  'view_all': 'Ver Todo',
+  'day_streak': 'días seguidos',
+  'progress_hero_title': 'Tu progreso está ganando impulso',
+  'progress_hero_no_logs': 'Empieza a registrar atuendos para seguir tu camino.',
+  'progress_hero_start': 'Registra tu primer atuendo para comenzar.',
+  'progress_hero_default': 'Sigue construyendo tu historial de estilo.',
+  'outfits_logged_so_far': 'atuendos registrados',
+  'challenges_active': 'desafíos activos.',
+  'motivation_start': 'Comienza tu racha hoy — registra tu primer atuendo.',
+  'motivation_building': 'Buen comienzo — ¡sigue así!',
+  'motivation_going': 'Estás construyendo buenos hábitos de estilo.',
+  'motivation_strong': '¡Racha impresionante — estás en racha!',
+  'no_active_challenges': 'No hay desafíos activos ahora',
+  'no_active_challenges_hint': 'Visita el Centro de Desafíos para unirte a un objetivo.',
+  'browse_challenges': 'Ver Desafíos',
+  'wardrobe_items': 'Artículos Guardarropa',
+  'total_spent': 'Total Gastado',
+  'wardrobe_utilization': 'Artículos Usados',
+  'purchases_this_month': 'Compras este Mes',
+
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 ¡Hola! ¡He analizado tu guardarropa y he encontrado {count} combinaciones de atuendos perfectas para ti hoy! Cada sugerencia está personalizada según tus preferencias de estilo, las condiciones climáticas y tus favoritos anteriores.',

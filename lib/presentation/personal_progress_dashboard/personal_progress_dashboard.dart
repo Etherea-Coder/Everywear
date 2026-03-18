@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../core/app_export.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../routes/app_routes.dart';
+import '../../services/progress_service.dart';
 import './widgets/streak_hero_widget.dart';
 import './widgets/active_challenge_card_widget.dart';
-import './widgets/achievement_badge_display_widget.dart';
-import './widgets/personal_stats_widget.dart';
 
-/// Personal Progress Dashboard - Central hub for individual achievement tracking
-/// Displays current streak, active challenges, earned badges, and lifetime statistics
-/// Focuses on personal growth without social comparison
 class PersonalProgressDashboard extends StatefulWidget {
   const PersonalProgressDashboard({Key? key}) : super(key: key);
 
@@ -19,196 +16,152 @@ class PersonalProgressDashboard extends StatefulWidget {
       _PersonalProgressDashboardState();
 }
 
-class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _celebrationController;
+class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
+  final ProgressService _progressService = ProgressService();
 
-  final Map<String, dynamic> _progressData = {
-    'currentStreak': 7,
-    'longestStreak': 15,
-    'weeklyProgress': 0.71,
-    'motivationalMessage': 'You\'re building strong style habits.',
-    'totalPoints': 1250,
-  };
+  bool _isLoading = true;
 
-  final List<Map<String, dynamic>> _activeChallenges = [
-    {
-      'id': '1',
-      'title': 'Daily Outfit Logger',
-      'description': 'Log your outfit for 7 consecutive days',
-      'type': 'daily',
-      'progress': 0.71,
-      'currentValue': 5,
-      'targetValue': 7,
-      'points': 50,
-      'icon': 'today',
-      'dueDate': DateTime.now().add(const Duration(days: 2)),
-    },
-    {
-      'id': '2',
-      'title': 'Rate Your Outfits',
-      'description': 'Rate at least 5 outfits this week',
-      'type': 'weekly',
-      'progress': 0.6,
-      'currentValue': 3,
-      'targetValue': 5,
-      'points': 75,
-      'icon': 'star',
-      'dueDate': DateTime.now().add(const Duration(days: 4)),
-    },
-  ];
-
-  final List<Map<String, dynamic>> _earnedAchievements = [
-    {
-      'id': '1',
-      'title': 'First Steps',
-      'icon': 'emoji_events',
-      'unlockedDate': DateTime.now().subtract(const Duration(days: 30)),
-      'rarity': 'common',
-    },
-    {
-      'id': '2',
-      'title': 'Week Warrior',
-      'icon': 'local_fire_department',
-      'unlockedDate': DateTime.now().subtract(const Duration(days: 1)),
-      'rarity': 'rare',
-    },
-  ];
-
-  final Map<String, dynamic> _personalStats = {
-    'totalOutfitsLogged': 142,
-    'moneySaved': 385.50,
-    'sustainabilityScore': 78,
-    'itemsAdded': 42,
-    'avgCostPerWear': 12.30,
-    'wardrobeUtilization': 65,
+  Map<String, int> _streakData = {'current': 0, 'longest': 0};
+  List<Map<String, dynamic>> _activeChallenges = [];
+  Map<String, dynamic> _stats = {
+    'totalOutfitsLogged': 0,
+    'totalItems': 0,
+    'totalSpent': 0.0,
+    'avgCostPerWear': 0.0,
+    'wardrobeUtilization': 0,
+    'purchasesThisMonth': 0,
   };
 
   @override
   void initState() {
     super.initState();
-    _celebrationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
+    _loadData();
   }
 
-  @override
-  void dispose() {
-    _celebrationController.dispose();
-    super.dispose();
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    final results = await Future.wait([
+      _progressService.fetchStreakData(),
+      _progressService.fetchActiveChallenges(),
+      _progressService.fetchPersonalStats(),
+    ]);
+    if (mounted) {
+      setState(() {
+        _streakData = results[0] as Map<String, int>;
+        _activeChallenges = results[1] as List<Map<String, dynamic>>;
+        _stats = results[2] as Map<String, dynamic>;
+        _isLoading = false;
+      });
+    }
   }
 
   void _navigateToChallengeCenter() {
     Navigator.pushNamed(context, AppRoutes.challengeCenter);
   }
 
-  Map<String, dynamic>? get _closestChallenge {
-    if (_activeChallenges.isEmpty) return null;
+  String get _heroSubtitle {
+    final current = _streakData['current'] ?? 0;
+    final outfits = _stats['totalOutfitsLogged'] as int? ?? 0;
+    final challenges = _activeChallenges.length;
 
-    final sorted = [..._activeChallenges]
-      ..sort(
-        (a, b) => (b['progress'] as double).compareTo(a['progress'] as double),
-      );
-
-    return sorted.first;
-  }
-
-  String get _nextMilestoneText {
-    final closest = _closestChallenge;
-    if (closest == null) return 'Keep going — your progress is taking shape.';
-
-    final pct = ((closest['progress'] as double) * 100).round();
-    return '${closest['title']} is $pct% complete.';
+    if (current == 0 && outfits == 0) {
+      return AppLocalizations.of(context).translate('progress_hero_start');
+    }
+    if (challenges > 0) {
+      final best = _activeChallenges.reduce(
+          (a, b) => (a['progress'] as double) >= (b['progress'] as double) ? a : b);
+      final pct = ((best['progress'] as double) * 100).round();
+      return '${best['title']} — $pct%';
+    }
+    return AppLocalizations.of(context).translate('progress_hero_default');
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: 'My Progress',
+        title: loc.translate('my_progress'),
         variant: CustomAppBarVariant.detail,
         actions: [
           IconButton(
-            icon: const Icon(Icons.emoji_events_outlined),
+            icon: const Icon(Icons.flag_outlined),
             onPressed: _navigateToChallengeCenter,
-            tooltip: 'Challenge Center',
+            tooltip: loc.translate('challenge_center'),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.delayed(const Duration(milliseconds: 700));
-          if (mounted) {
-            setState(() {});
-          }
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeroSummaryCard(theme),
-              SizedBox(height: 2.h),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroCard(theme, loc),
+                    SizedBox(height: 2.h),
 
-              StreakHeroWidget(
-                currentStreak: _progressData['currentStreak'],
-                longestStreak: _progressData['longestStreak'],
-                weeklyProgress: _progressData['weeklyProgress'],
-                motivationalMessage: _progressData['motivationalMessage'],
-                totalPoints: _progressData['totalPoints'],
-              ),
-              SizedBox(height: 2.5.h),
+                    StreakHeroWidget(
+                      currentStreak: _streakData['current'] ?? 0,
+                      longestStreak: _streakData['longest'] ?? 0,
+                      weeklyProgress: _weeklyProgress,
+                      motivationalMessage: _motivationalMessage(loc),
+                      totalPoints: 0, // no points table yet
+                    ),
+                    SizedBox(height: 2.5.h),
 
-              _buildSectionHeader(
-                context,
-                title: 'Active Challenges',
-                actionLabel: 'View All',
-                onTap: _navigateToChallengeCenter,
-              ),
-              SizedBox(height: 1.h),
-              _buildChallengesSection(theme),
-              SizedBox(height: 3.h),
+                    _buildSectionHeader(
+                      context,
+                      title: loc.translate('active_challenges'),
+                      actionLabel: loc.translate('view_all'),
+                      onTap: _navigateToChallengeCenter,
+                    ),
+                    SizedBox(height: 1.h),
+                    _buildChallengesSection(theme, loc),
+                    SizedBox(height: 3.h),
 
-              _buildSectionHeader(
-                context,
-                title: 'Recent Achievements',
-              ),
-              SizedBox(height: 1.h),
-              _buildAchievementsSection(theme),
-              SizedBox(height: 3.h),
+                    _buildSectionHeader(
+                      context,
+                      title: loc.translate('your_statistics'),
+                    ),
+                    SizedBox(height: 1.h),
+                    _buildStatsSection(theme, loc),
+                    SizedBox(height: 3.h),
 
-              _buildSectionHeader(
-                context,
-                title: 'Your Statistics',
+                    _buildChallengeGalleryCard(theme, loc),
+                    SizedBox(height: 3.h),
+                  ],
+                ),
               ),
-              SizedBox(height: 1.h),
-              PersonalStatsWidget(
-                totalOutfitsLogged: _personalStats['totalOutfitsLogged'],
-                moneySaved: _personalStats['moneySaved'],
-                sustainabilityScore: _personalStats['sustainabilityScore'],
-                itemsAdded: _personalStats['itemsAdded'],
-                avgCostPerWear: _personalStats['avgCostPerWear'],
-                wardrobeUtilization: _personalStats['wardrobeUtilization'],
-              ),
-              SizedBox(height: 3.h),
-
-              _buildAchievementGalleryCard(theme),
-              SizedBox(height: 3.h),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
-  Widget _buildHeroSummaryCard(ThemeData theme) {
-    final currentStreak = _progressData['currentStreak'] as int;
-    final totalPoints = _progressData['totalPoints'] as int;
-    final unlockedCount = _earnedAchievements.length;
+  /// Weekly progress: ratio of days with outfits in last 7 days
+  double get _weeklyProgress {
+    // This is a lightweight estimate — for precision we'd need a date query
+    // but StreakHeroWidget already shows the real streak
+    final streak = _streakData['current'] ?? 0;
+    return (streak.clamp(0, 7) / 7).clamp(0.0, 1.0);
+  }
+
+  String _motivationalMessage(AppLocalizations loc) {
+    final streak = _streakData['current'] ?? 0;
+    if (streak == 0) return loc.translate('motivation_start');
+    if (streak < 3) return loc.translate('motivation_building');
+    if (streak < 7) return loc.translate('motivation_going');
+    return loc.translate('motivation_strong');
+  }
+
+  Widget _buildHeroCard(ThemeData theme, AppLocalizations loc) {
+    final current = _streakData['current'] ?? 0;
+    final outfits = _stats['totalOutfitsLogged'] as int? ?? 0;
+    final activeChallengeCount = _activeChallenges.length;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
@@ -233,37 +186,31 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
               color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
-              Icons.trending_up,
-              color: Colors.white,
-              size: 28,
-            ),
+            child: const Icon(Icons.trending_up, color: Colors.white, size: 28),
           ),
           SizedBox(width: 4.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 2.5.w,
-                    vertical: 0.4.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '$currentStreak day streak',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                if (current > 0)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 0.4.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$current ${loc.translate('day_streak')}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
                 SizedBox(height: 1.h),
                 Text(
-                  'Your progress is building momentum',
+                  loc.translate('progress_hero_title'),
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -271,7 +218,11 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
                 ),
                 SizedBox(height: 0.6.h),
                 Text(
-                  'You have unlocked $unlockedCount achievements and earned $totalPoints points so far. $_nextMilestoneText',
+                  outfits == 0
+                      ? loc.translate('progress_hero_no_logs')
+                      : '$outfits ${loc.translate('outfits_logged_so_far')} · '
+                        '$activeChallengeCount ${loc.translate('challenges_active')}. '
+                        '$_heroSubtitle',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.92),
                     height: 1.4,
@@ -292,7 +243,6 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
     VoidCallback? onTap,
   }) {
     final theme = Theme.of(context);
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Row(
@@ -300,28 +250,24 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
         children: [
           Text(
             title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
           if (actionLabel != null && onTap != null)
-            TextButton(
-              onPressed: onTap,
-              child: Text(actionLabel),
-            ),
+            TextButton(onPressed: onTap, child: Text(actionLabel)),
         ],
       ),
     );
   }
 
-  Widget _buildChallengesSection(ThemeData theme) {
+  Widget _buildChallengesSection(ThemeData theme, AppLocalizations loc) {
     if (_activeChallenges.isEmpty) {
-      return _buildEmptyInfoCard(
+      return _buildEmptyCard(
         theme,
         icon: Icons.flag_outlined,
-        title: 'No active challenges right now',
-        subtitle:
-            'Check the Challenge Center to join a new goal and keep your momentum going.',
+        title: loc.translate('no_active_challenges'),
+        subtitle: loc.translate('no_active_challenges_hint'),
+        actionLabel: loc.translate('browse_challenges'),
+        onAction: _navigateToChallengeCenter,
       );
     }
 
@@ -331,59 +277,143 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       itemCount: _activeChallenges.length,
       itemBuilder: (context, index) {
-        final challenge = _activeChallenges[index];
+        final c = _activeChallenges[index];
         return ActiveChallengeCardWidget(
-          title: challenge['title'],
-          description: challenge['description'],
-          type: challenge['type'],
-          progress: challenge['progress'],
-          currentValue: challenge['currentValue'],
-          targetValue: challenge['targetValue'],
-          points: challenge['points'],
-          icon: challenge['icon'],
-          dueDate: challenge['dueDate'],
+          title: c['title'],
+          description: c['description'],
+          type: c['type'],
+          progress: c['progress'],
+          currentValue: c['currentValue'],
+          targetValue: c['targetValue'],
+          points: c['points'],
+          icon: c['icon'],
+          dueDate: c['dueDate'],
           onTap: () {},
         );
       },
     );
   }
 
-  Widget _buildAchievementsSection(ThemeData theme) {
-    if (_earnedAchievements.isEmpty) {
-      return _buildEmptyInfoCard(
-        theme,
-        icon: Icons.emoji_events_outlined,
-        title: 'No achievements unlocked yet',
-        subtitle:
-            'Keep logging outfits, completing challenges, and building habits to unlock your first milestone.',
-      );
-    }
+  Widget _buildStatsSection(ThemeData theme, AppLocalizations loc) {
+    final outfits = _stats['totalOutfitsLogged'] as int? ?? 0;
+    final items = _stats['totalItems'] as int? ?? 0;
+    final spent = (_stats['totalSpent'] as double?) ?? 0.0;
+    final cpw = (_stats['avgCostPerWear'] as double?) ?? 0.0;
+    final utilization = _stats['wardrobeUtilization'] as int? ?? 0;
+    final purchases = _stats['purchasesThisMonth'] as int? ?? 0;
 
-    return SizedBox(
-      height: 14.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 4.w),
-        itemCount: _earnedAchievements.length,
-        itemBuilder: (context, index) {
-          final achievement = _earnedAchievements[index];
-          return Padding(
-            padding: EdgeInsets.only(right: 3.w),
-            child: AchievementBadgeDisplayWidget(
-              title: achievement['title'],
-              icon: achievement['icon'],
-              rarity: achievement['rarity'],
-              unlockedDate: achievement['unlockedDate'],
-            ),
-          );
-        },
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatPill(theme,
+                    icon: '👗',
+                    label: loc.translate('outfits_logged'),
+                    value: '$outfits'),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: _buildStatPill(theme,
+                    icon: '🧺',
+                    label: loc.translate('wardrobe_items'),
+                    value: '$items'),
+              ),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatPill(theme,
+                    icon: '💸',
+                    label: loc.translate('total_spent'),
+                    value: '€${spent.toStringAsFixed(0)}'),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: _buildStatPill(theme,
+                    icon: '📊',
+                    label: loc.translate('cost_per_wear'),
+                    value: cpw > 0 ? '€${cpw.toStringAsFixed(2)}' : '—'),
+              ),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatPill(theme,
+                    icon: '🔄',
+                    label: loc.translate('wardrobe_utilization'),
+                    value: '$utilization%'),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: _buildStatPill(theme,
+                    icon: '🛍',
+                    label: loc.translate('purchases_this_month'),
+                    value: '$purchases'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildAchievementGalleryCard(ThemeData theme) {
+  Widget _buildStatPill(ThemeData theme,
+      {required String icon,
+      required String label,
+      required String value}) {
+    return Container(
+      padding: EdgeInsets.all(3.5.w),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 22)),
+          SizedBox(width: 2.5.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  value,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChallengeGalleryCard(ThemeData theme, AppLocalizations loc) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, AppRoutes.achievementGallery),
+      onTap: _navigateToChallengeCenter,
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 4.w),
         padding: EdgeInsets.all(4.w),
@@ -413,11 +443,7 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
                 color: theme.colorScheme.onSecondary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.emoji_events,
-                color: theme.colorScheme.onSecondary,
-                size: 28,
-              ),
+              child: Icon(Icons.flag, color: theme.colorScheme.onSecondary, size: 28),
             ),
             SizedBox(width: 3.w),
             Expanded(
@@ -425,7 +451,7 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Achievement Gallery',
+                    loc.translate('challenge_center'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSecondary,
                       fontWeight: FontWeight.w700,
@@ -433,7 +459,7 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
                   ),
                   SizedBox(height: 0.3.h),
                   Text(
-                    'See every badge, milestone, and unlocked moment in your style journey.',
+                    loc.translate('challenge_center_subtitle'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSecondary.withValues(alpha: 0.9),
                     ),
@@ -441,22 +467,21 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: theme.colorScheme.onSecondary,
-              size: 20,
-            ),
+            Icon(Icons.arrow_forward_ios,
+                color: theme.colorScheme.onSecondary, size: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEmptyInfoCard(
+  Widget _buildEmptyCard(
     ThemeData theme, {
     required IconData icon,
     required String title,
     required String subtitle,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
@@ -464,34 +489,29 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            size: 40,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-          ),
+          Icon(icon,
+              size: 40,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
           SizedBox(height: 1.5.h),
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          Text(title,
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center),
           SizedBox(height: 0.6.h),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          Text(subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center),
+          if (actionLabel != null && onAction != null) ...[
+            SizedBox(height: 2.h),
+            ElevatedButton(onPressed: onAction, child: Text(actionLabel)),
+          ],
         ],
       ),
     );

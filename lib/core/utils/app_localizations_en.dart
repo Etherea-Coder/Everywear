@@ -223,6 +223,32 @@ const Map<String, String> appLocalizationsEn = {
   'challenge_stylist_tip': 'Stylist tip',
   'challenge_how_it_works': 'How it works',
   'challenge_no_wardrobe': 'No wardrobe items found. Add items first.',
+
+  // Progress Dashboard 
+  'my_progress': 'My Progress',
+  'challenge_center': 'Challenge Center',
+  'challenge_center_subtitle': 'Browse and join new style challenges to keep growing.',
+  'active_challenges': 'Active Challenges',
+  'your_statistics': 'Your Statistics',
+  'view_all': 'View All',
+  'day_streak': 'day streak',
+  'progress_hero_title': 'Your progress is building momentum',
+  'progress_hero_no_logs': 'Start logging outfits to track your style journey.',
+  'progress_hero_start': 'Log your first outfit to get started.',
+  'progress_hero_default': 'Keep building your style history.',
+  'outfits_logged_so_far': 'outfits logged',
+  'challenges_active': 'active challenges.',
+  'motivation_start': 'Start your streak today — log your first outfit.',
+  'motivation_building': 'Good start — keep it going.',
+  'motivation_going': 'You\'re building strong style habits.',
+  'motivation_strong': 'Impressive streak — you\'re on a roll!',
+  'no_active_challenges': 'No active challenges right now',
+  'no_active_challenges_hint': 'Visit the Challenge Center to join a goal and keep your momentum going.',
+  'browse_challenges': 'Browse Challenges',
+  'wardrobe_items': 'Wardrobe Items',
+  'total_spent': 'Total Spent',
+  'wardrobe_utilization': 'Items Worn',
+  'purchases_this_month': 'Buys This Month',
  
   // Dynamic AI messages
   'ai_bubble_message_initial':

@@ -276,42 +276,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         final languages = [
           {'code': 'en', 'name': localizations.english},
           {'code': 'es', 'name': localizations.spanish},
           {'code': 'fr', 'name': localizations.french},
         ];
-        return Padding(
-          padding: EdgeInsets.all(4.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(localizations.selectLanguage,
-                  style: TextStyle(
-                      fontSize: 16.sp, fontWeight: FontWeight.w600)),
-              SizedBox(height: 2.h),
-              ...languages.map((lang) {
-                final code = lang['code']!;
-                final isSelected =
-                    ref.watch(localeProvider).languageCode == code;
-                return ListTile(
-                  leading: Text(LocaleManager.getLanguageFlag(code),
-                      style: TextStyle(fontSize: 24.sp)),
-                  title: Text(lang['name']!),
-                  trailing:
-                      isSelected ? const Icon(Icons.check_circle) : null,
-                  onTap: () {
-                    final newLocale = Locale(code);
-                    ref
-                        .read(settingsNotifierProvider.notifier)
-                        .updateLocale(newLocale);
-                    MyApp.of(context)?.updateLocale(newLocale);
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-            ],
+        return DraggableScrollableSheet(
+          initialChildSize: 0.4,
+          minChildSize: 0.3,
+          maxChildSize: 0.6,
+          expand: false,
+          builder: (context, scrollController) => SingleChildScrollView(
+            controller: scrollController,
+            child: Padding(
+              padding: EdgeInsets.all(4.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(localizations.selectLanguage,
+                      style: TextStyle(
+                          fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                  SizedBox(height: 2.h),
+                  ...languages.map((lang) {
+                    final code = lang['code']!;
+                    final isSelected =
+                        ref.watch(localeProvider).languageCode == code;
+                    return ListTile(
+                      leading: Text(LocaleManager.getLanguageFlag(code),
+                          style: TextStyle(fontSize: 24.sp)),
+                      title: Text(lang['name']!),
+                      trailing:
+                          isSelected ? const Icon(Icons.check_circle) : null,
+                      onTap: () {
+                        final newLocale = Locale(code);
+                        ref
+                            .read(settingsNotifierProvider.notifier)
+                            .updateLocale(newLocale);
+                        MyApp.of(context)?.updateLocale(newLocale);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -356,34 +366,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (context) => Padding(
-        padding: EdgeInsets.all(4.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(localizations.exportDataFormat,
-                style: TextStyle(
-                    fontSize: 16.sp, fontWeight: FontWeight.w600)),
-            SizedBox(height: 2.h),
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf),
-              title: Text(localizations.pdfReport),
-              subtitle: Text(localizations.comprehensiveWardrobeReport),
-              onTap: () {
-                Navigator.pop(context);
-                _handleExportData('PDF');
-              },
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.35,
+        minChildSize: 0.25,
+        maxChildSize: 0.5,
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          child: Padding(
+            padding: EdgeInsets.all(4.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(localizations.exportDataFormat,
+                    style: TextStyle(
+                        fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                SizedBox(height: 2.h),
+                ListTile(
+                  leading: const Icon(Icons.picture_as_pdf),
+                  title: Text(localizations.pdfReport),
+                  subtitle: Text(localizations.comprehensiveWardrobeReport),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleExportData('PDF');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.table_chart),
+                  title: Text(localizations.csvSpreadsheet),
+                  subtitle: Text(localizations.rawDataAnalysis),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleExportData('CSV');
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.table_chart),
-              title: Text(localizations.csvSpreadsheet),
-              subtitle: Text(localizations.rawDataAnalysis),
-              onTap: () {
-                Navigator.pop(context);
-                _handleExportData('CSV');
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
