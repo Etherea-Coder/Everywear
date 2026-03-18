@@ -71,8 +71,8 @@ class CalendarHeaderWidget extends StatelessWidget {
           // Week Days
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: (DateFormat.allLocalesWithSymbols().contains(Localizations.localeOf(context).toString()) 
-                ? DateFormat(null, Localizations.localeOf(context).toString()).dateSymbols.narrowWeekdays 
+            children: (DateFormat.allLocalesWithSymbols().contains(Localizations.localeOf(context).toString())
+                ? DateFormat(null, Localizations.localeOf(context).toString()).dateSymbols.NARROWWEEKDAYS
                 : ['S', 'M', 'T', 'W', 'T', 'F', 'S'])
                 .map(
                   (day) => SizedBox(
@@ -119,7 +119,7 @@ class CalendarHeaderWidget extends StatelessWidget {
     // Add day widgets
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(focusedMonth.year, focusedMonth.month, day);
-      final dateKey = DateFormat('yyyy-MM-dd', 'en_US').format(date); // Use stable key format
+      final dateKey = DateFormat('yyyy-MM-dd', 'en_US').format(date);
       final hasEntries =
           outfitEntries.containsKey(dateKey) &&
           outfitEntries[dateKey]!.isNotEmpty;
