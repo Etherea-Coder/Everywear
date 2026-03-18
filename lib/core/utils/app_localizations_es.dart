@@ -565,4 +565,13 @@ const Map<String, String> appLocalizationsEs = {
   'q_for_an_event': '¿Cómo debería vestirme para una ocasión especial basada en mi estilo?',
   'q_more_variety': '¿Cómo puedo crear más variedad de atuendos con lo que ya tengo?',
   'q_style_upgrade': '¿Qué es lo único que puedo cambiar para elevar mi estilo diario?',
+  // Challenge type titles
+  'challenge_type_anchor_title': 'Pieza Ancla',
+  'challenge_type_anchor_description': 'Elige una pieza clave de tu armario y crea 3 outfits diferentes alrededor de ella durante la semana.',
+  'challenge_type_capsule_title': 'Desafío Cápusula',
+  'challenge_type_capsule_description': 'Selecciona 7 piezas y crea 5 outfits diferentes usando solo esas prendas.',
+  'challenge_type_color_title': 'Historia de Color',
+  'challenge_type_color_description': 'Crea outfits usando una paleta de colores coherente - prueba tonos azul marino, camel o aceituna.',
+  'challenge_type_rediscover_title': 'Redescubre',
+  'challenge_type_rediscover_description': 'Encuentra una prenda sin usar en tu armario y styléala de una manera nueva.',
 };

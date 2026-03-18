@@ -2907,4 +2907,13 @@ const Map<String, String> appLocalizationsEn = {
 'morning_ai_suggestions': 'Morning AI suggestions',
 'daily_outfit_ideas': 'Daily outfit ideas every morning',
 'events': 'Events',
+  // Challenge type titles
+  'challenge_type_anchor_title': 'Anchor Piece',
+  'challenge_type_anchor_description': 'Choose a key piece from your wardrobe and build 3 different outfits around it throughout the week.',
+  'challenge_type_capsule_title': 'Capsule Challenge',
+  'challenge_type_capsule_description': 'Select 7 items and create 5 different outfits using only those pieces.',
+  'challenge_type_color_title': 'Color Story',
+  'challenge_type_color_description': 'Build outfits using a cohesive color palette - try navy, camel, or olive tones.',
+  'challenge_type_rediscover_title': 'Rediscover',
+  'challenge_type_rediscover_description': 'Find an unworn item in your wardrobe and style it in a new way.',
 };

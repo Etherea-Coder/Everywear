@@ -57,6 +57,34 @@ class _ChallengeDetailSheetState extends State<ChallengeDetailSheet> {
     }
   }
 
+  String _getLocalizedTitle(String type, AppLocalizations loc) {
+    switch (type) {
+      case 'anchor_piece': return loc.translate('challenge_type_anchor_title');
+      case 'rediscover':   return loc.translate('challenge_type_rediscover_title');
+      case 'color_outfit': return loc.translate('challenge_type_color_title');
+      case 'capsule':      return loc.translate('challenge_type_capsule_title');
+      case 'minimalist':   return loc.translate('challenge_type_minimalist_title');
+      case 'vintage':      return loc.translate('challenge_type_vintage_title');
+      case 'monochrome':   return loc.translate('challenge_type_monochrome_title');
+      case 'pattern_mix':  return loc.translate('challenge_type_pattern_mix_title');
+      default:             return _challenge['title'] as String? ?? '';
+    }
+  }
+
+  String _getLocalizedDescription(String type, AppLocalizations loc) {
+    switch (type) {
+      case 'anchor_piece': return loc.translate('challenge_type_anchor_description');
+      case 'rediscover':   return loc.translate('challenge_type_rediscover_description');
+      case 'color_outfit': return loc.translate('challenge_type_color_description');
+      case 'capsule':      return loc.translate('challenge_type_capsule_description');
+      case 'minimalist':   return loc.translate('challenge_type_minimalist_description');
+      case 'vintage':      return loc.translate('challenge_type_vintage_description');
+      case 'monochrome':   return loc.translate('challenge_type_monochrome_description');
+      case 'pattern_mix':  return loc.translate('challenge_type_pattern_mix_description');
+      default:             return _challenge['description'] as String? ?? '';
+    }
+  }
+
   Future<void> _loadWardrobeItems() async {
     setState(() => _loadingWardrobe = true);
     try {
@@ -295,7 +323,7 @@ class _ChallengeDetailSheetState extends State<ChallengeDetailSheet> {
                       ),
                       SizedBox(height: 0.5.h),
                       Text(
-                        _challenge['title'] as String? ?? '',
+                        _getLocalizedTitle(type, AppLocalizations.of(context)),
                         style: theme.textTheme.headlineSmall
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -309,7 +337,7 @@ class _ChallengeDetailSheetState extends State<ChallengeDetailSheet> {
 
             // ── Description ─────────────────────────────────────────────
             Text(
-              _challenge['description'] as String? ?? '',
+              _getLocalizedDescription(type, AppLocalizations.of(context)),
               style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
             ),
 

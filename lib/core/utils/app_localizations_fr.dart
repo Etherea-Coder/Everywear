@@ -576,4 +576,13 @@ const Map<String, String> appLocalizationsFr = {
   'q_for_an_event': 'Comment devrais-je m\'habiller pour une occasion spéciale basée sur mon style ?',
   'q_more_variety': 'Comment puis-je créer plus de variété de tenues avec ce que je possède déjà ?',
   'q_style_upgrade': 'Quelle est la chose que je peux changer pour élever mon style quotidien ?',
+  // Challenge type titles
+  'challenge_type_anchor_title': 'Pièce d\'Ancrage',
+  'challenge_type_anchor_description': 'Choisissez une pièce clé de votre dressing et créez 3 tenues différentes autour d\'elle pendant la semaine.',
+  'challenge_type_capsule_title': 'Défi Capsule',
+  'challenge_type_capsule_description': 'Sélectionnez 7 pièces et créez 5 tenues différentes en utilisant uniquement ces vêtements.',
+  'challenge_type_color_title': 'Histoire de Couleurs',
+  'challenge_type_color_description': 'Créez des tenues en utilisant une palette de couleurs cohérente - essayez les tons marine, camel ou olive.',
+  'challenge_type_rediscover_title': 'Redécouverte',
+  'challenge_type_rediscover_description': 'Trouvez un vêtement non porté dans votre dressing et stylisez-le d\'une nouvelle manière.',
 };
