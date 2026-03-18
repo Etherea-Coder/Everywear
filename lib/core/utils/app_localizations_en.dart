@@ -357,7 +357,24 @@ const Map<String, String> appLocalizationsEn = {
   'privacy_rights_content': 'You may request:\n\n• Account deletion\n• Data export\n• Support regarding your data',
   'privacy_contact_title': 'Contact',
   'privacy_contact_content': 'If you have privacy questions please contact:\n\nsupport@everywear.studio',
- 
+
+  // TERMS OF USE 
+  'terms_title': 'Everywear Terms',
+  'terms_use_title': 'Use of the app',
+  'terms_use_content': 'Everywear provides tools to organize wardrobes and track outfits. By using the app you agree to use the service responsibly.',
+  'terms_accounts_title': 'Accounts',
+  'terms_accounts_content': 'You are responsible for maintaining the confidentiality of your account credentials.',
+  'terms_tiers_title': 'Essential & Signature',
+  'terms_tiers_content': 'Everywear offers two tiers:\n\nEssential — free access to core wardrobe tools.\n\nSignature — premium access to advanced insights, analytics and enhanced outfit suggestions.',
+  'terms_subscriptions_title': 'Subscriptions',
+  'terms_subscriptions_content': 'Subscriptions renew automatically unless cancelled through your App Store or Google Play account.',
+  'terms_cancellation_title': 'Cancellation',
+  'terms_cancellation_content': 'You may cancel your subscription anytime through your store account settings.',
+  'terms_user_content_title': 'User content',
+  'terms_user_content_content': 'You retain ownership of wardrobe photos and data you upload. Everywear stores this data only to provide the service.',
+  'terms_contact_title': 'Contact',
+  'terms_contact_content': 'Questions regarding these terms:\n\nsupport@everywear.studio',
+
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 Hi! I\'ve analyzed your wardrobe and found {count} perfect outfit combinations for you today! Each suggestion is personalized based on your style preferences, weather conditions, and past favorites.',

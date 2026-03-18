@@ -338,6 +338,23 @@ const Map<String, String> appLocalizationsEs = {
   'privacy_contact_title': 'Contacto',
   'privacy_contact_content': 'Si tienes preguntas sobre privacidad, contacta:\n\nsupport@everywear.studio',
   
+  // TERMS OF USE
+  'terms_title': 'Términos de Everywear',
+  'terms_use_title': 'Uso de la aplicación',
+  'terms_use_content': 'Everywear proporciona herramientas para organizar armarios y seguir atuendos. Al usar la aplicación, aceptas usar el servicio de manera responsable.',
+  'terms_accounts_title': 'Cuentas',
+  'terms_accounts_content': 'Eres responsable de mantener la confidencialidad de tus credenciales de cuenta.',
+  'terms_tiers_title': 'Esencial & Signature',
+  'terms_tiers_content': 'Everywear ofrece dos niveles:\n\nEsencial — acceso gratuito a las herramientas básicas del armario.\n\nSignature — acceso premium a insights avanzados, análisis y sugerencias de atuendos mejoradas.',
+  'terms_subscriptions_title': 'Suscripciones',
+  'terms_subscriptions_content': 'Las suscripciones se renuevan automáticamente a menos que se cancelen a través de tu cuenta de App Store o Google Play.',
+  'terms_cancellation_title': 'Cancelación',
+  'terms_cancellation_content': 'Puedes cancelar tu suscripción en cualquier momento a través de la configuración de tu cuenta de store.',
+  'terms_user_content_title': 'Contenido del usuario',
+  'terms_user_content_content': 'Mantienes la propiedad de las fotos y datos del armario que subes. Everywear almacena estos datos solo para proporcionar el servicio.',
+  'terms_contact_title': 'Contacto',
+  'terms_contact_content': 'Preguntas sobre estos términos:\n\nsupport@everywear.studio',
+
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 ¡Hola! ¡He analizado tu guardarropa y he encontrado {count} combinaciones de atuendos perfectas para ti hoy! Cada sugerencia está personalizada según tus preferencias de estilo, las condiciones climáticas y tus favoritos anteriores.',

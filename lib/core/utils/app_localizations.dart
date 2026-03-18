@@ -738,6 +738,23 @@ class AppLocalizations {
   String get privacyRightsContent => translate('privacy_rights_content');
   String get privacyContactTitle => translate('privacy_contact_title');
   String get privacyContactContent => translate('privacy_contact_content');
+
+  //TERMS OF USE
+  String get termsTitle => translate('terms_title');
+  String get termsUseTitle => translate('terms_use_title');
+  String get termsUseContent => translate('terms_use_content');
+  String get termsAccountsTitle => translate('terms_accounts_title');
+  String get termsAccountsContent => translate('terms_accounts_content');
+  String get termsTiersTitle => translate('terms_tiers_title');
+  String get termsTiersContent => translate('terms_tiers_content');
+  String get termsSubscriptionsTitle => translate('terms_subscriptions_title');
+  String get termsSubscriptionsContent => translate('terms_subscriptions_content');
+  String get termsCancellationTitle => translate('terms_cancellation_title');
+  String get termsCancellationContent => translate('terms_cancellation_content');
+  String get termsUserContentTitle => translate('terms_user_content_title');
+  String get termsUserContentContent => translate('terms_user_content_content');
+  String get termsContactTitle => translate('terms_contact_title');
+  String get termsContactContent => translate('terms_contact_content');
   
   // Coach Questions
   String get qOutfitIdeas => translate('q_outfit_ideas');

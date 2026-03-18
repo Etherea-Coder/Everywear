@@ -338,6 +338,23 @@ const Map<String, String> appLocalizationsFr = {
   'privacy_contact_title': 'Contact',
   'privacy_contact_content': 'Si vous avez des questions concernant la confidentialité, veuillez contacter :\n\nsupport@everywear.studio',
   
+  // TERMS OF USE
+  'terms_title': 'Conditions d\'Utilisation Everywear',
+  'terms_use_title': 'Utilisation de l\'application',
+  'terms_use_content': 'Everywear fournit des outils pour organiser votre dressing et suivre vos tenues. En utilisant l\'application, vous acceptez d\'utiliser le service de manière responsable.',
+  'terms_accounts_title': 'Comptes',
+  'terms_accounts_content': 'Vous êtes responsable de la confidentialité de vos identifiants de compte.',
+  'terms_tiers_title': 'Essentiel & Signature',
+  'terms_tiers_content': 'Everywear propose deux formules :\n\nEssentiel — accès gratuit aux outils de base du dressing.\n\nSignature — accès premium aux insights avancés, analyses et suggestions de tenues améliorées.',
+  'terms_subscriptions_title': 'Abonnements',
+  'terms_subscriptions_content': 'Les abonnements sont renouvelés automatiquement sauf s\'ils sont annulés via votre compte App Store ou Google Play.',
+  'terms_cancellation_title': 'Annulation',
+  'terms_cancellation_content': 'Vous pouvez annuler votre abonnement à tout moment via les paramètres de votre compte store.',
+  'terms_user_content_title': 'Contenu utilisateur',
+  'terms_user_content_content': 'Vous conservez la propriété des photos et données de dressing que vous téléchargez. Everywear stocke ces données uniquement pour fournir le service.',
+  'terms_contact_title': 'Contact',
+  'terms_contact_content': 'Questions concernant ces conditions :\n\nsupport@everywear.studio',
+
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 Salut ! J\'ai analysé votre Dressing et trouvé {count} combinaisons de tenues parfaites pour vous aujourd\'hui ! Chaque suggestion est personnalisée en fonction de vos préférences de style, des conditions météorologiques et de vos favoris passés.',
