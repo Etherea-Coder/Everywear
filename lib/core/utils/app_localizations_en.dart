@@ -309,6 +309,36 @@ const Map<String, String> appLocalizationsEn = {
   'faq_a9': 'No. Your wardrobe and account data are used to power your experience inside the app. Analytics settings let you control whether anonymous usage data helps improve the app.',
   'faq_q10': 'How can I get better suggestions?',
   'faq_a10': 'Add more wardrobe items, complete your style quiz, log outfits regularly, and use the occasion and vibe options. This gives the app more context to produce suggestions that feel more personal.',
+
+    // ── SEND FEEDBACK ─────────────────────────────────────────────────────────────
+  'feedback_hero_title': 'We would love to hear from you',
+  'feedback_hero_subtitle': 'Your ideas, bug reports, and reflections help shape Everywear into a more thoughtful wardrobe studio.',
+  'feedback_type_section_title': 'What would you like to share?',
+  'feedback_message_section_title': 'Your message',
+  'feedback_experience_section_title': 'How is your experience so far?',
+  'feedback_email_section_title': 'Contact email',
+  'feedback_note_section_title': 'A quick note',
+  
+  // Feedback types
+  'feedback_type_suggestion': 'Suggestion',
+  'feedback_type_bug': 'Bug',
+  'feedback_type_design': 'Design',
+  'feedback_type_ai_suggestions': 'AI suggestions',
+  'feedback_type_other': 'Other',
+  
+  // Form fields
+  'feedback_message_hint': 'Tell us what happened, what you would improve, or what you would love to see next...',
+  'feedback_message_required': 'Please write a message',
+  'feedback_message_too_short': 'Please add a little more detail',
+  'feedback_rating_optional': 'Optional, but helpful',
+  'feedback_email_hint': 'your@email.com',
+  'feedback_email_invalid': 'Please enter a valid email',
+  'feedback_note_text': 'If you report a bug, a few details like where it happened, what you expected, and what happened instead will help a lot.',
+  
+  // Button states
+  'feedback_sending': 'Sending...',
+  'feedback_success_message': 'Thank you — your feedback has been sent',
+  'feedback_error_message': 'Could not send feedback. Please try again.',
  
   // Dynamic AI messages
   'ai_bubble_message_initial':

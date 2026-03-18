@@ -290,6 +290,36 @@ const Map<String, String> appLocalizationsFr = {
   'faq_q10': 'Comment puis-je obtenir de meilleures suggestions ?',
   'faq_a10': 'Ajoutez plus d\'articles à votre dressing, complétez votre quiz de style, enregistrez régulièrement vos tenues et utilisez les options d\'occasion et d\'ambiance. Cela donne à l\'application plus de contexte pour produire des suggestions plus personnelles.',
 
+    // ── SEND FEEDBACK ─────────────────────────────────────────────────────────────
+  'feedback_hero_title': 'Nous aimerions vous entendre',
+  'feedback_hero_subtitle': 'Vos idées, rapports de bugs et réflexions aident à façonner Everywear en un studio vestimentaire plus réfléchi.',
+  'feedback_type_section_title': 'Que souhaitez-vous partager ?',
+  'feedback_message_section_title': 'Votre message',
+  'feedback_experience_section_title': 'Comment se passe votre expérience ?',
+  'feedback_email_section_title': 'Email de contact',
+  'feedback_note_section_title': 'Une petite note',
+  
+  // Feedback types
+  'feedback_type_suggestion': 'Suggestion',
+  'feedback_type_bug': 'Bug',
+  'feedback_type_design': 'Design',
+  'feedback_type_ai_suggestions': 'Suggestions IA',
+  'feedback_type_other': 'Autre',
+  
+  // Form fields
+  'feedback_message_hint': 'Dites-nous ce qui s\'est passé, ce que vous amélioreriez, ou ce que vous aimeriez voir ensuite...',
+  'feedback_message_required': 'Veuillez écrire un message',
+  'feedback_message_too_short': 'Veuillez ajouter un peu plus de détail',
+  'feedback_rating_optional': 'Optionnel, mais utile',
+  'feedback_email_hint': 'votre@email.com',
+  'feedback_email_invalid': 'Veuillez entrer un email valide',
+  'feedback_note_text': 'Si vous signalez un bug, quelques détails comme où cela s\'est produit, ce que vous attendiez et ce qui s\'est réellement passé aideront beaucoup.',
+  
+  // Button states
+  'feedback_sending': 'Envoi...',
+  'feedback_success_message': 'Merci — votre feedback a été envoyé',
+  'feedback_error_message': 'Impossible d\'envoyer le feedback. Veuillez réessayer.',
+
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 Salut ! J\'ai analysé votre Dressing et trouvé {count} combinaisons de tenues parfaites pour vous aujourd\'hui ! Chaque suggestion est personnalisée en fonction de vos préférences de style, des conditions météorologiques et de vos favoris passés.',

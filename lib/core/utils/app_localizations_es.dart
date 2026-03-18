@@ -290,6 +290,36 @@ const Map<String, String> appLocalizationsEs = {
   'faq_q10': '¿Cómo puedo obtener mejores sugerencias?',
   'faq_a10': 'Añade más artículos a tu armario, completa tu cuestionario de estilo, registra atuendos regularmente y usa las opciones de ocasión y ambiente. Esto da a la aplicación más contexto para producir sugerencias que se sientan más personales.',
 
+    // ── SEND FEEDBACK ─────────────────────────────────────────────────────────────
+  'feedback_hero_title': 'Nos encantaría escucharte',
+  'feedback_hero_subtitle': 'Tus ideas, reportes de errores y reflexiones ayudan a formar Everywear en un estudio de armario más reflexivo.',
+  'feedback_type_section_title': '¿Qué te gustaría compartir?',
+  'feedback_message_section_title': 'Tu mensaje',
+  'feedback_experience_section_title': '¿Cómo va tu experiencia hasta ahora?',
+  'feedback_email_section_title': 'Email de contacto',
+  'feedback_note_section_title': 'Una nota rápida',
+  
+  // Feedback types
+  'feedback_type_suggestion': 'Sugerencia',
+  'feedback_type_bug': 'Error',
+  'feedback_type_design': 'Diseño',
+  'feedback_type_ai_suggestions': 'Sugerencias IA',
+  'feedback_type_other': 'Otro',
+  
+  // Form fields
+  'feedback_message_hint': 'Cuéntanos qué pasó, qué mejorarías o qué te gustaría ver a continuación...',
+  'feedback_message_required': 'Por favor escribe un mensaje',
+  'feedback_message_too_short': 'Por favor añade un poco más de detalle',
+  'feedback_rating_optional': 'Opcional, pero útil',
+  'feedback_email_hint': 'tu@email.com',
+  'feedback_email_invalid': 'Por favor ingresa un email válido',
+  'feedback_note_text': 'Si reportas un error, algunos detalles como dónde ocurrió, qué esperabas y qué pasó en su lugar ayudarán mucho.',
+  
+  // Button states
+  'feedback_sending': 'Enviando...',
+  'feedback_success_message': 'Gracias — tu feedback ha sido enviado',
+  'feedback_error_message': 'No se pudo enviar el feedback. Por favor intenta de nuevo.',
+
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 ¡Hola! ¡He analizado tu guardarropa y he encontrado {count} combinaciones de atuendos perfectas para ti hoy! Cada sugerencia está personalizada según tus preferencias de estilo, las condiciones climáticas y tus favoritos anteriores.',

@@ -690,6 +690,36 @@ class AppLocalizations {
   String get faqA9 => translate('faq_a9');
   String get faqQ10 => translate('faq_q10');
   String get faqA10 => translate('faq_a10');
+
+    // ── SEND FEEDBACK ─────────────────────────────────────────────────────────────
+  String get feedbackHeroTitle => translate('feedback_hero_title');
+  String get feedbackHeroSubtitle => translate('feedback_hero_subtitle');
+  String get feedbackTypeSectionTitle => translate('feedback_type_section_title');
+  String get feedbackMessageSectionTitle => translate('feedback_message_section_title');
+  String get feedbackExperienceSectionTitle => translate('feedback_experience_section_title');
+  String get feedbackEmailSectionTitle => translate('feedback_email_section_title');
+  String get feedbackNoteSectionTitle => translate('feedback_note_section_title');
+  
+  // Feedback types
+  String get feedbackTypeSuggestion => translate('feedback_type_suggestion');
+  String get feedbackTypeBug => translate('feedback_type_bug');
+  String get feedbackTypeDesign => translate('feedback_type_design');
+  String get feedbackTypeAiSuggestions => translate('feedback_type_ai_suggestions');
+  String get feedbackTypeOther => translate('feedback_type_other');
+  
+  // Form fields
+  String get feedbackMessageHint => translate('feedback_message_hint');
+  String get feedbackMessageRequired => translate('feedback_message_required');
+  String get feedbackMessageTooShort => translate('feedback_message_too_short');
+  String get feedbackRatingOptional => translate('feedback_rating_optional');
+  String get feedbackEmailHint => translate('feedback_email_hint');
+  String get feedbackEmailInvalid => translate('feedback_email_invalid');
+  String get feedbackNoteText => translate('feedback_note_text');
+  
+  // Button states
+  String get feedbackSending => translate('feedback_sending');
+  String get feedbackSuccessMessage => translate('feedback_success_message');
+  String get feedbackErrorMessage => translate('feedback_error_message');
   
   // Coach Questions
   String get qOutfitIdeas => translate('q_outfit_ideas');

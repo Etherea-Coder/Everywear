@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/profile_service.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../core/utils/app_localizations.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../services/supabase_service.dart';
 
@@ -20,21 +21,14 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
   final TextEditingController _emailController = TextEditingController();
 
   bool _isSubmitting = false;
-  String _selectedType = 'Suggestion';
+  String? _selectedTypeKey;
   int _selectedRating = 0;
-
-  final List<String> _feedbackTypes = [
-    'Suggestion',
-    'Bug',
-    'Design',
-    'AI suggestions',
-    'Other',
-  ];
 
   @override
   void initState() {
     super.initState();
     _prefillEmail();
+    _selectedTypeKey = 'suggestion';
   }
 
   void _prefillEmail() {
@@ -54,11 +48,20 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    final Map<String, String> feedbackTypes = {
+      'suggestion': l10n.feedbackTypeSuggestion,
+      'bug': l10n.feedbackTypeBug,
+      'design': l10n.feedbackTypeDesign,
+      'ai_suggestions': l10n.feedbackTypeAiSuggestions,
+      'other': l10n.feedbackTypeOther,
+    };
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: const CustomAppBar(
-        title: 'Send Feedback',
+      appBar: CustomAppBar(
+        title: l10n.sendFeedback,
         variant: CustomAppBarVariant.detail,
       ),
       body: SingleChildScrollView(
@@ -68,49 +71,43 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeroCard(theme),
+              _buildHeroCard(theme, l10n),
               SizedBox(height: 2.h),
-
               _buildSection(
                 theme,
-                title: 'What would you like to share?',
+                title: l10n.feedbackTypeSectionTitle,
                 icon: Icons.chat_bubble_outline,
-                child: _buildTypeSelectorCard(theme),
+                child: _buildTypeSelectorCard(theme, feedbackTypes),
               ),
               SizedBox(height: 2.h),
-
               _buildSection(
                 theme,
-                title: 'Your message',
+                title: l10n.feedbackMessageSectionTitle,
                 icon: Icons.edit_outlined,
-                child: _buildMessageCard(theme),
+                child: _buildMessageCard(theme, l10n),
               ),
               SizedBox(height: 2.h),
-
               _buildSection(
                 theme,
-                title: 'How is your experience so far?',
+                title: l10n.feedbackExperienceSectionTitle,
                 icon: Icons.star_outline,
-                child: _buildRatingCard(theme),
+                child: _buildRatingCard(theme, l10n),
               ),
               SizedBox(height: 2.h),
-
               _buildSection(
                 theme,
-                title: 'Contact email',
+                title: l10n.feedbackEmailSectionTitle,
                 icon: Icons.mail_outline,
-                child: _buildEmailCard(theme),
+                child: _buildEmailCard(theme, l10n),
               ),
               SizedBox(height: 2.h),
-
               _buildSection(
                 theme,
-                title: 'A quick note',
+                title: l10n.feedbackNoteSectionTitle,
                 icon: Icons.info_outline,
-                child: _buildInfoCard(theme),
+                child: _buildInfoCard(theme, l10n),
               ),
               SizedBox(height: 3.h),
-
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.w),
                 child: SizedBox(
@@ -127,7 +124,9 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                             ),
                           )
                         : const Icon(Icons.send_outlined),
-                    label: Text(_isSubmitting ? 'Sending...' : 'Send Feedback'),
+                    label: Text(_isSubmitting
+                        ? l10n.feedbackSending
+                        : l10n.sendFeedback),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 1.6.h),
                       shape: RoundedRectangleBorder(
@@ -144,7 +143,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Widget _buildHeroCard(ThemeData theme) {
+  Widget _buildHeroCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       margin: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 0),
       padding: EdgeInsets.all(4.5.w),
@@ -184,14 +183,14 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'We would love to hear from you',
+                  l10n.feedbackHeroTitle,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 SizedBox(height: 0.8.h),
                 Text(
-                  'Your ideas, bug reports, and reflections help shape Everywear into a more thoughtful wardrobe studio.',
+                  l10n.feedbackHeroSubtitle,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     height: 1.5,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -235,7 +234,10 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Widget _buildTypeSelectorCard(ThemeData theme) {
+  Widget _buildTypeSelectorCard(
+    ThemeData theme,
+    Map<String, String> feedbackTypes,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
@@ -253,10 +255,10 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
       child: Wrap(
         spacing: 2.w,
         runSpacing: 1.2.h,
-        children: _feedbackTypes.map((type) {
-          final selected = _selectedType == type;
+        children: feedbackTypes.entries.map((entry) {
+          final selected = _selectedTypeKey == entry.key;
           return GestureDetector(
-            onTap: () => setState(() => _selectedType = type),
+            onTap: () => setState(() => _selectedTypeKey = entry.key),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
@@ -273,7 +275,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                 ),
               ),
               child: Text(
-                type,
+                entry.value,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: selected
                       ? theme.colorScheme.primary
@@ -288,7 +290,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Widget _buildMessageCard(ThemeData theme) {
+  Widget _buildMessageCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
@@ -306,17 +308,16 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
       child: TextFormField(
         controller: _messageController,
         maxLines: 7,
-        decoration: const InputDecoration(
-          hintText:
-              'Tell us what happened, what you would improve, or what you would love to see next...',
+        decoration: InputDecoration(
+          hintText: l10n.feedbackMessageHint,
           border: InputBorder.none,
         ),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'Please write a message';
+            return l10n.feedbackMessageRequired;
           }
           if (value.trim().length < 8) {
-            return 'Please add a little more detail';
+            return l10n.feedbackMessageTooShort;
           }
           return null;
         },
@@ -324,7 +325,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Widget _buildRatingCard(ThemeData theme) {
+  Widget _buildRatingCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
@@ -339,7 +340,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Optional, but helpful',
+            l10n.feedbackRatingOptional,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -369,7 +370,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Widget _buildEmailCard(ThemeData theme) {
+  Widget _buildEmailCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
@@ -387,14 +388,14 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
       child: TextFormField(
         controller: _emailController,
         keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(
-          hintText: 'your@email.com',
+        decoration: InputDecoration(
+          hintText: l10n.feedbackEmailHint,
           border: InputBorder.none,
         ),
         validator: (value) {
           if (value == null || value.trim().isEmpty) return null;
           if (!value.contains('@')) {
-            return 'Please enter a valid email';
+            return l10n.feedbackEmailInvalid;
           }
           return null;
         },
@@ -402,7 +403,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     );
   }
 
-  Widget _buildInfoCard(ThemeData theme) {
+  Widget _buildInfoCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
@@ -414,7 +415,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
         ),
       ),
       child: Text(
-        'If you report a bug, a few details like where it happened, what you expected, and what happened instead will help a lot.',
+        l10n.feedbackNoteText,
         style: theme.textTheme.bodyMedium?.copyWith(
           height: 1.5,
           color: theme.colorScheme.onSurfaceVariant,
@@ -429,8 +430,17 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      final l10n = AppLocalizations.of(context);
+      final feedbackTypes = {
+        'suggestion': l10n.feedbackTypeSuggestion,
+        'bug': l10n.feedbackTypeBug,
+        'design': l10n.feedbackTypeDesign,
+        'ai_suggestions': l10n.feedbackTypeAiSuggestions,
+        'other': l10n.feedbackTypeOther,
+      };
+
       final success = await _profileService.submitFeedback(
-        type: _selectedType,
+        type: feedbackTypes[_selectedTypeKey] ?? _selectedTypeKey!,
         message: _messageController.text.trim(),
         rating: _selectedRating > 0 ? _selectedRating : null,
       );
@@ -439,14 +449,14 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Thank you — your feedback has been sent'),
+        SnackBar(
+          content: Text(l10n.feedbackSuccessMessage),
         ),
       );
 
       _messageController.clear();
       setState(() {
-        _selectedType = 'Suggestion';
+        _selectedTypeKey = 'suggestion';
         _selectedRating = 0;
       });
 
@@ -454,9 +464,11 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     } catch (e) {
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not send feedback: $e'),
+          content: Text(l10n.feedbackErrorMessage),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
