@@ -474,6 +474,26 @@ const Map<String, String> appLocalizationsEs = {
   'q_matters_originality': 'Originalidad',
   'q_matters_versatility': 'Versatilidad',
 
+  // ── CHALLENGES ──────────────────────────────────────────────────────────────
+  'challenge_weekly_label': 'Desafío semanal',
+  'challenge_accept': 'Aceptar el desafío',
+  'challenge_log_progress': 'Registrar atuendo',
+  'challenge_tap_to_log': 'Toca para registrar progreso',
+  'challenge_complete_inline': '✅ ¡Desafío completado!',
+  'challenge_complete_title': '¡Desafío completado!',
+  'challenge_next_week': 'Nuevo desafío llega la próxima semana.',
+  'challenge_insight_title': 'Insight de Estilo Desbloqueado',
+  'challenge_insight_card_title': 'Tu Insight de Estilo',
+  'challenge_insight_cta': '¡Genial!',
+  'challenge_progress_label': 'Progreso',
+  'challenge_anchor_chosen': 'Tu pieza ancla',
+  'challenge_anchor_pick_title': 'Elige tu pieza ancla',
+  'challenge_anchor_pick_subtitle': 'Esta es la pieza alrededor de la cual crearás 3 atuendos.',
+  'challenge_suggested_for_you': 'Sugerido para ti',
+  'challenge_stylist_tip': 'Consejo de estilista',
+  'challenge_how_it_works': 'Cómo funciona',
+  'challenge_no_wardrobe': 'No se encontraron artículos en el guardarropa. Agrega artículos primero.',
+
   // Additional strings
   'maximum_photos_allowed': 'Número máximo de fotos',
   'failed_to_select_photo': 'Error al seleccionar la foto',

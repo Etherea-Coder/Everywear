@@ -485,6 +485,26 @@ const Map<String, String> appLocalizationsFr = {
   'q_matters_originality': 'Originalité',
   'q_matters_versatility': 'Polyvalence',
 
+  // ── CHALLENGES ──────────────────────────────────────────────────────────────
+  'challenge_weekly_label': 'Défi de la semaine',
+  'challenge_accept': 'Accepter le défi',
+  'challenge_log_progress': 'Enregistrer une tenue',
+  'challenge_tap_to_log': 'Appuyez pour enregistrer',
+  'challenge_complete_inline': '✅ Défi terminé !',
+  'challenge_complete_title': 'Défi accompli !',
+  'challenge_next_week': 'Un nouveau défi arrive la semaine prochaine.',
+  'challenge_insight_title': 'Insight Style Débloqué',
+  'challenge_insight_card_title': 'Votre Insight Style',
+  'challenge_insight_cta': 'Super !',
+  'challenge_progress_label': 'Progression',
+  'challenge_anchor_chosen': 'Votre pièce maîtresse',
+  'challenge_anchor_pick_title': 'Choisissez votre pièce maîtresse',
+  'challenge_anchor_pick_subtitle': 'C\'est la pièce autour de laquelle vous créerez 3 tenues.',
+  'challenge_suggested_for_you': 'Suggéré pour vous',
+  'challenge_stylist_tip': 'Conseil de styliste',
+  'challenge_how_it_works': 'Comment ça marche',
+  'challenge_no_wardrobe': 'Aucun article dans le Dressing. Ajoutez des articles d\'abord.',
+
   // Additional strings
   'maximum_photos_allowed': 'Nombre maximum de photos',
   'failed_to_select_photo': 'Échec de la sélection de la photo',

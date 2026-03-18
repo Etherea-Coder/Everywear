@@ -204,6 +204,26 @@ const Map<String, String> appLocalizationsEn = {
   'cost_per_wear': 'Cost Per Wear',
   'per_wear': '/wear',
 
+  // ── CHALLENGES ──────────────────────────────────────────────────────────────
+  'challenge_weekly_label': 'Weekly Challenge',
+  'challenge_accept': 'Accept Challenge',
+  'challenge_log_progress': 'Log Outfit Progress',
+  'challenge_tap_to_log': 'Tap to log progress',
+  'challenge_complete_inline': '✅ Challenge complete!',
+  'challenge_complete_title': 'Challenge Complete!',
+  'challenge_next_week': 'New challenge arrives next week.',
+  'challenge_insight_title': 'Style Insight Unlocked',
+  'challenge_insight_card_title': 'Your Style Insight',
+  'challenge_insight_cta': 'Awesome!',
+  'challenge_progress_label': 'Progress',
+  'challenge_anchor_chosen': 'Your anchor piece',
+  'challenge_anchor_pick_title': 'Pick your anchor piece',
+  'challenge_anchor_pick_subtitle': 'This is the item you\'ll build 3 outfits around.',
+  'challenge_suggested_for_you': 'Suggested for you',
+  'challenge_stylist_tip': 'Stylist tip',
+  'challenge_how_it_works': 'How it works',
+  'challenge_no_wardrobe': 'No wardrobe items found. Add items first.',
+ 
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 Hi! I\'ve analyzed your wardrobe and found {count} perfect outfit combinations for you today! Each suggestion is personalized based on your style preferences, weather conditions, and past favorites.',

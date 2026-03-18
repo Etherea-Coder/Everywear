@@ -5,6 +5,7 @@ import '../../services/style_service.dart';
 import '../../services/user_tier_service.dart';
 import '../../widgets/upgrade_prompt_widget.dart';
 import '../../core/utils/app_localizations.dart';
+import './widgets/challenges_card.dart';
 
 class SmartSuggestions extends StatefulWidget {
   const SmartSuggestions({Key? key}) : super(key: key);
@@ -25,7 +26,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   };
 
   List<Map<String, dynamic>> _events = [];
-  List<Map<String, dynamic>> _challenges = [];
   Map<String, dynamic> _insights = {};
   Map<String, dynamic>? _quizResult;
   bool _isLoading = true;
@@ -56,16 +56,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     setState(() => _isLoading = true);
     final results = await Future.wait([
       _styleService.fetchUpcomingEvents(),
-      _styleService.fetchChallenges(),
       _styleService.fetchStyleInsights(),
       _styleService.fetchQuizResult(),
     ]);
     if (mounted) {
       setState(() {
         _events = results[0] as List<Map<String, dynamic>>;
-        _challenges = results[1] as List<Map<String, dynamic>>;
-        _insights = results[2] as Map<String, dynamic>;
-        _quizResult = results[3] as Map<String, dynamic>?;
+        _insights = results[1] as Map<String, dynamic>;
+        _quizResult = results[2] as Map<String, dynamic>?;
         _isLoading = false;
       });
     }
@@ -85,7 +83,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               floating: true,
               backgroundColor: theme.scaffoldBackgroundColor,
               elevation: 0,
-              title: Text(localizations.styleTitle, style: theme.textTheme.headlineMedium),
+              title: Text(localizations.styleTitle,
+                  style: theme.textTheme.headlineMedium),
               actions: [
                 IconButton(
                   icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
@@ -104,20 +103,24 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   delegate: SliverChildListDelegate([
                     _buildQuizSection(theme),
                     SizedBox(height: 3.h),
-                    _buildSectionHeader(theme, localizations.styleCoach, Icons.psychology_alt),
+                    _buildSectionHeader(theme, localizations.styleCoach,
+                        Icons.psychology_alt),
                     SizedBox(height: 1.h),
                     _buildCoachSection(theme),
                     SizedBox(height: 3.h),
-                    _buildSectionHeader(theme, localizations.events, Icons.event,
+                    _buildSectionHeader(theme, localizations.events,
+                        Icons.event,
                         onAdd: _showAddEventDialog),
                     SizedBox(height: 1.h),
                     _buildEventsSection(theme),
                     SizedBox(height: 3.h),
-                    _buildSectionHeader(theme, localizations.challenges, Icons.flag),
+                    _buildSectionHeader(
+                        theme, localizations.challenges, Icons.flag),
                     SizedBox(height: 1.h),
-                    _buildChallengesSection(theme),
+                    ChallengesCard(isPremium: _isPremium),
                     SizedBox(height: 3.h),
-                    _buildSectionHeader(theme, localizations.insights, Icons.insights),
+                    _buildSectionHeader(
+                        theme, localizations.insights, Icons.insights),
                     SizedBox(height: 1.h),
                     _buildInsightsSection(theme),
                     SizedBox(height: 10.h),
@@ -212,7 +215,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 SizedBox(height: 0.5.h),
                 Row(
                   children: [
-                    _buildChip(theme, _getEventIcon(eventType) + ' ' + eventType),
+                    _buildChip(
+                        theme, _getEventIcon(eventType) + ' ' + eventType),
                     SizedBox(width: 2.w),
                     if (event['dress_code'] != null)
                       _buildChip(theme, event['dress_code']),
@@ -257,146 +261,13 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   String _getEventIcon(String type) {
     switch (type.toLowerCase()) {
       case 'wedding': return '💍';
-      case 'dinner': return '🍽';
-      case 'work': return '💼';
-      case 'party': return '🎉';
-      case 'travel': return '✈️';
-      case 'sport': return '⚽';
-      default: return '📅';
+      case 'dinner':  return '🍽';
+      case 'work':    return '💼';
+      case 'party':   return '🎉';
+      case 'travel':  return '✈️';
+      case 'sport':   return '⚽';
+      default:        return '📅';
     }
-  }
-
-  // ── CHALLENGES ──────────────────────────────────────────
-  Widget _buildChallengesSection(ThemeData theme) {
-    final localizations = AppLocalizations.of(context);
-    if (_challenges.isEmpty) {
-      return _buildEmptyCard(
-        theme,
-        icon: Icons.flag_outlined,
-        title: localizations.noChallengesAvailable,
-        subtitle: localizations.checkBackSoon,
-      );
-    }
-    return SizedBox(
-      height: 22.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _challenges.length,
-        itemBuilder: (context, index) {
-          return _buildChallengeCard(theme, _challenges[index]);
-        },
-      ),
-    );
-  }
-
-  Widget _buildChallengeCard(ThemeData theme, Map<String, dynamic> challenge) {
-    final isJoined = challenge['is_joined'] as bool? ?? false;
-    final progress = challenge['progress'] as int? ?? 0;
-    final duration = challenge['duration_days'] as int? ?? 7;
-
-    return Container(
-      width: 55.w,
-      margin: EdgeInsets.only(right: 3.w),
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: isJoined
-            ? theme.colorScheme.primary.withValues(alpha: 0.08)
-            : theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: isJoined
-            ? Border.all(color: theme.colorScheme.primary, width: 1.5)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  challenge['category'] as String? ?? 'Style',
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Text(
-                '$duration days',
-                style: TextStyle(
-                  fontSize: 10.sp,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 1.5.h),
-          Text(
-            challenge['title'] as String,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            maxLines: 2,
-          ),
-          SizedBox(height: 0.5.h),
-          Text(
-            challenge['description'] as String? ?? '',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
-          if (isJoined) ...[
-            LinearProgressIndicator(
-              value: progress / duration,
-              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            SizedBox(height: 0.5.h),
-            Text(
-              '$progress/$duration days',
-              style: TextStyle(
-                fontSize: 10.sp,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ] else
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _joinChallenge(challenge['id']),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 1.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context).continueText,
-                  style: TextStyle(fontSize: 12.sp),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 
   // ── QUIZ ────────────────────────────────────────────────
@@ -525,7 +396,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     width: 12.w,
                     height: 12.w,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.secondary.withValues(alpha: 0.10),
+                      color:
+                          theme.colorScheme.secondary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
@@ -539,7 +411,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // FIX: removed the duplicate `Text(` wrapper that was here
                         Text(
                           localizations.tipOfTheWeek,
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -584,7 +455,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       _coachTip.isNotEmpty
                           ? _coachTip
                           : localizations.coachIsPreparingTip,
-                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                      style:
+                          theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                     ),
               SizedBox(height: 2.h),
               SizedBox(
@@ -623,7 +495,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 icon: Icons.event_available,
                 title: localizations.eventCoaching,
                 subtitle: nextEvent != null
-                    ? localizations.suggestionsFor(nextEvent['title'] as String)
+                    ? localizations.suggestionsFor(
+                        nextEvent['title'] as String)
                     : localizations.addEventToUnlock,
                 onTap: nextEvent != null
                     ? () => _showEventCoachDialog(nextEvent)
@@ -704,12 +577,30 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     }
 
     final topics = [
-      {'label': localizations.topicOutfitIdeas, 'question': localizations.qOutfitIdeas},
-      {'label': localizations.topicShoppingAdvice, 'question': localizations.qShoppingAdvice},
-      {'label': localizations.topicMyWardrobe, 'question': localizations.qMyWardrobe},
-      {'label': localizations.topicForAnEvent, 'question': localizations.qForAnEvent},
-      {'label': localizations.topicMoreVariety, 'question': localizations.qMoreVariety},
-      {'label': localizations.topicStyleUpgrade, 'question': localizations.qStyleUpgrade},
+      {
+        'label': localizations.topicOutfitIdeas,
+        'question': localizations.qOutfitIdeas
+      },
+      {
+        'label': localizations.topicShoppingAdvice,
+        'question': localizations.qShoppingAdvice
+      },
+      {
+        'label': localizations.topicMyWardrobe,
+        'question': localizations.qMyWardrobe
+      },
+      {
+        'label': localizations.topicForAnEvent,
+        'question': localizations.qForAnEvent
+      },
+      {
+        'label': localizations.topicMoreVariety,
+        'question': localizations.qMoreVariety
+      },
+      {
+        'label': localizations.topicStyleUpgrade,
+        'question': localizations.qStyleUpgrade
+      },
     ];
 
     final customController = TextEditingController();
@@ -719,7 +610,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -876,11 +768,13 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         builder: (context, setDialogState) {
           if (isLoading && coachData.isEmpty) {
             isLoading = false;
-            _styleService.fetchEventCoaching(
+            _styleService
+                .fetchEventCoaching(
               event: event,
               insights: _insights,
               quizResult: _quizResult,
-            ).then((data) {
+            )
+                .then((data) {
               if (context.mounted) {
                 setDialogState(() => coachData = data);
               }
@@ -924,32 +818,36 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                                     const SizedBox(height: 12),
                                   ],
                                   if (coachData['outfit_1'] != null)
-                                    _buildOutfitSuggestion(
-                                        dlgTheme, '1', coachData['outfit_1'] as String),
+                                    _buildOutfitSuggestion(dlgTheme, '1',
+                                        coachData['outfit_1'] as String),
                                   if (coachData['outfit_2'] != null)
-                                    _buildOutfitSuggestion(
-                                        dlgTheme, '2', coachData['outfit_2'] as String),
+                                    _buildOutfitSuggestion(dlgTheme, '2',
+                                        coachData['outfit_2'] as String),
                                   if (coachData['outfit_3'] != null)
-                                    _buildOutfitSuggestion(
-                                        dlgTheme, '3', coachData['outfit_3'] as String),
+                                    _buildOutfitSuggestion(dlgTheme, '3',
+                                        coachData['outfit_3'] as String),
                                   if (coachData['prep_tip'] != null) ...[
                                     const SizedBox(height: 12),
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         color: Colors.amber.shade50,
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius:
+                                            BorderRadius.circular(8),
                                       ),
                                       child: Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           const Text('💡 ',
-                                              style: TextStyle(fontSize: 14)),
+                                              style:
+                                                  TextStyle(fontSize: 14)),
                                           Expanded(
                                             child: Text(
-                                              coachData['prep_tip'] as String,
-                                              style: const TextStyle(fontSize: 13),
+                                              coachData['prep_tip']
+                                                  as String,
+                                              style: const TextStyle(
+                                                  fontSize: 13),
                                             ),
                                           ),
                                         ],
@@ -976,7 +874,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     );
   }
 
-  Widget _buildOutfitSuggestion(ThemeData theme, String number, String text) {
+  Widget _buildOutfitSuggestion(
+      ThemeData theme, String number, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -1030,11 +929,13 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
           final theme = Theme.of(context);
           if (isLoading && result.isEmpty) {
             isLoading = false;
-            _styleService.askCoach(
+            _styleService
+                .askCoach(
               question: question,
               insights: _insights,
               quizResult: _quizResult,
-            ).then((data) {
+            )
+                .then((data) {
               if (context.mounted) {
                 setDialogState(() => result = data);
               }
@@ -1073,7 +974,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                               color: theme.colorScheme.onSurface,
                             ),
                           ),
-                          if ((result['next_step'] as String? ?? '').isNotEmpty) ...[
+                          if ((result['next_step'] as String? ?? '')
+                              .isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.all(12),
@@ -1087,14 +989,16 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                                 ),
                               ),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   const Text('👣 ',
                                       style: TextStyle(fontSize: 14)),
                                   Expanded(
                                     child: Text(
                                       result['next_step'] as String,
-                                      style: const TextStyle(fontSize: 13),
+                                      style:
+                                          const TextStyle(fontSize: 13),
                                     ),
                                   ),
                                 ],
@@ -1248,7 +1152,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.add, color: theme.colorScheme.primary, size: 20),
+              child:
+                  Icon(Icons.add, color: theme.colorScheme.primary, size: 20),
             ),
           ),
       ],
@@ -1403,7 +1308,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                             DateFormat('MMM dd, yyyy').format(selectedDate),
                       ),
                       controller: TextEditingController(
-                        text: DateFormat('MMM dd, yyyy').format(selectedDate),
+                        text:
+                            DateFormat('MMM dd, yyyy').format(selectedDate),
                       ),
                     ),
                   ),
@@ -1495,11 +1401,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     }
   }
 
-  Future<void> _joinChallenge(String challengeId) async {
-    final success = await _styleService.joinChallenge(challengeId);
-    if (success) _loadData();
-  }
-
   void _startQuiz() => _showQuizDialog();
 
   void _showQuizDialog() {
@@ -1585,11 +1486,11 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         leading: Radio<String>(
                           value: option,
                           groupValue: answers[q['question']],
-                          onChanged: (v) => setDialogState(
-                              () => answers[q['question'] as String] = v!),
+                          onChanged: (v) => setDialogState(() =>
+                              answers[q['question'] as String] = v!),
                         ),
-                        onTap: () => setDialogState(
-                            () => answers[q['question'] as String] = option),
+                        onTap: () => setDialogState(() =>
+                            answers[q['question'] as String] = option),
                       ))
                   .toList(),
             ),
@@ -1608,8 +1509,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                           setDialogState(() => currentQuestion++);
                         } else if (currentQuestion ==
                             questions.length - 1) {
-                          setDialogState(() =>
-                              currentQuestion++); // go to intention step
+                          setDialogState(() => currentQuestion++);
                         } else {
                           Navigator.pop(context);
                           final profile =
@@ -1646,8 +1546,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     final loc = AppLocalizations.of(context);
     final style = answers.values.join(' ').toLowerCase();
 
-    // Match against translated answer strings so profile detection works
-    // regardless of the app's current language.
     final polishedSignals = [
       loc.qFeelPolished, loc.qMattersElegance,
       'polished', 'timeless', 'elegance', 'élégance', 'elegancia',
@@ -1666,7 +1564,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     ].map((s) => s.toLowerCase());
 
     final minimalistSignals = [
-      loc.qMattersVersatility, loc.qStyleAdventurousWorks, loc.qStyleAdventurousSmall,
+      loc.qMattersVersatility, loc.qStyleAdventurousWorks,
+      loc.qStyleAdventurousSmall,
       'versatility', 'polyvalence', 'versatilidad',
       'small changes', 'petits changements', 'cambios pequeños',
     ].map((s) => s.toLowerCase());

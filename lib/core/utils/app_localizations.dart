@@ -590,7 +590,7 @@ class AppLocalizations {
   String get topicMoreVariety => translate('topic_more_variety');
   String get topicStyleUpgrade => translate('topic_style_upgrade');
   
-    String get qFeelLikeYourself => translate('q_feel_like_yourself');
+  String get qFeelLikeYourself => translate('q_feel_like_yourself');
   String get qFeelRelaxed => translate('q_feel_relaxed');
   String get qFeelPolished => translate('q_feel_polished');
   String get qFeelCreative => translate('q_feel_creative');
@@ -610,6 +610,26 @@ class AppLocalizations {
   String get qMattersElegance => translate('q_matters_elegance');
   String get qMattersOriginality => translate('q_matters_originality');
   String get qMattersVersatility => translate('q_matters_versatility');
+
+  // ── Challenges ──────────────────────────────────────────
+String get challengeWeeklyLabel      => translate('challenge_weekly_label');
+String get challengeAccept           => translate('challenge_accept');
+String get challengeLogProgress      => translate('challenge_log_progress');
+String get challengeTapToLog         => translate('challenge_tap_to_log');
+String get challengeCompleteInline   => translate('challenge_complete_inline');
+String get challengeCompleteTitle    => translate('challenge_complete_title');
+String get challengeNextWeek         => translate('challenge_next_week');
+String get challengeInsightTitle     => translate('challenge_insight_title');
+String get challengeInsightCardTitle => translate('challenge_insight_card_title');
+String get challengeInsightCta       => translate('challenge_insight_cta');
+String get challengeProgressLabel    => translate('challenge_progress_label');
+String get challengeAnchorChosen     => translate('challenge_anchor_chosen');
+String get challengeAnchorPickTitle  => translate('challenge_anchor_pick_title');
+String get challengeAnchorPickSubtitle => translate('challenge_anchor_pick_subtitle');
+String get challengeSuggestedForYou  => translate('challenge_suggested_for_you');
+String get challengeStylistTip       => translate('challenge_stylist_tip');
+String get challengeHowItWorks       => translate('challenge_how_it_works');
+String get challengeNoWardrobe       => translate('challenge_no_wardrobe');
   
   // Coach Questions
   String get qOutfitIdeas => translate('q_outfit_ideas');
