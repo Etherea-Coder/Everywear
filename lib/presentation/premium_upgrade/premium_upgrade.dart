@@ -5,6 +5,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
 import '../../services/supabase_service.dart';
+import '../../core/utils/app_localizations.dart';
 import './widgets/faq_item_widget.dart';
 import './widgets/feature_comparison_widget.dart';
 import './widgets/hero_section_widget.dart';
@@ -22,61 +23,55 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
   String _selectedPlan = 'yearly';
   final _subscriptionService = SubscriptionService();
 
-  final List<Map<String, dynamic>> _testimonials = [
-    {
-      'name': 'Sarah Chen',
-      'image': 'assets/images/testimonials/sarah_chen.png',
-      'text':
-          'Premium analytics helped me reduce impulse purchases and get more value from the clothes I already own.',
-      'rating': 5,
-    },
-    {
-      'name': 'Marcus Johnson',
-      'image': 'assets/images/testimonials/marcus_johnson.png',
-      'text':
-          'The AI suggestions and outfit variations made the app feel like a real personal stylist.',
-      'rating': 5,
-    },
-    {
-      'name': 'Emma Rodriguez',
-      'image': 'assets/images/testimonials/emma_rodriguez.png',
-      'text':
-          'Premium made the app much more useful day to day. More ideas, more guidance, no ads.',
-      'rating': 5,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _faqs = [
-    {
-      'question': 'Can I cancel anytime?',
-      'answer':
-          'Yes. Your subscription renews automatically, and you can cancel anytime from your Play Store or App Store subscription settings.',
-    },
-    {
-      'question': 'What happens if I cancel?',
-      'answer':
-          'You will keep Premium access until the end of the current billing period, then your account will return to the free plan.',
-    },
-    {
-      'question': 'Can I restore my subscription?',
-      'answer':
-          'Yes. If you already purchased Premium on this account, you can restore your purchases at any time.',
-    },
-    {
-      'question': 'Do you offer discount codes?',
-      'answer':
-          'Occasionally, yes. Special discount codes may be shared through campaigns, partnerships, or selected creators.',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    final List<Map<String, dynamic>> _testimonials = [
+      {
+        'name': 'Sarah Chen',
+        'image': 'assets/images/testimonials/sarah_chen.png',
+        'text': l10n.testimonialSarahText,
+        'rating': 5,
+      },
+      {
+        'name': 'Marcus Johnson',
+        'image': 'assets/images/testimonials/marcus_johnson.png',
+        'text': l10n.testimonialMarcusText,
+        'rating': 5,
+      },
+      {
+        'name': 'Emma Rodriguez',
+        'image': 'assets/images/testimonials/emma_rodriguez.png',
+        'text': l10n.testimonialEmmaText,
+        'rating': 5,
+      },
+    ];
+
+    final List<Map<String, dynamic>> _faqs = [
+      {
+        'question': l10n.faqCancelAnytime,
+        'answer': l10n.faqCancelAnytimeAnswer,
+      },
+      {
+        'question': l10n.faqWhatHappensCancel,
+        'answer': l10n.faqWhatHappensCancelAnswer,
+      },
+      {
+        'question': l10n.faqRestoreSubscription,
+        'answer': l10n.faqRestoreSubscriptionAnswer,
+      },
+      {
+        'question': l10n.faqDiscountCodes,
+        'answer': l10n.faqDiscountCodesAnswer,
+      },
+    ];
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: const CustomAppBar(
-        title: 'Premium Upgrade',
+      appBar: CustomAppBar(
+        title: l10n.premiumUpgrade,
         variant: CustomAppBarVariant.detail,
       ),
       body: SingleChildScrollView(
@@ -94,7 +89,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
-                'Choose Your Plan',
+                l10n.chooseYourPlan,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -109,7 +104,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 6.w),
               child: Text(
-                'Upgrade when you want more suggestions, more coaching, more outfit variations, and no ads.',
+                l10n.upgradeMoreFeatures,
                 style: TextStyle(
                   fontSize: 13.sp,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
@@ -122,15 +117,15 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             SizedBox(height: 3.h),
 
             PricingCardWidget(
-              planName: 'Monthly',
+              planName: l10n.monthly,
               price: '€7.49',
-              period: '/month',
-              features: const [
-                'More AI outfit suggestions',
-                'More coach interactions',
-                'More event outfit generations',
-                'Ad-free experience',
-                'Access to Premium features while subscribed',
+              period: l10n.perMonth,
+              features: [
+                l10n.moreAiOutfitSuggestions,
+                l10n.moreCoachInteractions,
+                l10n.moreEventOutfitGenerations,
+                l10n.adFreeExperience,
+                l10n.accessPremiumWhileSubscribed,
               ],
               isSelected: _selectedPlan == 'monthly',
               onSelect: () => setState(() => _selectedPlan = 'monthly'),
@@ -140,16 +135,16 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             SizedBox(height: 2.h),
 
             PricingCardWidget(
-              planName: 'Yearly',
+              planName: l10n.yearly,
               price: '€69.90',
-              period: '/year',
-              savings: '-22%',
-              features: const [
-                'Everything in Monthly',
-                'Better yearly value',
-                'Fewer renewals to manage',
-                'Full Premium access all year',
-                'Best plan for regular users',
+              period: l10n.perYear,
+              savings: l10n.savePercent,
+              features: [
+                l10n.everythingInMonthly,
+                l10n.betterYearlyValue,
+                l10n.fewerRenewals,
+                l10n.fullPremiumAllYear,
+                l10n.bestPlanRegularUsers,
               ],
               isSelected: _selectedPlan == 'yearly',
               isBestValue: true,
@@ -159,14 +154,14 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 3.h),
 
-            _buildStoreInfoCard(theme),
+            _buildStoreInfoCard(theme, l10n),
 
             SizedBox(height: 4.h),
 
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
-                'What Our Users Say',
+                l10n.whatUsersSay,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -199,7 +194,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
-                'Frequently Asked Questions',
+                l10n.frequentlyAskedQuestions,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -250,7 +245,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Secure Store Billing',
+                          l10n.secureStoreBilling,
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -259,7 +254,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                         ),
                         SizedBox(height: 0.5.h),
                         Text(
-                          'Subscriptions are handled securely through Google Play or the App Store on your device.',
+                          l10n.subscriptionsHandledSecurely,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: theme.colorScheme.onSurface.withValues(
@@ -281,7 +276,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
               child: TextButton(
                 onPressed: _handleRestorePurchases,
                 child: Text(
-                  'Restore Purchases',
+                  l10n.restorePurchases,
                   style: TextStyle(
                     fontSize: 13.sp,
                     color: theme.colorScheme.primary,
@@ -298,7 +293,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
     );
   }
 
-  Widget _buildStoreInfoCard(ThemeData theme) {
+  Widget _buildStoreInfoCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
@@ -323,14 +318,14 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'How billing works',
+                  l10n.howBillingWorks,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 SizedBox(height: 0.6.h),
                 Text(
-                  'Your subscription will be managed by Google Play or the App Store. No card form is required here — billing continues through your store account.',
+                  l10n.billingManagedByStore,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.4,
@@ -345,15 +340,16 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
   }
 
   Future<void> _handleUpgrade() async {
+    final l10n = AppLocalizations.of(context);
     final user = SupabaseService.instance.client.auth.currentUser;
     if (user == null) {
-      _showErrorDialog('Please login to continue');
+      _showErrorDialog(l10n.pleaseLoginContinue);
       return;
     }
     try {
       final offerings = await _subscriptionService.getOfferings();
       if (offerings == null || offerings.current == null) {
-        _showErrorDialog('No offerings available. Please try again later.');
+        _showErrorDialog(l10n.noOfferingsAvailable);
         return;
       }
       final packages = offerings.current!.availablePackages;
@@ -372,13 +368,13 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       final success = await _subscriptionService.purchase(selectedPackage);
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Welcome to Signature!')),
+          SnackBar(content: Text(l10n.welcomeToSignature)),
         );
         Navigator.pop(context);
       }
     } on PurchasesErrorCode catch (e) {
       if (e != PurchasesErrorCode.purchaseCancelledError) {
-        _showErrorDialog('Purchase failed: ${e.name}');
+        _showErrorDialog('${l10n.purchaseFailed}: ${e.name}');
       }
     } catch (e) {
       _showErrorDialog(e.toString());
@@ -386,19 +382,20 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
   }
 
   Future<void> _handleRestorePurchases() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final hasAccess = await _subscriptionService.restorePurchases();
       if (!mounted) return;
       if (hasAccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Purchases restored successfully!')),
+          SnackBar(content: Text(l10n.purchasesRestoredSuccess)),
         );
         Navigator.pop(context);
       } else {
-        _showErrorDialog('No active subscription found to restore.');
+        _showErrorDialog(l10n.noActiveSubscriptionRestore);
       }
     } catch (e) {
-      _showErrorDialog('Restore failed: ${e.toString()}');
+      _showErrorDialog('${l10n.restoreFailed}: ${e.toString()}');
     }
   }
 

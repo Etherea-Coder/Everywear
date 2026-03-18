@@ -1218,27 +1218,37 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: EdgeInsets.all(4.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: Text(localizations.filterByCategory),
-              onTap: () => Navigator.pop(context),
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.35,
+        minChildSize: 0.25,
+        maxChildSize: 0.5,
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          child: Container(
+            padding: EdgeInsets.all(4.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.category),
+                  title: Text(localizations.filterByCategory),
+                  onTap: () => Navigator.pop(context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.date_range),
+                  title: Text(localizations.customDateRange),
+                  onTap: () => Navigator.pop(context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.download),
+                  title: Text(localizations.exportData),
+                  onTap: () => Navigator.pop(context),
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.date_range),
-              title: Text(localizations.customDateRange),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.download),
-              title: Text(localizations.exportData),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
+          ),
         ),
       ),
     );

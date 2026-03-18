@@ -17,7 +17,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final localizations = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final user = ref.watch(supabaseAuthProvider).value;
     final profileAsync = ref.watch(userProfileProvider);
@@ -45,7 +45,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: 'Profile',
+        title: l10n.profileTitle,
         variant: CustomAppBarVariant.standard,
       ),
       body: SingleChildScrollView(
@@ -63,26 +63,26 @@ class ProfileScreen extends ConsumerWidget {
             SizedBox(height: 2.h),
 
             SettingsSectionWidget(
-              title: 'Insights & Analytics',
+              title: l10n.insightsAnalytics,
               children: [
                 SettingsTileWidget(
                   icon: Icons.insights_outlined,
-                  title: 'Style Insights',
-                  subtitle: 'Wardrobe analytics and AI recommendations',
+                  title: l10n.styleInsights,
+                  subtitle: l10n.styleInsightsSubtitle,
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.insightsDashboard),
                 ),
                 SettingsTileWidget(
                   icon: Icons.emoji_events_outlined,
-                  title: 'Achievements',
-                  subtitle: 'View earned badges and milestones',
+                  title: l10n.achievements,
+                  subtitle: l10n.achievementsSubtitle,
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.achievementGallery),
                 ),
                 SettingsTileWidget(
                   icon: Icons.trending_up_outlined,
-                  title: 'Progress Dashboard',
-                  subtitle: 'Track your style evolution',
+                  title: l10n.progressDashboard,
+                  subtitle: l10n.progressDashboardSubtitle,
                   onTap: () => Navigator.pushNamed(
                     context,
                     AppRoutes.personalProgressDashboard,
@@ -93,14 +93,14 @@ class ProfileScreen extends ConsumerWidget {
             SizedBox(height: 2.h),
 
             SettingsSectionWidget(
-              title: localizations.subscription,
+              title: l10n.subscription,
               children: [
                 SettingsTileWidget(
                   icon: Icons.workspace_premium_outlined,
-                  title: 'Membership',
+                  title: l10n.membership,
                   subtitle: membershipTier.toLowerCase() == 'free'
-                      ? 'Essential plan · Unlock more features'
-                      : '$displayTier plan',
+                      ? l10n.essentialPlanUnlock
+                      : '$displayTier ${l10n.plan}',
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.premiumUpgrade),
                 ),
@@ -113,8 +113,8 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 SettingsTileWidget(
                   icon: Icons.settings_outlined,
-                  title: 'Settings',
-                  subtitle: 'App preferences, security, privacy',
+                  title: l10n.settings,
+                  subtitle: l10n.settingsSubtitle,
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.settings),
                 ),

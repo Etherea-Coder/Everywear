@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../core/utils/app_localizations.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class TermsScreen extends StatelessWidget {
@@ -43,76 +44,59 @@ class TermsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: const CustomAppBar(title: "Terms of Use"),
+      appBar: CustomAppBar(
+        title: l10n.termsOfService,
+        variant: CustomAppBarVariant.detail,
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Text(
-              "Everywear Terms",
+              l10n.termsTitle,
               style: theme.textTheme.headlineSmall
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
-
             SizedBox(height: 3.h),
-
             _section(
               theme,
-              "Use of the app",
-              "Everywear provides tools to organize wardrobes "
-              "and track outfits. By using the app you agree "
-              "to use the service responsibly.",
+              l10n.termsUseTitle,
+              l10n.termsUseContent,
             ),
-
             _section(
               theme,
-              "Accounts",
-              "You are responsible for maintaining the confidentiality "
-              "of your account credentials.",
+              l10n.termsAccountsTitle,
+              l10n.termsAccountsContent,
             ),
-
             _section(
               theme,
-              "Essential & Signature",
-              "Everywear offers two tiers:\n\n"
-              "Essential — free access to core wardrobe tools.\n\n"
-              "Signature — premium access to advanced insights, "
-              "analytics and enhanced outfit suggestions.",
+              l10n.termsTiersTitle,
+              l10n.termsTiersContent,
             ),
-
             _section(
               theme,
-              "Subscriptions",
-              "Subscriptions renew automatically unless cancelled "
-              "through your App Store or Google Play account.",
+              l10n.termsSubscriptionsTitle,
+              l10n.termsSubscriptionsContent,
             ),
-
             _section(
               theme,
-              "Cancellation",
-              "You may cancel your subscription anytime through "
-              "your store account settings.",
+              l10n.termsCancellationTitle,
+              l10n.termsCancellationContent,
             ),
-
             _section(
               theme,
-              "User content",
-              "You retain ownership of wardrobe photos and data "
-              "you upload. Everywear stores this data only "
-              "to provide the service.",
+              l10n.termsUserContentTitle,
+              l10n.termsUserContentContent,
             ),
-
             _section(
               theme,
-              "Contact",
-              "Questions regarding these terms:\n\n"
-              "support@everywear.studio",
+              l10n.termsContactTitle,
+              l10n.termsContactContent,
             ),
-
             SizedBox(height: 4.h),
           ],
         ),

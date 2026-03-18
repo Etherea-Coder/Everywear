@@ -755,6 +755,69 @@ class AppLocalizations {
   String get termsUserContentContent => translate('terms_user_content_content');
   String get termsContactTitle => translate('terms_contact_title');
   String get termsContactContent => translate('terms_contact_content');
+
+  // Profile Screen
+  String get profileTitle => translate('profile_title');
+  String get insightsAnalytics => translate('insights_analytics');
+  String get styleInsights => translate('style_insights');
+  String get styleInsightsSubtitle => translate('style_insights_subtitle');
+  String get achievements => translate('achievements');
+  String get achievementsSubtitle => translate('achievements_subtitle');
+  String get progressDashboard => translate('progress_dashboard');
+  String get progressDashboardSubtitle => translate('progress_dashboard_subtitle');
+  String get membership => translate('membership');
+  String get essentialPlanUnlock => translate('essential_plan_unlock');
+  String get signaturePlan => translate('signature_plan');
+  String get plan => translate('plan');
+  String get settingsSubtitle => translate('settings_subtitle');
+
+  // Premium Upgrade Screen
+  String get premiumUpgrade => translate('premium_upgrade');
+  String get chooseYourPlan => translate('choose_your_plan');
+  String get upgradeMoreFeatures => translate('upgrade_more_features');
+  String get monthly => translate('monthly');
+  String get perMonth => translate('per_month');
+  String get yearly => translate('yearly');
+  String get perYear => translate('per_year');
+  String get savePercent => translate('save_percent');
+  String get moreAiOutfitSuggestions => translate('more_ai_outfit_suggestions');
+  String get moreCoachInteractions => translate('more_coach_interactions');
+  String get moreEventOutfitGenerations => translate('more_event_outfit_generations');
+  String get adFreeExperience => translate('ad_free_experience');
+  String get accessPremiumWhileSubscribed => translate('access_premium_while_subscribed');
+  String get everythingInMonthly => translate('everything_in_monthly');
+  String get betterYearlyValue => translate('better_yearly_value');
+  String get fewerRenewals => translate('fewer_renewals');
+  String get fullPremiumAllYear => translate('full_premium_all_year');
+  String get bestPlanRegularUsers => translate('best_plan_regular_users');
+  String get howBillingWorks => translate('how_billing_works');
+  String get billingManagedByStore => translate('billing_managed_by_store');
+  String get whatUsersSay => translate('what_users_say');
+  String get frequentlyAskedQuestions => translate('frequently_asked_questions');
+  String get secureStoreBilling => translate('secure_store_billing');
+  String get subscriptionsHandledSecurely => translate('subscriptions_handled_securely');
+  String get restorePurchases => translate('restore_purchases');
+  String get purchasesRestoredSuccess => translate('purchases_restored_success');
+  String get noActiveSubscriptionRestore => translate('no_active_subscription_restore');
+  String get purchaseFailed => translate('purchase_failed');
+  String get restoreFailed => translate('restore_failed');
+  String get noOfferingsAvailable => translate('no_offerings_available');
+  String get pleaseLoginContinue => translate('please_login_continue');
+
+  // FAQ
+  String get faqCancelAnytime => translate('faq_cancel_anytime');
+  String get faqCancelAnytimeAnswer => translate('faq_cancel_anytime_answer');
+  String get faqWhatHappensCancel => translate('faq_what_happens_cancel');
+  String get faqWhatHappensCancelAnswer => translate('faq_what_happens_cancel_answer');
+  String get faqRestoreSubscription => translate('faq_restore_subscription');
+  String get faqRestoreSubscriptionAnswer => translate('faq_restore_subscription_answer');
+  String get faqDiscountCodes => translate('faq_discount_codes');
+  String get faqDiscountCodesAnswer => translate('faq_discount_codes_answer');
+
+  // Testimonials
+  String get testimonialSarahText => translate('testimonial_sarah_text');
+  String get testimonialMarcusText => translate('testimonial_marcus_text');
+  String get testimonialEmmaText => translate('testimonial_emma_text');
   
   // Coach Questions
   String get qOutfitIdeas => translate('q_outfit_ideas');
