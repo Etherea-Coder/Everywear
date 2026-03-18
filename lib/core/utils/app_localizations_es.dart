@@ -165,8 +165,8 @@ const Map<String, String> appLocalizationsEs = {
   'filter_special': 'Especial',
 
   // Capture Flow
-  'log_outfit': 'Registrar Atuendo',
-  'capture_outfit': 'Capturar Atuendo',
+  'log_outfit': 'Registrar atuendo',
+  'capture_outfit': 'Capturar',
   'select_from_wardrobe': 'Seleccionar del Guardarropa',
   'confirm_outfit': 'Confirmar Atuendo',
   'camera_permission_required': 'Se requiere permiso de la cámara para capturar atuendos',
@@ -233,7 +233,7 @@ const Map<String, String> appLocalizationsEs = {
   'good_morning': 'Buenos días',
   'good_afternoon': 'Buenas tardes',
   'good_evening': 'Buenas noches',
-  'log_outfit_btn': 'Registrar atuendo',
+  'log_outfit_btn': 'Registrar',
   'repeat_outfit': 'Repetir atuendo',
   'repeat_outfit_question': '¿Registrar este atuendo de nuevo para hoy?',
   'outfit_repeated': '¡Atuendo repetido para hoy!',

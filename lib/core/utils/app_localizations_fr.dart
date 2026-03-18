@@ -165,7 +165,7 @@ const Map<String, String> appLocalizationsFr = {
   'filter_special': 'Spécial',
 
   // Capture Flow
-  'log_outfit': 'Enregistrer la Tenue',
+  'log_outfit': 'Enregistrer la tenue',
   'capture_outfit': 'Capturer la Tenue',
   'select_from_wardrobe': 'Sélectionner dans le Dressing',
   'confirm_outfit': 'Confirmer la Tenue',
@@ -195,7 +195,7 @@ const Map<String, String> appLocalizationsFr = {
   'rating_not_great': 'Pas super',
   'rating_ok': 'Correct',
   'rating_loved_it': 'J\'ai adoré',
-  'save_outfit': 'Enregistrer la Tenue',
+  'save_outfit': 'Enregistrer la tenue',
   'select_at_least_one_item': 'Veuillez sélectionner au moins un article',
   'search_wardrobe_hint': 'Rechercher des articles...',
   'no_items_found': 'Aucun article trouvé',
@@ -233,7 +233,7 @@ const Map<String, String> appLocalizationsFr = {
   'good_morning': 'Bonjour',
   'good_afternoon': 'Bon après-midi',
   'good_evening': 'Bonsoir',
-  'log_outfit_btn': 'Enregistrer la tenue',
+  'log_outfit_btn': 'Enregistrer',
   'repeat_outfit': 'Répéter la tenue',
   'repeat_outfit_question': 'Enregistrer cette tenue à nouveau pour aujourd\'hui ?',
   'outfit_repeated': 'Tenue répétée pour aujourd\'hui !',
