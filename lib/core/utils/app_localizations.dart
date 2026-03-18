@@ -720,6 +720,24 @@ class AppLocalizations {
   String get feedbackSending => translate('feedback_sending');
   String get feedbackSuccessMessage => translate('feedback_success_message');
   String get feedbackErrorMessage => translate('feedback_error_message');
+
+  // PRIVACY POLICY
+  String get privacyTitle => translate('privacy_title');
+  String get privacyLastUpdated => translate('privacy_last_updated');
+  String get privacyPhilosophyTitle => translate('privacy_philosophy_title');
+  String get privacyPhilosophyContent => translate('privacy_philosophy_content');
+  String get privacyCollectTitle => translate('privacy_collect_title');
+  String get privacyCollectContent => translate('privacy_collect_content');
+  String get privacyWardrobeTitle => translate('privacy_wardrobe_title');
+  String get privacyWardrobeContent => translate('privacy_wardrobe_content');
+  String get privacyAnalyticsTitle => translate('privacy_analytics_title');
+  String get privacyAnalyticsContent => translate('privacy_analytics_content');
+  String get privacySubscriptionsTitle => translate('privacy_subscriptions_title');
+  String get privacySubscriptionsContent => translate('privacy_subscriptions_content');
+  String get privacyRightsTitle => translate('privacy_rights_title');
+  String get privacyRightsContent => translate('privacy_rights_content');
+  String get privacyContactTitle => translate('privacy_contact_title');
+  String get privacyContactContent => translate('privacy_contact_content');
   
   // Coach Questions
   String get qOutfitIdeas => translate('q_outfit_ideas');

@@ -320,6 +320,24 @@ const Map<String, String> appLocalizationsFr = {
   'feedback_success_message': 'Merci — votre feedback a été envoyé',
   'feedback_error_message': 'Impossible d\'envoyer le feedback. Veuillez réessayer.',
 
+  // PRIVACY POLICY
+  'privacy_title': 'Politique de Confidentialité Everywear',
+  'privacy_last_updated': 'Dernière mise à jour : 2026',
+  'privacy_philosophy_title': 'Notre philosophie',
+  'privacy_philosophy_content': 'Everywear a été conçu comme un studio vestimentaire calme. Notre objectif est de vous aider à redécouvrir les vêtements que vous possédez déjà et à développer votre style personnel de manière intentionnelle. Les données de votre dressing vous appartiennent.',
+  'privacy_collect_title': 'Informations collectées',
+  'privacy_collect_content': 'Lorsque vous créez un compte, nous pouvons collecter :\n\n• Adresse email\n• Données d\'authentification\n• Informations de base sur l\'appareil\n\nCela nous permet de fournir le service de manière sécurisée.',
+  'privacy_wardrobe_title': 'Données du dressing',
+  'privacy_wardrobe_content': 'Everywear stocke les informations que vous choisissez d\'ajouter, telles que :\n\n• Articles vestimentaires\n• Historique des tenues\n• Images du dressing\n• Préférences de style\n\nCes données sont utilisées uniquement pour fournir les fonctionnalités du dressing.',
+  'privacy_analytics_title': 'Analytique',
+  'privacy_analytics_content': 'Des données d\'utilisation anonymes peuvent être collectées pour comprendre comment les fonctionnalités sont utilisées et améliorer l\'application.',
+  'privacy_subscriptions_title': 'Abonnements',
+  'privacy_subscriptions_content': 'Les abonnements Signature sont traités via l\'App Store d\'Apple ou Google Play. Everywear ne stocke jamais les informations de paiement.',
+  'privacy_rights_title': 'Vos droits',
+  'privacy_rights_content': 'Vous pouvez demander :\n\n• La suppression de votre compte\n• L\'export de vos données\n• Un support concernant vos données',
+  'privacy_contact_title': 'Contact',
+  'privacy_contact_content': 'Si vous avez des questions concernant la confidentialité, veuillez contacter :\n\nsupport@everywear.studio',
+  
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 Salut ! J\'ai analysé votre Dressing et trouvé {count} combinaisons de tenues parfaites pour vous aujourd\'hui ! Chaque suggestion est personnalisée en fonction de vos préférences de style, des conditions météorologiques et de vos favoris passés.',

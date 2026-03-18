@@ -339,6 +339,24 @@ const Map<String, String> appLocalizationsEn = {
   'feedback_sending': 'Sending...',
   'feedback_success_message': 'Thank you — your feedback has been sent',
   'feedback_error_message': 'Could not send feedback. Please try again.',
+
+    // PRIVACY POLICY
+  'privacy_title': 'Everywear Privacy Policy',
+  'privacy_last_updated': 'Last updated: 2026',
+  'privacy_philosophy_title': 'Our philosophy',
+  'privacy_philosophy_content': 'Everywear was designed as a calm wardrobe studio. Our goal is to help you rediscover the clothes you already own and develop your personal style intentionally. Your wardrobe data belongs to you.',
+  'privacy_collect_title': 'Information we collect',
+  'privacy_collect_content': 'When you create an account we may collect:\n\n• Email address\n• Authentication data\n• Basic device information\n\nThis allows us to securely provide the service.',
+  'privacy_wardrobe_title': 'Wardrobe data',
+  'privacy_wardrobe_content': 'Everywear stores information you choose to add, such as:\n\n• Clothing items\n• Outfit logs\n• Wardrobe images\n• Style preferences\n\nThis data is used only to provide wardrobe features.',
+  'privacy_analytics_title': 'Analytics',
+  'privacy_analytics_content': 'Anonymous usage data may be collected to understand how features are used and improve the application.',
+  'privacy_subscriptions_title': 'Subscriptions',
+  'privacy_subscriptions_content': 'Signature subscriptions are processed through Apple App Store or Google Play. Everywear never stores payment information.',
+  'privacy_rights_title': 'Your rights',
+  'privacy_rights_content': 'You may request:\n\n• Account deletion\n• Data export\n• Support regarding your data',
+  'privacy_contact_title': 'Contact',
+  'privacy_contact_content': 'If you have privacy questions please contact:\n\nsupport@everywear.studio',
  
   // Dynamic AI messages
   'ai_bubble_message_initial':

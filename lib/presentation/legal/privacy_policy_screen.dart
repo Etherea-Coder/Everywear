@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../core/utils/app_localizations.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
@@ -43,91 +44,64 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: const CustomAppBar(title: "Privacy Policy"),
+      appBar: CustomAppBar(
+        title: l10n.privacyPolicy, // Already exists
+        variant: CustomAppBarVariant.detail,
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Text(
-              "Everywear Privacy Policy",
+              l10n.privacyTitle,
               style: theme.textTheme.headlineSmall
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
-
             SizedBox(height: 1.h),
-
             Text(
-              "Last updated: 2026",
+              l10n.privacyLastUpdated,
               style: theme.textTheme.bodySmall,
             ),
-
             SizedBox(height: 3.h),
-
             _section(
               theme,
-              "Our philosophy",
-              "Everywear was designed as a calm wardrobe studio. "
-              "Our goal is to help you rediscover the clothes you already own "
-              "and develop your personal style intentionally. "
-              "Your wardrobe data belongs to you.",
+              l10n.privacyPhilosophyTitle,
+              l10n.privacyPhilosophyContent,
             ),
-
             _section(
               theme,
-              "Information we collect",
-              "When you create an account we may collect:\n\n"
-              "• Email address\n"
-              "• Authentication data\n"
-              "• Basic device information\n\n"
-              "This allows us to securely provide the service.",
+              l10n.privacyCollectTitle,
+              l10n.privacyCollectContent,
             ),
-
             _section(
               theme,
-              "Wardrobe data",
-              "Everywear stores information you choose to add, such as:\n\n"
-              "• Clothing items\n"
-              "• Outfit logs\n"
-              "• Wardrobe images\n"
-              "• Style preferences\n\n"
-              "This data is used only to provide wardrobe features.",
+              l10n.privacyWardrobeTitle,
+              l10n.privacyWardrobeContent,
             ),
-
             _section(
               theme,
-              "Analytics",
-              "Anonymous usage data may be collected to understand how "
-              "features are used and improve the application.",
+              l10n.privacyAnalyticsTitle,
+              l10n.privacyAnalyticsContent,
             ),
-
             _section(
               theme,
-              "Subscriptions",
-              "Signature subscriptions are processed through "
-              "Apple App Store or Google Play. "
-              "Everywear never stores payment information.",
+              l10n.privacySubscriptionsTitle,
+              l10n.privacySubscriptionsContent,
             ),
-
             _section(
               theme,
-              "Your rights",
-              "You may request:\n\n"
-              "• account deletion\n"
-              "• data export\n"
-              "• support regarding your data",
+              l10n.privacyRightsTitle,
+              l10n.privacyRightsContent,
             ),
-
             _section(
               theme,
-              "Contact",
-              "If you have privacy questions please contact:\n\n"
-              "support@everywear.studio",
+              l10n.privacyContactTitle,
+              l10n.privacyContactContent,
             ),
-
             SizedBox(height: 4.h),
           ],
         ),

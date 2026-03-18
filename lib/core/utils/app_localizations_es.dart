@@ -320,6 +320,24 @@ const Map<String, String> appLocalizationsEs = {
   'feedback_success_message': 'Gracias — tu feedback ha sido enviado',
   'feedback_error_message': 'No se pudo enviar el feedback. Por favor intenta de nuevo.',
 
+  // PRIVACY POLICY
+  'privacy_title': 'Política de Privacidad de Everywear',
+  'privacy_last_updated': 'Última actualización: 2026',
+  'privacy_philosophy_title': 'Nuestra filosofía',
+  'privacy_philosophy_content': 'Everywear fue diseñado como un estudio de armario tranquilo. Nuestro objetivo es ayudarte a redescubrir la ropa que ya posees y desarrollar tu estilo personal de manera intencional. Los datos de tu armario te pertenecen.',
+  'privacy_collect_title': 'Información que recopilamos',
+  'privacy_collect_content': 'Cuando creas una cuenta podemos recopilar:\n\n• Dirección de correo electrónico\n• Datos de autenticación\n• Información básica del dispositivo\n\nEsto nos permite proporcionar el servicio de forma segura.',
+  'privacy_wardrobe_title': 'Datos del armario',
+  'privacy_wardrobe_content': 'Everywear almacena la información que eliges añadir, como:\n\n• Artículos de ropa\n• Registro de atuendos\n• Imágenes del armario\n• Preferencias de estilo\n\nEstos datos se utilizan únicamente para proporcionar las funciones del armario.',
+  'privacy_analytics_title': 'Análisis',
+  'privacy_analytics_content': 'Se pueden recopilar datos de uso anónimos para entender cómo se utilizan las funciones y mejorar la aplicación.',
+  'privacy_subscriptions_title': 'Suscripciones',
+  'privacy_subscriptions_content': 'Las suscripciones Signature se procesan a través de Apple App Store o Google Play. Everywear nunca almacena información de pago.',
+  'privacy_rights_title': 'Tus derechos',
+  'privacy_rights_content': 'Puedes solicitar:\n\n• Eliminación de cuenta\n• Exportación de datos\n• Soporte respecto a tus datos',
+  'privacy_contact_title': 'Contacto',
+  'privacy_contact_content': 'Si tienes preguntas sobre privacidad, contacta:\n\nsupport@everywear.studio',
+  
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 ¡Hola! ¡He analizado tu guardarropa y he encontrado {count} combinaciones de atuendos perfectas para ti hoy! Cada sugerencia está personalizada según tus preferencias de estilo, las condiciones climáticas y tus favoritos anteriores.',
