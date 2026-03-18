@@ -590,6 +590,27 @@ class AppLocalizations {
   String get topicMoreVariety => translate('topic_more_variety');
   String get topicStyleUpgrade => translate('topic_style_upgrade');
   
+    String get qFeelLikeYourself => translate('q_feel_like_yourself');
+  String get qFeelRelaxed => translate('q_feel_relaxed');
+  String get qFeelPolished => translate('q_feel_polished');
+  String get qFeelCreative => translate('q_feel_creative');
+  String get qFeelPractical => translate('q_feel_practical');
+  String get qColorsDominate => translate('q_colors_dominate');
+  String get qColorsNeutrals => translate('q_colors_neutrals');
+  String get qColorsEarth => translate('q_colors_earth');
+  String get qColorsBold => translate('q_colors_bold');
+  String get qColorsSoft => translate('q_colors_soft');
+  String get qHelpMost => translate('q_help_most');
+  String get qHelpTogether => translate('q_help_together');
+  String get qHelpVariety => translate('q_help_variety');
+  String get qHelpShopping => translate('q_help_shopping');
+  String get qHelpConfident => translate('q_help_confident');
+  String get qMattersMost => translate('q_matters_most');
+  String get qMattersComfort => translate('q_matters_comfort');
+  String get qMattersElegance => translate('q_matters_elegance');
+  String get qMattersOriginality => translate('q_matters_originality');
+  String get qMattersVersatility => translate('q_matters_versatility');
+  
   // Coach Questions
   String get qOutfitIdeas => translate('q_outfit_ideas');
   String get qShoppingAdvice => translate('q_shopping_advice');

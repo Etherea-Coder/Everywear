@@ -452,6 +452,28 @@ const Map<String, String> appLocalizationsEs = {
   'filter_by_category': 'Filtrar por categoría',
   'custom_date_range': 'Rango de fechas personalizado',
 
+  // Quiz — questions 1, 2, 3 & 5
+  'q_feel_like_yourself': '¿Qué atuendos te hacen sentir más tú mismo?',
+  'q_feel_relaxed': 'Relajado y sin esfuerzo',
+  'q_feel_polished': 'Pulido y atemporal',
+  'q_feel_creative': 'Creativo y expresivo',
+  'q_feel_practical': 'Práctico y deportivo',
+  'q_colors_dominate': '¿Qué colores dominan tu guardarropa hoy?',
+  'q_colors_neutrals': 'Principalmente neutros',
+  'q_colors_earth': 'Tonos tierra y cálidos',
+  'q_colors_bold': 'Colores vivos y contraste',
+  'q_colors_soft': 'Tonos suaves y claros',
+  'q_help_most': '¿Con qué quieres más ayuda ahora mismo?',
+  'q_help_together': 'Verme más arreglado',
+  'q_help_variety': 'Crear más variedad de atuendos',
+  'q_help_shopping': 'Comprar de forma más intencional',
+  'q_help_confident': 'Sentirme más seguro con lo que llevo',
+  'q_matters_most': 'Al elegir ropa, ¿qué es lo más importante para ti?',
+  'q_matters_comfort': 'Comodidad',
+  'q_matters_elegance': 'Elegancia',
+  'q_matters_originality': 'Originalidad',
+  'q_matters_versatility': 'Versatilidad',
+
   // Additional strings
   'maximum_photos_allowed': 'Número máximo de fotos',
   'failed_to_select_photo': 'Error al seleccionar la foto',

@@ -463,6 +463,28 @@ const Map<String, String> appLocalizationsFr = {
   'filter_by_category': 'Filtrer par catégorie',
   'custom_date_range': 'Plage de dates personnalisée',
 
+  // Quiz — questions 1, 2, 3 & 5
+  'q_feel_like_yourself': 'Quelles tenues vous font vous sentir le plus vous-même ?',
+  'q_feel_relaxed': 'Décontracté et naturel',
+  'q_feel_polished': 'Soigné et intemporel',
+  'q_feel_creative': 'Créatif et expressif',
+  'q_feel_practical': 'Pratique et sportif',
+  'q_colors_dominate': 'Quelles couleurs dominent votre dressing aujourd\'hui ?',
+  'q_colors_neutrals': 'Principalement des neutres',
+  'q_colors_earth': 'Tons terreux et nuances chaudes',
+  'q_colors_bold': 'Couleurs vives et contrastes',
+  'q_colors_soft': 'Tons doux et nuances claires',
+  'q_help_most': 'Dans quoi souhaitez-vous le plus d\'aide en ce moment ?',
+  'q_help_together': 'Avoir l\'air plus soigné',
+  'q_help_variety': 'Créer plus de variété de tenues',
+  'q_help_shopping': 'Acheter de manière plus réfléchie',
+  'q_help_confident': 'Me sentir plus confiant dans ce que je porte',
+  'q_matters_most': 'Lorsque vous choisissez des vêtements, qu\'est-ce qui compte le plus pour vous ?',
+  'q_matters_comfort': 'Confort',
+  'q_matters_elegance': 'Élégance',
+  'q_matters_originality': 'Originalité',
+  'q_matters_versatility': 'Polyvalence',
+
   // Additional strings
   'maximum_photos_allowed': 'Nombre maximum de photos',
   'failed_to_select_photo': 'Échec de la sélection de la photo',

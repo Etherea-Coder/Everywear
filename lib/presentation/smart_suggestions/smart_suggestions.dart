@@ -1506,30 +1506,30 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     final localizations = AppLocalizations.of(context);
     final questions = [
       {
-        'question': 'Which outfits make you feel most like yourself?',
+        'question': localizations.qFeelLikeYourself,
         'options': [
-          'Relaxed and effortless',
-          'Polished and timeless',
-          'Creative and expressive',
-          'Practical and sporty',
+          localizations.qFeelRelaxed,
+          localizations.qFeelPolished,
+          localizations.qFeelCreative,
+          localizations.qFeelPractical,
         ],
       },
       {
-        'question': 'What colors dominate your wardrobe today?',
+        'question': localizations.qColorsDominate,
         'options': [
-          'Mostly neutrals',
-          'Earth tones and warm shades',
-          'Bold colors and contrast',
-          'Soft tones and light shades',
+          localizations.qColorsNeutrals,
+          localizations.qColorsEarth,
+          localizations.qColorsBold,
+          localizations.qColorsSoft,
         ],
       },
       {
-        'question': 'What do you want help with most right now?',
+        'question': localizations.qHelpMost,
         'options': [
-          'Looking more put together',
-          'Creating more outfit variety',
-          'Shopping more intentionally',
-          'Feeling more confident in what I wear',
+          localizations.qHelpTogether,
+          localizations.qHelpVariety,
+          localizations.qHelpShopping,
+          localizations.qHelpConfident,
         ],
       },
       {
@@ -1542,12 +1542,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         ],
       },
       {
-        'question': 'When choosing clothes, what matters most to you?',
+        'question': localizations.qMattersMost,
         'options': [
-          'Comfort',
-          'Elegance',
-          'Originality',
-          'Versatility',
+          localizations.qMattersComfort,
+          localizations.qMattersElegance,
+          localizations.qMattersOriginality,
+          localizations.qMattersVersatility,
         ],
       },
     ];
@@ -1643,26 +1643,39 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   String _determineStyleProfile(Map<String, String> answers) {
+    final loc = AppLocalizations.of(context);
     final style = answers.values.join(' ').toLowerCase();
 
-    if (style.contains('polished') ||
-        style.contains('timeless') ||
-        style.contains('elegance')) {
-      return 'Classic Elegance';
-    }
-    if (style.contains('creative') ||
-        style.contains('expressive') ||
-        style.contains('experiment')) {
-      return 'Bold & Trendy';
-    }
-    if (style.contains('sporty') || style.contains('practical')) {
-      return 'Active & Sporty';
-    }
-    if (style.contains('versatility') ||
-        style.contains('small changes') ||
-        style.contains('what i know works')) {
-      return 'Minimalist';
-    }
+    // Match against translated answer strings so profile detection works
+    // regardless of the app's current language.
+    final polishedSignals = [
+      loc.qFeelPolished, loc.qMattersElegance,
+      'polished', 'timeless', 'elegance', 'élégance', 'elegancia',
+      'soigné', 'intemporel',
+    ].map((s) => s.toLowerCase());
+
+    final boldSignals = [
+      loc.qFeelCreative, loc.qColorsBold,
+      'creative', 'expressive', 'bold', 'créatif', 'expressif',
+      'creativo', 'expresivo', 'vives',
+    ].map((s) => s.toLowerCase());
+
+    final activeSignals = [
+      loc.qFeelPractical,
+      'sporty', 'practical', 'sportif', 'pratique', 'deportivo', 'práctico',
+    ].map((s) => s.toLowerCase());
+
+    final minimalistSignals = [
+      loc.qMattersVersatility, loc.qStyleAdventurousWorks, loc.qStyleAdventurousSmall,
+      'versatility', 'polyvalence', 'versatilidad',
+      'small changes', 'petits changements', 'cambios pequeños',
+    ].map((s) => s.toLowerCase());
+
+    if (polishedSignals.any((s) => style.contains(s))) return 'Classic Elegance';
+    if (boldSignals.any((s) => style.contains(s))) return 'Bold & Trendy';
+    if (activeSignals.any((s) => style.contains(s))) return 'Active & Sporty';
+    if (minimalistSignals.any((s) => style.contains(s))) return 'Minimalist';
+
     return 'Casual Chic';
   }
 }

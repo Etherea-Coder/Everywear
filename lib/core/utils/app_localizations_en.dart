@@ -445,6 +445,28 @@ const Map<String, String> appLocalizationsEn = {
   'how_much_did_you_pay': 'How much did you pay for',
   'added_to_wardrobe_log': 'added to your wardrobe log',
 
+  // Quiz — questions 1, 2, 3 & 5
+  'q_feel_like_yourself': 'Which outfits make you feel most like yourself?',
+  'q_feel_relaxed': 'Relaxed and effortless',
+  'q_feel_polished': 'Polished and timeless',
+  'q_feel_creative': 'Creative and expressive',
+  'q_feel_practical': 'Practical and sporty',
+  'q_colors_dominate': 'What colors dominate your wardrobe today?',
+  'q_colors_neutrals': 'Mostly neutrals',
+  'q_colors_earth': 'Earth tones and warm shades',
+  'q_colors_bold': 'Bold colors and contrast',
+  'q_colors_soft': 'Soft tones and light shades',
+  'q_help_most': 'What do you want help with most right now?',
+  'q_help_together': 'Looking more put together',
+  'q_help_variety': 'Creating more outfit variety',
+  'q_help_shopping': 'Shopping more intentionally',
+  'q_help_confident': 'Feeling more confident in what I wear',
+  'q_matters_most': 'When choosing clothes, what matters most to you?',
+  'q_matters_comfort': 'Comfort',
+  'q_matters_elegance': 'Elegance',
+  'q_matters_originality': 'Originality',
+  'q_matters_versatility': 'Versatility',
+
   // Wardrobe
   'your_personal_collection': 'Your personal collection, ready to style anywhere.',
   'updated_everywhere': 'Updated everywhere',
