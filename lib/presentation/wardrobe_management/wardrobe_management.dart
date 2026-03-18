@@ -60,7 +60,6 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
 
   AppLocalizations get localizations => AppLocalizations.of(context);
 
-  /// Sets up real-time subscription for wardrobe changes
   void _setupRealtimeSubscription() {
     try {
       _realtimeChannel = _wardrobeService.subscribeToWardrobeChanges(
@@ -112,15 +111,13 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     if (_isMultiSelectMode) {
       _toggleItemSelection(item['id'] as String);
     } else {
-      Navigator.of(
-        context,
-        rootNavigator: true,
-      ).pushNamed('/add-clothing-item', arguments: item)
-        .then((result) {
-          if (result != null) {
-            ref.read(wardrobeItemsProvider.notifier).refresh();
-          }
-        });
+      Navigator.of(context, rootNavigator: true)
+          .pushNamed('/add-clothing-item', arguments: item)
+          .then((result) {
+        if (result != null) {
+          ref.read(wardrobeItemsProvider.notifier).refresh();
+        }
+      });
     }
   }
 
@@ -142,28 +139,22 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     showDialog(
       context: context,
       builder: (context) {
-        final localizations = AppLocalizations.of(context);
+        final loc = AppLocalizations.of(context);
         return AlertDialog(
-          title:
-              Text(localizations.deleteItem, style: theme.textTheme.titleLarge),
-          content: Text(
-            localizations.deleteItemConfirmation,
-            style: theme.textTheme.bodyMedium,
-          ),
+          title: Text(loc.deleteItem, style: theme.textTheme.titleLarge),
+          content: Text(loc.deleteItemConfirmation, style: theme.textTheme.bodyMedium),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(localizations.cancel),
+              child: Text(loc.cancel),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
                 await _deleteItem(itemId);
               },
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
-              child: Text(localizations.delete),
+              style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+              child: Text(loc.delete),
             ),
           ],
         );
@@ -173,15 +164,11 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
 
   Future<void> _deleteItem(String itemId) async {
     try {
-      final localizations = AppLocalizations.of(context);
       await _wardrobeService.deleteWardrobeItem(itemId);
-      // Refresh the wardrobe items provider to update UI
       ref.read(wardrobeItemsProvider.notifier).refresh();
       _showSnackBar(localizations.itemDeletedSuccess);
     } catch (error) {
-      final localizations = AppLocalizations.of(context);
-      _showSnackBar('${localizations.itemDeleteError}: $error',
-          isError: true);
+      _showSnackBar('${localizations.itemDeleteError}: $error', isError: true);
     }
   }
 
@@ -191,28 +178,25 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
     showDialog(
       context: context,
       builder: (context) {
-        final localizations = AppLocalizations.of(context);
+        final loc = AppLocalizations.of(context);
         return AlertDialog(
-          title:
-              Text(localizations.deleteItems, style: theme.textTheme.titleLarge),
+          title: Text(loc.deleteItems, style: theme.textTheme.titleLarge),
           content: Text(
-            '${localizations.delete} ${_selectedItems.length} ${localizations.selectedItems}?',
+            '${loc.delete} ${_selectedItems.length} ${loc.selectedItems}?',
             style: theme.textTheme.bodyMedium,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(localizations.cancel),
+              child: Text(loc.cancel),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
                 await _deleteBatchItems();
               },
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
-              child: Text(localizations.delete),
+              style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+              child: Text(loc.delete),
             ),
           ],
         );
@@ -222,9 +206,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
 
   Future<void> _deleteBatchItems() async {
     try {
-      final localizations = AppLocalizations.of(context);
       await _wardrobeService.deleteMultipleItems(_selectedItems.toList());
-      // Refresh the wardrobe items provider to update UI
       ref.read(wardrobeItemsProvider.notifier).refresh();
       setState(() {
         _selectedItems.clear();
@@ -232,9 +214,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       });
       _showSnackBar(localizations.itemsDeletedSuccess);
     } catch (error) {
-      final localizations = AppLocalizations.of(context);
-      _showSnackBar('${localizations.itemsDeleteError}: $error',
-          isError: true);
+      _showSnackBar('${localizations.itemsDeleteError}: $error', isError: true);
     }
   }
 
@@ -251,49 +231,32 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
 
   String _getCategoryEmoji(String category) {
     switch (category.toLowerCase()) {
-      case 'tops':
-        return '👕';
-      case 'bottoms':
-        return '👖';
-      case 'shoes':
-        return '👟';
-      case 'outerwear':
-        return '🧥';
-      case 'accessories':
-        return '👜';
-      case 'dresses':
-        return '👗';
-      case 'activewear':
-        return '🏃';
-      default:
-        return '👗';
+      case 'tops': return '👕';
+      case 'bottoms': return '👖';
+      case 'shoes': return '👟';
+      case 'outerwear': return '🧥';
+      case 'accessories': return '👜';
+      case 'dresses': return '👗';
+      case 'activewear': return '🏃';
+      default: return '👗';
     }
   }
 
   String _getLocalizedCategory(String category) {
     switch (category.toLowerCase()) {
-      case 'tops':
-        return localizations.translate('tops');
-      case 'bottoms':
-        return localizations.translate('bottoms');
-      case 'shoes':
-        return localizations.translate('shoes');
-      case 'outerwear':
-        return localizations.translate('outerwear');
-      case 'accessories':
-        return localizations.translate('accessories');
-      case 'dresses':
-        return localizations.translate('dresses');
-      case 'activewear':
-        return localizations.translate('activewear');
-      default:
-        return category;
+      case 'tops': return localizations.translate('tops');
+      case 'bottoms': return localizations.translate('bottoms');
+      case 'shoes': return localizations.translate('shoes');
+      case 'outerwear': return localizations.translate('outerwear');
+      case 'accessories': return localizations.translate('accessories');
+      case 'dresses': return localizations.translate('dresses');
+      case 'activewear': return localizations.translate('activewear');
+      default: return category;
     }
   }
 
-  Widget _buildPremiumHeader(
+  Widget _buildHeader(
     ThemeData theme,
-    AsyncValue<List<Map<String, dynamic>>> itemsAsync,
     AsyncValue<List<Map<String, dynamic>>> allItemsAsync,
     AsyncValue<Map<String, dynamic>?> tierInfoAsync,
   ) {
@@ -306,6 +269,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Title row ──────────────────────────────────────────────
               Row(
                 children: [
                   Expanded(
@@ -314,12 +278,10 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                       style: theme.textTheme.headlineMedium,
                     ),
                   ),
+                  // Multi-select controls — shown only when active
                   if (_isMultiSelectMode) ...[
                     Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 3.w,
-                        vertical: 0.7.h,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.7.h),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(14),
@@ -351,16 +313,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                       ),
                       tooltip: localizations.cancel,
                     ),
-                  ] else
-                    IconButton(
-                      onPressed: () {},
-                      icon: CustomIconWidget(
-                        iconName: 'filter_list',
-                        color: theme.colorScheme.onSurface,
-                        size: 24,
-                      ),
-                      tooltip: localizations.filter,
-                    ),
+                  ],
+                  // No filter icon in normal mode — chips handle filtering
                 ],
               ),
               SizedBox(height: 0.6.h),
@@ -371,15 +325,14 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                 ),
               ),
               SizedBox(height: 1.8.h),
+
+              // ── Tier badge + sync badge ─────────────────────────────────
               Row(
                 children: [
                   tierInfoAsync.when(
                     data: (tierInfo) => tierInfo != null
                         ? Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 3.w,
-                              vertical: 0.7.h,
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.7.h),
                             decoration: BoxDecoration(
                               color: tierInfo['tier'] == 'premium'
                                   ? Colors.amber.withValues(alpha: 0.18)
@@ -413,10 +366,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                   ),
                   SizedBox(width: 2.w),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 3.w,
-                      vertical: 0.7.h,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.7.h),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(14),
@@ -431,7 +381,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         ),
                         SizedBox(width: 1.w),
                         Text(
-                          'Updated everywhere',
+                          localizations.updatedEverywhere,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
@@ -443,6 +393,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                 ],
               ),
               SizedBox(height: 2.h),
+
+              // ── Search bar ─────────────────────────────────────────────
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -459,9 +411,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                             color: theme.colorScheme.onSurfaceVariant,
                             size: 20,
                           ),
-                          onPressed: () {
-                            _searchController.clear();
-                          },
+                          onPressed: () => _searchController.clear(),
                         )
                       : null,
                   filled: true,
@@ -470,13 +420,14 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 4.w,
-                    vertical: 1.5.h,
-                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
                 ),
               ),
               SizedBox(height: 1.8.h),
+
+              // ── Stats summary card ─────────────────────────────────────
+              // Shows total items and the most-stocked category.
+              // Category matching is case-insensitive to handle Supabase values.
               allItemsAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
@@ -493,19 +444,17 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       ThemeData theme, List<Map<String, dynamic>> wardrobeItems) {
     final total = wardrobeItems.length;
 
+    // Count by category using case-insensitive comparison so "Tops" and "tops"
+    // both map to the same bucket.
     final counts = <String, int>{};
-    for (final category in _categories.where((c) => c != 'filter_all')) {
-      counts[category] = 0;
-    }
-
     for (final item in wardrobeItems) {
-      final category = (item['category'] as String?) ?? '';
-      if (counts.containsKey(category)) {
-        counts[category] = counts[category]! + 1;
+      final raw = (item['category'] as String? ?? '').toLowerCase().trim();
+      if (raw.isNotEmpty) {
+        counts[raw] = (counts[raw] ?? 0) + 1;
       }
     }
 
-    final topCategoryEntry = counts.entries.isEmpty
+    final topEntry = counts.isEmpty
         ? null
         : counts.entries.reduce((a, b) => a.value >= b.value ? a : b);
 
@@ -537,12 +486,11 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
           Expanded(
             child: _buildSummaryPill(
               theme,
-              icon: topCategoryEntry != null
-                  ? _getCategoryEmoji(topCategoryEntry.key)
-                  : '✨',
-              label: localizations.filter,
-              value: topCategoryEntry != null 
-                  ? _getLocalizedCategory(topCategoryEntry.key)
+              icon: topEntry != null ? _getCategoryEmoji(topEntry.key) : '✨',
+              // "Top category" is a clearer label than the filter label
+              label: localizations.topCategoryLabel,
+              value: topEntry != null
+                  ? _getLocalizedCategory(topEntry.key)
                   : '—',
             ),
           ),
@@ -587,7 +535,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -608,18 +556,20 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
           Navigator.of(context, rootNavigator: true)
               .pushNamed('/add-clothing-item')
               .then((result) {
-                if (result != null) {
-                  ref.read(wardrobeItemsProvider.notifier).refresh();
-                }
-              });
+            if (result != null) {
+              ref.read(wardrobeItemsProvider.notifier).refresh();
+            }
+          });
         },
         backgroundColor: theme.colorScheme.primary,
         child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       ),
       body: Column(
         children: [
-          _buildPremiumHeader(theme, itemsAsync, allItemsAsync, tierInfoAsync),
+          // Header: title, badges, search, summary card
+          _buildHeader(theme, allItemsAsync, tierInfoAsync),
 
+          // Category filter chips — the single source of filtering
           Container(
             color: theme.scaffoldBackgroundColor,
             padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
@@ -637,6 +587,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
             ),
           ),
 
+          // Grid
           Expanded(
             child: itemsAsync.when(
               loading: () => const WardrobeShimmer(),
@@ -676,11 +627,9 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                   ? EmptyWardrobeWidget(
                       hasSearchQuery: _searchController.text.isNotEmpty,
                       onAddItem: () {
-                        Navigator.of(
-                          context,
-                          rootNavigator: true,
-                        ).pushNamed('/add-clothing-item')
-                        .then((result) {
+                        Navigator.of(context, rootNavigator: true)
+                            .pushNamed('/add-clothing-item')
+                            .then((result) {
                           if (result != null) {
                             ref.read(wardrobeItemsProvider.notifier).refresh();
                           }
@@ -701,8 +650,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         itemCount: wardrobeItems.length,
                         itemBuilder: (context, index) {
                           final item = wardrobeItems[index];
-                          final isSelected =
-                              _selectedItems.contains(item['id']);
+                          final isSelected = _selectedItems.contains(item['id']);
                           return WardrobeItemCardWidget(
                             item: item,
                             isSelected: isSelected,
@@ -710,8 +658,8 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                             onTap: () => _handleItemTap(item),
                             onLongPress: () =>
                                 _handleItemLongPress(item['id'] as String),
-                            onDelete: () => _showDeleteConfirmation(
-                                item['id'] as String),
+                            onDelete: () =>
+                                _showDeleteConfirmation(item['id'] as String),
                           );
                         },
                       ),
