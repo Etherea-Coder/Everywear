@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
+import '../../core/utils/app_localizations.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({Key? key}) : super(key: key);
@@ -11,67 +12,29 @@ class HelpCenterScreen extends StatefulWidget {
 }
 
 class _HelpCenterScreenState extends State<HelpCenterScreen> {
-  final List<Map<String, String>> _faqItems = [
-    {
-      'question': 'What is Everywear?',
-      'answer':
-          'Everywear is your personal wardrobe studio. It helps you organize your clothes, get daily outfit ideas, track your style habits, and make more thoughtful purchase decisions.',
-    },
-    {
-      'question': 'How should I start using the app?',
-      'answer':
-          'Start by adding a few key wardrobe items, then log outfits as you wear them. The more you use the app, the more personal and accurate your suggestions, insights, and coaching become.',
-    },
-    {
-      'question': 'What does the Today page do?',
-      'answer':
-          'The Today page is your daily styling space. It gives you an outfit idea based on your wardrobe, your selected mood, your plans, and contextual details like weather or upcoming events.',
-    },
-    {
-      'question': 'What is the Style page for?',
-      'answer':
-          'The Style page is your coaching space. It is designed for reflection, challenges, quizzes, style growth, and more personal guidance beyond the daily suggestion.',
-    },
-    {
-      'question': 'What are Style Insights?',
-      'answer':
-          'Style Insights show patterns in how you use your wardrobe — like your most worn categories, outfit history, wardrobe utilization, and value over time. They help you understand your style more clearly.',
-    },
-    {
-      'question': 'What is the difference between Essential and Signature?',
-      'answer':
-          'Essential gives you access to the core experience of Everywear. Signature unlocks more suggestions, more coaching, more outfit options, and a smoother premium experience with fewer limitations.',
-    },
-    {
-      'question': 'Will the app delete my wardrobe if I cancel Signature?',
-      'answer':
-          'No. Your wardrobe data stays with your account. If you return to Essential, you keep your saved data, but some premium features and extra usage limits may no longer be available.',
-    },
-    {
-      'question': 'How do purchases and wishlist tracking work?',
-      'answer':
-          'The Purchases page helps you log what enters your wardrobe, monitor category spending, track cost-per-wear, and save items to a wishlist before buying them.',
-    },
-    {
-      'question': 'Does Everywear sell my personal data?',
-      'answer':
-          'No. Your wardrobe and account data are used to power your experience inside the app. Analytics settings let you control whether anonymous usage data helps improve the app.',
-    },
-    {
-      'question': 'How can I get better suggestions?',
-      'answer':
-          'Add more wardrobe items, complete your style quiz, log outfits regularly, and use the occasion and vibe options. This gives the app more context to produce suggestions that feel more personal.',
-    },
+  @override
+Widget build(BuildContext context) {
+  final theme = Theme.of(context);
+  final l10n = AppLocalizations.of(context);
+
+  // Define FAQ items here (not as a class field)
+  final List<Map<String, String>> faqItems = [
+    {'question': l10n.faqQ1, 'answer': l10n.faqA1},
+    {'question': l10n.faqQ2, 'answer': l10n.faqA2},
+    {'question': l10n.faqQ3, 'answer': l10n.faqA3},
+    {'question': l10n.faqQ4, 'answer': l10n.faqA4},
+    {'question': l10n.faqQ5, 'answer': l10n.faqA5},
+    {'question': l10n.faqQ6, 'answer': l10n.faqA6},
+    {'question': l10n.faqQ7, 'answer': l10n.faqA7},
+    {'question': l10n.faqQ8, 'answer': l10n.faqA8},
+    {'question': l10n.faqQ9, 'answer': l10n.faqA9},
+    {'question': l10n.faqQ10, 'answer': l10n.faqA10},
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
+  return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: const CustomAppBar(
-        title: 'Help Center',
+      appBar: CustomAppBar(
+        title: l10n.helpCenter, // Use localized title
         variant: CustomAppBarVariant.detail,
       ),
       body: SingleChildScrollView(
@@ -79,13 +42,13 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeroCard(theme),
+            _buildHeroCard(theme, l10n),
             SizedBox(height: 1.5.h),
-            _buildStudioIntro(theme),
+            _buildStudioIntro(theme, l10n),
             SizedBox(height: 2.h),
             _buildSection(
               theme,
-              title: 'Our Philosophy',
+              title: l10n.helpCenterPhilosophyTitle,
               icon: Icons.spa_outlined,
               child: _buildInfoCard(
                 theme,
@@ -93,14 +56,14 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Everywear is designed as a calm personal wardrobe space.',
+                      l10n.helpCenterPhilosophyHeading,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 1.h),
                     Text(
-                      'The goal is not to pressure you to buy more or dress in a certain way. The goal is to help you see your wardrobe more clearly, use it more intentionally, and build a style that feels like your own.',
+                      l10n.helpCenterPhilosophyBody,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         height: 1.5,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -113,91 +76,82 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             SizedBox(height: 2.h),
             _buildSection(
               theme,
-              title: 'How Everywear Works',
+              title: l10n.helpCenterHowItWorksTitle,
               icon: Icons.auto_awesome_outlined,
               child: Column(
                 children: [
                   _buildStepCard(
                     theme,
                     number: '1',
-                    title: 'Add your wardrobe',
-                    description:
-                        'Start with a few pieces you wear often. You do not need to add everything at once.',
+                    title: l10n.helpCenterStep1Title,
+                    description: l10n.helpCenterStep1Desc,
                   ),
                   SizedBox(height: 1.2.h),
                   _buildStepCard(
                     theme,
                     number: '2',
-                    title: 'Log your outfits',
-                    description:
-                        'Track what you actually wear. This helps the app understand your habits and improve your suggestions.',
+                    title: l10n.helpCenterStep2Title,
+                    description: l10n.helpCenterStep2Desc,
                   ),
                   SizedBox(height: 1.2.h),
                   _buildStepCard(
                     theme,
                     number: '3',
-                    title: 'Explore your daily suggestions',
-                    description:
-                        'Use the Today page to get outfit ideas based on your mood, plans, and wardrobe context.',
+                    title: l10n.helpCenterStep3Title,
+                    description: l10n.helpCenterStep3Desc,
                   ),
                   SizedBox(height: 1.2.h),
                   _buildStepCard(
                     theme,
                     number: '4',
-                    title: 'Grow your style with coaching',
-                    description:
-                        'Use the Style page to discover challenges, answer quizzes, and get more thoughtful guidance over time.',
+                    title: l10n.helpCenterStep4Title,
+                    description: l10n.helpCenterStep4Desc,
                   ),
                 ],
               ),
             ),
             SizedBox(height: 1.5.h),
-            _buildProTipCard(theme),
+            _buildProTipCard(theme, l10n),
             SizedBox(height: 2.h),
             _buildSection(
               theme,
-              title: 'What each page does',
+              title: l10n.helpCenterPagesTitle,
               icon: Icons.dashboard_outlined,
               child: Column(
                 children: [
                   _buildFeatureCard(
                     theme,
                     icon: Icons.today_outlined,
-                    title: 'Today',
-                    description:
-                        'Your daily landing space for outfit ideas, quick logs, and morning guidance.',
+                    title: l10n.helpCenterPageTodayTitle,
+                    description: l10n.helpCenterPageTodayDesc,
                   ),
                   SizedBox(height: 1.2.h),
                   _buildFeatureCard(
                     theme,
                     icon: Icons.checkroom_outlined,
-                    title: 'Wardrobe',
-                    description:
-                        'Your personal collection of clothes, organized and ready to style.',
+                    title: l10n.helpCenterPageWardrobeTitle,
+                    description: l10n.helpCenterPageWardrobeDesc,
                   ),
                   SizedBox(height: 1.2.h),
                   _buildFeatureCard(
                     theme,
                     icon: Icons.auto_awesome,
-                    title: 'Style',
-                    description:
-                        'Your coaching area for quizzes, challenges, events, and personal growth.',
+                    title: l10n.helpCenterPageStyleTitle,
+                    description: l10n.helpCenterPageStyleDesc,
                   ),
                   SizedBox(height: 1.2.h),
                   _buildFeatureCard(
                     theme,
                     icon: Icons.shopping_bag_outlined,
-                    title: 'Purchases',
-                    description:
-                        'Track wardrobe spending, wishlist items, and the long-term value of what you buy.',
+                    title: l10n.helpCenterPagePurchasesTitle,
+                    description: l10n.helpCenterPagePurchasesDesc,
                   ),
                   SizedBox(height: 1.2.h),
                   _buildFeatureCard(
                     theme,
                     icon: Icons.person_outline,
-                    title: 'Profile',
-                    description:
-                        'See your insights, achievements, progress, membership, and settings.',
+                    title: l10n.helpCenterPageProfileTitle,
+                    description: l10n.helpCenterPageProfileDesc,
                   ),
                 ],
               ),
@@ -205,7 +159,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             SizedBox(height: 2.h),
             _buildSection(
               theme,
-              title: 'Membership',
+              title: l10n.helpCenterMembershipTitle,
               icon: Icons.workspace_premium_outlined,
               child: _buildInfoCard(
                 theme,
@@ -213,14 +167,14 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Essential',
+                      l10n.helpCenterEssentialTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 0.6.h),
                     Text(
-                      'A refined core experience with wardrobe management, daily use, and selected AI guidance.',
+                      l10n.helpCenterEssentialDesc,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         height: 1.5,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -228,14 +182,14 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      'Signature',
+                      l10n.helpCenterSignatureTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 0.6.h),
                     Text(
-                      'A deeper experience with more suggestions, more coaching, more outfit possibilities, and a more seamless premium journey.',
+                      l10n.helpCenterSignatureDesc,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         height: 1.5,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -248,14 +202,14 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             SizedBox(height: 2.h),
             _buildSection(
               theme,
-              title: 'Frequently Asked Questions',
+              title: l10n.helpCenterFaqTitle,
               icon: Icons.help_outline,
-              child: _buildFaqList(theme),
+              child: _buildFaqList(theme, faqItems),
             ),
             SizedBox(height: 2.h),
             _buildSection(
               theme,
-              title: 'Need more help?',
+              title: l10n.helpCenterNeedHelpTitle,
               icon: Icons.mail_outline,
               child: _buildInfoCard(
                 theme,
@@ -263,7 +217,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'If something does not work as expected, or if you want to share feedback, please use the feedback option in Settings.',
+                      l10n.helpCenterNeedHelpBody1,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         height: 1.5,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -271,7 +225,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     ),
                     SizedBox(height: 1.5.h),
                     Text(
-                      'Everywear is designed to evolve thoughtfully, and your feedback helps shape that process.',
+                      l10n.helpCenterNeedHelpBody2,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         height: 1.5,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -287,7 +241,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     );
   }
 
-  Widget _buildHeroCard(ThemeData theme) {
+  Widget _buildHeroCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       margin: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 0),
       padding: EdgeInsets.all(4.5.w),
@@ -327,14 +281,14 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Welcome to the Everywear Help Center',
+                  l10n.helpCenterHeroTitle,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 SizedBox(height: 0.8.h),
                 Text(
-                  'A calm guide to how the app works, what each space is for, and how to get the most out of your wardrobe journey.',
+                  l10n.helpCenterHeroSubtitle,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     height: 1.5,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -348,7 +302,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     );
   }
 
-  Widget _buildStudioIntro(ThemeData theme) {
+  Widget _buildStudioIntro(ThemeData theme, AppLocalizations l10n) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Container(
@@ -358,9 +312,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Text(
-          'Everywear is designed as a calm studio for your wardrobe. '
-          'This space helps you understand how the app works, how to grow your style, '
-          'and how to get the most from your clothes.',
+          l10n.helpCenterStudioIntro,
           style: theme.textTheme.bodyMedium?.copyWith(
             height: 1.5,
             color: theme.colorScheme.onSurfaceVariant,
@@ -370,7 +322,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     );
   }
 
-  Widget _buildProTipCard(ThemeData theme) {
+  Widget _buildProTipCard(ThemeData theme, AppLocalizations l10n) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Container(
@@ -392,7 +344,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             SizedBox(width: 3.w),
             Expanded(
               child: Text(
-                'Tip: The more outfits you log, the more personal your daily suggestions and insights become.',
+                l10n.helpCenterProTip,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   height: 1.5,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -579,7 +531,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     );
   }
 
-  Widget _buildFaqList(ThemeData theme) {
+  Widget _buildFaqList(ThemeData theme, List<Map<String, String>> faqItems) {
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,
@@ -593,8 +545,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
         ],
       ),
       child: Column(
-        children: List.generate(_faqItems.length, (index) {
-          final item = _faqItems[index];
+        children: List.generate(faqItems.length, (index) {
+          final item = faqItems[index];
 
           return ExpansionTile(
             tilePadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.3.h),
