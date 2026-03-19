@@ -307,6 +307,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     switch (theme) {
       case 'light': return localizations.lightMode;
       case 'dark':  return localizations.darkMode;
+      case 'system':
       case 'auto':  return localizations.autoSystem;
       default:      return localizations.lightMode;
     }
