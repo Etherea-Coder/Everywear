@@ -167,33 +167,36 @@ class OutfitEntryCardWidget extends StatelessWidget {
                     ),
                   ),
                 SizedBox(height: 0.5.h),
-                // Items chips
+                // Item image thumbnails
                 if (items.isNotEmpty)
-                  Wrap(
-                    spacing: 2.w,
-                    runSpacing: 1.h,
-                    children: items
-                        .map(
-                          (item) => Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 3.w,
-                              vertical: 0.5.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withAlpha(26),
-                              borderRadius: BorderRadius.circular(20.0),
-                            ),
-                            child: Text(
-                              item.toString(),
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                  SizedBox(
+                    height: 11.w,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => SizedBox(width: 2.w),
+                      itemBuilder: (context, index) {
+                        final item = items[index] as Map<String, dynamic>;
+                        final imgUrl = item['imageUrl'] as String? ?? '';
+                        final name = item['name'] as String? ?? '';
+                        return Tooltip(
+                          message: name,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: imgUrl.isNotEmpty
+                                ? Image.network(
+                                    imgUrl,
+                                    width: 11.w,
+                                    height: 11.w,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _itemPlaceholder(theme, name),
+                                  )
+                                : _itemPlaceholder(theme, name),
                           ),
-                        )
-                        .toList(),
+                        );
+                      },
+                    ),
                   ),
                 // Notes
                 if (notes.isNotEmpty) ...[
@@ -211,6 +214,27 @@ class OutfitEntryCardWidget extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _itemPlaceholder(ThemeData theme, String name) {
+    return Container(
+      width: 11.w,
+      height: 11.w,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withAlpha(26),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : '?',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
       ),
     );
   }

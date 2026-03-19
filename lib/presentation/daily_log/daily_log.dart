@@ -1586,7 +1586,10 @@ class _DailyLogState extends State<DailyLog> {
 
   Map<String, dynamic> _formatEntry(Map<String, dynamic> entry) {
     final items = (entry['outfit_items'] as List<dynamic>? ?? [])
-        .map((oi) => (oi['wardrobe_items']?['name'] ?? loc.unknown) as String)
+        .map((oi) => {
+            'name': (oi['wardrobe_items']?['name'] ?? loc.unknown) as String,
+            'imageUrl': (oi['wardrobe_items']?['image_url'] ?? '') as String,
+          })
         .toList();
 
     final imageUrl = (entry['outfit_items'] as List<dynamic>? ?? [])

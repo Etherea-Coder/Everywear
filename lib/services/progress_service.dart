@@ -165,7 +165,7 @@ class ProgressService {
         // Wardrobe items worn at least once (times_worn > 0)
         _client
             .from('wardrobe_items')
-            .select('id, times_worn')
+            .select('id, wear_count')
             .eq('user_id', userId),
       ]);
 
@@ -184,7 +184,7 @@ class ProgressService {
 
       // Wardrobe utilization: % of items worn at least once
       final wornItems =
-          itemsWithWear.where((i) => ((i['times_worn'] as int?) ?? 0) > 0).length;
+          itemsWithWear.where((i) => ((i['wear_count'] as int?) ?? 0) > 0).length;
       final utilization =
           totalItems > 0 ? ((wornItems / totalItems) * 100).round() : 0;
 
