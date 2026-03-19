@@ -10,18 +10,17 @@ final wardrobeRepositoryProvider = Provider((ref) => WardrobeRepository());
 
 final userTierServiceProvider = Provider((ref) => UserTierService());
 
-// Auth user stream — reacts to sign-in/sign-out automatically
-final supabaseAuthProvider = StreamProvider<User?>((ref) {
-  if (!SupabaseService.isInitialized) {
-    return const Stream.empty();
-  }
-  return Supabase.instance.client.auth.onAuthStateChange
-      .map((data) => data.session?.user);
+// Auth user — derived from authStateProvider, no second stream subscription
+final supabaseAuthProvider = Provider<User?>((ref) {
+  return ref.watch(authStateProvider).maybeWhen(
+    data: (state) => state.session?.user,
+    orElse: () => null,
+  );
 });
 
 // Profile from your `profiles` table (membership tier, etc.)
 final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
-  final user = ref.watch(supabaseAuthProvider).value;
+  final user = ref.watch(supabaseAuthProvider);
   if (user == null) return null;
 
   try {
@@ -40,21 +39,13 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 });
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
-  // TODO: Ensure Supabase is initialized before accessing client
   if (!SupabaseService.isInitialized) {
     debugPrint('⚠️ authStateProvider: Supabase not initialized, returning empty stream');
     return const Stream.empty();
   }
-  
   debugPrint('✅ authStateProvider: Listening to auth state changes');
-  final stream = SupabaseService.instance.client.auth.onAuthStateChange;
-  
-  // Add logging for auth state changes
-  stream.listen((state) {
-    debugPrint('🔐 Auth state changed: ${state.event}, session: ${state.session != null}');
-  });
-  
-  return stream;
+  // Return the stream directly — NO secondary .listen() call
+  return SupabaseService.instance.client.auth.onAuthStateChange;
 });
 
 final currentUserProvider = Provider<User?>((ref) {

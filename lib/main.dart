@@ -117,24 +117,15 @@ class _MyAppState extends ConsumerState<MyApp> {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.light;
   bool _isInitialized = false;
-  bool _showBrandedLoader = true;
 
   @override
   void initState() {
     super.initState();
     _initializeApp();
-    
-    // Safety timeout: Never show the branded loader for more than 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && _showBrandedLoader) {
-        setState(() => _showBrandedLoader = false);
-      }
-    });
   }
 
   Future<void> _initializeApp() async {
     try {
-      // SharedPreferences often hangs on poor hardware - 2s limit
       final results = await Future.wait([
         LocaleManager.getSavedLocale(),
         LocaleManager.getSavedThemeMode(),
@@ -148,17 +139,10 @@ class _MyAppState extends ConsumerState<MyApp> {
           _locale = savedLocale ?? const Locale('en');
           _themeMode = _parseThemeMode(savedTheme);
           _isInitialized = true;
-          // If we finished loading locale, we can potentially hide the branded loader
-          // but we still wait for auth if it's very fast (handled by the builder logic)
         });
-        
         ref.read(themeModeProvider.notifier).state = _themeMode;
         ref.read(localeProvider.notifier).state = _locale!;
-
-        // Restore notification schedule after phone restart
         await NotificationService.instance.restoreIfEnabled();
-
-        // Apply saved analytics preference
         await AnalyticsService.instance.applyStoredPreference();
       }
     } catch (e) {
@@ -175,59 +159,38 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   ThemeMode _parseThemeMode(String theme) {
     switch (theme.toLowerCase()) {
-      case 'dark':
-        return ThemeMode.dark;
+      case 'dark':   return ThemeMode.dark;
       case 'system':
-      case 'auto':
-        return ThemeMode.system;
+      case 'auto':   return ThemeMode.system;
       case 'light':
-      default:
-        return ThemeMode.light;
+      default:       return ThemeMode.light;
     }
   }
 
-  /// Public method to update locale and force complete app rebuild
   void updateLocale(Locale locale) {
     if (_locale?.languageCode != locale.languageCode) {
-      setState(() {
-        _locale = locale;
-      });
+      setState(() => _locale = locale);
       ref.read(localeProvider.notifier).state = locale;
     }
   }
 
-  /// Public method to update theme mode and force complete app rebuild
   void updateThemeMode(String theme) {
     final newThemeMode = _parseThemeMode(theme);
     if (_themeMode != newThemeMode) {
-      setState(() {
-        _themeMode = newThemeMode;
-      });
+      setState(() => _themeMode = newThemeMode);
       ref.read(themeModeProvider.notifier).state = newThemeMode;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show branded loading screen until locale and auth are loaded
-    final authState = ref.watch(authStateProvider);
-
-    // ROBUST BUILD LOGIC:
-    // Only show the branded loader if:
-    // 1. Initialized is false AND We haven't hit our safety timeout
-    // OR 
-    // 2. Locale is missing AND We haven't hit our safety timeout
-    // OR
-    // 3. Auth is specifically LOADING AND We haven't hit our safety timeout
-    final stillLoading = !_isInitialized || _locale == null;
-
-    if (_showBrandedLoader && stillLoading) {
-      debugPrint('📱 Showing branded loader - initialized: $_isInitialized, locale: $_locale, authLoading: ${authState.isLoading}');
+    // Show plain loader until locale is ready
+    if (!_isInitialized || _locale == null) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: Scaffold(
-          backgroundColor: const Color(0xFF2D5A27), // Branded Primary Light
+          backgroundColor: const Color(0xFF2D5A27),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -238,7 +201,7 @@ class _MyAppState extends ConsumerState<MyApp> {
                     'assets/images/icon-1768225114910.png',
                     width: 120,
                     height: 120,
-                   ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(color: Colors.white),
@@ -248,6 +211,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
       );
     }
+
+    final authState = ref.watch(authStateProvider);
 
     return Sizer(
       builder: (context, orientation, screenType) {
@@ -260,15 +225,13 @@ class _MyAppState extends ConsumerState<MyApp> {
           // 🚨 CRITICAL: NEVER REMOVE OR MODIFY
           builder: (context, child) {
             return MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: const TextScaler.linear(1.0)),
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(1.0)),
               child: child!,
             );
           },
           // 🚨 END CRITICAL SECTION
           debugShowCheckedModeBanner: false,
-          // Localization configuration
           locale: _locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -287,25 +250,21 @@ class _MyAppState extends ConsumerState<MyApp> {
             }
             return supportedLocales.first;
           },
-          // Determine home based on auth state
           home: authState.when(
             data: (state) {
               final hasSession = state.session != null;
-              debugPrint('🏠 Navigation decision: hasSession=$hasSession, event=${state.event}');
-              if (hasSession) {
-                return const HomeScreen(); 
-              }
-              return const SplashScreen();
+              return hasSession ? const HomeScreen() : const SplashScreen();
             },
+            // During loading, check current session directly —
+            // avoids rebuilding SplashScreen and resetting the login form
             loading: () {
-              debugPrint('⏳ Auth state loading, checking current session');
-              final hasSession = SupabaseService.instance.client.auth.currentSession != null;
-              return hasSession ? const HomeScreen() : const SplashScreen(); 
+              final hasSession = SupabaseService
+                  .instance.client.auth.currentSession != null;
+              return hasSession
+                  ? const HomeScreen()
+                  : const SplashScreen();
             },
-            error: (error, stack) {
-              debugPrint('❌ Auth state error: $error, showing SplashScreen');
-              return const SplashScreen();
-            },
+            error: (_, __) => const SplashScreen(),
           ),
           routes: AppRoutes.routes,
         );

@@ -19,7 +19,7 @@ class ProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    final user = ref.watch(supabaseAuthProvider).value;
+    final user = ref.watch(supabaseAuthProvider);
     final profileAsync = ref.watch(userProfileProvider);
 
     final displayName = user?.userMetadata?['full_name'] ?? user?.email ?? '';
