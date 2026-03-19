@@ -28,7 +28,7 @@ import '../presentation/change_password_screen/change_password_screen.dart';
 import '../presentation/legal/terms_screen.dart';
 import '../presentation/legal/privacy_policy_screen.dart';
 import '../presentation/support/contact_support_screen.dart';
-
+import '../presentation/outfit_history/outfit_history_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -72,6 +72,7 @@ class AppRoutes {
   static const String addClothingItem   = '/add-clothing-item';
   static const String outfitCaptureFlow = '/outfit-capture-flow';
   static const String outfitRating      = '/outfit-rating';
+  static const String outfitHistory = '/outfit-history';
 
   // ============================================
   // AI & INTELLIGENCE
@@ -137,6 +138,7 @@ class AppRoutes {
     addClothingItem:   (context) => const AddClothingItem(),
     outfitCaptureFlow: (context) => const OutfitCaptureFlow(),
     outfitRating:      (context) => const OutfitRating(),
+    outfitHistory: (context) => const OutfitHistoryScreen(),
 
     // AI & Intelligence
     aiIntelligence:  (context) => const AIIntelligence(),

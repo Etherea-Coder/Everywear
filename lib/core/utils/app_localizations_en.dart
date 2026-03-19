@@ -26,6 +26,17 @@ const Map<String, String> appLocalizationsEn = {
   'filter': 'Filter',
   'sort': 'Sort',
 
+  // Outfit History
+  'outfit_history': 'Outfit History',
+  'view_history': 'View history',
+  'outfits_logged_tap_to_view': 'outfits logged — tap to view',
+  'no_outfits_logged_yet': 'No outfits logged yet',
+  'start_logging_outfits': 'Start logging your daily outfits to build your history.',
+  'sort_newest': 'Newest first',
+  'sort_oldest': 'Oldest first',
+  'sort_by_rating': 'By rating',
+  'sort_by': 'Sort by',
+
   // Auth
   'welcome_back': 'Welcome Back',
   'create_account': 'Create Account',

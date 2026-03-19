@@ -4,9 +4,10 @@ import 'package:sizer/sizer.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../routes/app_routes.dart';
+import '../../services/progress_service.dart';
+import '../../services/challenge_service.dart';
 import './widgets/streak_hero_widget.dart';
 import './widgets/active_challenge_card_widget.dart';
-import '../../services/challenge_service.dart';
 
 class PersonalProgressDashboard extends StatefulWidget {
   const PersonalProgressDashboard({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class PersonalProgressDashboard extends StatefulWidget {
 }
 
 class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
+  final ProgressService _progressService = ProgressService();
   final ChallengeService _challengeService = ChallengeService();
 
   bool _isLoading = true;
@@ -32,49 +34,64 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
     'purchasesThisMonth': 0,
   };
 
-@override
-void initState() {
-  super.initState();
-  _loadActiveChallenges();
-}
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
-  Future<void> _loadActiveChallenges() async {
-    final current = await _challengeService.fetchCurrentChallenge();
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+
+    final results = await Future.wait([
+      _progressService.fetchStreakData(),
+      _progressService.fetchPersonalStats(),
+      _loadActiveChallenges(),
+    ]);
+
     if (mounted) {
       setState(() {
-        if (current != null && current['is_joined'] == true) {
-          final progress = current['progress'] as int? ?? 0;
-          final goal = current['goal'] as int? ?? 1;
-          _activeChallenges = [
-            {
-              'id': current['id'],
-              'title': current['title'],
-              'description': current['description'],
-              'type': 'weekly',
-              'progress': goal > 0 ? progress / goal : 0.0,
-              'currentValue': progress,
-              'targetValue': goal,
-              'points': 75,
-              'icon': 'flag',
-              'dueDate': DateTime.now().add(
-                Duration(days: 7 - DateTime.now().weekday),
-              ),
-            }
-          ];
-        }
+        _streakData = (results[0] as Map).cast<String, int>();
+        _stats = (results[1] as Map).cast<String, dynamic>();
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await _loadActiveChallenges();
-    setState(() => _isLoading = false);
+  Future<Map<String, dynamic>> _loadActiveChallenges() async {
+    final current = await _challengeService.fetchCurrentChallenge();
+    if (mounted && current != null && current['is_joined'] == true) {
+      final progress = current['progress'] as int? ?? 0;
+      final goal = current['goal'] as int? ?? 1;
+      setState(() {
+        _activeChallenges = [
+          {
+            'id': current['id'],
+            'title': current['title'],
+            'description': current['description'],
+            'type': 'weekly',
+            'progress': goal > 0 ? progress / goal : 0.0,
+            'currentValue': progress,
+            'targetValue': goal,
+            'points': 75,
+            'icon': 'flag',
+            'dueDate': DateTime.now().add(
+              Duration(days: 7 - DateTime.now().weekday),
+            ),
+          }
+        ];
+      });
+    }
+    return {};
   }
 
   void _navigateToChallengeCenter() {
     Navigator.pushNamed(context, AppRoutes.challengeCenter);
+  }
+
+  void _navigateToOutfitHistory() {
+    Navigator.pushNamed(context, AppRoutes.outfitHistory);
   }
 
   String get _heroSubtitle {
@@ -87,7 +104,9 @@ void initState() {
     }
     if (challenges > 0) {
       final best = _activeChallenges.reduce(
-          (a, b) => (a['progress'] as double) >= (b['progress'] as double) ? a : b);
+          (a, b) => (a['progress'] as double) >= (b['progress'] as double)
+              ? a
+              : b);
       final pct = ((best['progress'] as double) * 100).round();
       return '${best['title']} — $pct%';
     }
@@ -118,55 +137,54 @@ void initState() {
               onRefresh: _loadData,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: SafeArea(
-                  bottom: false,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeroCard(theme, loc),
-                      SizedBox(height: 2.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroCard(theme, loc),
+                    SizedBox(height: 2.h),
 
-                      StreakHeroWidget(
-                        currentStreak: _streakData['current'] ?? 0,
-                        longestStreak: _streakData['longest'] ?? 0,
-                        weeklyProgress: _weeklyProgress,
-                        motivationalMessage: _motivationalMessage(loc),
-                        totalPoints: 0, // no points table yet
-                      ),
-                      SizedBox(height: 2.5.h),
+                    StreakHeroWidget(
+                      currentStreak: _streakData['current'] ?? 0,
+                      longestStreak: _streakData['longest'] ?? 0,
+                      weeklyProgress: _weeklyProgress,
+                      motivationalMessage: _motivationalMessage(loc),
+                      totalPoints: 0,
+                    ),
+                    SizedBox(height: 2.5.h),
 
-                      _buildSectionHeader(
-                        context,
-                        title: loc.translate('active_challenges'),
-                        actionLabel: loc.translate('view_all'),
-                        onTap: _navigateToChallengeCenter,
-                      ),
-                      SizedBox(height: 1.h),
-                      _buildChallengesSection(theme, loc),
-                      SizedBox(height: 3.h),
+                    _buildSectionHeader(
+                      context,
+                      title: loc.translate('active_challenges'),
+                      actionLabel: loc.translate('view_all'),
+                      onTap: _navigateToChallengeCenter,
+                    ),
+                    SizedBox(height: 1.h),
+                    _buildChallengesSection(theme, loc),
+                    SizedBox(height: 3.h),
 
-                      _buildSectionHeader(
-                        context,
-                        title: loc.translate('your_statistics'),
-                      ),
-                      SizedBox(height: 1.h),
-                      _buildStatsSection(theme, loc),
-                      SizedBox(height: 3.h),
+                    _buildSectionHeader(
+                      context,
+                      title: loc.translate('your_statistics'),
+                      actionLabel: loc.translate('view_history'),
+                      onTap: _navigateToOutfitHistory,
+                    ),
+                    SizedBox(height: 1.h),
+                    _buildStatsSection(theme, loc),
+                    SizedBox(height: 3.h),
 
-                      _buildChallengeGalleryCard(theme, loc),
-                      SizedBox(height: 4.h),
-                    ],
-                  ),
+                    _buildOutfitHistoryBanner(theme, loc),
+                    SizedBox(height: 2.h),
+
+                    _buildChallengeGalleryCard(theme, loc),
+                    SizedBox(height: 3.h),
+                  ],
                 ),
               ),
             ),
     );
   }
 
-  /// Weekly progress: ratio of days with outfits in last 7 days
   double get _weeklyProgress {
-    // This is a lightweight estimate — for precision we'd need a date query
-    // but StreakHeroWidget already shows the real streak
     final streak = _streakData['current'] ?? 0;
     return (streak.clamp(0, 7) / 7).clamp(0.0, 1.0);
   }
@@ -207,7 +225,8 @@ void initState() {
               color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.trending_up, color: Colors.white, size: 28),
+            child:
+                const Icon(Icons.trending_up, color: Colors.white, size: 28),
           ),
           SizedBox(width: 4.w),
           Expanded(
@@ -216,7 +235,8 @@ void initState() {
               children: [
                 if (current > 0)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 0.4.h),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 2.5.w, vertical: 0.4.h),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(20),
@@ -242,8 +262,8 @@ void initState() {
                   outfits == 0
                       ? loc.translate('progress_hero_no_logs')
                       : '$outfits ${loc.translate('outfits_logged_so_far')} · '
-                        '$activeChallengeCount ${loc.translate('challenges_active')}. '
-                        '$_heroSubtitle',
+                          '$activeChallengeCount ${loc.translate('challenges_active')}. '
+                          '$_heroSubtitle',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.92),
                     height: 1.4,
@@ -271,7 +291,8 @@ void initState() {
         children: [
           Text(
             title,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           if (actionLabel != null && onTap != null)
             TextButton(onPressed: onTap, child: Text(actionLabel)),
@@ -333,7 +354,8 @@ void initState() {
                 child: _buildStatPill(theme,
                     icon: '👗',
                     label: loc.translate('outfits_logged'),
-                    value: '$outfits'),
+                    value: '$outfits',
+                    onTap: _navigateToOutfitHistory),
               ),
               SizedBox(width: 3.w),
               Expanded(
@@ -358,7 +380,8 @@ void initState() {
                 child: _buildStatPill(theme,
                     icon: '📊',
                     label: loc.translate('cost_per_wear'),
-                    value: cpw > 0 ? '€${cpw.toStringAsFixed(2)}' : '—'),
+                    value:
+                        cpw > 0 ? '€${cpw.toStringAsFixed(2)}' : '—'),
               ),
             ],
           ),
@@ -385,49 +408,132 @@ void initState() {
     );
   }
 
-  Widget _buildStatPill(ThemeData theme,
-      {required String icon,
-      required String label,
-      required String value}) {
-    return Container(
-      padding: EdgeInsets.all(3.5.w),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 22)),
-          SizedBox(width: 2.5.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  value,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+  Widget _buildStatPill(
+    ThemeData theme, {
+    required String icon,
+    required String label,
+    required String value,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(3.5.w),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: onTap != null
+              ? Border.all(
+                  color:
+                      theme.colorScheme.primary.withValues(alpha: 0.15))
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 22)),
+            SizedBox(width: 2.5.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        value,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (onTap != null) ...[
+                        SizedBox(width: 1.w),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 10,
+                          color: theme.colorScheme.primary
+                              .withValues(alpha: 0.6),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Outfit history banner ─────────────────────────────────────────────────
+
+  Widget _buildOutfitHistoryBanner(ThemeData theme, AppLocalizations loc) {
+    final outfits = _stats['totalOutfitsLogged'] as int? ?? 0;
+    if (outfits == 0) return const SizedBox.shrink();
+
+    return GestureDetector(
+      onTap: _navigateToOutfitHistory,
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 4.w),
+        padding: EdgeInsets.all(4.w),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
           ),
-        ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(2.5.w),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.history, color: theme.colorScheme.primary, size: 24),
+            ),
+            SizedBox(width: 3.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    loc.translate('outfit_history'),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '$outfits ${loc.translate('outfits_logged_tap_to_view')}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -464,7 +570,8 @@ void initState() {
                 color: theme.colorScheme.onSecondary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.flag, color: theme.colorScheme.onSecondary, size: 28),
+              child: Icon(Icons.flag,
+                  color: theme.colorScheme.onSecondary, size: 28),
             ),
             SizedBox(width: 3.w),
             Expanded(
@@ -482,7 +589,8 @@ void initState() {
                   Text(
                     loc.translate('challenge_center_subtitle'),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSecondary.withValues(alpha: 0.9),
+                      color: theme.colorScheme.onSecondary
+                          .withValues(alpha: 0.9),
                     ),
                   ),
                 ],
@@ -516,7 +624,8 @@ void initState() {
         children: [
           Icon(icon,
               size: 40,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+              color:
+                  theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
           SizedBox(height: 1.5.h),
           Text(title,
               style: theme.textTheme.titleMedium
