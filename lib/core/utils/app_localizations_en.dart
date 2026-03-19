@@ -25,6 +25,7 @@ const Map<String, String> appLocalizationsEn = {
   'search': 'Search',
   'filter': 'Filter',
   'sort': 'Sort',
+  'general': 'General',
 
   // Outfit History
   'outfit_history': 'Outfit History',
@@ -672,6 +673,8 @@ const Map<String, String> appLocalizationsEn = {
   'hint_wedding': 'e.g. Sarah\'s Wedding',
   'date_label': 'Date',
   'dress_code_optional': 'Dress Code (optional)',
+  'editEvent': 'Edit Event',
+  'noDressCode': 'No dress code',
   'finish': 'Finish',
   'style_quiz': 'Style Quiz',
   'profile_classic': 'Classic Elegance',

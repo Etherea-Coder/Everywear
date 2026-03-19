@@ -559,6 +559,8 @@ class AppLocalizations {
   String get hintWedding => translate('hint_wedding');
   String get dateLabel => translate('date_label');
   String get dressCodeOptional => translate('dress_code_optional');
+  String get editEvent => translate('editEvent');
+  String get noDressCode => translate('noDressCode');
   String get finish => translate('finish');
   String get styleQuiz => translate('style_quiz');
   

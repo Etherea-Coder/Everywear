@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
 
@@ -59,6 +60,35 @@ class StyleService {
     } catch (e) {
       debugPrint('Error deleting event: $e');
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateEvent({
+    required String eventId,
+    required String title,
+    required DateTime eventDate,
+    required String eventType,
+    String? dressCode,
+    String? notes,
+  }) async {
+    try {
+      final response = await _client
+          .from('style_events')
+          .update({
+            'title': title,
+            'event_date': DateFormat('yyyy-MM-dd').format(eventDate),
+            'event_type': eventType,
+            'dress_code': dressCode,
+            'notes': (notes != null && notes.isNotEmpty) ? notes : null,
+            // outfit_id is intentionally omitted — we never overwrite it here
+          })
+          .eq('id', eventId)
+          .select()
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      debugPrint('Error updating event: $e');
+      return null;
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/outfit_log_service.dart';
+import '../home_screen/home_screen.dart';
 import '../../services/style_service.dart';
 import '../../services/today_suggestion_service.dart';
 import '../../services/weather_service.dart';
@@ -1331,7 +1332,9 @@ class _DailyLogState extends State<DailyLog> {
     final eventType = event['event_type'] as String? ?? loc.eventTypeOther;
     final dressCode = event['dress_code'] as String?;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => HomeScreen.goToTab(context, 2),
+      child: Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
@@ -1408,6 +1411,7 @@ class _DailyLogState extends State<DailyLog> {
           ),
         ],
       ),
+    ),
     );
   }
 

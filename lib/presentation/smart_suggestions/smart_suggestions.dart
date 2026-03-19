@@ -243,13 +243,27 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 ),
               ),
               SizedBox(height: 1.h),
-              GestureDetector(
-                onTap: () => _deleteEvent(event['id']),
-                child: Icon(
-                  Icons.delete_outline,
-                  size: 18,
-                  color: Colors.grey.shade400,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => _showEditEventSheet(event),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+                  SizedBox(width: 2.w),
+                  GestureDetector(
+                    onTap: () => _deleteEvent(event['id']),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1225,6 +1239,182 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   // ── ACTIONS ─────────────────────────────────────────────
+  void _showEditEventSheet(Map<String, dynamic> event) {
+    final titleController =
+        TextEditingController(text: event['title'] as String? ?? '');
+    final notesController =
+        TextEditingController(text: event['notes'] as String? ?? '');
+
+    DateTime selectedDate =
+        DateTime.tryParse(event['event_date'] as String? ?? '') ??
+            DateTime.now().add(const Duration(days: 7));
+
+    String selectedType = event['event_type'] as String? ?? 'Dinner';
+    String? dressCode = event['dress_code'] as String?;
+
+    final eventTypes = [
+      'Wedding', 'Dinner', 'Work', 'Party', 'Travel', 'Sport', 'Other'
+    ];
+    final dressCodes = [
+      'Casual', 'Smart Casual', 'Formal', 'Black Tie', 'Sporty'
+    ];
+    final localizations = AppLocalizations.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(4.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 2.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  localizations.editEvent,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                SizedBox(height: 2.h),
+                // Title
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    labelText: localizations.eventName,
+                    prefixIcon: const Icon(Icons.event),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                // Date picker
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now()
+                          .subtract(const Duration(days: 365)),
+                      lastDate:
+                          DateTime.now().add(const Duration(days: 730)),
+                    );
+                    if (picked != null) {
+                      setSheetState(() => selectedDate = picked);
+                    }
+                  },
+                  child: AbsorbPointer(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        labelText: localizations.dateLabel,
+                        prefixIcon: const Icon(Icons.calendar_today),
+                      ),
+                      controller: TextEditingController(
+                        text: DateFormat('MMM dd, yyyy').format(selectedDate),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                // Event type
+                DropdownButtonFormField<String>(
+                  value: eventTypes.contains(selectedType)
+                      ? selectedType
+                      : 'Other',
+                  decoration: const InputDecoration(
+                    labelText: 'Event Type',
+                    prefixIcon: Icon(Icons.category),
+                  ),
+                  items: eventTypes
+                      .map((t) =>
+                          DropdownMenuItem(value: t, child: Text(t)))
+                      .toList(),
+                  onChanged: (v) =>
+                      setSheetState(() => selectedType = v!),
+                ),
+                SizedBox(height: 2.h),
+                // Dress code
+                DropdownButtonFormField<String>(
+                  value: dressCodes.contains(dressCode) ? dressCode : null,
+                  decoration: InputDecoration(
+                    labelText: localizations.dressCodeOptional,
+                    prefixIcon: const Icon(Icons.checkroom),
+                  ),
+                  items: [
+                    DropdownMenuItem<String>(
+                      value: null,
+                      child: Text(localizations.noDressCode),
+                    ),
+                    ...dressCodes.map((d) =>
+                        DropdownMenuItem(value: d, child: Text(d))),
+                  ],
+                  onChanged: (v) => setSheetState(() => dressCode = v),
+                ),
+                SizedBox(height: 2.h),
+                // Notes
+                TextField(
+                  controller: notesController,
+                  decoration: InputDecoration(
+                    labelText: localizations.notes,
+                    hintText: localizations.optionalNotesHint,
+                    prefixIcon: const Icon(Icons.note_outlined),
+                    border: const OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 3.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (titleController.text.trim().isEmpty) return;
+                      Navigator.pop(context);
+                      await _styleService.updateEvent(
+                        eventId: event['id'] as String,
+                        title: titleController.text.trim(),
+                        eventDate: selectedDate,
+                        eventType: selectedType,
+                        dressCode: dressCode,
+                        notes: notesController.text.trim(),
+                      );
+                      _loadData();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 1.5.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(localizations.save),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showAddEventDialog() {
     final titleController = TextEditingController();
     DateTime selectedDate = DateTime.now().add(const Duration(days: 7));

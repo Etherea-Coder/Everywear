@@ -24,6 +24,10 @@ import '../../providers/ad_providers.dart';
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
+  static void goToTab(BuildContext context, int index) {
+    context.findAncestorStateOfType<_HomeScreenState>()?._onTabChanged(index);
+  }
+
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
@@ -38,17 +42,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const WardrobeManagement(), // Index 1: Wardrobe
     const SmartSuggestions(),   // Index 2: Style
     const PurchaseTracking(),   // Index 3: Purchases
-    const ProfileScreen(),    // Index 4: Profile (includes Insights link)
+    const ProfileScreen(),      // Index 4: Profile (includes Insights link)
   ];
 
   /// Track navigation as actions for interstitial ads
   void _onTabChanged(int index) {
     if (_currentIndex != index) {
-      // Track navigation action for interstitial ad counter
-      // Only count major section changes, not just tab switches
-      // Uncomment below if you want navigation to count as actions
-      // ref.read(adStateProvider.notifier).trackAction(AdActionType.navigation);
-
       setState(() {
         _currentIndex = index;
       });
