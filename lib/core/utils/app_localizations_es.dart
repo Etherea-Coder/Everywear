@@ -241,7 +241,7 @@ const Map<String, String> appLocalizationsEs = {
   'wardrobe_utilization': 'Artículos Usados',
   'purchases_this_month': 'Compras este Mes',
 
-    // ── HELP CENTER ──────────────────────────────────────────────────────────────
+  // HELP CENTER
   'help_center_hero_title': 'Bienvenido al Centro de Ayuda de Everywear',
   'help_center_hero_subtitle': 'Una guía tranquila sobre cómo funciona la aplicación, para qué sirve cada espacio y cómo aprovechar al máximo tu viaje de armario.',
   'help_center_studio_intro': 'Everywear está diseñado como un estudio tranquilo para tu armario. Este espacio te ayuda a entender cómo funciona la aplicación, cómo hacer crecer tu estilo y cómo aprovechar al máximo tu ropa.',
@@ -301,7 +301,7 @@ const Map<String, String> appLocalizationsEs = {
   'faq_q10': '¿Cómo puedo obtener mejores sugerencias?',
   'faq_a10': 'Añade más artículos a tu armario, completa tu cuestionario de estilo, registra atuendos regularmente y usa las opciones de ocasión y ambiente. Esto da a la aplicación más contexto para producir sugerencias que se sientan más personales.',
 
-    // ── SEND FEEDBACK ─────────────────────────────────────────────────────────────
+    // SEND FEEDBACK
   'feedback_hero_title': 'Nos encantaría escucharte',
   'feedback_hero_subtitle': 'Tus ideas, reportes de errores y reflexiones ayudan a formar Everywear en un estudio de armario más reflexivo.',
   'feedback_type_section_title': '¿Qué te gustaría compartir?',
@@ -316,6 +316,25 @@ const Map<String, String> appLocalizationsEs = {
   'feedback_type_design': 'Diseño',
   'feedback_type_ai_suggestions': 'Sugerencias IA',
   'feedback_type_other': 'Otro',
+
+  // RESET
+  'reset_app': 'Restablecer la aplicación',
+  'reset_app_subtitle': 'Borrar todos tus datos y empezar de nuevo',
+  'reset_title': 'Restablecer datos',
+  'reset_warning': 'Esto eliminará permanentemente todos tus datos. Esta acción no se puede deshacer.',
+  'reset_keeps_account': 'Tu cuenta (correo y contraseña) se conservará. Solo se eliminan tus datos.',
+  'reset_continue_btn': 'Continuar',
+  'reset_confirm_title': '¿Estás seguro?',
+  'reset_type_instruction': 'Escribe RESET abajo para confirmar que deseas borrar todo.',
+  'reset_confirm_btn': 'Eliminar todo',
+  'reset_in_progress': 'Restableciendo tus datos...',
+  'reset_error': 'Error al restablecer',
+  'reset_item_wardrobe': 'Todos los artículos del guardarropa',
+  'reset_item_logs': 'Todos los registros de atuendos',
+  'reset_item_purchases': 'Todas las compras y lista de deseos',
+  'reset_item_challenges': 'Todos los desafíos y progreso',
+  'reset_item_quiz': 'Resultados del quiz de estilo',
+  'reset_item_events': 'Todos los eventos de estilo',
   
   // Form fields
   'feedback_message_hint': 'Cuéntanos qué pasó, qué mejorarías o qué te gustaría ver a continuación...',

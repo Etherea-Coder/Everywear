@@ -13,6 +13,7 @@ import './widgets/confirmation_dialog_widget.dart';
 import './widgets/settings_section_widget.dart';
 import './widgets/settings_tile_widget.dart';
 import './widgets/theme_selector_dialog.dart';
+import '../../../presentation/settings_profile/widgets/reset_app_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
@@ -35,7 +36,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: 'Settings',
+        title: localizations.settings,
         variant: CustomAppBarVariant.standard,
       ),
       body: SingleChildScrollView(
@@ -44,9 +45,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             SizedBox(height: 2.h),
 
-            // General
+            // ── General ──────────────────────────────────────────────────
             _buildSection(
-              title: 'General',
+              title: localizations.translate('general'),
               children: [
                 _buildNavTile(
                   icon: Icons.palette_outlined,
@@ -67,8 +68,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 _buildSwitchTile(
                   icon: Icons.wb_sunny_outlined,
-                  title: 'Morning AI suggestions',
-                  subtitle: 'Daily outfit ideas every morning',
+                  title: localizations.morningAiSuggestions,
+                  subtitle: localizations.dailyOutfitIdeas,
                   value: _morningAISuggestions,
                   onChanged: (value) =>
                       setState(() => _morningAISuggestions = value),
@@ -77,7 +78,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             SizedBox(height: 2.h),
 
-            // Account & Security
+            // ── Account & Security ───────────────────────────────────────
             _buildSection(
               title: localizations.accountSettings,
               children: [
@@ -99,7 +100,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             SizedBox(height: 2.h),
 
-            // Privacy
+            // ── Privacy ──────────────────────────────────────────────────
             _buildSection(
               title: localizations.privacySettings,
               children: [
@@ -111,17 +112,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (value) =>
                       setState(() => _analyticsOptIn = value),
                 ),
+              ],
+            ),
+            SizedBox(height: 2.h),
+
+            // ── Data Management ──────────────────────────────────────────
+            _buildSection(
+              title: localizations.dataManagement,
+              children: [
                 _buildNavTile(
                   icon: Icons.download_outlined,
                   title: localizations.exportData,
                   subtitle: localizations.downloadWardrobeData,
                   onTap: () => _showExportOptions(context),
                 ),
+                _buildNavTile(
+                  icon: Icons.restart_alt_outlined,
+                  title: localizations.translate('reset_app'),
+                  subtitle: localizations.translate('reset_app_subtitle'),
+                  titleColor: theme.colorScheme.error,
+                  onTap: () => ResetAppDialog.show(context),
+                ),
               ],
             ),
             SizedBox(height: 2.h),
 
-            // Help
+            // ── Help & Support ───────────────────────────────────────────
             _buildSection(
               title: localizations.helpAndSupport,
               children: [
@@ -157,7 +173,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             SizedBox(height: 3.h),
 
-            // Logout
+            // ── Logout button ────────────────────────────────────────────
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: SizedBox(
@@ -184,7 +200,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             SizedBox(height: 1.5.h),
 
-            // Version
+            // ── Version ──────────────────────────────────────────────────
             Text(
               'Version 1.0.1',
               style: theme.textTheme.bodySmall

@@ -241,7 +241,7 @@ const Map<String, String> appLocalizationsFr = {
   'wardrobe_utilization': 'Articles Portés',
   'purchases_this_month': 'Achats ce Mois',
 
-    // ── HELP CENTER ──────────────────────────────────────────────────────────────
+    // HELP CENTER
   'help_center_hero_title': 'Bienvenue au Centre d\'aide Everywear',
   'help_center_hero_subtitle': 'Un guide calme sur le fonctionnement de l\'application, à quoi sert chaque espace, et comment tirer le meilleur parti de votre parcours vestimentaire.',
   'help_center_studio_intro': 'Everywear est conçu comme un studio calme pour votre dressing. Cet espace vous aide à comprendre comment l\'application fonctionne, comment développer votre style, et comment profiter au mieux de vos vêtements.',
@@ -414,6 +414,25 @@ const Map<String, String> appLocalizationsFr = {
   'restore_failed': 'Échec de la restauration',
   'no_offerings_available': 'Aucune offre disponible. Veuillez réessayer plus tard.',
   'please_login_continue': 'Veuillez vous connecter pour continuer',
+
+  // RESET
+  'reset_app': 'Réinitialiser l\'application',
+  'reset_app_subtitle': 'Effacer toutes vos données et repartir de zéro',
+  'reset_title': 'Réinitialiser les données',
+  'reset_warning': 'Cela supprimera définitivement toutes vos données. Cette action est irréversible.',
+  'reset_keeps_account': 'Votre compte (email et mot de passe) sera conservé. Seules vos données sont supprimées.',
+  'reset_continue_btn': 'Continuer',
+  'reset_confirm_title': 'Êtes-vous sûr ?',
+  'reset_type_instruction': 'Tapez RESET ci-dessous pour confirmer la suppression de tout.',
+  'reset_confirm_btn': 'Tout supprimer',
+  'reset_in_progress': 'Réinitialisation en cours...',
+  'reset_error': 'Échec de la réinitialisation',
+  'reset_item_wardrobe': 'Tous les articles du dressing',
+  'reset_item_logs': 'Tous les journaux de tenues',
+  'reset_item_purchases': 'Tous les achats et la liste de souhaits',
+  'reset_item_challenges': 'Tous les défis et la progression',
+  'reset_item_quiz': 'Résultats du quiz de style',
+  'reset_item_events': 'Tous les événements de style',
 
   // FAQ
   'faq_cancel_anytime': 'Puis-je annuler à tout moment ?',

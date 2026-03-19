@@ -751,6 +751,25 @@ const Map<String, String> appLocalizationsEn = {
   'filter_by_category': 'Filter by Category',
   'custom_date_range': 'Custom Date Range',
 
+  // RESET
+  'reset_app': 'Reset App Data',
+  'reset_app_subtitle': 'Erase all your data and start fresh',
+  'reset_title': 'Reset App Data',
+  'reset_warning': 'This will permanently delete all your data. This action cannot be undone.',
+  'reset_keeps_account': 'Your account (email & password) will be kept. Only your data is deleted.',
+  'reset_continue_btn': 'Continue',
+  'reset_confirm_title': 'Are you sure?',
+  'reset_type_instruction': 'Type RESET below to confirm you want to erase everything.',
+  'reset_confirm_btn': 'Delete Everything',
+  'reset_in_progress': 'Resetting your data...',
+  'reset_error': 'Reset failed',
+  'reset_item_wardrobe': 'All wardrobe items',
+  'reset_item_logs': 'All outfit logs',
+  'reset_item_purchases': 'All purchases & wishlist',
+  'reset_item_challenges': 'All challenges & progress',
+  'reset_item_quiz': 'Style quiz results',
+  'reset_item_events': 'All style events',
+
   // Category names
   'tops': 'Tops',
   'bottoms': 'Bottoms',
