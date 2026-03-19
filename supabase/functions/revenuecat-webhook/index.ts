@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0'
 
@@ -95,9 +96,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({ received: true }), { status: 200 })
 
   } catch (error) {
-    console.error('RevenueCat webhook error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('RevenueCat webhook error:', errorMessage)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 400 },
     )
   }

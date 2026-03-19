@@ -16,6 +16,7 @@ import './widgets/theme_selector_dialog.dart';
 import '../../../presentation/settings_profile/widgets/reset_app_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/export_service.dart';
+import '../../services/supabase_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -363,16 +364,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _handleDeleteAccount() async {
     try {
-      await Supabase.instance.client.auth.admin
-          .deleteUser(Supabase.instance.client.auth.currentUser!.id);
+      final response = await SupabaseService.instance.client.functions.invoke(
+        'delete-account',
+      );
+
+      if (response.status != 200) {
+        throw Exception(response.data?['error'] ?? 'Delete failed');
+      }
+
+      // Sign out locally after server-side deletion
+      await SupabaseService.instance.client.auth.signOut();
+
       if (mounted) {
         Navigator.of(context)
             .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppLocalizations.of(context).error}: $e'),
+          ),
+        );
+      }
     }
   }
 
