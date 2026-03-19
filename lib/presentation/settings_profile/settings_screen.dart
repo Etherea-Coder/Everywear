@@ -15,7 +15,7 @@ import './widgets/settings_tile_widget.dart';
 import './widgets/theme_selector_dialog.dart';
 import '../../../presentation/settings_profile/widgets/reset_app_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import '../../services/export_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -426,12 +426,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _handleExportData(String format) {
-    final localizations = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${localizations.exportingData} $format...')),
-    );
+  if (format == 'PDF') {
+    ExportService.instance.exportAsPDF(context);
+  } else {
+    ExportService.instance.exportAsCSV(context);
   }
-
+}
   // ─── Logout ───────────────────────────────────────────────────────────────
 
   void _handleLogout(BuildContext context, AppLocalizations localizations) {
