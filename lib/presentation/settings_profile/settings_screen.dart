@@ -17,6 +17,8 @@ import '../../../presentation/settings_profile/widgets/reset_app_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/export_service.dart';
 import '../../services/supabase_service.dart';
+import '../../services/notification_service.dart';
+import '../../services/analytics_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -26,8 +28,33 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _morningAISuggestions = true;
+  bool _morningAISuggestions = false;
   bool _analyticsOptIn = true;
+
+  bool _isEmailUser() {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return false;
+    return user.appMetadata['provider'] == 'email' ||
+        (user.identities ?? []).any((i) => i.provider == 'email');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final notifications =
+        await NotificationService.instance.isMorningSuggestionsEnabled();
+    final analytics = await AnalyticsService.instance.isAnalyticsEnabled();
+    if (mounted) {
+      setState(() {
+        _morningAISuggestions = notifications;
+        _analyticsOptIn = analytics;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +99,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: localizations.morningAiSuggestions,
                   subtitle: localizations.dailyOutfitIdeas,
                   value: _morningAISuggestions,
-                  onChanged: (value) =>
-                      setState(() => _morningAISuggestions = value),
+                  onChanged: (value) async {
+                    if (value) {
+                      final granted =
+                          await NotificationService.instance.enableMorningSuggestions();
+                      if (!granted && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Please enable notifications in your device settings.'),
+                          ),
+                        );
+                        return;
+                      }
+                    } else {
+                      await NotificationService.instance.disableMorningSuggestions();
+                    }
+                    if (mounted) setState(() => _morningAISuggestions = value);
+                  },
                 ),
               ],
             ),
@@ -83,13 +126,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSection(
               title: localizations.accountSettings,
               children: [
-                _buildNavTile(
-                  icon: Icons.lock_outline,
-                  title: localizations.changePassword,
-                  subtitle: localizations.updatePassword,
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.changePassword),
-                ),
+                if (_isEmailUser())
+                  _buildNavTile(
+                    icon: Icons.lock_outline,
+                    title: localizations.changePassword,
+                    subtitle: localizations.updatePassword,
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.changePassword),
+                  ),
                 _buildNavTile(
                   icon: Icons.delete_outline,
                   title: localizations.deleteAccount,
@@ -110,8 +154,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: localizations.analytics,
                   subtitle: localizations.helpImproveApp,
                   value: _analyticsOptIn,
-                  onChanged: (value) =>
-                      setState(() => _analyticsOptIn = value),
+                  onChanged: (value) async {
+                    await AnalyticsService.instance.setAnalyticsEnabled(value);
+                    if (mounted) setState(() => _analyticsOptIn = value);
+                  },
                 ),
               ],
             ),

@@ -12,6 +12,8 @@ import './core/utils/locale_manager.dart';
 import './core/providers.dart';
 import './services/supabase_service.dart';
 import './services/revenuecat_service.dart';
+import './services/notification_service.dart';
+import './services/analytics_service.dart';
 import './widgets/custom_error_widget.dart';
 import './presentation/home_screen/home_screen.dart';
 import './presentation/splash_screen/splash_screen.dart';
@@ -152,6 +154,12 @@ class _MyAppState extends ConsumerState<MyApp> {
         
         ref.read(themeModeProvider.notifier).state = _themeMode;
         ref.read(localeProvider.notifier).state = _locale!;
+
+        // Restore notification schedule after phone restart
+        await NotificationService.instance.restoreIfEnabled();
+
+        // Apply saved analytics preference
+        await AnalyticsService.instance.applyStoredPreference();
       }
     } catch (e) {
       debugPrint('⚠️ App initialization failed: $e');
