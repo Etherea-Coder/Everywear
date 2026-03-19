@@ -211,7 +211,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     // 2. Locale is missing AND We haven't hit our safety timeout
     // OR
     // 3. Auth is specifically LOADING AND We haven't hit our safety timeout
-    final stillLoading = !_isInitialized || _locale == null || authState.isLoading;
+    final stillLoading = !_isInitialized || _locale == null;
 
     if (_showBrandedLoader && stillLoading) {
       debugPrint('📱 Showing branded loader - initialized: $_isInitialized, locale: $_locale, authLoading: ${authState.isLoading}');
@@ -285,17 +285,18 @@ class _MyAppState extends ConsumerState<MyApp> {
               final hasSession = state.session != null;
               debugPrint('🏠 Navigation decision: hasSession=$hasSession, event=${state.event}');
               if (hasSession) {
-                return HomeScreen(); 
+                return const HomeScreen(); 
               }
-              return SplashScreen();
+              return const SplashScreen();
             },
             loading: () {
-              debugPrint('⏳ Auth state loading, showing SplashScreen');
-              return SplashScreen(); 
+              debugPrint('⏳ Auth state loading, checking current session');
+              final hasSession = SupabaseService.instance.client.auth.currentSession != null;
+              return hasSession ? const HomeScreen() : const SplashScreen(); 
             },
             error: (error, stack) {
               debugPrint('❌ Auth state error: $error, showing SplashScreen');
-              return SplashScreen();
+              return const SplashScreen();
             },
           ),
           routes: AppRoutes.routes,
