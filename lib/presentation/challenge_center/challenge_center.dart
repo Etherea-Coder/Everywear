@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
-import '../../services/style_service.dart';
+import '../../services/challenge_service.dart';
 import './widgets/featured_challenge_banner_widget.dart';
 import './widgets/challenge_category_card_widget.dart';
 import './widgets/challenge_filter_chip_widget.dart';
@@ -15,7 +15,7 @@ class ChallengeCenter extends StatefulWidget {
 }
 
 class _ChallengeCenterState extends State<ChallengeCenter> {
-  final StyleService _styleService = StyleService();
+  final ChallengeService _challengeService = ChallengeService();
 
   String _selectedFilter = 'all';
   bool _isLoading = true;
@@ -29,10 +29,21 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
 
   Future<void> _loadChallenges() async {
     setState(() => _isLoading = true);
-    final challenges = await _styleService.fetchChallenges();
+    final history = await _challengeService.fetchUserChallengeHistory();
+    final current = await _challengeService.fetchCurrentChallenge();
     if (mounted) {
       setState(() {
-        _challenges = challenges;
+        _challenges = [
+          if (current != null) current,
+          ...history
+              .where((h) => h['challenge_id'] != current?['id'])
+              .map((h) => {
+                    ...Map<String, dynamic>.from(h['challenges'] as Map),
+                    'is_joined': true,
+                    'progress': h['progress'] ?? 0,
+                  })
+              .toList(),
+        ];
         _isLoading = false;
       });
     }
@@ -68,7 +79,7 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
   }
 
   Future<void> _acceptChallenge(String challengeId) async {
-    final success = await _styleService.joinChallenge(challengeId);
+    final success = await _challengeService.joinChallenge(challengeId);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

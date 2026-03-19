@@ -4,9 +4,9 @@ import 'package:sizer/sizer.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../routes/app_routes.dart';
-import '../../services/progress_service.dart';
 import './widgets/streak_hero_widget.dart';
 import './widgets/active_challenge_card_widget.dart';
+import '../../services/challenge_service.dart';
 
 class PersonalProgressDashboard extends StatefulWidget {
   const PersonalProgressDashboard({Key? key}) : super(key: key);
@@ -17,7 +17,7 @@ class PersonalProgressDashboard extends StatefulWidget {
 }
 
 class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
-  final ProgressService _progressService = ProgressService();
+  final ChallengeService _challengeService = ChallengeService();
 
   bool _isLoading = true;
 
@@ -32,27 +32,45 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
     'purchasesThisMonth': 0,
   };
 
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
+@override
+void initState() {
+  super.initState();
+  _loadActiveChallenges();
+}
+
+  Future<void> _loadActiveChallenges() async {
+    final current = await _challengeService.fetchCurrentChallenge();
+    if (mounted) {
+      setState(() {
+        if (current != null && current['is_joined'] == true) {
+          final progress = current['progress'] as int? ?? 0;
+          final goal = current['goal'] as int? ?? 1;
+          _activeChallenges = [
+            {
+              'id': current['id'],
+              'title': current['title'],
+              'description': current['description'],
+              'type': 'weekly',
+              'progress': goal > 0 ? progress / goal : 0.0,
+              'currentValue': progress,
+              'targetValue': goal,
+              'points': 75,
+              'icon': 'flag',
+              'dueDate': DateTime.now().add(
+                Duration(days: 7 - DateTime.now().weekday),
+              ),
+            }
+          ];
+        }
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final results = await Future.wait([
-      _progressService.fetchStreakData(),
-      _progressService.fetchActiveChallenges(),
-      _progressService.fetchPersonalStats(),
-    ]);
-    if (mounted) {
-      setState(() {
-        _streakData = results[0] as Map<String, int>;
-        _activeChallenges = results[1] as List<Map<String, dynamic>>;
-        _stats = results[2] as Map<String, dynamic>;
-        _isLoading = false;
-      });
-    }
+    await _loadActiveChallenges();
+    setState(() => _isLoading = false);
   }
 
   void _navigateToChallengeCenter() {
@@ -100,42 +118,45 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
               onRefresh: _loadData,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeroCard(theme, loc),
-                    SizedBox(height: 2.h),
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeroCard(theme, loc),
+                      SizedBox(height: 2.h),
 
-                    StreakHeroWidget(
-                      currentStreak: _streakData['current'] ?? 0,
-                      longestStreak: _streakData['longest'] ?? 0,
-                      weeklyProgress: _weeklyProgress,
-                      motivationalMessage: _motivationalMessage(loc),
-                      totalPoints: 0, // no points table yet
-                    ),
-                    SizedBox(height: 2.5.h),
+                      StreakHeroWidget(
+                        currentStreak: _streakData['current'] ?? 0,
+                        longestStreak: _streakData['longest'] ?? 0,
+                        weeklyProgress: _weeklyProgress,
+                        motivationalMessage: _motivationalMessage(loc),
+                        totalPoints: 0, // no points table yet
+                      ),
+                      SizedBox(height: 2.5.h),
 
-                    _buildSectionHeader(
-                      context,
-                      title: loc.translate('active_challenges'),
-                      actionLabel: loc.translate('view_all'),
-                      onTap: _navigateToChallengeCenter,
-                    ),
-                    SizedBox(height: 1.h),
-                    _buildChallengesSection(theme, loc),
-                    SizedBox(height: 3.h),
+                      _buildSectionHeader(
+                        context,
+                        title: loc.translate('active_challenges'),
+                        actionLabel: loc.translate('view_all'),
+                        onTap: _navigateToChallengeCenter,
+                      ),
+                      SizedBox(height: 1.h),
+                      _buildChallengesSection(theme, loc),
+                      SizedBox(height: 3.h),
 
-                    _buildSectionHeader(
-                      context,
-                      title: loc.translate('your_statistics'),
-                    ),
-                    SizedBox(height: 1.h),
-                    _buildStatsSection(theme, loc),
-                    SizedBox(height: 3.h),
+                      _buildSectionHeader(
+                        context,
+                        title: loc.translate('your_statistics'),
+                      ),
+                      SizedBox(height: 1.h),
+                      _buildStatsSection(theme, loc),
+                      SizedBox(height: 3.h),
 
-                    _buildChallengeGalleryCard(theme, loc),
-                    SizedBox(height: 3.h),
-                  ],
+                      _buildChallengeGalleryCard(theme, loc),
+                      SizedBox(height: 4.h),
+                    ],
+                  ),
                 ),
               ),
             ),
