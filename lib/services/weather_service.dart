@@ -10,9 +10,9 @@ class WeatherService {
   static const String _geocodingUrl = 'https://nominatim.openstreetmap.org/reverse';
 
   // Default fallback coordinates (San Francisco)
-  double _latitude = 37.7749;
-  double _longitude = -122.4194;
-  String _locationName = 'San Francisco, CA';
+  double? _latitude;
+  double? _longitude;
+  String _locationName = '';
   bool _isUsingDeviceLocation = true;
 
   /// Get current location name
@@ -148,7 +148,7 @@ class WeatherService {
       _isUsingDeviceLocation = true;
       
       // Get actual city name via reverse geocoding
-      _locationName = await _getLocationNameFromCoordinates(_latitude, _longitude);
+      _locationName = await _getLocationNameFromCoordinates(_latitude!, _longitude!);
     } else {
       // Location unavailable - return error state
       return {
@@ -163,6 +163,8 @@ class WeatherService {
         'error': true,
       };
     }
+
+    if (_latitude == null || _longitude == null) return _errorState('Location unavailable');
 
     try {
       final uri = Uri.parse(
@@ -325,6 +327,8 @@ class WeatherService {
       _locationName = displayName;
       _isUsingDeviceLocation = false;
       _savedCity = city;
+
+      if (_latitude == null || _longitude == null) return _errorState('City not found');
 
       final weatherUri = Uri.parse(
         '$_baseUrl?latitude=$_latitude&longitude=$_longitude&current=temperature_2m,weather_code,is_day&temperature_unit=celsius',

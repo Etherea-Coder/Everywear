@@ -277,6 +277,8 @@ class AppLocalizations {
   String get thisMonth => translate('this_month');
   String get rating => translate('rating');
   String get confirm => translate('confirm');
+  String get noItemsInCategory => translate('noItemsInCategory');
+  String get addItemToWardrobe => translate('addItemToWardrobe');
 
   // Smart Suggestions
   String get styleTitle => translate('style_title');
@@ -286,6 +288,7 @@ class AppLocalizations {
   String get removeEventQuestion => translate('remove_event_question');
   String get styleCoach => translate('style_coach');
   String get orPickATopic => translate('or_pick_a_topic');
+  String get coachFallbackTip => translate('coachFallbackTip');
 
   // Purchase Tracking
   String get monthlyBudget => translate('monthly_budget');

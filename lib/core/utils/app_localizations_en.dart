@@ -663,6 +663,8 @@ const Map<String, String> appLocalizationsEn = {
   'outfits_label': 'Outfits',
   'items_label': 'Items',
   'top_label': 'Top',
+  'noItemsInCategory': 'No items in your wardrobe for this slot yet.',
+  'addItemToWardrobe': 'Add an item',
 
   // Smart Suggestions
   'style_title': 'Style',
@@ -684,6 +686,7 @@ const Map<String, String> appLocalizationsEn = {
   'profile_bold': 'Bold & Trendy',
   'profile_active': 'Active & Sporty',
   'profile_minimalist': 'Minimalist',
+  'coachFallbackTip': 'Try combining a familiar piece with something you wear less often this week.',
 
   // Purchase Tracking
   'monthly_budget': 'Monthly Budget',
@@ -1876,7 +1879,6 @@ const Map<String, String> appLocalizationsEn = {
   'correct_true': 'Correct',
   'wrong': 'Wrong',
   'false': 'False',
-  'fake': 'Fake',
   'fictitious': 'Fictitious',
   'fictional': 'Fictional',
   'imaginary': 'Imaginary',
@@ -2692,7 +2694,6 @@ const Map<String, String> appLocalizationsEn = {
   'correct_true_impact': 'Correct',
   'wrong_impact': 'Wrong',
   'false_impact': 'False',
-  'fake_impact': 'Fake',
   'fictitious_impact': 'Fictitious',
   'fictional_impact': 'Fictional',
   'imaginary_impact': 'Imaginary',

@@ -249,7 +249,7 @@ class StyleService {
     }
   }
   // ── COACH ───────────────────────────────────────────────
-  Future<String> fetchPassiveCoachTip({
+  Future<String?> fetchPassiveCoachTip({
     required Map<String, dynamic> insights,
     Map<String, dynamic>? quizResult,
   }) async {
@@ -274,12 +274,12 @@ class StyleService {
       );
 
       if (response.data != null && response.data['success'] == true) {
-        return response.data['tip'] as String? ?? _localPassiveTip(insights, quizResult);
+        return response.data['tip'] as String?;
       }
-      return _localPassiveTip(insights, quizResult);
+      return null;
     } catch (e) {
       debugPrint('Coach passive tip error: $e');
-      return _localPassiveTip(insights, quizResult);
+      return null;
     }
   }
 
@@ -372,15 +372,5 @@ class StyleService {
     final distStr = dist.entries.map((e) => '${e.key}: ${e.value}').join(', ');
     return 'Total: $total items. Distribution: $distStr. Top category: $topCat. Top occasion: $topOcc.';
   }
-
-  String _localPassiveTip(Map<String, dynamic> insights, Map<String, dynamic>? quiz) {
-    final profile = (quiz?['style_profile'] ?? '').toString().toLowerCase();
-    final topCat = insights['topCategory'] ?? 'your wardrobe';
-    if (profile.contains('classic')) return 'Your style leans polished and timeless. Try one softer texture this week to add depth without losing elegance.';
-    if (profile.contains('bold')) return 'You enjoy expressive style. Balance one statement piece with a simpler base to make it stand out even more.';
-    if (profile.contains('sport')) return 'Your style is practical. Try elevating one look with a more structured layer for a sharper finish.';
-    if (profile.contains('minimal')) return 'Your style is clean and intentional. Focus on contrast this week with one richer tone or texture.';
-    return 'You have a strong base in $topCat. Try combining a familiar piece with something you wear less often this week.';
-  }
-
+ 
 }

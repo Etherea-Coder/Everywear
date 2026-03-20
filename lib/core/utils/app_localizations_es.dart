@@ -124,6 +124,7 @@ const Map<String, String> appLocalizationsEs = {
   'daily_log': 'Registro diario',
   'insights': 'Perspectivas',
   'your_style_profile': 'Tu Perfil de Estilo',
+  'coachFallbackTip': 'Prueba combinar una prenda familiar con algo que uses con menos frecuencia esta semana.',
 
   // Language names
   'english': 'Inglés',
@@ -302,7 +303,7 @@ const Map<String, String> appLocalizationsEs = {
   'faq_q10': '¿Cómo puedo obtener mejores sugerencias?',
   'faq_a10': 'Añade más artículos a tu armario, completa tu cuestionario de estilo, registra atuendos regularmente y usa las opciones de ocasión y ambiente. Esto da a la aplicación más contexto para producir sugerencias que se sientan más personales.',
 
-    // SEND FEEDBACK
+  // SEND FEEDBACK
   'feedback_hero_title': 'Nos encantaría escucharte',
   'feedback_hero_subtitle': 'Tus ideas, reportes de errores y reflexiones ayudan a formar Everywear en un estudio de armario más reflexivo.',
   'feedback_type_section_title': '¿Qué te gustaría compartir?',
@@ -663,6 +664,8 @@ const Map<String, String> appLocalizationsEs = {
   'discard': 'Descartar',
   'edit_item': 'Editar artículo',
   'changes': 'Cambios',
+  'noItemsInCategory': 'No hay artículos en esta categoría todavía.',
+  'addItemToWardrobe': 'Añadir un artículo',
 
   // Category names
   'tops': 'Tops',

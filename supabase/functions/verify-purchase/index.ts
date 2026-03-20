@@ -1,4 +1,3 @@
-// @ts-nocheck - Deno types not available in VSCode TypeScript server
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -71,7 +70,10 @@ serve(async (req) => {
 
     // Check if user has an active entitlement (v2 API structure)
     const entitlements = rcData?.subscriber?.entitlements ?? {}
-    const entitlement = Object.values(entitlements)[0] as any
+    const entitlement = Object.values(entitlements)[0] as {
+      is_period_type?: string
+      expires_date?: string | null
+    } | undefined
     const isPremium = entitlement?.is_period_type !== 'trial' && 
                       (entitlement?.expires_date === null || 
                        entitlement?.expires_date === undefined ||

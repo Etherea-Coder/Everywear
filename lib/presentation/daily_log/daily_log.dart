@@ -74,33 +74,13 @@ class _DailyLogState extends State<DailyLog> {
   ];
 
   Map<String, dynamic> _suggestedOutfit = {
-    'title': 'Today\'s Style Idea',
-    'description': 'A simple look to get you started today.',
-    'anchor': {
-      'slot': 'anchor',
-      'name': 'Denim Jacket',
-      'imageUrl': '',
-      'category': 'Outerwear',
-    },
+    'title': '',
+    'description': '',
+    'anchor': {'slot': 'anchor', 'name': '', 'imageUrl': '', 'category': ''},
     'items': [
-      {
-        'slot': 'top',
-        'name': 'White Tee',
-        'imageUrl': '',
-        'category': 'Top',
-      },
-      {
-        'slot': 'bottom',
-        'name': 'Black Jeans',
-        'imageUrl': '',
-        'category': 'Bottom',
-      },
-      {
-        'slot': 'shoes',
-        'name': 'Sneakers',
-        'imageUrl': '',
-        'category': 'Shoes',
-      },
+      {'slot': 'top',    'name': '', 'imageUrl': '', 'category': ''},
+      {'slot': 'bottom', 'name': '', 'imageUrl': '', 'category': ''},
+      {'slot': 'shoes',  'name': '', 'imageUrl': '', 'category': ''},
     ],
   };
 
@@ -286,7 +266,7 @@ class _DailyLogState extends State<DailyLog> {
 
   /// Overlays wardrobe-resolved (or previously loaded) imageUrls onto
   /// [newOutfit], so images never regress to empty strings on refresh.
-  Map<String, dynamic> _mergeImageUrls(
+    Map<String, dynamic> _mergeImageUrls(
     Map<String, dynamic> newOutfit,
     Map<String, dynamic> prevOutfit,
   ) {
@@ -1086,45 +1066,75 @@ class _DailyLogState extends State<DailyLog> {
               ),
             ),
             SizedBox(height: 2.h),
-            ...alternatives.map((item) {
-              return ListTile(
-                contentPadding: EdgeInsets.symmetric(vertical: 0.5.h),
-                leading: Container(
-                  width: 13.w,
-                  height: 13.w,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
+            if (alternatives.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.h),
+                child: Column(
+                  children: [
+                    Icon(Icons.checkroom_outlined,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+                    SizedBox(height: 2.h),
+                    Text(
+                      loc.noItemsInCategory,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 1.h),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, AppRoutes.addClothingItem);
+                      },
+                      icon: const Icon(Icons.add),
+                      label: Text(loc.addItemToWardrobe),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...alternatives.map((item) {
+                return ListTile(
+                  contentPadding: EdgeInsets.symmetric(vertical: 0.5.h),
+                  leading: Container(
+                    width: 13.w,
+                    height: 13.w,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.checkroom),
                   ),
-                  child: const Icon(Icons.checkroom),
-                ),
-                title: Text(
-                  item['name'] as String,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
+                  title: Text(
+                    item['name'] as String,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                subtitle: Text(
-                  item['category'] as String? ?? '',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  subtitle: Text(
+                    item['category'] as String? ?? '',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                trailing: Icon(
-                  Icons.swap_horiz,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _swapSuggestionItem(slot, item);
-                },
-              );
-            }).toList(),
+                  trailing: Icon(
+                    Icons.swap_horiz,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _swapSuggestionItem(slot, item);
+                  },
+                );
+              }).toList(),
             SizedBox(height: 1.h),
           ],
         ),
@@ -1169,125 +1179,11 @@ class _DailyLogState extends State<DailyLog> {
     if (alternatives.isNotEmpty) return alternatives;
 
     // Only fall back to dummy data if the wardrobe has no matching items at all
-    return _getFallbackAlternatives(slot);
+    return getFallbackAlternatives(slot);
   }
 
-  List<Map<String, dynamic>> _getFallbackAlternatives(String slot) {
-    switch (slot) {
-      case 'anchor':
-        return [
-          {
-            'slot': 'anchor',
-            'name': loc.itemTailoredOvershirt,
-            'imageUrl': '',
-            'category': loc.catAnchor,
-          },
-          {
-            'slot': 'anchor',
-            'name': loc.itemLightCardigan,
-            'imageUrl': '',
-            'category': loc.catAnchor,
-          },
-          {
-            'slot': 'anchor',
-            'name': loc.itemStructuredBlazer,
-            'imageUrl': '',
-            'category': loc.catAnchor,
-          },
-          {
-            'slot': 'anchor',
-            'name': loc.itemDenimJacket,
-            'imageUrl': '',
-            'category': loc.catAnchor,
-          },
-        ];
-
-      case 'top':
-        return [
-          {
-            'slot': 'top',
-            'name': loc.itemWhiteShirt,
-            'imageUrl': '',
-            'category': loc.catTop,
-          },
-          {
-            'slot': 'top',
-            'name': loc.itemCleanNeutralTop,
-            'imageUrl': '',
-            'category': loc.catTop,
-          },
-          {
-            'slot': 'top',
-            'name': loc.itemBlackTee,
-            'imageUrl': '',
-            'category': loc.catTop,
-          },
-          {
-            'slot': 'top',
-            'name': loc.itemSoftBlouse,
-            'imageUrl': '',
-            'category': loc.catTop,
-          },
-        ];
-
-      case 'bottom':
-        return [
-          {
-            'slot': 'bottom',
-            'name': loc.itemDarkTrousers,
-            'imageUrl': '',
-            'category': loc.catBottom,
-          },
-          {
-            'slot': 'bottom',
-            'name': loc.itemStraightJeans,
-            'imageUrl': '',
-            'category': loc.catBottom,
-          },
-          {
-            'slot': 'bottom',
-            'name': loc.itemRelaxedPants,
-            'imageUrl': '',
-            'category': loc.catBottom,
-          },
-          {
-            'slot': 'bottom',
-            'name': loc.itemTailoredShorts,
-            'imageUrl': '',
-            'category': loc.catBottom,
-          },
-        ];
-      case 'shoes':
-        return [
-          {
-            'slot': 'shoes',
-            'name': loc.itemWhiteSneakers,
-            'imageUrl': '',
-            'category': loc.catShoes,
-          },
-          {
-            'slot': 'shoes',
-            'name': loc.itemLeatherLoafers,
-            'imageUrl': '',
-            'category': loc.catShoes,
-          },
-          {
-            'slot': 'shoes',
-            'name': loc.itemChelseaBoots,
-            'imageUrl': '',
-            'category': loc.catShoes,
-          },
-          {
-            'slot': 'shoes',
-            'name': loc.itemMinimalTrainers,
-            'imageUrl': '',
-            'category': loc.catShoes,
-          },
-        ];
-
-      default:
-        return [];
-    }
+  List<Map<String, dynamic>> getFallbackAlternatives(String slot) {
+    return []; // Return empty — we show an empty state in the sheet instead
   }
 
   String _getLocalizedSlotTitle(AppLocalizations loc, String slot) {

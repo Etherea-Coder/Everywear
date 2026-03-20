@@ -60,7 +60,7 @@ class ExportService {
     final results = await Future.wait([
       _client
           .from('wardrobe_items')
-          .select('name, category, color, brand, size, purchase_price, notes')
+          .select('name, category, semantic_label, brand, purchase_price, notes')
           .eq('user_id', userId)
           .order('category'),
       _client
@@ -102,14 +102,13 @@ class ExportService {
 
     // Wardrobe items
     buffer.writeln('=== WARDROBE ITEMS ===');
-    buffer.writeln('Name,Category,Color,Brand,Size,Purchase Price,Notes');
+    buffer.writeln('Name,Category,Style,Brand,Purchase Price,Notes');
     for (final item in data['wardrobe'] as List<Map<String, dynamic>>) {
       buffer.writeln([
         _csvCell(item['name']),
         _csvCell(item['category']),
-        _csvCell(item['color']),
+        _csvCell(item['semantic_label']),  // ✅
         _csvCell(item['brand']),
-        _csvCell(item['size']),
         _csvCell(item['purchase_price']),
         _csvCell(item['notes']),
       ].join(','));
@@ -286,21 +285,14 @@ class ExportService {
             pw.Text('Wardrobe Items', style: sectionStyle),
             pw.SizedBox(height: 8),
             pw.TableHelper.fromTextArray(
-              headers: [
-                'Name', 'Category', 'Color', 'Brand', 'Size', 'Price'
-              ],
-              data: wardrobe
-                  .map((i) => [
-                        i['name'] ?? '',
-                        i['category'] ?? '',
-                        i['color'] ?? '',
-                        i['brand'] ?? '',
-                        i['size'] ?? '',
-                        i['purchase_price'] != null
-                            ? '${i['purchase_price']}'
-                            : '',
-                      ])
-                  .toList(),
+              headers: ['Name', 'Category', 'Style', 'Brand', 'Price'],
+              data: wardrobe.map((i) => [
+                i['name'] ?? '',
+                i['category'] ?? '',
+                i['semantic_label'] ?? '',   // ✅
+                i['brand'] ?? '',
+                i['purchase_price'] != null ? '${i['purchase_price']}' : '',
+              ]).toList(),
               headerStyle: headerStyle,
               headerDecoration:
                   pw.BoxDecoration(color: accentColor),

@@ -670,6 +670,9 @@ const Map<String, String> appLocalizationsFr = {
   'discard': 'Abandonner',
   'edit_item': 'Modifier l\'article',
   'changes': 'Modifications',
+  'noItemsInCategory': 'Pas encore d\'articles dans cette catégorie',
+  'addItemToWardrobe': 'Ajouter un vêtement',
+  'coachFallbackTip': 'Essayez d\'associer une pièce familière avec quelque chose que vous portez moins souvent cette semaine.',
 
   // Category names
   'tops': 'Hauts',
