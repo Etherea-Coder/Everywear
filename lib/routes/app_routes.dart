@@ -88,7 +88,6 @@ class AppRoutes {
          
   // ============================================
   // PROFILE ACTIONS
-  // These need their own screens — flagged as TODO
   // ============================================
   static const String editProfile    = '/edit-profile';           
   static const String changePassword = '/change-password';

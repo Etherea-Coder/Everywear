@@ -98,7 +98,7 @@ class VisionEngineServiceMobile implements VisionEngineService {
       }
       return null;
     } catch (e) {
-      debugPrint('Gemini analysis failed: $e');
+      if (kDebugMode) debugPrint('Gemini analysis failed: $e');
       return null;
     }
   }

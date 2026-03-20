@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,17 +34,17 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
     return data;
   } catch (e) {
     // Profile may not exist yet, return null
-    debugPrint('Profile not found for user ${user.id}: $e');
+    if (kDebugMode) debugPrint('Profile not found for user ${user.id}: $e');
     return null;
   }
 });
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!SupabaseService.isInitialized) {
-    debugPrint('⚠️ authStateProvider: Supabase not initialized, returning empty stream');
+    if (kDebugMode) debugPrint('⚠️ authStateProvider: Supabase not initialized, returning empty stream');
     return const Stream.empty();
   }
-  debugPrint('✅ authStateProvider: Listening to auth state changes');
+  if (kDebugMode) debugPrint('✅ authStateProvider: Listening to auth state changes');
   // Return the stream directly — NO secondary .listen() call
   return SupabaseService.instance.client.auth.onAuthStateChange;
 });
@@ -69,7 +70,7 @@ class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
         onTimeout: () => [],
       );
     } catch (e) {
-      debugPrint('WardrobeItemsNotifier build error: $e');
+      if (kDebugMode) debugPrint('WardrobeItemsNotifier build error: $e');
       return []; // Return empty list on error to prevent white screens
     }
   }
@@ -84,7 +85,7 @@ class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
           onTimeout: () => [],
         );
       } catch (e) {
-        debugPrint('WardrobeItemsNotifier refresh error: $e');
+        if (kDebugMode) debugPrint('WardrobeItemsNotifier refresh error: $e');
         return []; // Return empty list on error
       }
     });
@@ -101,7 +102,7 @@ class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
         await refresh();
       }
     } catch (e) {
-      debugPrint('WardrobeItemsNotifier addItem error: $e');
+      if (kDebugMode) debugPrint('WardrobeItemsNotifier addItem error: $e');
     }
   }
 
@@ -110,11 +111,11 @@ class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
       final repository = ref.read(wardrobeRepositoryProvider);
       await repository.deleteItem(itemId).timeout(
         const Duration(seconds: 8),
-        onTimeout: () => debugPrint('Delete timeout for item: $itemId'),
+        onTimeout: () { if (kDebugMode) debugPrint('Delete timeout for item: $itemId'); },
       );
       await refresh();
     } catch (e) {
-      debugPrint('WardrobeItemsNotifier deleteItem error: $e');
+      if (kDebugMode) debugPrint('WardrobeItemsNotifier deleteItem error: $e');
     }
   }
 }

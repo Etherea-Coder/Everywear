@@ -16,7 +16,7 @@ class PurchaseService {
       if (endDate != null) query = query.lte('purchase_date', endDate.toIso8601String());
       final response = await query.order('purchase_date', ascending: false);
       return List<Map<String, dynamic>>.from(response);
-    } catch (e) { debugPrint('Error fetching purchases: $e'); return []; }
+    } catch (e) { if (kDebugMode) debugPrint('Error fetching purchases: $e'); return []; }
   }
 
   Future<Map<String, dynamic>> fetchMonthlyStats(DateTime month) async {
@@ -29,7 +29,7 @@ class PurchaseService {
       final purchases = List<Map<String, dynamic>>.from(response);
       final totalSpent = purchases.fold(0.0, (sum, p) => sum + (p['price'] as num).toDouble());
       return {'totalSpent': totalSpent, 'purchaseCount': purchases.length};
-    } catch (e) { debugPrint('Error fetching monthly stats: $e'); return {'totalSpent': 0.0, 'purchaseCount': 0}; }
+    } catch (e) { if (kDebugMode) debugPrint('Error fetching monthly stats: $e'); return {'totalSpent': 0.0, 'purchaseCount': 0}; }
   }
 
   Future<List<Map<String, dynamic>>> fetchMonthlySpending() async {
@@ -45,7 +45,7 @@ class PurchaseService {
         monthlyTotals[key] = (monthlyTotals[key] ?? 0) + (purchase['price'] as num).toDouble();
       }
       return monthlyTotals.entries.map((e) => {'month': e.key, 'total': e.value}).toList();
-    } catch (e) { debugPrint('Error fetching monthly spending: $e'); return []; }
+    } catch (e) { if (kDebugMode) debugPrint('Error fetching monthly spending: $e'); return []; }
   }
 
   Future<Map<String, dynamic>?> addPurchase({required String name, required double price, required DateTime purchaseDate, String? brand, String? category, String? imageUrl, String? notes, String? wardrobeItemId}) async {
@@ -59,14 +59,14 @@ class PurchaseService {
         'notes': notes, 'wardrobe_item_id': wardrobeItemId,
       }).select().single();
       return Map<String, dynamic>.from(response);
-    } catch (e) { debugPrint('Error adding purchase: $e'); return null; }
+    } catch (e) { if (kDebugMode) debugPrint('Error adding purchase: $e'); return null; }
   }
 
   Future<bool> deletePurchase(String purchaseId) async {
     try {
       await _client.from('purchases').delete().eq('id', purchaseId);
       return true;
-    } catch (e) { debugPrint('Error deleting purchase: $e'); return false; }
+    } catch (e) { if (kDebugMode) debugPrint('Error deleting purchase: $e'); return false; }
   }
 
   Future<List<String>> fetchBrands() async {
@@ -75,7 +75,7 @@ class PurchaseService {
       if (userId == null) return [];
       final response = await _client.from('purchases').select('brand').eq('user_id', userId).not('brand', 'is', null);
       return List<Map<String, dynamic>>.from(response).map((p) => p['brand'] as String).toSet().toList();
-    } catch (e) { debugPrint('Error fetching brands: $e'); return []; }
+    } catch (e) { if (kDebugMode) debugPrint('Error fetching brands: $e'); return []; }
   }
 
   double calculateCostPerWear(double price, int wearCount) {
@@ -95,7 +95,7 @@ class PurchaseService {
       if (response == null) return {'monthly_budget': 0.0, 'currency': 'EUR'};
       return Map<String, dynamic>.from(response);
     } catch (e) {
-      debugPrint('Error fetching budget: $e');
+      if (kDebugMode) debugPrint('Error fetching budget: $e');
       return {'monthly_budget': 0.0, 'currency': 'EUR'};
     }
   }
@@ -115,7 +115,7 @@ class PurchaseService {
       });
       return true;
     } catch (e) {
-      debugPrint('Error saving budget: $e');
+      if (kDebugMode) debugPrint('Error saving budget: $e');
       return false;
     }
   }
@@ -133,7 +133,7 @@ class PurchaseService {
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      debugPrint('Error fetching wishlist: $e');
+      if (kDebugMode) debugPrint('Error fetching wishlist: $e');
       return [];
     }
   }
@@ -164,7 +164,7 @@ class PurchaseService {
       }).select().single();
       return Map<String, dynamic>.from(response);
     } catch (e) {
-      debugPrint('Error adding wishlist item: $e');
+      if (kDebugMode) debugPrint('Error adding wishlist item: $e');
       return null;
     }
   }
@@ -174,7 +174,7 @@ class PurchaseService {
       await _client.from('wishlist').delete().eq('id', id);
       return true;
     } catch (e) {
-      debugPrint('Error deleting wishlist item: $e');
+      if (kDebugMode) debugPrint('Error deleting wishlist item: $e');
       return false;
     }
   }
@@ -187,7 +187,7 @@ class PurchaseService {
       }).eq('id', id);
       return true;
     } catch (e) {
-      debugPrint('Error marking wishlist item purchased: $e');
+      if (kDebugMode) debugPrint('Error marking wishlist item purchased: $e');
       return false;
     }
   }
@@ -199,7 +199,7 @@ class PurchaseService {
       }).eq('id', id);
       return true;
     } catch (e) {
-      debugPrint('Error updating wishlist price: $e');
+      if (kDebugMode) debugPrint('Error updating wishlist price: $e');
       return false;
     }
   }
@@ -248,7 +248,7 @@ class PurchaseService {
       result.sort((a, b) => (a['cpw'] as double).compareTo(b['cpw'] as double));
       return result;
     } catch (e) {
-      debugPrint('Error fetching CPW leaderboard: $e');
+      if (kDebugMode) debugPrint('Error fetching CPW leaderboard: $e');
       return [];
     }
   }
@@ -272,7 +272,7 @@ class PurchaseService {
       }
       return result;
     } catch (e) {
-      debugPrint('Error fetching category spending: $e');
+      if (kDebugMode) debugPrint('Error fetching category spending: $e');
       return {};
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -28,7 +29,7 @@ class ProfileService {
       });
       return true;
     } catch (e) {
-      debugPrint('Feedback error: $e');
+      if (kDebugMode) debugPrint('Feedback error: $e');
       return false;
     }
   }
@@ -43,7 +44,7 @@ class ProfileService {
       );
       return null; // null = success
     } catch (e) {
-      debugPrint('Change password error: $e');
+      if (kDebugMode) debugPrint('Change password error: $e');
       return e.toString();
     }
   }
@@ -53,13 +54,13 @@ class ProfileService {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
-        debugPrint('❌ Upload photo error: No user logged in');
+        if (kDebugMode) debugPrint('❌ Upload photo error: No user logged in');
         return null;
       }
 
       final file = File(filePath);
       if (!await file.exists()) {
-        debugPrint('❌ Upload photo error: File does not exist at $filePath');
+        if (kDebugMode) debugPrint('❌ Upload photo error: File does not exist at $filePath');
         return null;
       }
 
@@ -90,8 +91,8 @@ class ProfileService {
       // This matches the RLS policy: (storage.foldername(name))[1] = userId
       final storagePath = '$userId/avatar.$ext';
 
-      debugPrint('📤 Uploading to avatars bucket: $storagePath');
-      debugPrint('📤 Content type: $contentType');
+      if (kDebugMode) debugPrint('📤 Uploading to avatars bucket: $storagePath');
+      if (kDebugMode) debugPrint('📤 Content type: $contentType');
 
       // Upload to avatars bucket
       await _client.storage.from('avatars').upload(
@@ -108,7 +109,7 @@ class ProfileService {
           .from('avatars')
           .getPublicUrl(storagePath);
 
-      debugPrint('✅ Upload successful! URL: $publicUrl');
+      if (kDebugMode) debugPrint('✅ Upload successful! URL: $publicUrl');
 
       // Save to user metadata
       await _client.auth.updateUser(
@@ -122,18 +123,18 @@ class ProfileService {
           'avatar_url': publicUrl,
           'updated_at': DateTime.now().toIso8601String(),
         });
-        debugPrint('✅ Updated user_profiles table');
+        if (kDebugMode) debugPrint('✅ Updated user_profiles table');
       } catch (e) {
         // Non-fatal: table might not exist or have different columns
-        debugPrint('⚠️ Could not update user_profiles table: $e');
+        if (kDebugMode) debugPrint('⚠️ Could not update user_profiles table: $e');
       }
 
       return publicUrl;
     } on StorageException catch (e) {
-      debugPrint('❌ Storage error: ${e.message}');
+      if (kDebugMode) debugPrint('❌ Storage error: ${e.message}');
       return null;
     } catch (e) {
-      debugPrint('❌ Upload photo error: $e');
+      if (kDebugMode) debugPrint('❌ Upload photo error: $e');
       return null;
     }
   }
@@ -203,7 +204,7 @@ class ProfileService {
 
       return file.path;
     } catch (e) {
-      debugPrint('Export CSV error: $e');
+      if (kDebugMode) debugPrint('Export CSV error: $e');
       return null;
     }
   }

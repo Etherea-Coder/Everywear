@@ -27,7 +27,7 @@ class WardrobeService {
           rethrow;
         }
         
-        debugPrint('Operation failed, retrying in ${delay.inSeconds}s... (attempt $attempts/$maxRetries)');
+        if (kDebugMode) debugPrint('Operation failed, retrying in ${delay.inSeconds}s... (attempt $attempts/$maxRetries)');
         await Future.delayed(delay);
         delay *= 2; // Exponential backoff
       }
@@ -70,7 +70,7 @@ class WardrobeService {
     } catch (error) {
       // Return empty list on any error (including Supabase not initialized)
       // This prevents white screen crashes
-      debugPrint('Wardrobe fetch error: $error');
+      if (kDebugMode) debugPrint('Wardrobe fetch error: $error');
       return [];
     }
   }
@@ -288,7 +288,7 @@ class WardrobeService {
         'category_counts': categoryCounts,
       };
     } catch (error) {
-      debugPrint('Error getting wardrobe statistics: $error');
+      if (kDebugMode) debugPrint('Error getting wardrobe statistics: $error');
       return _emptyStats();
     }
   }
@@ -360,7 +360,7 @@ class WardrobeService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (error) {
-      debugPrint('Error fetching outfit history: $error');
+      if (kDebugMode) debugPrint('Error fetching outfit history: $error');
       return [];
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,7 +150,7 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
     );
 
-    debugPrint('✅ Morning notification scheduled for 08:00 daily');
+    if (kDebugMode) debugPrint('✅ Morning notification scheduled for 08:00 daily');
   }
 
   /// Call on app launch to reschedule if preference is on

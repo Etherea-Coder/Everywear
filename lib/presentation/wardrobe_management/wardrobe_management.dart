@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -80,7 +81,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
         },
       );
     } catch (error) {
-      debugPrint('Failed to setup real-time subscription: $error');
+      if (kDebugMode) debugPrint('Failed to setup real-time subscription: $error');
     }
   }
 

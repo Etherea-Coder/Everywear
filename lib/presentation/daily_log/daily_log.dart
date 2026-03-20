@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
@@ -114,7 +115,7 @@ class _DailyLogState extends State<DailyLog> {
         }
       }
     } catch (e) {
-      debugPrint('⚠️ Display name load failed: $e');
+      if (kDebugMode) debugPrint('⚠️ Display name load failed: $e');
     }
 
     final results = await Future.wait([
@@ -1966,7 +1967,7 @@ class _DailyLogState extends State<DailyLog> {
         );
       }
     } catch (e) {
-      debugPrint('Error saving displayed outfit: $e');
+      if (kDebugMode) debugPrint('Error saving displayed outfit: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

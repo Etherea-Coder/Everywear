@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -440,12 +441,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       // Debug: Log file info
-      debugPrint('Picked file: ${picked.path}');
-      debugPrint('File exists: ${await file.exists()}');
+      if (kDebugMode) debugPrint('Picked file: ${picked.path}');
+      if (kDebugMode) debugPrint('File exists: ${await file.exists()}');
 
       final url = await _profileService.uploadProfilePhoto(picked.path);
 
-      debugPrint('Upload returned URL: $url');
+      if (kDebugMode) debugPrint('Upload returned URL: $url');
 
       if (url != null && mounted) {
         setState(() => _avatarUrl = url);
@@ -464,7 +465,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } catch (e) {
-      debugPrint('Pick/Upload error: $e');
+      if (kDebugMode) debugPrint('Pick/Upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -142,14 +142,14 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
       try {
         await _cameraController!.setFocusMode(FocusMode.auto);
       } catch (e) {
-        debugPrint('Focus mode not supported: $e');
+        if (kDebugMode) debugPrint('Focus mode not supported: $e');
       }
 
       if (!kIsWeb) {
         try {
           await _cameraController!.setFlashMode(FlashMode.auto);
         } catch (e) {
-          debugPrint('Flash mode not supported: $e');
+          if (kDebugMode) debugPrint('Flash mode not supported: $e');
         }
       }
 
@@ -160,7 +160,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
         });
       }
     } catch (e) {
-      debugPrint('Camera initialization error: $e');
+      if (kDebugMode) debugPrint('Camera initialization error: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -603,7 +603,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
         });
       }
     } catch (e) {
-      debugPrint('Gallery pick error: $e');
+      if (kDebugMode) debugPrint('Gallery pick error: $e');
       if (mounted) {
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(

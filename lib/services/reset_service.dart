@@ -34,9 +34,9 @@ class ResetService {
     for (final step in steps) {
       try {
         await step.action();
-        debugPrint('✅ Reset: cleared ${step.table}');
+        if (kDebugMode) debugPrint('✅ Reset: cleared ${step.table}');
       } catch (e) {
-        debugPrint('❌ Reset failed at ${step.table}: $e');
+        if (kDebugMode) debugPrint('❌ Reset failed at ${step.table}: $e');
         return ResetResult.failure('Failed to clear ${step.table}: $e');
       }
     }

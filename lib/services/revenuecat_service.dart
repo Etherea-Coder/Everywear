@@ -31,7 +31,7 @@ class RevenueCatService {
     try {
       await Purchases.logIn(supabaseUserId);
     } catch (e) {
-      debugPrint('RevenueCat login failed: $e');
+      if (kDebugMode) debugPrint('RevenueCat login failed: $e');
     }
   }
 
@@ -40,7 +40,7 @@ class RevenueCatService {
     try {
       await Purchases.logOut();
     } catch (e) {
-      debugPrint('RevenueCat logout failed: $e');
+      if (kDebugMode) debugPrint('RevenueCat logout failed: $e');
     }
   }
 }

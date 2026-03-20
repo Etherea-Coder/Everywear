@@ -58,7 +58,7 @@ class ChallengeService {
 
       return challenge;
     } catch (e) {
-      debugPrint('ChallengeService.fetchCurrentChallenge error: $e');
+      if (kDebugMode) debugPrint('ChallengeService.fetchCurrentChallenge error: $e');
       return null;
     }
   }
@@ -77,7 +77,7 @@ class ChallengeService {
 
       return List<Map<String, dynamic>>.from(rows);
     } catch (e) {
-      debugPrint('ChallengeService.fetchUserChallengeHistory error: $e');
+      if (kDebugMode) debugPrint('ChallengeService.fetchUserChallengeHistory error: $e');
       return [];
     }
   }
@@ -102,7 +102,7 @@ class ChallengeService {
       });
       return true;
     } catch (e) {
-      debugPrint('ChallengeService.joinChallenge error: $e');
+      if (kDebugMode) debugPrint('ChallengeService.joinChallenge error: $e');
       return false;
     }
   }
@@ -145,7 +145,7 @@ class ChallengeService {
         'insight': updatePayload['insight'],
       };
     } catch (e) {
-      debugPrint('ChallengeService.incrementProgress error: $e');
+      if (kDebugMode) debugPrint('ChallengeService.incrementProgress error: $e');
       return {'progress': currentProgress, 'is_complete': false};
     }
   }
@@ -207,7 +207,7 @@ class ChallengeService {
 
       return null;
     } catch (e) {
-      debugPrint('ChallengeService.fetchLongestUnwornItem error: $e');
+      if (kDebugMode) debugPrint('ChallengeService.fetchLongestUnwornItem error: $e');
       return null;
     }
   }

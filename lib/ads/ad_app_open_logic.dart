@@ -50,12 +50,12 @@ class AdAppOpenLogic {
   /// Returns true if ad was shown, false otherwise
   static Future<bool> showAppOpenAd() async {
     if (!_adsEnabled || _isShowing) {
-      debugPrint('📺 App open ad skipped (disabled or already showing)');
+      if (kDebugMode) debugPrint('📺 App open ad skipped (disabled or already showing)');
       return false;
     }
 
     _isShowing = true;
-    debugPrint('📺 Showing app open ad...');
+    if (kDebugMode) debugPrint('📺 Showing app open ad...');
 
     // Call the registered callback
     if (onShowAdRequested != null) {
@@ -65,7 +65,7 @@ class AdAppOpenLogic {
     }
 
     // Placeholder behavior
-    debugPrint('📺 Would show app open ad (placeholder)');
+    if (kDebugMode) debugPrint('📺 Would show app open ad (placeholder)');
     _isShowing = false;
     return false;
   }
@@ -73,7 +73,7 @@ class AdAppOpenLogic {
   /// Called when ad is dismissed
   static void dismissAd() {
     _isShowing = false;
-    debugPrint('📺 App open ad dismissed');
+    if (kDebugMode) debugPrint('📺 App open ad dismissed');
 
     if (onAdDismissed != null) {
       onAdDismissed!();
@@ -84,7 +84,7 @@ class AdAppOpenLogic {
   static void preloadAd() {
     if (!_adsEnabled) return;
 
-    debugPrint('📺 Preloading app open ad...');
+    if (kDebugMode) debugPrint('📺 Preloading app open ad...');
 
     // TODO: When integrating AdMob:
     // AppOpenAd.load(

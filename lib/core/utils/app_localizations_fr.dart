@@ -745,7 +745,21 @@ const Map<String, String> appLocalizationsFr = {
   'q_matters_originality': 'Originalité',
   'q_matters_versatility': 'Polyvalence',
 
-  // ── CHALLENGES ──────────────────────────────────────────────────────────────
+  'stylistIncludesFavorite': 'Inclut votre favori %s',
+  'stylistPerfectTimeToWear': 'Le moment idéal pour porter votre %s',
+  'stylistLightBreathable': 'Léger et respirant pour %s°C',
+  'stylistWarmCozy': 'Chaud et confortable pour %s°C',
+  'stylistProfessional': 'Professionnel et élégant pour le travail',
+  'stylistComfortable': 'Confortable et décontracté pour le quotidien',
+  'stylistAiCurated': 'Combinaison sélectionnée par l\'IA selon votre garde-robe',
+  'stylistLayerOuterwear': 'Superposez votre veste pour ajuster facilement la température',
+  'stylistAddBelt': 'Ajoutez une ceinture pour souligner la taille',
+  'stylistConsiderAccessories': 'Pensez à ajouter une montre ou un bijou discret',
+  'stylistEnsureShoes': 'Veillez à des chaussures soignées et des accessoires minimalistes',
+  'stylistExperimentAccessories': 'Osez les accessoires audacieux',
+  'stylistWearConfidence': 'Portez-le avec confiance et faites-en le vôtre',
+
+  // CHALLENGES
   'challenge_weekly_label': 'Défi de la semaine',
   'challenge_accept': 'Accepter le défi',
   'challenge_log_progress': 'Enregistrer une tenue',

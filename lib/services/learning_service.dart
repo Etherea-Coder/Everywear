@@ -42,7 +42,7 @@ class LearningService {
         };
       }).toList();
     } catch (e) {
-      debugPrint('Error fetching modules: $e');
+      if (kDebugMode) debugPrint('Error fetching modules: $e');
       return [];
     }
   }
@@ -65,7 +65,7 @@ class LearningService {
 
       return true;
     } catch (e) {
-      debugPrint('Error updating module progress: $e');
+      if (kDebugMode) debugPrint('Error updating module progress: $e');
       return false;
     }
   }
@@ -108,7 +108,7 @@ class LearningService {
         'level': level,
       };
     } catch (e) {
-      debugPrint('Error fetching learning stats: $e');
+      if (kDebugMode) debugPrint('Error fetching learning stats: $e');
       return _emptyStats();
     }
   }

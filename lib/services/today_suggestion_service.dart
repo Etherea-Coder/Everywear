@@ -73,7 +73,7 @@ class TodaySuggestionService {
         },
       );
 
-      debugPrint('Today suggestion response: ${response.data}');
+      if (kDebugMode) debugPrint('Today suggestion response: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
         final result = Map<String, dynamic>.from(response.data);
@@ -81,7 +81,7 @@ class TodaySuggestionService {
       }
       return null;
     } catch (e) {
-      debugPrint('Today suggestion error: $e');
+      if (kDebugMode) debugPrint('Today suggestion error: $e');
       return null;
     }
   }

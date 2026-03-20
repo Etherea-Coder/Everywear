@@ -27,10 +27,10 @@ class StorageService {
       );
 
       final publicUrl = _client.storage.from(_bucket).getPublicUrl(fileName);
-      debugPrint('Uploaded image: $publicUrl');
+      if (kDebugMode) debugPrint('Uploaded image: $publicUrl');
       return publicUrl;
     } catch (e) {
-      debugPrint('Error uploading image: $e');
+      if (kDebugMode) debugPrint('Error uploading image: $e');
       return null;
     }
   }
@@ -46,7 +46,7 @@ class StorageService {
       await _client.storage.from(_bucket).remove([filePath]);
       return true;
     } catch (e) {
-      debugPrint('Error deleting image: $e');
+      if (kDebugMode) debugPrint('Error deleting image: $e');
       return false;
     }
   }

@@ -23,7 +23,7 @@ class StyleService {
           .limit(10);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      debugPrint('Error fetching events: $e');
+      if (kDebugMode) debugPrint('Error fetching events: $e');
       return [];
     }
   }
@@ -48,7 +48,7 @@ class StyleService {
       }).select().single();
       return Map<String, dynamic>.from(response);
     } catch (e) {
-      debugPrint('Error adding event: $e');
+      if (kDebugMode) debugPrint('Error adding event: $e');
       return null;
     }
   }
@@ -58,7 +58,7 @@ class StyleService {
       await _client.from('style_events').delete().eq('id', eventId);
       return true;
     } catch (e) {
-      debugPrint('Error deleting event: $e');
+      if (kDebugMode) debugPrint('Error deleting event: $e');
       return false;
     }
   }
@@ -87,7 +87,7 @@ class StyleService {
           .maybeSingle();
       return response;
     } catch (e) {
-      debugPrint('Error updating event: $e');
+      if (kDebugMode) debugPrint('Error updating event: $e');
       return null;
     }
   }
@@ -121,7 +121,7 @@ class StyleService {
         };
       }).toList();
     } catch (e) {
-      debugPrint('Error fetching challenges: $e');
+      if (kDebugMode) debugPrint('Error fetching challenges: $e');
       return [];
     }
   }
@@ -137,7 +137,7 @@ class StyleService {
       });
       return true;
     } catch (e) {
-      debugPrint('Error joining challenge: $e');
+      if (kDebugMode) debugPrint('Error joining challenge: $e');
       return false;
     }
   }
@@ -191,7 +191,7 @@ class StyleService {
         'totalOutfitsLogged': logsList.length,
       };
     } catch (e) {
-      debugPrint('Error fetching insights: $e');
+      if (kDebugMode) debugPrint('Error fetching insights: $e');
       return _emptyInsights();
     }
   }
@@ -218,7 +218,7 @@ class StyleService {
           .maybeSingle();
       return response != null ? Map<String, dynamic>.from(response) : null;
     } catch (e) {
-      debugPrint('Error fetching quiz result: $e');
+      if (kDebugMode) debugPrint('Error fetching quiz result: $e');
       return null;
     }
   }
@@ -244,7 +244,7 @@ class StyleService {
       });
       return true;
     } catch (e) {
-      debugPrint('Error saving quiz result: $e');
+      if (kDebugMode) debugPrint('Error saving quiz result: $e');
       return false;
     }
   }
@@ -278,7 +278,7 @@ class StyleService {
       }
       return null;
     } catch (e) {
-      debugPrint('Coach passive tip error: $e');
+      if (kDebugMode) debugPrint('Coach passive tip error: $e');
       return null;
     }
   }
@@ -307,8 +307,8 @@ class StyleService {
         },
       );
 
-      debugPrint('Coach response status: ${response.status}');
-      debugPrint('Coach response data: ${response.data}');
+      if (kDebugMode) debugPrint('Coach response status: ${response.status}');
+      if (kDebugMode) debugPrint('Coach response data: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
         return {
@@ -319,7 +319,7 @@ class StyleService {
       final errMsg = response.data?['error'] ?? 'Unknown error (status ${response.status})';
       return {'answer': 'Coach error: $errMsg', 'next_step': ''};
     } catch (e) {
-      debugPrint('Coach active error: $e');
+      if (kDebugMode) debugPrint('Coach active error: $e');
       return {'answer': 'ERROR: ${e.runtimeType}: ${e.toString()}', 'next_step': ''};
     }
   }

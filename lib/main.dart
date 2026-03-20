@@ -66,20 +66,20 @@ Future<void> _initializeEssentialServices() async {
       options.debug = kDebugMode;
     });
   } catch (e) {
-    debugPrint('⚠️ Sentry failed to init: $e');
+    if (kDebugMode) debugPrint('⚠️ Sentry failed to init: $e');
   }
 
   // Initialize Supabase and Hive sequentially to ensure stability
   try {
     await SupabaseService.initialize().timeout(const Duration(seconds: 10));
   } catch (e) {
-    debugPrint('⚠️ Essential service Supabase failed to init: $e');
+    if (kDebugMode) debugPrint('⚠️ Essential service Supabase failed to init: $e');
   }
 
   try {
     await Hive.initFlutter().timeout(const Duration(seconds: 5));
   } catch (e) {
-    debugPrint('⚠️ Essential service Hive failed to init: $e');
+    if (kDebugMode) debugPrint('⚠️ Essential service Hive failed to init: $e');
   }
 }
 
@@ -88,7 +88,7 @@ Future<void> _initializeBackgroundServices() async {
   try {
     await RevenueCatService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
   } catch (e) {
-    debugPrint('⚠️ RevenueCat failed to init: $e');
+    if (kDebugMode) debugPrint('⚠️ RevenueCat failed to init: $e');
   }
 
   // Log in to RevenueCat if user already has active session
@@ -98,7 +98,7 @@ Future<void> _initializeBackgroundServices() async {
       await RevenueCatService.logIn(user.id).timeout(const Duration(seconds: 5)).catchError((_) {});
     }
   } catch (e) {
-    debugPrint('⚠️ RevenueCat login failed: $e');
+    if (kDebugMode) debugPrint('⚠️ RevenueCat login failed: $e');
   }
 }
 
@@ -146,7 +146,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         await AnalyticsService.instance.applyStoredPreference();
       }
     } catch (e) {
-      debugPrint('⚠️ App initialization failed: $e');
+      if (kDebugMode) debugPrint('⚠️ App initialization failed: $e');
       if (mounted) {
         setState(() {
           _locale = const Locale('en');

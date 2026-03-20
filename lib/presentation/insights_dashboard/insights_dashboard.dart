@@ -614,7 +614,6 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
         borderRadius: BorderRadius.circular(20),
         child: Row(
           children: [
-            // Soft pink left accent stripe
             Container(
               width: 4,
               color: theme.colorScheme.secondary.withValues(alpha: 0.45),

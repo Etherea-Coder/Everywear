@@ -59,7 +59,7 @@ class AdService {
     int actionsPerInterstitial = 4,
   }) async {
     if (_initialized) {
-      debugPrint('📱 AdService already initialized');
+      if (kDebugMode) debugPrint('📱 AdService already initialized');
       return;
     }
 
@@ -76,7 +76,7 @@ class AdService {
 
     _initialized = true;
 
-    debugPrint('📱 AdService initialized (testMode: $testMode)');
+    if (kDebugMode) debugPrint('📱 AdService initialized (testMode: $testMode)');
   }
 
   /// Set premium status (disables all ads)
@@ -87,7 +87,7 @@ class AdService {
     AdInterstitialLogic.setAdsEnabled(!isPremium);
     AdAppOpenLogic.setAdsEnabled(!isPremium);
 
-    debugPrint('📱 Premium status: $isPremium (ads: ${!isPremium})');
+    if (kDebugMode) debugPrint('📱 Premium status: $isPremium (ads: ${!isPremium})');
   }
 
   /// Enable or disable ads globally
@@ -96,7 +96,7 @@ class AdService {
     AdInterstitialLogic.setAdsEnabled(enabled);
     AdAppOpenLogic.setAdsEnabled(enabled);
 
-    debugPrint('📱 Ads enabled: $enabled');
+    if (kDebugMode) debugPrint('📱 Ads enabled: $enabled');
   }
 
   // ============================================
@@ -107,7 +107,7 @@ class AdService {
   void trackAction(AdActionType actionType) {
     if (!shouldShowAds) return;
 
-    debugPrint('📱 Tracking action: ${actionType.name}');
+    if (kDebugMode) debugPrint('📱 Tracking action: ${actionType.name}');
     actionType.register();
   }
 
@@ -141,7 +141,7 @@ class AdService {
   // ============================================
 
   void _onInterstitialTriggered() {
-    debugPrint('📱 Interstitial triggered via action counter');
+    if (kDebugMode) debugPrint('📱 Interstitial triggered via action counter');
 
     // TODO: Show actual interstitial when AdMob is integrated
     // For now, just log
@@ -149,7 +149,7 @@ class AdService {
   }
 
   Future<bool> _onShowAppOpenRequested() async {
-    debugPrint('📱 App open ad requested');
+    if (kDebugMode) debugPrint('📱 App open ad requested');
 
     // TODO: Show actual app open ad when AdMob is integrated
     // For now, just return false (no ad shown)
@@ -157,8 +157,8 @@ class AdService {
   }
 
   void _showPlaceholderInterstitial() {
-    debugPrint('📺 [PLACEHOLDER] Would show interstitial ad here');
-    debugPrint('📺 In production, this would show a real AdMob interstitial');
+    if (kDebugMode) debugPrint('📺 [PLACEHOLDER] Would show interstitial ad here');
+    if (kDebugMode) debugPrint('📺 In production, this would show a real AdMob interstitial');
   }
 
   // ============================================

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -180,7 +181,7 @@ class ResetAppDialog {
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
       } catch (e) {
-        debugPrint('Prefs clear error: $e');
+        if (kDebugMode) debugPrint('Prefs clear error: $e');
       }
     }
 

@@ -58,7 +58,7 @@ class _CameraViewWidgetState extends State<CameraViewWidget> {
         setState(() => _isFlashOn = !_isFlashOn);
       }
     } catch (e) {
-      debugPrint('Flash toggle error: $e');
+      if (kDebugMode) debugPrint('Flash toggle error: $e');
     }
   }
 
@@ -89,14 +89,14 @@ class _CameraViewWidgetState extends State<CameraViewWidget> {
       try {
         await newController.setFocusMode(FocusMode.auto);
       } catch (e) {
-        debugPrint('Focus mode not supported: $e');
+        if (kDebugMode) debugPrint('Focus mode not supported: $e');
       }
 
       if (!kIsWeb) {
         try {
           await newController.setFlashMode(FlashMode.auto);
         } catch (e) {
-          debugPrint('Flash mode not supported: $e');
+          if (kDebugMode) debugPrint('Flash mode not supported: $e');
         }
       }
 
@@ -109,7 +109,7 @@ class _CameraViewWidgetState extends State<CameraViewWidget> {
         widget.onCameraControllerChanged?.call(newController);
       }
     } catch (e) {
-      debugPrint('Camera flip error: $e');
+      if (kDebugMode) debugPrint('Camera flip error: $e');
       if (mounted) {
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -136,7 +136,7 @@ class _CameraViewWidgetState extends State<CameraViewWidget> {
       final XFile photo = await _localCameraController!.takePicture();
       widget.onPhotoCaptured(photo);
     } catch (e) {
-      debugPrint('Photo capture error: $e');
+      if (kDebugMode) debugPrint('Photo capture error: $e');
       if (mounted) {
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(

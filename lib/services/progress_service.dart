@@ -69,7 +69,7 @@ class ProgressService {
 
       return {'current': current, 'longest': longest};
     } catch (e) {
-      debugPrint('fetchStreakData error: $e');
+      if (kDebugMode) debugPrint('fetchStreakData error: $e');
       return {'current': 0, 'longest': 0};
     }
   }
@@ -130,7 +130,7 @@ class ProgressService {
         };
       }).toList();
     } catch (e) {
-      debugPrint('fetchActiveChallenges error: $e');
+      if (kDebugMode) debugPrint('fetchActiveChallenges error: $e');
       return [];
     }
   }
@@ -209,7 +209,7 @@ class ProgressService {
         'purchasesThisMonth': thisMonthPurchases,
       };
     } catch (e) {
-      debugPrint('fetchPersonalStats error: $e');
+      if (kDebugMode) debugPrint('fetchPersonalStats error: $e');
       return _emptyStats();
     }
   }

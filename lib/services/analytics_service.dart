@@ -34,14 +34,14 @@ class AnalyticsService {
       scope.setTag('analytics_opted_in', 'true');
     });
     // Re-enable event capture by removing the beforeSend filter
-    debugPrint('✅ Analytics enabled — Sentry reporting active');
+    if (kDebugMode) debugPrint('✅ Analytics enabled — Sentry reporting active');
   }
 
   void _disableSentry() {
     Sentry.configureScope((scope) {
       scope.setTag('analytics_opted_in', 'false');
     });
-    debugPrint('✅ Analytics disabled — Sentry reporting suppressed');
+    if (kDebugMode) debugPrint('✅ Analytics disabled — Sentry reporting suppressed');
   }
 
   /// Call this once on app start, after Sentry is initialized,

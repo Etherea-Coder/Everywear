@@ -216,7 +216,21 @@ const Map<String, String> appLocalizationsEn = {
   'cost_per_wear': 'Cost Per Wear',
   'per_wear': '/wear',
 
-  // ── CHALLENGES ──────────────────────────────────────────────────────────────
+  'stylistIncludesFavorite': 'Includes your favorite %s',
+  'stylistPerfectTimeToWear': 'Perfect time to wear your %s',
+  'stylistLightBreathable': 'Light and breathable for %s°C weather',
+  'stylistWarmCozy': 'Warm and cozy for %s°C weather',
+  'stylistProfessional': 'Professional and polished for work',
+  'stylistComfortable': 'Comfortable and relaxed for casual wear',
+  'stylistAiCurated': 'AI-curated combination based on your wardrobe',
+  'stylistLayerOuterwear': 'Layer your outerwear for easy temperature adjustment',
+  'stylistAddBelt': 'Add a belt to define your waist and elevate the look',
+  'stylistConsiderAccessories': 'Consider adding a watch or simple jewelry to complete the outfit',
+  'stylistEnsureShoes': 'Ensure shoes are polished and accessories are minimal',
+  'stylistExperimentAccessories': 'Feel free to experiment with bold accessories',
+  'stylistWearConfidence': 'Wear with confidence and make it your own',
+
+  // CHALLENGES 
   'challenge_weekly_label': 'Weekly Challenge',
   'challenge_accept': 'Accept Challenge',
   'challenge_log_progress': 'Log Outfit Progress',

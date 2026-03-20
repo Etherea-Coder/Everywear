@@ -27,14 +27,14 @@ class WardrobeRepository {
           await _localService.syncItems(remoteItems).timeout(const Duration(seconds: 3));
           return remoteItems;
         } catch (e) {
-          debugPrint('Remote fetch failed, falling back to local: $e');
+          if (kDebugMode) debugPrint('Remote fetch failed, falling back to local: $e');
           return _fetchLocalAsMap(category, searchQuery);
         }
       } else {
         return _fetchLocalAsMap(category, searchQuery);
       }
     } catch (e) {
-      debugPrint('Complete wardrobe fetch failure: $e');
+      if (kDebugMode) debugPrint('Complete wardrobe fetch failure: $e');
       // Return empty list as last resort to prevent white screens
       return [];
     }

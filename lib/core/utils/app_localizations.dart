@@ -626,7 +626,21 @@ class AppLocalizations {
   String get qMattersOriginality => translate('q_matters_originality');
   String get qMattersVersatility => translate('q_matters_versatility');
 
-  // ── Challenges ──────────────────────────────────────────
+  String get stylistIncludesFavorite => translate('stylistIncludesFavorite');
+  String get stylistPerfectTimeToWear => translate('stylistPerfectTimeToWear');
+  String get stylistLightBreathable => translate('stylistLightBreathable');
+  String get stylistWarmCozy => translate('stylistWarmCozy');
+  String get stylistProfessional => translate('stylistProfessional');
+  String get stylistComfortable => translate('stylistComfortable');
+  String get stylistAiCurated => translate('stylistAiCurated');
+  String get stylistLayerOuterwear => translate('stylistLayerOuterwear');
+  String get stylistAddBelt => translate('stylistAddBelt');
+  String get stylistConsiderAccessories => translate('stylistConsiderAccessories');
+  String get stylistEnsureShoes => translate('stylistEnsureShoes');
+  String get stylistExperimentAccessories => translate('stylistExperimentAccessories');
+  String get stylistWearConfidence => translate('stylistWearConfidence');
+
+  // Challenges
   String get challengeWeeklyLabel      => translate('challenge_weekly_label');
   String get challengeAccept           => translate('challenge_accept');
   String get challengeLogProgress      => translate('challenge_log_progress');

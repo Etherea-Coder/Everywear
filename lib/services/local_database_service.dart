@@ -22,9 +22,9 @@ class LocalDatabaseService {
       }
       _box = await Hive.openBox<LocalWardrobeItem>(_boxName);
       _isInitialized = true;
-      debugPrint('✅ LocalDatabaseService initialized');
+      if (kDebugMode) debugPrint('✅ LocalDatabaseService initialized');
     } catch (e) {
-      debugPrint('❌ Failed to initialize LocalDatabaseService: $e');
+      if (kDebugMode) debugPrint('❌ Failed to initialize LocalDatabaseService: $e');
       _isInitialized = false;
     }
   }

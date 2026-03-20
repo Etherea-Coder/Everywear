@@ -37,7 +37,7 @@ class OutfitLogService {
 
       return List<Map<String, dynamic>>.from(logs);
     } catch (e) {
-      debugPrint('Error fetching outfit logs: $e');
+      if (kDebugMode) debugPrint('Error fetching outfit logs: $e');
       return [];
     }
   }
@@ -68,7 +68,7 @@ class OutfitLogService {
           .toSet()
           .toList();
     } catch (e) {
-      debugPrint('Error fetching logged dates: $e');
+      if (kDebugMode) debugPrint('Error fetching logged dates: $e');
       return [];
     }
   }
@@ -124,7 +124,7 @@ class OutfitLogService {
         'favoriteOccasion': favoriteOccasion,
       };
     } catch (e) {
-      debugPrint('Error fetching monthly stats: $e');
+      if (kDebugMode) debugPrint('Error fetching monthly stats: $e');
       return {'totalOutfits': 0, 'uniqueItems': 0, 'favoriteOccasion': 'None'};
     }
   }
@@ -182,7 +182,7 @@ class OutfitLogService {
 
       return outfitId;
     } catch (e) {
-      debugPrint('Error creating outfit log: $e');
+      if (kDebugMode) debugPrint('Error creating outfit log: $e');
       return null;
     }
   }
@@ -258,7 +258,7 @@ class OutfitLogService {
 
       return true;
     } catch (e) {
-      debugPrint('Error updating outfit log: $e');
+      if (kDebugMode) debugPrint('Error updating outfit log: $e');
       return false;
     }
   }
@@ -269,7 +269,7 @@ class OutfitLogService {
       await _client.from('outfit_logs').delete().eq('id', outfitId);
       return true;
     } catch (e) {
-      debugPrint('Error deleting outfit log: $e');
+      if (kDebugMode) debugPrint('Error deleting outfit log: $e');
       return false;
     }
   }
@@ -304,7 +304,7 @@ class OutfitLogService {
         outfitName: original['outfit_name'],
       );
     } catch (e) {
-      debugPrint('Error repeating outfit log: $e');
+      if (kDebugMode) debugPrint('Error repeating outfit log: $e');
       return null;
     }
   }

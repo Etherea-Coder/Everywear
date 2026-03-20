@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
@@ -47,7 +48,7 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
         });
       }
     } catch (e) {
-      debugPrint('OutfitHistoryScreen._loadOutfits error: $e');
+      if (kDebugMode) debugPrint('OutfitHistoryScreen._loadOutfits error: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }

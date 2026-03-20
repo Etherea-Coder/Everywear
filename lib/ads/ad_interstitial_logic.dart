@@ -70,7 +70,7 @@ class AdInterstitialLogic {
     if (!_adsEnabled) return;
 
     _actionCounter++;
-    debugPrint('📱 Ad action count: $_actionCounter/$_actionsPerAd');
+    if (kDebugMode) debugPrint('📱 Ad action count: $_actionCounter/$_actionsPerAd');
 
     if (_actionCounter >= _actionsPerAd) {
       _triggerAd();
@@ -80,12 +80,12 @@ class AdInterstitialLogic {
   /// Force reset the counter (useful after showing an ad)
   static void resetCounter() {
     _actionCounter = 0;
-    debugPrint('📱 Ad counter reset');
+    if (kDebugMode) debugPrint('📱 Ad counter reset');
   }
 
   /// Trigger the ad callback
   static void _triggerAd() {
-    debugPrint('📺 Interstitial ad triggered!');
+    if (kDebugMode) debugPrint('📺 Interstitial ad triggered!');
 
     // Call the registered callback (will show real ad when integrated)
     if (onAdTriggered != null) {
@@ -106,7 +106,7 @@ class AdInterstitialLogic {
     if (!_adsEnabled) return false;
 
     // Placeholder: just log and return
-    debugPrint('📺 Would show interstitial ad here (placeholder)');
+    if (kDebugMode) debugPrint('📺 Would show interstitial ad here (placeholder)');
 
     // TODO: When integrating AdMob:
     // if (_interstitialAd != null) {
@@ -147,7 +147,7 @@ enum AdActionType {
 extension AdActionTypeExtension on AdActionType {
   /// Register this action type with the ad counter
   void register() {
-    debugPrint('📱 Ad action: $name');
+    if (kDebugMode) debugPrint('📱 Ad action: $name');
     AdInterstitialLogic.registerAction();
   }
 }
