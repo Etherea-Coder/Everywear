@@ -123,8 +123,8 @@ class _VersatilityScoresCardWidgetState
   }
 
   Widget _buildVersatilityItem(Map<String, dynamic> item, ThemeData theme) {
-    final score = item['score'] as int;
-    final combinations = item['combinations'] as int;
+    final score        = (item['score']        as num?)?.toInt() ?? 0;
+    final combinations = (item['combinations'] as num?)?.toInt() ?? 0;
     final itemName = item['item'] as String;
 
     Color scoreColor;

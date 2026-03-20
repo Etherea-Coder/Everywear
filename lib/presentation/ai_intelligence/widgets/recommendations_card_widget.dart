@@ -57,11 +57,11 @@ class _RecommendationsCardWidgetState extends State<RecommendationsCardWidget> {
     Map<String, dynamic> recommendation,
     ThemeData theme,
   ) {
-    final type = recommendation['type'] as String;
-    final title = recommendation['title'] as String;
-    final description = recommendation['description'] as String;
-    final confidence = recommendation['confidence'] as int;
-    final reasoning = recommendation['reasoning'] as String;
+    final type        = (recommendation['type']        as String?)  ?? 'style';
+    final title       = (recommendation['title']       as String?)  ?? 'Recommendation';
+    final description = (recommendation['description'] as String?)  ?? '';
+    final confidence  = (recommendation['confidence']  as num?)?.toInt() ?? 70;
+    final reasoning   = (recommendation['reasoning']   as String?)  ?? '';
 
     final colors = _getTypeColors(type);
 

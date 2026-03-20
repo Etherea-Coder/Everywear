@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
+import '../../services/ai_intelligence_service.dart';
 
 import './widgets/ai_hero_section_widget.dart';
 import './widgets/style_trends_card_widget.dart';
@@ -9,8 +10,6 @@ import './widgets/versatility_scores_card_widget.dart';
 import './widgets/sustainability_impact_card_widget.dart';
 import './widgets/recommendations_card_widget.dart';
 
-/// AI Intelligence Screen - Comprehensive wardrobe analytics powered by local AI
-/// Displays style trends, outfit versatility, sustainability metrics, and personalized recommendations
 class AIIntelligence extends StatefulWidget {
   const AIIntelligence({Key? key}) : super(key: key);
 
@@ -19,68 +18,121 @@ class AIIntelligence extends StatefulWidget {
 }
 
 class _AIIntelligenceState extends State<AIIntelligence> {
-  int _selectedTimeRange = 1;
+  // ── State ────────────────────────────────────────────────────────────────
+  int _selectedTimeRange = 1;       // 0=week 1=month 2=season
   bool _isGenerating = false;
+  bool _isLoading = true;
+  String? _error;
+  String? _selectedCategory;        // null = all categories
 
-  final Map<String, dynamic> _aiData = {
-    'confidenceScore': 87,
-    'styleProfile': 'Casual Minimalist',
-    'dominantColors': ['Blue', 'Black', 'White', 'Gray'],
-    'colorPercentages': [35, 25, 20, 15],
-    'silhouetteEvolution': [
-      {'month': 'Jan', 'fitted': 40, 'relaxed': 60},
-      {'month': 'Feb', 'fitted': 45, 'relaxed': 55},
-      {'month': 'Mar', 'fitted': 50, 'relaxed': 50},
-    ],
-    'emergingStyles': ['Athleisure', 'Smart Casual'],
-    'versatilityScores': [
-      {'item': 'Black Jeans', 'score': 92, 'combinations': 18},
-      {'item': 'White T-Shirt', 'score': 88, 'combinations': 16},
-      {'item': 'Denim Jacket', 'score': 75, 'combinations': 12},
-      {'item': 'Red Dress', 'score': 35, 'combinations': 4},
-    ],
-    'underutilizedItems': [
-      {'item': 'Formal Blazer', 'lastWorn': '45 days ago', 'suggestions': 3},
-      {'item': 'Floral Skirt', 'lastWorn': '32 days ago', 'suggestions': 2},
-    ],
-    'sustainabilityMetrics': {
-      'avgCostPerWear': 8.75,
-      'costTrend': -12.5,
-      'purchaseFrequency': 2.3,
-      'carbonImpact': 145,
-      'carbonGoal': 200,
-      'sustainabilityGoalProgress': 72,
-    },
-    'recommendations': [
-      {
-        'type': 'gap',
-        'title': 'Add Versatile Bottoms',
-        'description':
-            'Your wardrobe lacks neutral-colored pants. Consider adding khaki or gray trousers for more outfit combinations.',
-        'confidence': 85,
-        'reasoning': 'Analysis shows 60% of your tops lack compatible bottoms',
-      },
-      {
-        'type': 'seasonal',
-        'title': 'Spring Transition Pieces',
-        'description':
-            'Light cardigans and linen shirts would expand your spring wardrobe options.',
-        'confidence': 78,
-        'reasoning':
-            'Seasonal analysis indicates limited transitional layering options',
-      },
-      {
-        'type': 'style',
-        'title': 'Elevate Your Casual Style',
-        'description':
-            'Adding structured blazers could bridge your casual and professional looks.',
-        'confidence': 72,
-        'reasoning':
-            'Style evolution suggests growing interest in smart casual aesthetics',
-      },
-    ],
-  };
+  Map<String, dynamic> _aiData = {};
 
+  static const _timeRangeKeys = ['week', 'month', 'season'];
+
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    _loadInsights();
+  }
+
+  String get _currentTimeRange => _timeRangeKeys[_selectedTimeRange];
+
+  Future<void> _loadInsights({bool forceRefresh = false}) async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; _error = null; });
+
+    try {
+      final data = await AIIntelligenceService.instance.getInsights(
+        timeRange: _currentTimeRange,
+        category: _selectedCategory,
+        forceRefresh: forceRefresh,
+      );
+      if (mounted) setState(() { _aiData = data; _isLoading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
+    }
+  }
+
+  // ── Public actions ───────────────────────────────────────────────────────
+
+  /// Pull-to-refresh: reload from network, update cache.
+  Future<void> _refreshInsights() => _loadInsights(forceRefresh: true);
+
+  /// "Generate New Insights" button: force AI re-generation.
+  Future<void> _generateNewInsights() async {
+    setState(() => _isGenerating = true);
+    AIIntelligenceService.instance.clearCache();
+    try {
+      await _loadInsights(forceRefresh: true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('New AI insights generated!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
+    }
+  }
+
+  /// Time range chip tap: change window and re-fetch.
+  void _onTimeRangeChanged(int index) {
+    if (_selectedTimeRange == index) return;
+    setState(() => _selectedTimeRange = index);
+    _loadInsights();
+  }
+
+  // ── Filter sheet ─────────────────────────────────────────────────────────
+  void _showFilterOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => _FilterSheet(
+        selectedCategory: _selectedCategory,
+        onCategorySelected: (category) {
+          Navigator.pop(ctx);
+          if (category == _selectedCategory) return;
+          setState(() => _selectedCategory = category);
+          _loadInsights();
+        },
+        onCustomDateRange: () {
+          Navigator.pop(ctx);
+          _pickCustomDateRange();
+        },
+      ),
+    );
+  }
+
+  Future<void> _pickCustomDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: now,
+      initialDateRange: DateTimeRange(
+        start: now.subtract(const Duration(days: 30)),
+        end: now,
+      ),
+    );
+    if (picked == null || !mounted) return;
+
+    // Map the picked range to the closest time-range key
+    final days = picked.end.difference(picked.start).inDays;
+    int newIndex;
+    if (days <= 9)       newIndex = 0; // week
+    else if (days <= 45) newIndex = 1; // month
+    else                 newIndex = 2; // season
+
+    setState(() => _selectedTimeRange = newIndex);
+    _loadInsights();
+  }
+
+  // ── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -89,6 +141,21 @@ class _AIIntelligenceState extends State<AIIntelligence> {
       appBar: CustomAppBar(
         title: 'AI Intelligence',
         actions: [
+          if (_selectedCategory != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Chip(
+                label: Text(_selectedCategory!,
+                    style: TextStyle(fontSize: 11.sp)),
+                onDeleted: () {
+                  setState(() => _selectedCategory = null);
+                  _loadInsights();
+                },
+                deleteIconColor: theme.colorScheme.onPrimary,
+                backgroundColor: theme.colorScheme.primary,
+                labelStyle: TextStyle(color: theme.colorScheme.onPrimary),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterOptions,
@@ -98,93 +165,143 @@ class _AIIntelligenceState extends State<AIIntelligence> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshInsights,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AIHeroSectionWidget(
-                confidenceScore: _aiData['confidenceScore'],
-                styleProfile: _aiData['styleProfile'],
-              ),
-              SizedBox(height: 2.h),
-              _buildTimeRangeSelector(theme),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Style Trends Analysis', theme),
-              StyleTrendsCardWidget(
-                dominantColors: _aiData['dominantColors'],
-                colorPercentages: _aiData['colorPercentages'],
-                silhouetteEvolution: _aiData['silhouetteEvolution'],
-                emergingStyles: _aiData['emergingStyles'],
-              ),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Outfit Versatility Scores', theme),
-              VersatilityScoresCardWidget(
-                versatilityScores: _aiData['versatilityScores'],
-                underutilizedItems: _aiData['underutilizedItems'],
-              ),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Sustainability Impact', theme),
-              SustainabilityImpactCardWidget(
-                metrics: _aiData['sustainabilityMetrics'],
-              ),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Personalized Recommendations', theme),
-              RecommendationsCardWidget(
-                recommendations: _aiData['recommendations'],
-              ),
-              SizedBox(height: 3.h),
-              _buildGenerateInsightsButton(theme),
-              SizedBox(height: 10.h),
-            ],
-          ),
-        ),
+        child: _buildBody(theme),
       ),
     );
   }
 
-  Widget _buildTimeRangeSelector(ThemeData theme) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-      child: Row(
+  Widget _buildBody(ThemeData theme) {
+    if (_isLoading && _aiData.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null && _aiData.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(8.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              SizedBox(height: 2.h),
+              Text('Could not load insights', style: theme.textTheme.titleMedium),
+              SizedBox(height: 1.h),
+              Text(_error!, textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall),
+              SizedBox(height: 3.h),
+              ElevatedButton(
+                onPressed: () => _loadInsights(forceRefresh: true),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTimeRangeChip('Week', 0, theme),
-          SizedBox(width: 2.w),
-          _buildTimeRangeChip('Month', 1, theme),
-          SizedBox(width: 2.w),
-          _buildTimeRangeChip('Season', 2, theme),
+          // Show a slim loading bar while refreshing (data already present)
+          if (_isLoading)
+            LinearProgressIndicator(
+                minHeight: 2, color: theme.colorScheme.primary),
+
+          AIHeroSectionWidget(
+            confidenceScore: (_aiData['confidenceScore'] as num?)?.toInt() ?? 0,
+            styleProfile:    _aiData['styleProfile']    ?? '—',
+          ),
+          SizedBox(height: 2.h),
+          _buildTimeRangeSelector(theme),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader('Style Trends Analysis', theme),
+          StyleTrendsCardWidget(
+            dominantColors:      List<String>.from(_aiData['dominantColors']     ?? []),
+            colorPercentages: (_aiData['colorPercentages'] as List? ?? [])
+                .map((e) => (e as num).toInt())
+                .toList(),
+            silhouetteEvolution: List<Map<String, dynamic>>.from(
+                (_aiData['silhouetteEvolution'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+            emergingStyles:      List<String>.from(_aiData['emergingStyles']     ?? []),
+          ),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader('Outfit Versatility Scores', theme),
+          VersatilityScoresCardWidget(
+            versatilityScores: List<Map<String, dynamic>>.from(
+                (_aiData['versatilityScores'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+            underutilizedItems: List<Map<String, dynamic>>.from(
+                (_aiData['underutilizedItems'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+          ),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader('Sustainability Impact', theme),
+          SustainabilityImpactCardWidget(
+            metrics: Map<String, dynamic>.from(_aiData['sustainabilityMetrics'] ?? {}),
+          ),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader('Personalized Recommendations', theme),
+          RecommendationsCardWidget(
+            recommendations: List<Map<String, dynamic>>.from(
+                (_aiData['recommendations'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+          ),
+          SizedBox(height: 3.h),
+          _buildGenerateInsightsButton(theme),
+          SizedBox(height: 10.h),
         ],
       ),
     );
   }
 
-  Widget _buildTimeRangeChip(String label, int index, ThemeData theme) {
-    final isSelected = _selectedTimeRange == index;
+  // ── Sub-widgets ──────────────────────────────────────────────────────────
+  Widget _buildTimeRangeSelector(ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+      child: Row(
+        children: [
+          _buildChip('Week',   0, theme),
+          SizedBox(width: 2.w),
+          _buildChip('Month',  1, theme),
+          SizedBox(width: 2.w),
+          _buildChip('Season', 2, theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, int index, ThemeData theme) {
+    final selected = _selectedTimeRange == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedTimeRange = index),
-        child: Container(
+        onTap: () => _onTimeRangeChanged(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(vertical: 1.5.h),
           decoration: BoxDecoration(
-            color: isSelected
+            color: selected
                 ? theme.colorScheme.primary
                 : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.dividerColor,
-              width: 1,
+              color: selected ? theme.colorScheme.primary : theme.dividerColor,
             ),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isSelected
+              color: selected
                   ? theme.colorScheme.onPrimary
                   : theme.colorScheme.onSurface,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
         ),
@@ -195,12 +312,9 @@ class _AIIntelligenceState extends State<AIIntelligence> {
   Widget _buildSectionHeader(String title, ThemeData theme) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-      child: Text(
-        title,
-        style: theme.textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: Text(title,
+          style: theme.textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w600)),
     );
   }
 
@@ -212,13 +326,9 @@ class _AIIntelligenceState extends State<AIIntelligence> {
         onPressed: _isGenerating ? null : _generateNewInsights,
         icon: _isGenerating
             ? SizedBox(
-                width: 20,
-                height: 20,
+                width: 20, height: 20,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.onPrimary,
-                ),
-              )
+                    strokeWidth: 2, color: theme.colorScheme.onPrimary))
             : const Icon(Icons.auto_awesome),
         label: Text(
           _isGenerating ? 'Generating...' : 'Generate New Insights',
@@ -229,61 +339,92 @@ class _AIIntelligenceState extends State<AIIntelligence> {
           foregroundColor: theme.colorScheme.onPrimary,
           padding: EdgeInsets.symmetric(vertical: 2.h),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
+              borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
   }
+}
 
-  Future<void> _refreshInsights() async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() {});
-    }
-  }
+// ── Filter bottom sheet ──────────────────────────────────────────────────────
+class _FilterSheet extends StatelessWidget {
+  final String? selectedCategory;
+  final ValueChanged<String?> onCategorySelected;
+  final VoidCallback onCustomDateRange;
 
-  Future<void> _generateNewInsights() async {
-    setState(() => _isGenerating = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() => _isGenerating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('New AI insights generated successfully!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  }
+  static const _categories = [
+  'Tops',
+  'Bottoms',
+  'Dresses',
+  'Shoes',
+  'Accessories',
+  ];
 
-  void _showFilterOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
+  const _FilterSheet({
+    required this.selectedCategory,
+    required this.onCategorySelected,
+    required this.onCustomDateRange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Padding(
         padding: EdgeInsets.all(4.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Custom date range
             ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text('Custom Date Range'),
-              onTap: () => Navigator.pop(context),
+              onTap: onCustomDateRange,
             ),
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Filter by Category'),
-              onTap: () => Navigator.pop(context),
+            const Divider(),
+
+            // Category filter
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+              child: Text('Filter by Category',
+                  style: theme.textTheme.titleSmall),
             ),
-            ListTile(
-              leading: const Icon(Icons.style),
-              title: const Text('Filter by Style'),
-              onTap: () => Navigator.pop(context),
+            Wrap(
+              spacing: 2.w,
+              runSpacing: 1.h,
+              children: [
+                // "All" chip
+                FilterChip(
+                  label: const Text('All'),
+                  selected: selectedCategory == null,
+                  onSelected: (_) => onCategorySelected(null),
+                ),
+                ..._categories.map(
+                  (cat) => FilterChip(
+                    label: Text(cat),
+                    selected: selectedCategory == cat,
+                    onSelected: (_) => onCategorySelected(cat),
+                  ),
+                ),
+              ],
             ),
+            SizedBox(height: 2.h),
           ],
         ),
       ),
     );
   }
-
 }

@@ -92,12 +92,12 @@ class _SustainabilityImpactCardWidgetState
   }
 
   List<Widget> _buildExpandedContent(ThemeData theme) {
-    final avgCostPerWear = widget.metrics['avgCostPerWear'] as double;
-    final costTrend = widget.metrics['costTrend'] as double;
-    final purchaseFrequency = widget.metrics['purchaseFrequency'] as double;
-    final carbonImpact = widget.metrics['carbonImpact'] as int;
-    final carbonGoal = widget.metrics['carbonGoal'] as int;
-    final goalProgress = widget.metrics['sustainabilityGoalProgress'] as int;
+    final avgCostPerWear    = (widget.metrics['avgCostPerWear']               as num?)?.toDouble() ?? 0.0;
+    final costTrend         = (widget.metrics['costTrend']                    as num?)?.toDouble() ?? 0.0;
+    final purchaseFrequency = (widget.metrics['purchaseFrequency']            as num?)?.toDouble() ?? 0.0;
+    final carbonImpact      = (widget.metrics['carbonImpact']                 as num?)?.toInt()    ?? 0;
+    final carbonGoal        = (widget.metrics['carbonGoal']                   as num?)?.toInt()    ?? 200;
+    final goalProgress      = (widget.metrics['sustainabilityGoalProgress']   as num?)?.toInt()    ?? 0;
 
     return [
       Divider(height: 1, color: theme.dividerColor),

@@ -127,12 +127,29 @@ class _StyleTrendsCardWidgetState extends State<StyleTrendsCardWidget> {
 
   Widget _buildColorChart(ThemeData theme) {
     final colorMap = {
-      'Blue': Colors.blue,
-      'Black': Colors.black,
-      'White': Colors.grey.shade300,
-      'Gray': Colors.grey,
-      'Red': Colors.red,
-      'Green': Colors.green,
+      'Blue':     Colors.blue,
+      'Black':    Colors.black,
+      'White':    Colors.grey.shade200,
+      'Gray':     Colors.grey,
+      'Grey':     Colors.grey,
+      'Red':      Colors.red,
+      'Green':    Colors.green,
+      'Navy':     const Color(0xFF001F5B),
+      'Brown':    const Color(0xFF795548),
+      'Beige':    const Color(0xFFF5F0E8),
+      'Cream':    const Color(0xFFFFFDD0),
+      'Orange':   Colors.orange,
+      'Pink':     Colors.pink.shade200,
+      'Purple':   Colors.purple,
+      'Yellow':   Colors.yellow,
+      'Burgundy': const Color(0xFF800020),
+      'Camel':    const Color(0xFFC19A6B),
+      'Khaki':    const Color(0xFFC3B091),
+      'Olive':    const Color(0xFF808000),
+      'Coral':    const Color(0xFFFF6B6B),
+      'Teal':     Colors.teal,
+      'Gold':     const Color(0xFFFFD700),
+      'Tan':      const Color(0xFFD2B48C),
     };
 
     return Column(
