@@ -43,7 +43,7 @@ void main() async {
   await _initializeEssentialServices();
 
   // ✅ NEW: Initialize Ad Service
-  await AdService.instance.initialize(testMode: true);
+  await AdService.instance.initialize(testMode: !kReleaseMode);
 
   // Run the app after critical services are ready
   runApp(

@@ -276,6 +276,7 @@ class AppLocalizations {
   String get outfitUpdated => translate('outfit_updated');
   String get thisMonth => translate('this_month');
   String get rating => translate('rating');
+  String get confirm => translate('confirm');
 
   // Smart Suggestions
   String get styleTitle => translate('style_title');
@@ -328,6 +329,16 @@ class AppLocalizations {
   String get wouldWearAgain => translate('would_wear_again');
   String get helpUsLearn => translate('help_us_learn');
   String get saveRating => translate('save_rating');
+  String get rateYourOutfit => translate('rate_your_outfit');
+  String get ratingSavedSuccessfully => translate('rating_saved_successfully');
+  String get failedToSaveRating => translate('failed_to_save_rating');
+  String get savingYourRating => translate('saving_your_rating');
+  String get ratedOutfit => translate('rated_outfit');
+  String get pleaseProvideRating => translate('please_provide_rating');
+  String get occasionFormal => translate('occasion_formal');
+  String get occasionSocialEvent => translate('occasion_social_event');
+  String get occasionDateNight => translate('occasion_date_night');
+  String get occasionAthletic => translate('occasion_athletic');
 
   // Photo Capture
   String get chooseFromGallery => translate('choose_from_gallery');
@@ -351,10 +362,6 @@ class AppLocalizations {
   String get couldNotGenerateExport => translate('could_not_generate_export');
   String get exportError => translate('export_error');
   String get failedToSavePreferences => translate('failed_to_save_preferences');
-  String get pleaseProvideRating => translate('please_provide_rating');
-  String get ratingSavedSuccessfully => translate('rating_saved_successfully');
-  String get failedToSaveRating => translate('failed_to_save_rating');
-  String get savingYourRating => translate('saving_your_rating');
   String get welcomeToSignature => translate('welcome_to_signature');
   String get purchasesRestored => translate('purchases_restored');
   String get keyLearnings => translate('key_learnings');
@@ -383,6 +390,9 @@ class AppLocalizations {
 
   // Today Page (Daily Log) specific
   String get weatherFallbackLabel => translate('weather_fallback_label');
+  String get enterCityManually => translate('enter_city_manually');
+  String get enterCityTitle => translate('enter_city_title');
+  String get cityHint => translate('city_hint');
   String get dailyLogWelcomeSubtitle => translate('daily_log_welcome_subtitle');
   String get setTodaysDirection => translate('set_todays_direction');
   String get setDirectionSubtitle => translate('set_direction_subtitle');

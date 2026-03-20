@@ -116,12 +116,14 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
                       FeaturedChallengeBannerWidget(
                         title: _featuredChallenge!['title'] ?? '',
                         description: _featuredChallenge!['description'] ?? '',
-                        imageUrl: 'assets/images/challenges/sustainability_week.jpg',
+                        imageUrl: _featuredChallenge!['image_url'] as String? ?? '',
                         semanticLabel: 'Featured challenge banner',
                         duration: '${_featuredChallenge!['duration_days']} days',
                         points: _featuredChallenge!['points'] ?? 100,
                         difficulty: _featuredChallenge!['difficulty'] ?? 'medium',
-                        onTap: () {},
+                        onTap: _featuredChallenge!['is_joined'] == true
+                            ? () {}
+                            : () => _acceptChallenge(_featuredChallenge!['id']),
                       ),
                     SizedBox(height: 2.5.h),
                     _buildSectionHeader(context, title: 'Browse by type'),
@@ -136,7 +138,7 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
                     ),
                     SizedBox(height: 1.h),
                     _buildChallengeList(theme),
-                    SizedBox(height: 3.h),
+                    SizedBox(height: 15.h),
                   ],
                 ),
               ),
@@ -338,7 +340,9 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
           estimatedTime: challenge['estimated_time'] ?? '30 min',
           isActive: challenge['is_joined'] == true,
           progress: duration > 0 ? progress / duration : 0.0,
-          onTap: () {},
+          onTap: challenge['is_joined'] == true
+              ? () {}
+              : () => _acceptChallenge(challenge['id']),
           onAccept: () => _acceptChallenge(challenge['id']),
         );
       },

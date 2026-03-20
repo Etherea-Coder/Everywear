@@ -123,7 +123,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         theme, localizations.insights, Icons.insights),
                     SizedBox(height: 1.h),
                     _buildInsightsSection(theme),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 15.h),
                   ]),
                 ),
               ),

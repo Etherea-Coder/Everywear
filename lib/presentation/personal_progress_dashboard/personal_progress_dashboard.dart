@@ -330,7 +330,7 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
           points: c['points'],
           icon: c['icon'],
           dueDate: c['dueDate'],
-          onTap: () {},
+          onTap: _navigateToChallengeCenter,
         );
       },
     );

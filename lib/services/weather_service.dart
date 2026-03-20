@@ -180,12 +180,10 @@ class WeatherService {
         final data = json.decode(response.body);
         return _parseWeatherResponse(data);
       } else {
-        // Fallback to simulated data on API error
-        return await _getSimulatedWeather();
+        return _errorState('Weather service offline');
       }
     } catch (e) {
-      // Fallback in case of any error
-      return await _getSimulatedWeather();
+      return _errorState('Weather unavailable');
     }
   }
 
@@ -294,24 +292,72 @@ class WeatherService {
     }
   }
 
-  /// Fallback simulated weather data
-  Future<Map<String, dynamic>> _getSimulatedWeather() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+  /// Fetches weather for a manually entered city name.
+  /// Uses Nominatim to geocode the city, then calls Open-Meteo.
+  Future<Map<String, dynamic>> getWeatherByCity(String city) async {
+    try {
+      final geocodeUri = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(city)}&format=json&limit=1',
+      );
+      final geocodeResponse = await http.get(
+        geocodeUri,
+        headers: {'User-Agent': 'EverywearApp/1.0'},
+      ).timeout(const Duration(seconds: 8));
 
-    final conditions = ['Sunny', 'Partly Cloudy', 'Overcast', 'Light Rain', 'Clear'];
-    final icons = ['sunny', 'partly_cloudy_day', 'cloud', 'rainy', 'clear_night'];
-    final now = DateTime.now();
+      if (geocodeResponse.statusCode != 200) {
+        return _errorState('City not found');
+      }
 
-    // Use time-based pseudo-random selection
-    final index = (now.hour + now.minute) % conditions.length;
+      final results = json.decode(geocodeResponse.body) as List<dynamic>;
+      if (results.isEmpty) return _errorState('City not found');
 
+      final first = results.first as Map<String, dynamic>;
+      final lat = double.tryParse(first['lat'].toString()) ?? 0;
+      final lon = double.tryParse(first['lon'].toString()) ?? 0;
+      final displayName = (first['display_name'] as String? ?? city)
+          .split(',')
+          .take(2)
+          .join(',')
+          .trim();
+
+      _latitude = lat;
+      _longitude = lon;
+      _locationName = displayName;
+      _isUsingDeviceLocation = false;
+      _savedCity = city;
+
+      final weatherUri = Uri.parse(
+        '$_baseUrl?latitude=$_latitude&longitude=$_longitude&current=temperature_2m,weather_code,is_day&temperature_unit=celsius',
+      );
+      final weatherResponse = await http.get(weatherUri).timeout(
+        const Duration(seconds: 10),
+      );
+
+      if (weatherResponse.statusCode == 200) {
+        return _parseWeatherResponse(json.decode(weatherResponse.body));
+      }
+      return _errorState('Weather service offline');
+    } catch (e) {
+      return _errorState('City not found');
+    }
+  }
+
+  /// The last manually entered city name (empty if using device location).
+  String _savedCity = '';
+  String get savedCity => _savedCity;
+
+  /// Standard error state for weather failures
+  Map<String, dynamic> _errorState(String message) {
     return {
-      'temperature': 18 + (now.minute % 12), // 18-29°C range
-      'condition': conditions[index],
-      'icon': icons[index],
+      'temperature': null,
+      'condition': message,
+      'icon': 'location_off',
       'location': _locationName,
       'unit': '°C',
-      'timestamp': now.toIso8601String(),
+      'timestamp': DateTime.now().toIso8601String(),
+      'latitude': null,
+      'longitude': null,
+      'error': true,
     };
   }
 }

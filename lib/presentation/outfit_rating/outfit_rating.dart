@@ -72,15 +72,15 @@ class _OutfitRatingState extends State<OutfitRating> {
 
     setState(() => _isSaving = true);
 
-    try {
-      final notes = [
-        if (_notesController.text.trim().isNotEmpty)
-          _notesController.text.trim(),
-        'Comfort: $_comfortRating/5',
-        'Style: $_styleRating/5',
-        'Versatility: $_versatilityRating/5',
-        'Would wear again: ${_wouldWearAgain ? 'Yes' : 'No'}',
-      ].join(' | ');
+      try {
+        final notes = [
+          if (_notesController.text.trim().isNotEmpty)
+            _notesController.text.trim(),
+          '${localizations.comfort}: $_comfortRating/5',
+          '${localizations.style}: $_styleRating/5',
+          '${localizations.versatility}: $_versatilityRating/5',
+          '${localizations.wouldWearAgain}: ${_wouldWearAgain ? localizations.yes : localizations.no}',
+        ].join(' | ');
 
       if (_outfitLogId != null) {
         // Update existing outfit log
@@ -100,17 +100,17 @@ class _OutfitRatingState extends State<OutfitRating> {
             wornDate: DateTime.now(),
             rating: _overallRating,
             notes: notes,
-            outfitName: 'Rated outfit',
+            outfitName: localizations.ratedOutfit,
           );
         }
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Rating saved successfully!'),
+          SnackBar(
+            content: Text(localizations.ratingSavedSuccessfully),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
         await Future.delayed(const Duration(milliseconds: 500));
@@ -120,7 +120,7 @@ class _OutfitRatingState extends State<OutfitRating> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save rating: $e'),
+            content: Text('${localizations.failedToSaveRating}: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -133,9 +133,10 @@ class _OutfitRatingState extends State<OutfitRating> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
       return Scaffold(
       appBar: CustomAppBar(
-        title: 'Rate Your Outfit',
+        title: localizations.rateYourOutfit,
         variant: CustomAppBarVariant.detail,
       ),
       body: Stack(
@@ -175,7 +176,7 @@ class _OutfitRatingState extends State<OutfitRating> {
                         CircularProgressIndicator(
                             color: theme.colorScheme.primary),
                         SizedBox(height: 2.h),
-                        Text('Saving your rating...',
+                        Text(localizations.savingYourRating,
                             style: theme.textTheme.bodyLarge),
                       ],
                     ),
@@ -280,8 +281,21 @@ class _OutfitRatingState extends State<OutfitRating> {
               runSpacing: 1.h,
               children: _occasions.map((occasion) {
                 final isSelected = _selectedOccasion == occasion;
+                // Get localized label for the occasion
+                String label;
+                switch (occasion) {
+                  case 'Casual': label = localizations.occasionCasual; break;
+                  case 'Work': label = localizations.occasionWork; break;
+                  case 'Formal': label = localizations.occasionFormal; break;
+                  case 'Athletic': label = localizations.occasionAthletic; break;
+                  case 'Social Event': label = localizations.occasionSocialEvent; break;
+                  case 'Date Night': label = localizations.occasionDateNight; break;
+                  case 'Travel': label = localizations.occasionTravel; break;
+                  default: label = occasion;
+                }
+                
                 return ChoiceChip(
-                  label: Text(occasion),
+                  label: Text(label),
                   selected: isSelected,
                   onSelected: (selected) {
                     if (selected) setState(() => _selectedOccasion = occasion);
@@ -337,6 +351,7 @@ class _OutfitRatingState extends State<OutfitRating> {
   }
 
   Widget _buildSaveButton(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -349,7 +364,7 @@ class _OutfitRatingState extends State<OutfitRating> {
               borderRadius: BorderRadius.circular(12.0)),
           elevation: 2,
         ),
-        child: Text('Save Rating',
+        child: Text(localizations.saveRating,
             style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onPrimary,
                 fontWeight: FontWeight.w600)),

@@ -46,28 +46,28 @@ class StylistEngineService {
   // Weather-based recommendations
   static const Map<String, Map<String, dynamic>> _weatherRules = {
     'hot': {
-      'temperature_range': [75, 120],
+      'temperature_range': [24, 50],
       'preferred_materials': ['Cotton', 'Linen'],
       'preferred_categories': ['Tops', 'Dresses', 'Shoes'],
       'avoid_categories': ['Outerwear'],
       'layer_count': 1,
     },
     'warm': {
-      'temperature_range': [65, 75],
+      'temperature_range': [18, 24],
       'preferred_materials': ['Cotton', 'Polyester'],
       'preferred_categories': ['Tops', 'Bottoms', 'Dresses'],
       'avoid_categories': [],
       'layer_count': 2,
     },
     'cool': {
-      'temperature_range': [50, 65],
+      'temperature_range': [10, 18],
       'preferred_materials': ['Cotton', 'Denim', 'Polyester'],
       'preferred_categories': ['Tops', 'Bottoms', 'Outerwear'],
       'avoid_categories': ['Dresses'],
       'layer_count': 2,
     },
     'cold': {
-      'temperature_range': [0, 50],
+      'temperature_range': [-20, 10],
       'preferred_materials': ['Wool', 'Denim'],
       'preferred_categories': ['Outerwear', 'Tops', 'Bottoms'],
       'avoid_categories': ['Dresses'],
@@ -281,10 +281,10 @@ class StylistEngineService {
 
     // Weather consideration
     final temp = weatherData['temperature'] as int;
-    if (temp > 75) {
-      reasons.add('Light and breathable for $temp°F weather');
-    } else if (temp < 50) {
-      reasons.add('Warm and cozy for $temp°F weather');
+    if (temp >= 24) {
+      reasons.add('Light and breathable for $temp°C weather');
+    } else if (temp <= 10) {
+      reasons.add('Warm and cozy for $temp°C weather');
     }
 
     // Occasion match
@@ -343,11 +343,11 @@ class StylistEngineService {
 
   /// Get weather rule based on temperature
   Map<String, dynamic> _getWeatherRule(int temperature) {
-    if (temperature >= 75) {
+    if (temperature >= 24) {
       return _weatherRules['hot']!;
-    } else if (temperature >= 65) {
+    } else if (temperature >= 18) {
       return _weatherRules['warm']!;
-    } else if (temperature >= 50) {
+    } else if (temperature >= 10) {
       return _weatherRules['cool']!;
     } else {
       return _weatherRules['cold']!;

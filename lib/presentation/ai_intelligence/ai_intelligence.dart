@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_bottom_bar.dart';
-import '../../routes/app_routes.dart';
+
 import './widgets/ai_hero_section_widget.dart';
 import './widgets/style_trends_card_widget.dart';
 import './widgets/versatility_scores_card_widget.dart';
@@ -140,10 +139,6 @@ class _AIIntelligenceState extends State<AIIntelligence> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: CustomBottomBar(
-        currentIndex: 3,
-        onTap: _handleNavigation,
       ),
     );
   }
@@ -291,17 +286,4 @@ class _AIIntelligenceState extends State<AIIntelligence> {
     );
   }
 
-  void _handleNavigation(int index) {
-    if (index == 3) return;
-
-    final routes = [
-      AppRoutes.dailyLog,
-      AppRoutes.wardrobeManagement,
-      AppRoutes.smartSuggestions,
-      AppRoutes.insightsDashboard,
-      AppRoutes.purchaseTracking,
-    ];
-
-    Navigator.pushReplacementNamed(context, routes[index]);
-  }
 }

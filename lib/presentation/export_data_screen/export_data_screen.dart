@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../services/profile_service.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
+import '../../services/export_service.dart';
 
 class ExportDataScreen extends StatefulWidget {
   const ExportDataScreen({Key? key}) : super(key: key);
@@ -12,7 +12,6 @@ class ExportDataScreen extends StatefulWidget {
 }
 
 class _ExportDataScreenState extends State<ExportDataScreen> {
-  final ProfileService _profileService = ProfileService();
   String _selectedFormat = 'PDF';
   bool _isExporting = false;
 
@@ -368,27 +367,11 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   Future<void> _handleExport() async {
     setState(() => _isExporting = true);
     try {
-      final filePath = await _profileService.exportAsCSV();
-      if (!mounted) return;
-      if (filePath != null) {
-        await _profileService.shareFile(filePath);
+      if (_selectedFormat == 'PDF') {
+        await ExportService.instance.exportAsPDF(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not generate export'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        await ExportService.instance.exportAsCSV(context);
       }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Export error: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }

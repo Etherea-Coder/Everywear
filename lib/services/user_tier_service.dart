@@ -156,22 +156,26 @@ class UserTierService {
   /// Increments coaching session count
   Future<void> incrementCoachingCount(String userId) async {
     try {
-      await _supabase.from('user_profiles').update({
-        'coaching_sessions_used':
-            _supabase.rpc('increment_coaching_sessions',
-                params: {'user_id_input': userId}),
-      });
+      await _supabase.rpc(
+        'increment_coaching_sessions',
+        params: {'user_id_input': userId},
+      );
     } catch (e) {
-      // Use a simpler approach
-      final response = await _supabase
-          .from('user_profiles')
-          .select('coaching_sessions_used')
-          .eq('id', _supabase.auth.currentUser!.id)
-          .single();
-      final current = response['coaching_sessions_used'] as int? ?? 0;
-      await _supabase.from('user_profiles').update({
-        'coaching_sessions_used': current + 1,
-      }).eq('id', _supabase.auth.currentUser!.id);
+      // RPC failed — fall back to safe read-then-write
+      try {
+        final response = await _supabase
+            .from('user_profiles')
+            .select('coaching_sessions_used')
+            .eq('id', userId) // use passed-in userId, not currentUser
+            .single();
+        final current = response['coaching_sessions_used'] as int? ?? 0;
+        await _supabase
+            .from('user_profiles')
+            .update({'coaching_sessions_used': current + 1})
+            .eq('id', userId); // use passed-in userId, not currentUser
+      } catch (e2) {
+        // Fail silently — count is non-critical
+      }
     }
   }
 
@@ -261,9 +265,21 @@ class UserTierService {
   /// Upgrade user to Signature (premium) tier
   Future<bool> upgradeToPremium(String userId) async {
     try {
-      await _supabase.from('user_profiles').update({
-        'tier': 'premium',
-      }).eq('id', userId);
+      final user = _supabase.auth.currentUser;
+      if (user == null) return false;
+
+      final response = await _supabase.functions.invoke(
+        'verify-purchase',
+        body: {
+          'revenue_cat_user_id': userId,
+        },
+      );
+
+      if (response.status != 200) {
+        final error = response.data?['error'] ?? 'Verification failed';
+        throw Exception(error);
+      }
+
       return true;
     } catch (e) {
       return false;

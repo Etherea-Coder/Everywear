@@ -658,11 +658,87 @@ class _DailyLogState extends State<DailyLog> {
                     ),
                   ),
                 ),
+              // ── Manual city entry when location is denied ──────────────
+              if (isError)
+                Padding(
+                  padding: EdgeInsets.only(top: 1.0.h),
+                  child: GestureDetector(
+                    onTap: _showManualCityDialog,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.edit_location_alt_outlined,
+                          size: 14,
+                          color: theme.colorScheme.primary,
+                        ),
+                        SizedBox(width: 1.w),
+                        Text(
+                          loc.enterCityManually,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _showManualCityDialog() async {
+    final controller = TextEditingController(
+      text: _weatherService.savedCity,
+    );
+    final loc = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.enterCityTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: loc.cityHint,
+            prefixIcon: const Icon(Icons.location_city_outlined),
+          ),
+          onSubmitted: (_) => Navigator.of(ctx).pop(true),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(loc.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(loc.confirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && controller.text.trim().isNotEmpty && mounted) {
+      setState(() => _isLoading = true);
+      final result = await _weatherService.getWeatherByCity(
+        controller.text.trim(),
+      );
+      if (mounted) {
+        setState(() {
+          _weather = result;
+          _isLoading = false;
+        });
+        // Refresh AI suggestion with new weather context
+        _loadAISuggestion();
+      }
+    }
+    controller.dispose();
   }
 
   String _getWeatherTip(AppLocalizations loc, String condition) {
@@ -1482,7 +1558,7 @@ class _DailyLogState extends State<DailyLog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
@@ -1509,7 +1585,7 @@ class _DailyLogState extends State<DailyLog> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : ListView(
-                padding: EdgeInsets.only(top: 2.h, bottom: 12.h),
+                padding: EdgeInsets.only(top: 2.h, bottom: 15.h),
                 children: [
                   SizedBox(height: 1.5.h),
                   

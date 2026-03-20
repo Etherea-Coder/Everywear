@@ -564,82 +564,94 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
         backgroundColor: theme.colorScheme.primary,
         child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       ),
-      body: Column(
-        children: [
-          // Header: title, badges, search, summary card
-          _buildHeader(theme, allItemsAsync, tierInfoAsync),
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: CustomScrollView(
+          slivers: [
+            // Header: title, badges, search, summary card
+            SliverToBoxAdapter(
+              child: _buildHeader(theme, allItemsAsync, tierInfoAsync),
+            ),
 
-          // Category filter chips — the single source of filtering
-          Container(
-            color: theme.scaffoldBackgroundColor,
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _categories.map((category) {
-                  return CategoryFilterChipWidget(
-                    label: category,
-                    isSelected: selectedCategory == category,
-                    onSelected: () => _onCategorySelected(category),
-                  );
-                }).toList(),
+            // Category filter chips — pinned or scrolling?
+            // User asked for "scrolling effect", so let's make it scroll.
+            SliverToBoxAdapter(
+              child: Container(
+                color: theme.scaffoldBackgroundColor,
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _categories.map((category) {
+                      return CategoryFilterChipWidget(
+                        label: category,
+                        isSelected: selectedCategory == category,
+                        onSelected: () => _onCategorySelected(category),
+                      );
+                    }).toList(),
+                  ),
+                ),
               ),
             ),
-          ),
 
-          // Grid
-          Expanded(
-            child: itemsAsync.when(
-              loading: () => const WardrobeShimmer(),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CustomIconWidget(
-                      iconName: 'error_outline',
-                      color: theme.colorScheme.error,
-                      size: 48,
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      localizations.failedToLoadWardrobe,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    SizedBox(height: 1.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w),
-                      child: Text(
-                        error.toString(),
-                        style: theme.textTheme.bodySmall,
-                        textAlign: TextAlign.center,
+            // Grid or Empty State
+            itemsAsync.when(
+              loading: () => const SliverFillRemaining(
+                child: WardrobeShimmer(),
+              ),
+              error: (error, stack) => SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CustomIconWidget(
+                        iconName: 'error_outline',
+                        color: theme.colorScheme.error,
+                        size: 48,
                       ),
-                    ),
-                    SizedBox(height: 2.h),
-                    ElevatedButton(
-                      onPressed: () =>
-                          ref.read(wardrobeItemsProvider.notifier).refresh(),
-                      child: Text(localizations.retry),
-                    ),
-                  ],
+                      SizedBox(height: 2.h),
+                      Text(
+                        localizations.failedToLoadWardrobe,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      SizedBox(height: 1.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        child: Text(
+                          error.toString(),
+                          style: theme.textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      ElevatedButton(
+                        onPressed: () =>
+                            ref.read(wardrobeItemsProvider.notifier).refresh(),
+                        child: Text(localizations.retry),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               data: (wardrobeItems) => wardrobeItems.isEmpty
-                  ? EmptyWardrobeWidget(
-                      hasSearchQuery: _searchController.text.isNotEmpty,
-                      onAddItem: () {
-                        Navigator.of(context, rootNavigator: true)
-                            .pushNamed('/add-clothing-item')
-                            .then((result) {
-                          if (result != null) {
-                            ref.read(wardrobeItemsProvider.notifier).refresh();
-                          }
-                        });
-                      },
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: EmptyWardrobeWidget(
+                        hasSearchQuery: _searchController.text.isNotEmpty,
+                        onAddItem: () {
+                          Navigator.of(context, rootNavigator: true)
+                              .pushNamed('/add-clothing-item')
+                              .then((result) {
+                            if (result != null) {
+                              ref.read(wardrobeItemsProvider.notifier).refresh();
+                            }
+                          });
+                        },
+                      ),
                     )
-                  : RefreshIndicator(
-                      onRefresh: _handleRefresh,
-                      child: GridView.builder(
-                        padding: EdgeInsets.all(4.w),
+                  : SliverPadding(
+                      padding: EdgeInsets.fromLTRB(4.w, 4.w, 4.w, 12.h),
+                      sliver: SliverGrid(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount:
                               MediaQuery.of(context).size.width > 600 ? 3 : 2,
@@ -647,26 +659,29 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                           mainAxisSpacing: 2.h,
                           childAspectRatio: 0.75,
                         ),
-                        itemCount: wardrobeItems.length,
-                        itemBuilder: (context, index) {
-                          final item = wardrobeItems[index];
-                          final isSelected = _selectedItems.contains(item['id']);
-                          return WardrobeItemCardWidget(
-                            item: item,
-                            isSelected: isSelected,
-                            isMultiSelectMode: _isMultiSelectMode,
-                            onTap: () => _handleItemTap(item),
-                            onLongPress: () =>
-                                _handleItemLongPress(item['id'] as String),
-                            onDelete: () =>
-                                _showDeleteConfirmation(item['id'] as String),
-                          );
-                        },
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final item = wardrobeItems[index];
+                            final isSelected =
+                                _selectedItems.contains(item['id']);
+                            return WardrobeItemCardWidget(
+                              item: item,
+                              isSelected: isSelected,
+                              isMultiSelectMode: _isMultiSelectMode,
+                              onTap: () => _handleItemTap(item),
+                              onLongPress: () =>
+                                  _handleItemLongPress(item['id'] as String),
+                              onDelete: () =>
+                                  _showDeleteConfirmation(item['id'] as String),
+                            );
+                          },
+                          childCount: wardrobeItems.length,
+                        ),
                       ),
                     ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

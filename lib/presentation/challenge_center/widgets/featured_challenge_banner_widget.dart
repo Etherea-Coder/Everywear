@@ -62,13 +62,33 @@ class FeaturedChallengeBannerWidget extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(16.0),
-              child: CustomImageWidget(
-                imageUrl: imageUrl,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                semanticLabel: semanticLabel,
-              ),
+              child: imageUrl.isNotEmpty
+                  ? CustomImageWidget(
+                      imageUrl: imageUrl,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      semanticLabel: semanticLabel,
+                    )
+                  : Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.flag_outlined,
+                        size: 64,
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ),
             ),
             Container(
               decoration: BoxDecoration(

@@ -186,7 +186,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView(
-        padding: EdgeInsets.all(4.w),
+        padding: EdgeInsets.fromLTRB(4.w, 4.w, 4.w, 15.h),
         children: [
           _buildHeroInsightCard(theme, currency),
           SizedBox(height: 2.h),
@@ -600,7 +600,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView.builder(
-        padding: EdgeInsets.all(4.w),
+        padding: EdgeInsets.fromLTRB(4.w, 4.w, 4.w, 15.h),
         itemCount: _purchases.length,
         itemBuilder: (context, index) => _buildPurchaseCard(theme, _purchases[index]),
       ),
@@ -705,7 +705,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView.builder(
-        padding: EdgeInsets.all(4.w),
+        padding: EdgeInsets.fromLTRB(4.w, 4.w, 4.w, 15.h),
         itemCount: _wishlist.length,
         itemBuilder: (context, index) =>
             _buildWishlistCard(theme, _wishlist[index]),
