@@ -7,6 +7,7 @@ import '../../services/revenuecat_service.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
+import 'dart:async';
 import '../../core/app_export.dart';
 import '../../widgets/custom_image_widget.dart';
 
@@ -37,11 +38,14 @@ class _SplashScreenState extends State<SplashScreen>
   final _nameController = TextEditingController();
   bool _obscurePassword = true;
 
+  late final StreamSubscription<AuthState> _authSubscription;
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     _initializeDisplay();
+    _listenToAuthChanges();
   }
 
   void _setupAnimations() {
@@ -74,11 +78,26 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _authSubscription.cancel();
     _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  void _listenToAuthChanges() {
+    _authSubscription = SupabaseService.instance.client.auth.onAuthStateChange
+        .listen((data) {
+      if (!mounted) return;
+      // Only react to explicit sign-in — ignore tokenRefreshed, initialSession, etc.
+      if (data.event == AuthChangeEvent.signedIn && data.session != null) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.home,
+          (route) => false,
+        );
+      }
+    });
   }
 
   @override
@@ -640,7 +659,6 @@ class _SplashScreenState extends State<SplashScreen>
         if (user != null) {
           await RevenueCatService.logIn(user.id);
         }
-        if (mounted) HapticFeedback.mediumImpact();
       }
     } on AuthException catch (e) {
       if (mounted) _showErrorSnackBar(e.message);

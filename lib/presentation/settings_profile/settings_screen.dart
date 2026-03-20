@@ -34,8 +34,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isEmailUser() {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return false;
-    return user.appMetadata['provider'] == 'email' ||
-        (user.identities ?? []).any((i) => i.provider == 'email');
+    final identities = user.identities ?? [];
+    if (identities.isEmpty) return false;
+    return identities.any((i) => i.provider == 'email');
   }
 
   @override
