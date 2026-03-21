@@ -33,7 +33,15 @@ class _AIIntelligenceState extends State<AIIntelligence> {
   @override
   void initState() {
     super.initState();
-    _loadInsights();
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      _loadInsights();
+    } else {
+      // Wait for session to be restored, then load
+      Supabase.instance.client.auth.onAuthStateChange.first.then((_) {
+        if (mounted) _loadInsights();
+      });
+    }
   }
 
   String get _currentTimeRange => _timeRangeKeys[_selectedTimeRange];

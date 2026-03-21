@@ -118,29 +118,33 @@ class _DailyLogState extends State<DailyLog> {
       if (kDebugMode) debugPrint('⚠️ Display name load failed: $e');
     }
 
-    final results = await Future.wait([
-      _outfitLogService.fetchOutfitLogsForDate(_selectedDate),
-      _outfitLogService.fetchMonthlyStats(_selectedDate),
-      _weatherService.getCurrentWeather(),
-      _styleService.fetchUpcomingEvents(),
-      _styleService.fetchQuizResult(),
-      _wardrobeService.fetchWardrobeItems(),
-    ]);
+    try {
+      final results = await Future.wait([
+        _outfitLogService.fetchOutfitLogsForDate(_selectedDate).catchError((_) => <Map<String, dynamic>>[]),
+        _outfitLogService.fetchMonthlyStats(_selectedDate).catchError((_) => <Map<String, dynamic>>{}),
+        _weatherService.getCurrentWeather().catchError((_) => <String, dynamic>{}),
+        _styleService.fetchUpcomingEvents().catchError((_) => <Map<String, dynamic>>[]),
+        _styleService.fetchQuizResult().catchError((_) => null),
+        _wardrobeService.fetchWardrobeItems().catchError((_) => <Map<String, dynamic>>[]),
+      ]);
 
-    if (mounted) {
-      setState(() {
-        _todayEntries = results[0] as List<Map<String, dynamic>>;
-        _monthlyStats = results[1] as Map<String, dynamic>;
-        _weather = (results[2] as Map<String, dynamic>?) ?? {};
-        _upcomingEvents = results[3] as List<Map<String, dynamic>>;
-        _quizResult = results[4] as Map<String, dynamic>?;
-        _wardrobeItems = results[5] as List<Map<String, dynamic>>;
-        _generateSuggestion();
-        _isLoading = false;
-      });
-      _loadAISuggestion();
+      if (mounted) {
+        setState(() {
+          _todayEntries   = results[0] as List<Map<String, dynamic>>;
+          _monthlyStats   = results[1] as Map<String, dynamic>;
+          _weather        = (results[2] as Map<String, dynamic>?) ?? {};
+          _upcomingEvents = results[3] as List<Map<String, dynamic>>;
+          _quizResult     = results[4] as Map<String, dynamic>?;
+          _wardrobeItems  = results[5] as List<Map<String, dynamic>>;
+          _generateSuggestion();
+          _isLoading = false;
+        });
+        _loadAISuggestion();
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ Daily log load failed: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
 
   void _generateSuggestion() {
     final condition = (_weather['condition'] ?? '').toString().toLowerCase();
@@ -1104,13 +1108,19 @@ class _DailyLogState extends State<DailyLog> {
                     width: 13.w,
                     height: 13.w,
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.08),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.checkroom),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: (item['imageUrl'] as String? ?? '').isNotEmpty
+                          ? Image.network(
+                              item['imageUrl'] as String,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Icon(Icons.checkroom),
+                            )
+                          : const Icon(Icons.checkroom),
+                    ),
                   ),
                   title: Text(
                     item['name'] as String,
@@ -1150,7 +1160,7 @@ class _DailyLogState extends State<DailyLog> {
     final List<String> categoryKeywords;
     switch (slot) {
       case 'anchor':
-        categoryKeywords = ['outerwear', 'jacket', 'coat', 'blazer', 'cardigan', 'overshirt'];
+        categoryKeywords = ['outerwear', 'jacket', 'coat', 'blazer', 'cardigan', 'overshirt', 'knitwear', 'hoodie', 'sweater'];
         break;
       case 'top':
         categoryKeywords = ['top', 'tops', 'shirt', 'blouse', 'tee', 'sweater', 'jumper', 'knitwear'];
@@ -1165,27 +1175,32 @@ class _DailyLogState extends State<DailyLog> {
         categoryKeywords = [];
     }
 
-    final alternatives = _wardrobeItems.where((item) {
-      if (categoryKeywords.isEmpty) return true;
-      final itemCategory = (item['category'] as String? ?? '').toLowerCase();
-      return categoryKeywords.any((kw) => itemCategory.contains(kw));
-    }).map((item) => {
+  final alternatives = _wardrobeItems.where((item) {
+    if (categoryKeywords.isEmpty) return true;
+    final itemCategory = (item['category'] as String? ?? '').toLowerCase();
+    return categoryKeywords.any((kw) => itemCategory.contains(kw));
+  }).map((item) => {
+    'slot': slot,
+    'name': item['name'] ?? item['title'] ?? loc.unknownItem,
+    'imageUrl': item['image_url'] ?? item['imageUrl'] ?? '',
+    'category': item['category'] ?? loc.catClothing,
+    'id': item['id'],
+  }).toList();
+
+  if (alternatives.isNotEmpty) return alternatives;
+
+  // Anchor fallback: show ALL wardrobe items so user is never stuck
+  if (slot == 'anchor') {
+    return _wardrobeItems.map((item) => {
       'slot': slot,
       'name': item['name'] ?? item['title'] ?? loc.unknownItem,
       'imageUrl': item['image_url'] ?? item['imageUrl'] ?? '',
       'category': item['category'] ?? loc.catClothing,
       'id': item['id'],
     }).toList();
-
-    if (alternatives.isNotEmpty) return alternatives;
-
-    // Only fall back to dummy data if the wardrobe has no matching items at all
-    return getFallbackAlternatives(slot);
   }
 
-  List<Map<String, dynamic>> getFallbackAlternatives(String slot) {
-    return []; // Return empty — we show an empty state in the sheet instead
-  }
+  return [];
 
   String _getLocalizedSlotTitle(AppLocalizations loc, String slot) {
     switch (slot) {

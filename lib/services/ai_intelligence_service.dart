@@ -31,8 +31,12 @@ class AIIntelligenceService {
   }) async {
     if (!forceRefresh && _isValid(timeRange, category)) return _cache!;
 
+    await _supabase.auth.refreshSession();
+    final session = _supabase.auth.currentSession;
+    if (session == null) throw Exception('Not authenticated');
     final response = await _supabase.functions.invoke(
       'generate-ai-insights',
+      headers: {'Authorization': 'Bearer ${session.accessToken}'},
       body: {
         'timeRange': timeRange,
         if (category != null) 'category': category,

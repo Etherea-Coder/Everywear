@@ -4,6 +4,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:app_settings/app_settings.dart';
+
+
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -50,8 +53,15 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
-      final granted = await android.requestNotificationsPermission();
-      return granted ?? false;
+n
+    final alreadyGranted = await android.areNotificationsEnabled();
+    if (alreadyGranted) return true;
+
+    final granted = await android.requestNotificationsPermission();
+    if (granted ?? false) return true;
+
+    await AppSettings.openAppSettings();
+    return false;
     }
 
     // iOS

@@ -91,7 +91,12 @@ class ChallengeService {
   }) async {
     try {
       final uid = _userId;
-      if (uid == null) return false;
+      if (uid == null) {
+        debugPrint('❌ joinChallenge: user not authenticated');
+        return false;
+      }
+
+      debugPrint('🔄 joinChallenge: uid=$uid challengeId=$challengeId');
 
       await _client.from('user_challenges').upsert({
         'user_id': uid,
@@ -99,10 +104,12 @@ class ChallengeService {
         'progress': 0,
         'started_at': DateTime.now().toIso8601String(),
         'anchor_item_id': anchorItemId,
-      });
+      }, onConflict: 'user_id,challenge_id');
+
+      debugPrint('✅ joinChallenge: success');
       return true;
     } catch (e) {
-      if (kDebugMode) debugPrint('ChallengeService.joinChallenge error: $e');
+      debugPrint('❌ joinChallenge error: $e');
       return false;
     }
   }

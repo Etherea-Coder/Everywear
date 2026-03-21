@@ -48,6 +48,7 @@ dependencies:
   pdf: ^3.11.0
   flutter_local_notifications: ^18.0.0
   timezone: ^0.9.4
+  app_settings: ^5.1.1
   
 dev_dependencies:
   flutter_test:

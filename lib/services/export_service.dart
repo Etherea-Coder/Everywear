@@ -75,7 +75,7 @@ class ExportService {
           .order('event_date'),
       _client
           .from('style_quiz_results')
-          .select('style_profile, preferred_colors, style_goals, created_at')
+          .select('style_profile, preferred_colors, style_goals, completed_at')
           .eq('user_id', userId)
           .order('created_at', ascending: false)
           .limit(1),
