@@ -53,9 +53,8 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
-n
     final alreadyGranted = await android.areNotificationsEnabled();
-    if (alreadyGranted) return true;
+    if (alreadyGranted == true) return true;
 
     final granted = await android.requestNotificationsPermission();
     if (granted ?? false) return true;

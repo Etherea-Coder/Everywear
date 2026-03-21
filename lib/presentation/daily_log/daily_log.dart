@@ -121,7 +121,7 @@ class _DailyLogState extends State<DailyLog> {
     try {
       final results = await Future.wait([
         _outfitLogService.fetchOutfitLogsForDate(_selectedDate).catchError((_) => <Map<String, dynamic>>[]),
-        _outfitLogService.fetchMonthlyStats(_selectedDate).catchError((_) => <Map<String, dynamic>>{}),
+        _outfitLogService.fetchMonthlyStats(_selectedDate).catchError((_) => <String, dynamic>{}),
         _weatherService.getCurrentWeather().catchError((_) => <String, dynamic>{}),
         _styleService.fetchUpcomingEvents().catchError((_) => <Map<String, dynamic>>[]),
         _styleService.fetchQuizResult().catchError((_) => null),
@@ -145,6 +145,7 @@ class _DailyLogState extends State<DailyLog> {
       if (kDebugMode) debugPrint('⚠️ Daily log load failed: $e');
       if (mounted) setState(() => _isLoading = false);
     }
+  }
 
   void _generateSuggestion() {
     final condition = (_weather['condition'] ?? '').toString().toLowerCase();
@@ -1030,9 +1031,17 @@ class _DailyLogState extends State<DailyLog> {
     );
   }
 
-  void _showSwapItemSheet(Map<String, dynamic> currentItem) {
+  Future<void> _showSwapItemSheet(Map<String, dynamic> currentItem) async {
     final loc = AppLocalizations.of(context);
     final slot = currentItem['slot'] as String? ?? 'item';
+
+    // Ensure wardrobe is loaded before computing alternatives
+    if (_wardrobeItems.isEmpty) {
+      final items = await _wardrobeService.fetchWardrobeItems();
+      if (mounted) setState(() => _wardrobeItems = items);
+    }
+
+    if (!mounted) return;
     final alternatives = _getSwapAlternatives(slot);
 
     showModalBottomSheet(
@@ -1201,6 +1210,8 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   return [];
+
+  }
 
   String _getLocalizedSlotTitle(AppLocalizations loc, String slot) {
     switch (slot) {
