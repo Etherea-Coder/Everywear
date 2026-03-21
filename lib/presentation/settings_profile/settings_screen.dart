@@ -46,6 +46,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadPreferences() async {
+    await NotificationService.instance.initialize(); // ← add this
     final notifications =
         await NotificationService.instance.isMorningSuggestionsEnabled();
     final analytics = await AnalyticsService.instance.isAnalyticsEnabled();
