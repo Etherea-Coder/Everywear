@@ -12,24 +12,23 @@ class ChallengeService {
 
   // ── READ ─────────────────────────────────────────────────────────────────
 
-  /// Returns the current week's challenge (based on ISO week number mod 4)
-  /// merged with the user's participation row if it exists.
   Future<Map<String, dynamic>?> fetchCurrentChallenge() async {
     try {
       final uid = _userId;
       if (uid == null) return null;
 
-      // Pick which week slot to show (1-4 rotation)
-      final weekSlot = (DateTime.now().weekOfYear % 4) + 1;
-
+      // Fetch all active challenges
       final challenges = await _client
-          .from('challenges')
+          .from('style_challenges')
           .select()
-          .eq('week_number', weekSlot)
-          .limit(1);
+          .eq('is_active', true)
+          .order('created_at');
 
       if (challenges.isEmpty) return null;
-      final challenge = Map<String, dynamic>.from(challenges.first);
+
+      // Rotate by week of year
+      final weekSlot = DateTime.now().weekOfYear % challenges.length;
+      final challenge = Map<String, dynamic>.from(challenges[weekSlot]);
 
       // Try to find an active user_challenge for this challenge
       final userRows = await _client
@@ -62,7 +61,6 @@ class ChallengeService {
       return null;
     }
   }
-
   /// Returns all challenges the user has ever joined (for history/insights).
   Future<List<Map<String, dynamic>>> fetchUserChallengeHistory() async {
     try {
