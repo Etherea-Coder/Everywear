@@ -119,15 +119,14 @@ class _ChallengeDetailSheetState extends State<ChallengeDetailSheet> {
     }
 
     setState(() => _isLoading = true);
-    final success = await widget.service.joinChallenge(
+    final error = await widget.service.joinChallenge(
       _challenge['id'] as String,
       anchorItemId: _selectedAnchorItem?['id'] as String?,
     );
 
     if (!mounted) return;
-    if (success) {
+    if (error == null) {
       widget.onChanged();
-      // Refresh local state
       setState(() {
         _challenge['is_joined'] = true;
         _challenge['progress'] = 0;
@@ -135,7 +134,7 @@ class _ChallengeDetailSheetState extends State<ChallengeDetailSheet> {
       });
       _showSnack('Challenge accepted! 🎉');
     } else {
-      _showSnack('Something went wrong. Please try again.', isError: true);
+      _showSnack('Error: $error', isError: true);
     }
     setState(() => _isLoading = false);
   }

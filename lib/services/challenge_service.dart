@@ -85,18 +85,13 @@ class ChallengeService {
   // ── JOIN ─────────────────────────────────────────────────────────────────
 
   /// Joins a challenge. For anchor_piece type, [anchorItemId] is required.
-  Future<bool> joinChallenge(
+  Future<String?> joinChallenge(
     String challengeId, {
     String? anchorItemId,
   }) async {
     try {
       final uid = _userId;
-      if (uid == null) {
-        debugPrint('❌ joinChallenge: user not authenticated');
-        return false;
-      }
-
-      debugPrint('🔄 joinChallenge: uid=$uid challengeId=$challengeId');
+      if (uid == null) return 'User not authenticated';
 
       await _client.from('user_challenges').upsert({
         'user_id': uid,
@@ -106,14 +101,11 @@ class ChallengeService {
         'anchor_item_id': anchorItemId,
       }, onConflict: 'user_id,challenge_id');
 
-      debugPrint('✅ joinChallenge: success');
-      return true;
+      return null; // null = success
     } catch (e) {
-      debugPrint('❌ joinChallenge error: $e');
-      return false;
+      return e.toString(); // return error as string
     }
   }
-
   // ── PROGRESS ─────────────────────────────────────────────────────────────
 
   /// Increments progress by 1 for [userChallengeId].

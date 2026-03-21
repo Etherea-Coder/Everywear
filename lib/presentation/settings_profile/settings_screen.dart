@@ -295,6 +295,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         icon: icon,
         title: title,
         subtitle: subtitle,
+        onTap: () => onChanged(!value),
         trailing: Switch(
           value: value,
           onChanged: onChanged,

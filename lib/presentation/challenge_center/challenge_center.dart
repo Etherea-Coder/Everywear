@@ -79,15 +79,16 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
   }
 
   Future<void> _acceptChallenge(String challengeId) async {
-    final success = await _challengeService.joinChallenge(challengeId);
-    if (success && mounted) {
+    final error = await _challengeService.joinChallenge(challengeId);
+    if (error == null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Challenge accepted! Good luck!'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
+        SnackBar(content: const Text('Challenge accepted! Good luck!')),
       );
       _loadChallenges();
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
     }
   }
 

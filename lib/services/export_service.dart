@@ -77,7 +77,7 @@ class ExportService {
           .from('style_quiz_results')
           .select('style_profile, preferred_colors, style_goals, completed_at')
           .eq('user_id', userId)
-          .order('created_at', ascending: false)
+          .order('completed_at', ascending: false)
           .limit(1),
     ]);
 
