@@ -47,37 +47,38 @@ class NotificationService {
 
   // ─── Permission ───────────────────────────────────────────────────────────
 
-  Future<bool> requestPermission() async {
-    // Android 13+
-    final android = _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    if (android != null) {
+Future<bool> requestPermission() async {
+  // Android 13+
+  final android = _plugin.resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>();
+  
+  if (android != null) {
     final alreadyGranted = await android.areNotificationsEnabled();
     if (alreadyGranted == true) return true;
 
+    // Request permission for Android 13+
     final granted = await android.requestNotificationsPermission();
     if (granted ?? false) return true;
 
-    await AppSettings.openAppSettings();
-    return false;
-    }
-
-    // iOS
-    final ios = _plugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-    if (ios != null) {
-      final granted = await ios.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-      return granted ?? false;
-    }
-
+    // If denied, open settings (optional, or just return false)
+    // await AppSettings.openAppSettings(); 
     return false;
   }
+
+  // iOS
+  final ios = _plugin.resolvePlatformSpecificImplementation<
+      IOSFlutterLocalNotificationsPlugin>();
+  if (ios != null) {
+    final granted = await ios.requestPermissions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    return granted ?? false;
+  }
+
+  return true; 
+}
 
   // ─── Preference persistence ───────────────────────────────────────────────
 
