@@ -233,6 +233,13 @@ class StylistEngineService {
     }).length;
     score += (materialMatches / items.length) * 0.05;
 
+    // Rating-based boost: items from highly-rated outfits increase confidence
+    final ratedItems = items.where((item) {
+      final avgRating = item['avg_rating'] as double?;
+      return avgRating != null && avgRating >= 4.0;
+    }).length;
+    score += (ratedItems / items.length) * 0.1;
+
     return (score * 100).clamp(65, 98).toDouble();
   }
 
@@ -258,6 +265,19 @@ class StylistEngineService {
       }
       reasons.add(
         favString.replaceFirst('%s', highRatedItems.first['name'] as String? ?? ''),
+      );
+    }
+
+    // Items with high average outfit ratings are proven favourites
+    final topRatedByOutfit = items.where((item) {
+      final avgRating = item['avg_rating'] as double?;
+      return avgRating != null && avgRating >= 4.0;
+    });
+    if (topRatedByOutfit.isNotEmpty && highRatedItems.isEmpty) {
+      final itemName = topRatedByOutfit.first['name'] as String? ?? '';
+      final avgRating = topRatedByOutfit.first['avg_rating'] as double;
+      reasons.add(
+        'Your $itemName appears in outfits you rated ${avgRating.toStringAsFixed(1)}/5 on average',
       );
     }
 

@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
+import './outfit_log_service.dart';
 
 class StyleService {
+  final OutfitLogService _outfitLogService = OutfitLogService();
   SupabaseClient get _client => SupabaseService.instance.client;
   
   // Public getter for accessing client
@@ -263,6 +265,9 @@ class StyleService {
       } : null;
 
       final wardrobeSummary = _buildWardrobeSummary(insights);
+      final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
+      final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
+      final itemRatings = await _outfitLogService.fetchItemRatingAverages();
 
       final response = await _client.functions.invoke(
         'style-coach',
@@ -273,6 +278,9 @@ class StyleService {
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': wardrobeSummary,
+          'recentOutfits': recentOutfits,
+          'occasionPatterns': occasionPatterns,
+          'itemRatings': itemRatings,
         },
       );
 
@@ -300,6 +308,10 @@ class StyleService {
         'styleIntention': quizResult['style_intention']?.toString(),
       } : null;
 
+      final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
+      final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
+      final itemRatings = await _outfitLogService.fetchItemRatingAverages();
+
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
@@ -308,6 +320,9 @@ class StyleService {
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': _buildWardrobeSummary(insights),
+          'recentOutfits': recentOutfits,
+          'occasionPatterns': occasionPatterns,
+          'itemRatings': itemRatings,
           'question': question,
         },
       );
@@ -345,6 +360,10 @@ class StyleService {
         'styleIntention': quizResult['style_intention']?.toString(),
       } : null;
 
+      final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
+      final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
+      final itemRatings = await _outfitLogService.fetchItemRatingAverages();
+
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
@@ -353,6 +372,9 @@ class StyleService {
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': _buildWardrobeSummary(insights),
+          'recentOutfits': recentOutfits,
+          'occasionPatterns': occasionPatterns,
+          'itemRatings': itemRatings,
           'event': {
             'title': event['title'],
             'type': event['event_type'],

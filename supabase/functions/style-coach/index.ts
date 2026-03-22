@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
-    const { userName, localHour, mode, userProfile, insights, wardrobeSummary, question, event } = await req.json()
+    const { userName, localHour, mode, userProfile, insights, wardrobeSummary, recentOutfits, occasionPatterns, itemRatings, question, event } = await req.json()
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
@@ -61,6 +61,48 @@ WARDROBE DATA:
 - Top occasion: ${insights?.topOccasion ?? 'Casual'}
 - Wardrobe summary: ${wardrobeSummary ?? 'Limited data available'}`
 
+    // Build recent outfit history block
+    let recentOutfitsBlock = ''
+    if (Array.isArray(recentOutfits) && recentOutfits.length > 0) {
+      const lines = recentOutfits.map((o: any) => {
+        const date = o.date ? new Date(o.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '?'
+        const items = Array.isArray(o.items) && o.items.length > 0 ? o.items.join(', ') : 'no item details'
+        const rating = o.rating ? ` — rated ${o.rating}/5` : ''
+        return `- ${date}: "${o.name ?? 'Unnamed'}" — ${items} (${o.occasion ?? 'Unknown'}${rating})`
+      }).join('\n')
+      recentOutfitsBlock = `\n\nRECENT OUTFIT HISTORY (last 7 days):\n${lines}`
+    }
+
+    // Build habit patterns block
+    let habitBlock = ''
+    if (occasionPatterns && typeof occasionPatterns === 'object') {
+      const weekday = occasionPatterns.weekday ?? {}
+      const weekend = occasionPatterns.weekend ?? {}
+      const fmtTop = (counts: Record<string, number>) => {
+        const entries = Object.entries(counts).sort(([,a], [,b]) => b - a)
+        if (entries.length === 0) return 'no data yet'
+        return entries.slice(0, 3).map(([k, v]) => `${k} (${v}x)`).join(', ')
+      }
+      if (Object.keys(weekday).length > 0 || Object.keys(weekend).length > 0) {
+        habitBlock = `\n\nHABIT PATTERNS (last 60 days):\n- Weekdays: ${fmtTop(weekday)}\n- Weekends: ${fmtTop(weekend)}`
+      }
+    }
+
+    // Build top-rated items block from item rating averages
+    let ratingsBlock = ''
+    if (itemRatings && typeof itemRatings === 'object' && Object.keys(itemRatings).length > 0) {
+      // itemRatings is { itemId: { avg_rating, rated_count } } — we don't have names here,
+      // but recent outfits already carry item names. Build a summary of top-rated items.
+      const entries = Object.entries(itemRatings as Record<string, any>)
+        .filter(([, v]) => v.avg_rating && v.rated_count >= 2)
+        .sort(([, a], [, b]) => (b.avg_rating as number) - (a.avg_rating as number))
+        .slice(0, 5)
+      if (entries.length > 0) {
+        const lines = entries.map(([id, v]) => `- Item ${id.slice(0, 8)}… avg ${v.avg_rating}/5 across ${v.rated_count} outfits`).join('\n')
+        ratingsBlock = `\n\nITEM RATING FEEDBACK:\nThe user rates their outfits. These items consistently appear in high-rated outfits — prefer them when building suggestions:\n${lines}`
+      }
+    }
+
     let prompt = ''
     const nameIntro = userName ? ` for ${userName}` : ''
 
@@ -80,12 +122,14 @@ WARDROBE DATA:
 Your job is to give one short weekly coaching tip. Be warm, encouraging, concise, and practical.
 Do not sound like a chatbot or fashion magazine. Base advice only on the user data below.
 ${profileBlock}
-${insightsBlock}${timeContext}
+${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}${timeContext}
 ${guardrails}
 
 TASK:
 Give exactly one coaching tip for this week.
 - Be specific and personal
+- Reference the user's recent outfit choices if available — notice patterns, suggest variety, or compliment repeated favourites
+- Use habit patterns to anticipate today's likely occasion if relevant
 - Suggest one realistic action
 - 2 to 4 sentences maximum
 - Start with a short observation, then one practical suggestion
@@ -96,7 +140,7 @@ Give exactly one coaching tip for this week.
 Help users style themselves using their own wardrobe, style profile, and goals.
 Be helpful, personal, concise, and confident.
 ${profileBlock}
-${insightsBlock}
+${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}
 ${guardrails}
 
 USER QUESTION:
@@ -104,6 +148,7 @@ ${question}
 
 TASK:
 Answer as their personal style coach. Prioritize items they already own.
+If relevant, reference their recent outfit history to give context-aware advice.
 Keep the answer under 180 words. The "next_step" must be a concrete action, never a question. Example: "Try pairing your blazer with white trousers this week".
 Output a JSON object with keys: "answer" and "next_step"`
 
@@ -113,7 +158,7 @@ Output a JSON object with keys: "answer" and "next_step"`
 Help users prepare outfits for real upcoming events. Be personal, practical, and appropriate.
 Use the user existing wardrobe first. Do not invent wardrobe items not provided.
 ${profileBlock}
-${insightsBlock}
+${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}
 
 EVENT:
 - Title: ${event?.title ?? 'Unknown'}
@@ -125,6 +170,7 @@ ${guardrails}
 
 TASK:
 Suggest up to 3 outfit directions for this event. Keep full answer under 220 words.
+If relevant, reference recent outfits to avoid repeats or build on successful looks.
 Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "prep_tip"`
     }
 

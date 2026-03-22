@@ -233,6 +233,155 @@ class OutfitLogService {
     );
   }
 
+  /// Fetch recent outfit history for AI prompts (style-coach).
+  /// Returns a compact list of the last [limit] outfits from the past [days] days.
+  Future<List<Map<String, dynamic>>> fetchRecentOutfitHistory({
+    int days = 7,
+    int limit = 7,
+  }) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      final since = DateTime.now().subtract(Duration(days: days)).toIso8601String();
+
+      final logs = await _client
+          .from('outfit_logs')
+          .select('''
+            worn_date, occasion, rating, outfit_name,
+            outfit_items (
+              wardrobe_items (
+                name, category, color
+              )
+            )
+          ''')
+          .eq('user_id', userId)
+          .gte('worn_date', since)
+          .order('worn_date', ascending: false)
+          .limit(limit);
+
+      return List<Map<String, dynamic>>.from(logs).map((log) {
+        final items = (log['outfit_items'] as List? ?? [])
+            .map((oi) => oi['wardrobe_items'] as Map<String, dynamic>?)
+            .where((w) => w != null)
+            .map((w) => '${w!['name']} (${w['category'] ?? 'unknown'}${w['color'] != null ? ', ${w['color']}' : ''})')
+            .toList();
+
+        return {
+          'date': log['worn_date'],
+          'name': log['outfit_name'] ?? 'Unnamed outfit',
+          'occasion': log['occasion'] ?? 'Other',
+          'rating': log['rating'],
+          'items': items,
+        };
+      }).toList();
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error fetching recent outfit history: $e');
+      return [];
+    }
+  }
+  /// Computes the average outfit rating for each wardrobe item.
+  /// Joins outfit_logs (which have ratings) with outfit_items to attribute
+  /// ratings to individual wardrobe items. Returns a map keyed by item_id.
+  Future<Map<String, Map<String, dynamic>>> fetchItemRatingAverages() async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return {};
+
+      // Fetch all rated outfit logs with their items
+      final logs = await _client
+          .from('outfit_logs')
+          .select('''
+            rating,
+            outfit_items (
+              item_id
+            )
+          ''')
+          .eq('user_id', userId)
+          .not('rating', 'is', null);
+
+      final logsList = List<Map<String, dynamic>>.from(logs);
+      if (logsList.isEmpty) return {};
+
+      // Accumulate ratings per item
+      final Map<String, List<int>> itemRatings = {};
+      for (final log in logsList) {
+        final rating = log['rating'] as int?;
+        if (rating == null) continue;
+        final items = log['outfit_items'] as List? ?? [];
+        for (final oi in items) {
+          final itemId = oi['item_id'] as String?;
+          if (itemId == null) continue;
+          itemRatings.putIfAbsent(itemId, () => []).add(rating);
+        }
+      }
+
+      // Compute averages
+      final Map<String, Map<String, dynamic>> result = {};
+      for (final entry in itemRatings.entries) {
+        final ratings = entry.value;
+        final avg = ratings.reduce((a, b) => a + b) / ratings.length;
+        result[entry.key] = {
+          'avg_rating': double.parse(avg.toStringAsFixed(1)),
+          'rated_count': ratings.length,
+        };
+      }
+
+      return result;
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error fetching item rating averages: $e');
+      return {};
+    }
+  }
+
+  /// Aggregates occasion frequency broken down by weekday vs weekend
+  /// from the last [days] days of outfit logs. Used by AI prompts.
+  Future<Map<String, dynamic>> fetchOccasionPatterns({int days = 60}) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return {};
+
+      final since = DateTime.now().subtract(Duration(days: days)).toIso8601String();
+
+      final logs = await _client
+          .from('outfit_logs')
+          .select('occasion, worn_date')
+          .eq('user_id', userId)
+          .gte('worn_date', since);
+
+      final logsList = List<Map<String, dynamic>>.from(logs);
+      if (logsList.isEmpty) return {};
+
+      final Map<String, int> weekdayCounts = {};
+      final Map<String, int> weekendCounts = {};
+      final Map<String, int> overallCounts = {};
+
+      for (final log in logsList) {
+        final occasion = log['occasion'] as String? ?? 'Other';
+        final date = DateTime.tryParse(log['worn_date'] ?? '');
+        overallCounts[occasion] = (overallCounts[occasion] ?? 0) + 1;
+
+        if (date != null) {
+          final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+          if (isWeekend) {
+            weekendCounts[occasion] = (weekendCounts[occasion] ?? 0) + 1;
+          } else {
+            weekdayCounts[occasion] = (weekdayCounts[occasion] ?? 0) + 1;
+          }
+        }
+      }
+
+      return {
+        'weekday': weekdayCounts,
+        'weekend': weekendCounts,
+        'overall': overallCounts,
+      };
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error fetching occasion patterns: $e');
+      return {};
+    }
+  }
+
   /// Update an existing outfit log
   Future<bool> updateOutfitLog({
     required String outfitId,

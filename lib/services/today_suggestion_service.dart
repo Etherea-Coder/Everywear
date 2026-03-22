@@ -63,6 +63,23 @@ class TodaySuggestionService {
       final user = _client.auth.currentUser;
       final userName = _getUserFirstName(user);
 
+      final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
+
+      // Fetch item rating averages and merge into wardrobe items
+      final itemRatings = await _outfitLogService.fetchItemRatingAverages();
+      final enrichedWardrobe = compactWardrobe.map((item) {
+        final id = item['id']?.toString() ?? '';
+        final ratingData = itemRatings[id];
+        if (ratingData != null) {
+          return {
+            ...item,
+            'avg_rating': ratingData['avg_rating'],
+            'rated_count': ratingData['rated_count'],
+          };
+        }
+        return item;
+      }).toList();
+
       final response = await _client.functions.invoke(
         'today-suggestion',
         body: {
@@ -72,9 +89,10 @@ class TodaySuggestionService {
           'weather': weather,
           'occasion': occasion,
           'mood': mood,
-          'wardrobeItems': compactWardrobe,
+          'wardrobeItems': enrichedWardrobe,
           'recentItems': recentItems,
           'nextEvent': eventSummary,
+          'occasionPatterns': occasionPatterns,
         },
       );
 

@@ -24,15 +24,18 @@ Deno.serve(async (req) => {
       wardrobeItems,
       recentItems,
       nextEvent,
+      occasionPatterns,
     } = await req.json()
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     // Build wardrobe list for prompt
-    const wardrobeList = (wardrobeItems ?? []).map((item: any) =>
-      `- id:${item.id} | ${item.name} | ${item.category} | ${item.color ?? 'unknown color'} | worn ${item.times_worn ?? 0}x | last worn: ${item.last_worn ?? 'never'} | imageUrl: ${item.image_url ?? ''}`
-    ).join('\n')
+    const wardrobeList = (wardrobeItems ?? []).map((item: any) => {
+      let line = `- id:${item.id} | ${item.name} | ${item.category} | ${item.color ?? 'unknown color'} | worn ${item.times_worn ?? 0}x | last worn: ${item.last_worn ?? 'never'} | imageUrl: ${item.image_url ?? ''}`
+      if (item.avg_rating) line += ` | avg outfit rating: ${item.avg_rating}/5 (${item.rated_count ?? 0} outfits)`
+      return line
+    }).join('\n')
 
     const recentList = (recentItems ?? []).join(', ') || 'none'
     const weatherStr = weather ? `${weather.temperature}${weather.unit}, ${weather.condition}` : 'unknown'
@@ -67,6 +70,19 @@ TODAY CONTEXT:
 - Upcoming event: ${eventStr}
 - Instruction: Tone of the description can hint at the time of day (e.g. morning prep, afternoon slump, evening out).
 
+${(() => {
+  if (!occasionPatterns || typeof occasionPatterns !== 'object') return ''
+  const weekday = occasionPatterns.weekday ?? {}
+  const weekend = occasionPatterns.weekend ?? {}
+  const fmtTop = (counts: Record<string, number>) => {
+    const entries = Object.entries(counts).sort(([,a], [,b]) => b - a)
+    if (entries.length === 0) return 'no data yet'
+    return entries.slice(0, 3).map(([k, v]) => `${k} (${v}x)`).join(', ')
+  }
+  if (Object.keys(weekday).length === 0 && Object.keys(weekend).length === 0) return ''
+  return `HABIT PATTERNS (last 60 days):\n- Weekdays: ${fmtTop(weekday)}\n- Weekends: ${fmtTop(weekend)}\n- Instruction: If no occasion is selected, lean toward the user's most common occasion for today's day type.`
+})()}
+
 RECENTLY WORN ITEMS (avoid if possible):
 ${recentList}
 
@@ -85,6 +101,10 @@ OUTFIT RULES:
 VARIETY RULE:
 Avoid items worn in the last 3 days unless they are the only strong match.
 Prefer underused items when they fit the outfit well.
+
+RATING PREFERENCE:
+Items with a high average outfit rating (4+) are proven favourites — prefer them when they fit the occasion and weather.
+Items with low average ratings (below 3) should be deprioritised unless no better option exists.
 
 Return ONLY valid JSON in this exact format, no markdown, no explanation:
 {

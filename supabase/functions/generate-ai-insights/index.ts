@@ -68,9 +68,37 @@ Deno.serve(async (req) => {
     // outfit_items uses `item_id`, NOT `wardrobe_item_id`
     const { data: logs = [], error: logsErr } = await supabase
       .from('outfit_logs')
-      .select('id, worn_date, occasion, outfit_items(item_id)')
+      .select('id, worn_date, occasion, rating, outfit_items(item_id)')
       .gte('worn_date', start.toISOString())
     if (logsErr) throw new Error(`outfit_logs: ${logsErr.message}`)
+
+    // ── Compute per-item average ratings from outfit logs ─────────────────
+    const itemRatingAccum: Record<string, number[]> = {}
+    logs.forEach((log: any) => {
+      if (log.rating == null) return
+      log.outfit_items?.forEach((oi: any) => {
+        if (!oi.item_id) return
+        if (!itemRatingAccum[oi.item_id]) itemRatingAccum[oi.item_id] = []
+        itemRatingAccum[oi.item_id].push(log.rating)
+      })
+    })
+    const itemRatingAverages: Record<string, { avg: number; count: number; name?: string }> = {}
+    for (const [id, ratings] of Object.entries(itemRatingAccum)) {
+      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length
+      const item = items.find((i: any) => i.id === id)
+      itemRatingAverages[id] = {
+        avg: Math.round(avg * 10) / 10,
+        count: ratings.length,
+        name: item?.name ?? undefined,
+      }
+    }
+
+    // Top-rated and lowest-rated items for AI prompt
+    const ratedItems = Object.entries(itemRatingAverages)
+      .filter(([, v]) => v.count >= 2)
+      .sort(([, a], [, b]) => b.avg - a.avg)
+    const topRated = ratedItems.slice(0, 5)
+    const lowestRated = ratedItems.filter(([, v]) => v.avg < 3).slice(0, 3)
 
     // ── Fetch style quiz (all available columns for richer AI context) ────
     const { data: quiz } = await supabase
@@ -207,6 +235,14 @@ WARDROBE SUMMARY:
 USER STYLE PROFILE (from quiz):
 ${JSON.stringify(quizContext)}
 
+${topRated.length > 0 ? `TOP-RATED ITEMS (by outfit rating):
+${topRated.map(([, v]) => `- ${v.name ?? 'Unknown'}: avg ${v.avg}/5 (${v.count} outfits)`).join('\n')}
+These are proven favourites — prefer recommending outfits around them.` : ''}
+
+${lowestRated.length > 0 ? `LOWEST-RATED ITEMS:
+${lowestRated.map(([, v]) => `- ${v.name ?? 'Unknown'}: avg ${v.avg}/5 (${v.count} outfits)`).join('\n')}
+Consider suggesting alternative styling or replacement for these.` : ''}
+
 Return exactly this structure:
 {
   "confidenceScore": <integer 60-95>,
@@ -274,6 +310,7 @@ Return exactly this structure:
       underutilizedItems,
       sustainabilityMetrics,
       recommendations:      aiInsights.recommendations ?? [],
+      topRatedItems:         topRated.map(([id, v]) => ({ id, name: v.name, avgRating: v.avg, outfitCount: v.count })),
     }
 
     return new Response(JSON.stringify(result), {
