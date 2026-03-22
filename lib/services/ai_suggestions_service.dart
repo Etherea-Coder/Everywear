@@ -28,6 +28,24 @@ class AiSuggestionsService {
         return {'success': false, 'error': 'User not authenticated'};
       }
 
+      final userName = _getUserFirstName(user);
+      
+      // Fetch quiz result to inject style profile if available
+      Map<String, dynamic>? profile;
+      try {
+        final quizResult = await StyleService().fetchQuizResult();
+        if (quizResult != null) {
+          profile = {
+            'styleProfile': quizResult['style_profile'],
+            'preferredColors': quizResult['preferred_colors']?.toString(),
+            'styleGoals': quizResult['style_goals']?.toString(),
+            'styleIntention': quizResult['style_intention']?.toString(),
+          };
+        }
+      } catch (e) {
+        // Ignore failure, we'll just not send profile data
+      }
+
       // Check suggestion limit before making API call
       final canRequest = await _tierService.canRequestSuggestion(user.id);
       if (!canRequest) {
@@ -48,6 +66,8 @@ class AiSuggestionsService {
         body: {
           'imageUrl': imageUrl,
           'language': language,
+          'userName': userName,
+          'userProfile': profile,
           'weather': weatherContext,
           'itemsInfo': itemHistory,
         },
@@ -69,4 +89,13 @@ class AiSuggestionsService {
       };
     }
   }
+
+  String? _getUserFirstName(User? user) {
+    if (user == null) return null;
+    final fullName = user.userMetadata?['full_name'] as String? ?? 
+                     user.userMetadata?['name'] as String?;
+    if (fullName == null || fullName.trim().isEmpty) return null;
+    return fullName.trim().split(' ').first;
+  }
+}
 }

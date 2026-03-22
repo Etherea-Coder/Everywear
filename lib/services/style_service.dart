@@ -254,6 +254,7 @@ class StyleService {
     Map<String, dynamic>? quizResult,
   }) async {
     try {
+      final userName = _getUserFirstName(_client.auth.currentUser);
       final profile = quizResult != null ? {
         'styleProfile': quizResult['style_profile'],
         'preferredColors': quizResult['preferred_colors']?.toString(),
@@ -266,6 +267,7 @@ class StyleService {
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
+          'userName': userName,
           'mode': 'passive',
           'userProfile': profile,
           'insights': insights,
@@ -289,6 +291,7 @@ class StyleService {
     Map<String, dynamic>? quizResult,
   }) async {
     try {
+      final userName = _getUserFirstName(_client.auth.currentUser);
       final profile = quizResult != null ? {
         'styleProfile': quizResult['style_profile'],
         'preferredColors': quizResult['preferred_colors']?.toString(),
@@ -299,6 +302,7 @@ class StyleService {
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
+          'userName': userName,
           'mode': 'active',
           'userProfile': profile,
           'insights': insights,
@@ -330,6 +334,7 @@ class StyleService {
     Map<String, dynamic>? quizResult,
   }) async {
     try {
+      final userName = _getUserFirstName(_client.auth.currentUser);
       final date = DateTime.parse(event['event_date']);
       final daysLeft = date.difference(DateTime.now()).inDays;
       final profile = quizResult != null ? {
@@ -342,6 +347,7 @@ class StyleService {
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
+          'userName': userName,
           'mode': 'event',
           'userProfile': profile,
           'insights': insights,
@@ -373,4 +379,11 @@ class StyleService {
     return 'Total: $total items. Distribution: $distStr. Top category: $topCat. Top occasion: $topOcc.';
   }
  
+  String? _getUserFirstName(User? user) {
+    if (user == null) return null;
+    final fullName = user.userMetadata?['full_name'] as String? ?? 
+                     user.userMetadata?['name'] as String?;
+    if (fullName == null || fullName.trim().isEmpty) return null;
+    return fullName.trim().split(' ').first;
+  }
 }

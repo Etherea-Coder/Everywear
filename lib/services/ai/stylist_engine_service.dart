@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 /// Carries all user-facing strings from the calling widget into the engine.
 class StylistStrings {
+  final String? userName;             // ← NEW
   final String includesFavorite;      // e.g. 'Includes your favorite %s'
   final String perfectTimeToWear;     // e.g. 'Perfect time to wear your %s'
   final String lightAndBreathable;    // e.g. 'Light and breathable for %s°C'
@@ -18,6 +19,7 @@ class StylistStrings {
   final String wearWithConfidence;
 
   const StylistStrings({
+    this.userName,                    // ← NEW
     required this.includesFavorite,
     required this.perfectTimeToWear,
     required this.lightAndBreathable,
@@ -241,14 +243,21 @@ class StylistEngineService {
     StylistStrings strings,            // ← NEW
   ) {
     final reasons = <String>[];
+    final personalizedCurated = strings.userName != null 
+        ? "Curated for ${strings.userName}" 
+        : strings.aiCurated;
 
     final highRatedItems = items.where((item) {
       final rating = item['rating'] as double?;
       return rating != null && rating >= 4.5;
     });
     if (highRatedItems.isNotEmpty) {
+      var favString = strings.includesFavorite;
+      if (strings.userName != null && favString.contains('your')) {
+        favString = favString.replaceFirst('your', "${strings.userName}'s");
+      }
       reasons.add(
-        strings.includesFavorite.replaceFirst('%s', highRatedItems.first['name'] as String? ?? ''),
+        favString.replaceFirst('%s', highRatedItems.first['name'] as String? ?? ''),
       );
     }
 
@@ -276,7 +285,7 @@ class StylistEngineService {
       reasons.add(strings.comfortableAndRelaxed);
     }
 
-    return reasons.isNotEmpty ? reasons.first : strings.aiCurated;
+    return reasons.isNotEmpty ? reasons.first : personalizedCurated;
   }
 
   String _generateStylingTips(

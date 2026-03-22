@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:app_settings/app_settings.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class NotificationService {
@@ -168,9 +168,20 @@ class NotificationService {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
 
+    final user = Supabase.instance.client.auth.currentUser;
+    final fullName = user?.userMetadata?['full_name'] as String? ?? 
+                     user?.userMetadata?['name'] as String?;
+    final firstName = (fullName != null && fullName.trim().isNotEmpty) 
+        ? fullName.trim().split(' ').first 
+        : null;
+
+    final title = firstName != null 
+        ? '✨ $firstName, your style idea is ready!' 
+        : '✨ Your style idea for today';
+
     await _plugin.zonedSchedule(
       _morningNotificationId,
-      '✨ Your style idea for today',
+      title,
       'Open Everywear to see your personalised outfit suggestion.',
       scheduledDate,
       details,

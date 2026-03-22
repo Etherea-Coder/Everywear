@@ -60,9 +60,13 @@ class TodaySuggestionService {
         };
       }
 
+      final user = _client.auth.currentUser;
+      final userName = _getUserFirstName(user);
+
       final response = await _client.functions.invoke(
         'today-suggestion',
         body: {
+          'userName': userName,
           'userProfile': profile,
           'weather': weather,
           'occasion': occasion,
@@ -119,5 +123,13 @@ class TodaySuggestionService {
             .map(patch)
             .toList(),
     };
+  }
+
+  String? _getUserFirstName(User? user) {
+    if (user == null) return null;
+    final fullName = user.userMetadata?['full_name'] as String? ?? 
+                     user.userMetadata?['name'] as String?;
+    if (fullName == null || fullName.trim().isEmpty) return null;
+    return fullName.trim().split(' ').first;
   }
 }
