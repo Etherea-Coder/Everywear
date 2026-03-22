@@ -71,6 +71,21 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
     }
   }
 
+  String? _extractFirstImage(Map<String, dynamic> outfit) {
+    // Try direct image_url first
+    final direct = outfit['image_url'] as String?;
+    if (direct != null && direct.isNotEmpty) return direct;
+
+    // Fall back to first wardrobe item image
+    final items = outfit['outfit_items'] as List? ?? [];
+    for (final oi in items) {
+      final item = oi['wardrobe_items'] as Map<String, dynamic>? ?? {};
+      final url = item['image_url'] as String?;
+      if (url != null && url.isNotEmpty) return url;
+    }
+    return null;
+  }
+
   void _showSortSheet() {
     final loc = AppLocalizations.of(context);
     final theme = Theme.of(context);
@@ -178,7 +193,7 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
     final rating = outfit['rating'] as int?;
     final name = outfit['outfit_name'] as String?;
     final occasion = outfit['occasion'] as String?;
-    final imageUrl = outfit['image_url'] as String?;
+    final imageUrl = _extractFirstImage(outfit);
     final items = outfit['outfit_items'] as List? ?? [];
 
     return GestureDetector(
@@ -293,8 +308,9 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
     final name = outfit['outfit_name'] as String?;
     final occasion = outfit['occasion'] as String?;
     final notes = outfit['notes'] as String?;
-    final imageUrl = outfit['image_url'] as String?;
+    final imageUrl = _extractFirstImage(outfit);
     final items = outfit['outfit_items'] as List? ?? [];
+    int tempRating = rating ?? 0;
 
     showModalBottomSheet(
       context: context,
@@ -450,7 +466,6 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
               SizedBox(height: 1.h),
               StatefulBuilder(
                 builder: (context, setStarState) {
-                  int tempRating = rating ?? 0;
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
