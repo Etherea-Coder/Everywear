@@ -60,13 +60,16 @@ class NotificationService {
       // 2. Request permission (Android 13+)
       final granted = await android.requestNotificationsPermission();
 
-      // 3. Logic Fix:
-      // - If 'true': User granted permission.
-      // - If 'null': Device is on Android < 13 (like API 16). 
-      //   Permissions are auto-granted on install, so we treat this as SUCCESS.
+      // 3. If the request returned true or null (Android < 13), treat as granted.
       if (granted ?? true) return true;
 
-      // 4. If explicitly denied (false), open settings
+      // 4. The request returned false — but on some devices/versions this
+      //    happens even when the user tapped "Allow" (race condition).
+      //    Re-check the actual system state to be sure.
+      final actuallyEnabled = await android.areNotificationsEnabled();
+      if (actuallyEnabled == true) return true;
+
+      // 5. Truly denied — open device settings so the user can enable manually
       await AppSettings.openAppSettings();
       return false;
     }
