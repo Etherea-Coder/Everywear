@@ -39,14 +39,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final provider = user.appMetadata['provider'] as String?;
     return provider == 'email';
   }
-    
-    // Check if ANY identity is NOT google/oauth
-    return identities.any((i) => 
-      i.provider == 'email' || 
-      i.provider == 'username' ||
-      (!['google', 'github', 'facebook', 'apple', 'twitter'].contains(i.provider))
-    );
-  }
 
   @override
   void initState() {
@@ -55,7 +47,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    await NotificationService.instance.initialize(); // ← add this
+    await NotificationService.instance.initialize();
     final notifications =
         await NotificationService.instance.isMorningSuggestionsEnabled();
     final analytics = await AnalyticsService.instance.isAnalyticsEnabled();
@@ -137,37 +129,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSection(
               title: localizations.accountSettings,
               children: [
-                // TEMP DEBUG TILE - Remove after debugging
-                GestureDetector(
-                  onTap: () {
-                    final user = Supabase.instance.client.auth.currentUser;
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Auth Debug'),
-                        content: SingleChildScrollView(
-                          child: Text(
-                            'Provider: ${user?.appMetadata['provider']}\n\n'
-                            'Identities: ${user?.identities?.map((i) => i.provider).join(', ')}\n\n'
-                            'App metadata: ${user?.appMetadata}\n\n'
-                            'User metadata: ${user?.userMetadata}',
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(4.w),
-                    color: Colors.amber.withValues(alpha: 0.2),
-                    child: const Text('Tap to see auth debug info'),
-                  ),
-                ),
                 if (_isEmailUser())
                   _buildNavTile(
                     icon: Icons.lock_outline,
