@@ -139,6 +139,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSection(
               title: localizations.accountSettings,
               children: [
+                // TEMP DEBUG TILE - Remove after debugging
+                _buildNavTile(
+                  icon: Icons.info_outline,
+                  title: 'Auth debug',
+                  subtitle: 'Provider: ${Supabase.instance.client.auth.currentUser?.appMetadata['provider'] ?? 'unknown'} | Identities: ${Supabase.instance.client.auth.currentUser?.identities?.map((i) => i.provider).join(', ') ?? 'none'}',
+                ),
                 if (_isEmailUser())
                   _buildNavTile(
                     icon: Icons.lock_outline,
