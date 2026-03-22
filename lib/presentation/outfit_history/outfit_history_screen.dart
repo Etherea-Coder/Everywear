@@ -437,6 +437,73 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(height: 1.5)),
               ],
+
+              // ── Rate button ───────────────────────────────────────
+              SizedBox(height: 2.h),
+              Divider(color: theme.dividerColor.withValues(alpha: 0.3)),
+              SizedBox(height: 1.h),
+              Text(
+                loc.translate('your_rating'),
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 1.h),
+              StatefulBuilder(
+                builder: (context, setStarState) {
+                  int tempRating = rating ?? 0;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: List.generate(5, (i) {
+                          return GestureDetector(
+                            onTap: () => setStarState(() => tempRating = i + 1),
+                            child: Icon(
+                              i < tempRating ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                              size: 36,
+                            ),
+                          );
+                        }),
+                      ),
+                      SizedBox(height: 2.h),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: tempRating == 0 ? null : () async {
+                            await _client
+                                .from('outfit_logs')
+                                .update({'rating': tempRating})
+                                .eq('id', outfit['id'] as String);
+                            if (mounted) {
+                              Navigator.pop(context);
+                              _loadOutfits();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(loc.translate('rating_saved_successfully')),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 1.5.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            rating != null
+                                ? loc.translate('update_rating')
+                                : loc.translate('save_rating'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
