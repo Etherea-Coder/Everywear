@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../services/achievement_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import './widgets/achievement_badge_card_widget.dart';
 import './widgets/achievement_detail_modal_widget.dart';
@@ -22,6 +23,8 @@ class _AchievementGalleryState extends State<AchievementGallery>
   String _searchQuery = '';
   bool _showCelebration = false;
   late AnimationController _celebrationController;
+  List<Map<String, dynamic>> _achievements = [];
+  bool _isLoading = true;
 
   final List<String> _categories = [
     'All',
@@ -31,128 +34,7 @@ class _AchievementGalleryState extends State<AchievementGallery>
     'Sustainability',
   ];
 
-  final List<Map<String, dynamic>> _achievements = [
-    {
-      'id': '1',
-      'title': 'First Steps',
-      'description': 'Logged your first outfit',
-      'category': 'Consistency',
-      'icon': 'emoji_events',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 5),
-      'rarity': 'Common',
-      'progress': 1.0,
-      'requirement': 'Log 1 outfit',
-      'backstory':
-          'Every journey begins with a single step. You\'ve started your mindful fashion journey!',
-      'relatedChallenges': ['Daily Logger', 'Wardrobe Explorer'],
-    },
-    {
-      'id': '2',
-      'title': 'Week Warrior',
-      'description': 'Logged outfits for 7 consecutive days',
-      'category': 'Consistency',
-      'icon': 'local_fire_department',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 12),
-      'rarity': 'Rare',
-      'progress': 1.0,
-      'requirement': 'Log outfits for 7 days straight',
-      'backstory':
-          'Consistency is the foundation of mindful living. Your dedication is inspiring!',
-      'relatedChallenges': ['Streak Master', 'Daily Dedication'],
-    },
-    {
-      'id': '3',
-      'title': 'Style Innovator',
-      'description': 'Created 10 unique outfit combinations',
-      'category': 'Style',
-      'icon': 'palette',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 10),
-      'rarity': 'Uncommon',
-      'progress': 1.0,
-      'requirement': 'Create 10 different outfits',
-      'backstory':
-          'Creativity flourishes when you explore your wardrobe\'s potential. Keep experimenting!',
-      'relatedChallenges': ['Mix Master', 'Creative Dresser'],
-    },
-    {
-      'id': '4',
-      'title': 'Mindful Shopper',
-      'description': 'Tracked 5 purchases with reflection notes',
-      'category': 'Mindful',
-      'icon': 'shopping_bag',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 8),
-      'rarity': 'Uncommon',
-      'progress': 1.0,
-      'requirement': 'Log 5 purchases with notes',
-      'backstory':
-          'Mindful consumption starts with awareness. You\'re making intentional choices!',
-      'relatedChallenges': ['Thoughtful Buyer', 'Purchase Tracker'],
-    },
-    {
-      'id': '5',
-      'title': 'Sustainability Champion',
-      'description': 'Achieved 50% cost-per-wear reduction',
-      'category': 'Sustainability',
-      'icon': 'eco',
-      'isUnlocked': false,
-      'unlockedDate': null,
-      'rarity': 'Epic',
-      'progress': 0.35,
-      'requirement': 'Reduce cost-per-wear by 50%',
-      'backstory':
-          'True sustainability means maximizing what you already own. You\'re on the right path!',
-      'relatedChallenges': ['Eco Warrior', 'Value Maximizer'],
-    },
-    {
-      'id': '6',
-      'title': 'Century Club',
-      'description': 'Logged 100 outfits',
-      'category': 'Consistency',
-      'icon': 'military_tech',
-      'isUnlocked': false,
-      'unlockedDate': null,
-      'rarity': 'Epic',
-      'progress': 0.42,
-      'requirement': 'Log 100 total outfits',
-      'backstory':
-          'Persistence creates transformation. You\'re building lasting habits!',
-      'relatedChallenges': ['Dedication Master', 'Long Hauler'],
-    },
-    {
-      'id': '7',
-      'title': 'Wardrobe Optimizer',
-      'description': 'Wore every item at least once',
-      'category': 'Style',
-      'icon': 'check_circle',
-      'isUnlocked': false,
-      'unlockedDate': null,
-      'rarity': 'Rare',
-      'progress': 0.78,
-      'requirement': 'Wear all wardrobe items',
-      'backstory':
-          'Every piece deserves its moment. You\'re maximizing your wardrobe\'s potential!',
-      'relatedChallenges': ['Full Utilization', 'No Item Left Behind'],
-    },
-    {
-      'id': '8',
-      'title': 'Monthly Milestone',
-      'description': 'Completed your first month',
-      'category': 'Consistency',
-      'icon': 'calendar_month',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 5),
-      'rarity': 'Uncommon',
-      'progress': 1.0,
-      'requirement': 'Use app for 30 days',
-      'backstory':
-          'A month of mindfulness is a powerful achievement. You\'re building lasting change!',
-      'relatedChallenges': ['Time Traveler', 'Commitment Champion'],
-    },
-  ];
+
 
   @override
   void initState() {
@@ -161,6 +43,13 @@ class _AchievementGalleryState extends State<AchievementGallery>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
+    _loadAchievements();
+  }
+
+  Future<void> _loadAchievements() async {
+    setState(() => _isLoading = true);
+    final data = await AchievementService.instance.fetchAchievements();
+    if (mounted) setState(() { _achievements = data; _isLoading = false; });
   }
 
   @override
@@ -254,9 +143,11 @@ class _AchievementGalleryState extends State<AchievementGallery>
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          RefreshIndicator(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                RefreshIndicator(
             onRefresh: _refreshAchievements,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -589,9 +480,6 @@ class _AchievementGalleryState extends State<AchievementGallery>
   }
 
   Future<void> _refreshAchievements() async {
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (mounted) {
-      setState(() {});
-    }
+    await _loadAchievements();
   }
 }

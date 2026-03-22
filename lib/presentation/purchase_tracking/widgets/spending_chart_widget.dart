@@ -14,9 +14,12 @@ class SpendingChartWidget extends StatelessWidget {
 
   Map<int, double> _getMonthlySpending() {
     final Map<int, double> monthlyData = {};
+    final now = DateTime.now();
+    final cutoff = DateTime(now.year, now.month - 5, 1);
 
     for (var purchase in purchases) {
       final date = purchase['purchaseDate'] as DateTime;
+      if (date.isBefore(cutoff)) continue; // skip older purchases
       final month = date.month;
       monthlyData[month] = (monthlyData[month] ?? 0.0) + purchase['price'];
     }
@@ -107,7 +110,7 @@ class SpendingChartWidget extends StatelessWidget {
             reservedSize: 40,
             getTitlesWidget: (value, meta) {
               return Text(
-                '\$${value.toInt()}',
+                '\€${value.toInt()}',
                 style: TextStyle(
                   fontSize: 10.sp,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -121,13 +124,14 @@ class SpendingChartWidget extends StatelessWidget {
             showTitles: true,
             reservedSize: 30,
             getTitlesWidget: (value, meta) {
-              final month = value.toInt();
-              if (month < 1 || month > 12) return const SizedBox();
-              final monthName = DateFormat('MMM').format(DateTime(2024, month));
+              final index = value.toInt();
+              if (index < 0 || index > 5) return const SizedBox();
+              final now = DateTime.now();
+              final month = DateTime(now.year, now.month - (5 - index), 1);
               return Padding(
                 padding: EdgeInsets.only(top: 1.h),
                 child: Text(
-                  monthName,
+                  DateFormat('MMM').format(month),
                   style: TextStyle(
                     fontSize: 10.sp,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -143,8 +147,8 @@ class SpendingChartWidget extends StatelessWidget {
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
       ),
       borderData: FlBorderData(show: false),
-      minX: 1,
-      maxX: 12,
+      minX: 0,
+      maxX: 5,
       minY: 0,
       maxY: maxY,
       lineBarsData: [
@@ -175,13 +179,15 @@ class SpendingChartWidget extends StatelessWidget {
   }
 
   List<FlSpot> _buildSpots(Map<int, double> monthlySpending) {
+    final now = DateTime.now();
     final List<FlSpot> spots = [];
-
-    for (var entry in monthlySpending.entries) {
-      spots.add(FlSpot(entry.key.toDouble(), entry.value));
+    
+    for (int i = 5; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      final spending = monthlySpending[month.month] ?? 0.0;
+      spots.add(FlSpot((5 - i).toDouble(), spending));
     }
-
-    spots.sort((a, b) => a.x.compareTo(b.x));
+    
     return spots;
   }
 }
