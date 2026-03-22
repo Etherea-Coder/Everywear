@@ -6,6 +6,9 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:app_settings/app_settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './today_suggestion_service.dart';
+import './style_service.dart';
+import './weather_service.dart';
 
 
 class NotificationService {
@@ -13,6 +16,8 @@ class NotificationService {
   NotificationService._();
 
   static const String _prefKey = 'morning_suggestions_enabled';
+  static const String _teaserKey = 'notification_teaser';
+  static const String _defaultBody = 'Open Everywear to see your personalised outfit suggestion.';
   static const int _morningNotificationId = 1001;
 
   final FlutterLocalNotificationsPlugin _plugin =
@@ -118,7 +123,8 @@ class NotificationService {
     await _savePreference(true);
 
     try {
-      await _scheduleDailyMorningNotification();
+      final teaser = await _preGenerateTeaser();
+      await _scheduleDailyMorningNotification(teaser: teaser);
     } catch (e) {
       if (kDebugMode) debugPrint('⚠️ Morning notification scheduling failed: $e');
       // Permission was granted and preference is saved — the notification
@@ -133,7 +139,7 @@ class NotificationService {
     await _savePreference(false);
   }
 
-  Future<void> _scheduleDailyMorningNotification() async {
+  Future<void> _scheduleDailyMorningNotification({String? teaser}) async {
     const androidDetails = AndroidNotificationDetails(
       'morning_suggestions',
       'Morning Style Suggestions',
@@ -179,10 +185,17 @@ class NotificationService {
         ? '✨ $firstName, your style idea is ready!' 
         : '✨ Your style idea for today';
 
+    // Use pre-generated teaser, cached teaser, or fallback
+    String body = teaser ?? _defaultBody;
+    if (teaser == null) {
+      final prefs = await SharedPreferences.getInstance();
+      body = prefs.getString(_teaserKey) ?? _defaultBody;
+    }
+
     await _plugin.zonedSchedule(
       _morningNotificationId,
       title,
-      'Open Everywear to see your personalised outfit suggestion.',
+      body,
       scheduledDate,
       details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -201,10 +214,62 @@ class NotificationService {
     final enabled = await isMorningSuggestionsEnabled();
     if (enabled) {
       try {
-        await _scheduleDailyMorningNotification();
+        // Pre-generate teaser in background, don't block scheduling
+        final teaser = await _preGenerateTeaser();
+        await _scheduleDailyMorningNotification(teaser: teaser);
       } catch (e) {
         if (kDebugMode) debugPrint('⚠️ Restore morning notification failed: $e');
       }
     }
+  }
+
+  /// Pre-generates a personalised teaser by calling the today-suggestion AI.
+  /// Caches the result in SharedPreferences for the next notification.
+  Future<String?> _preGenerateTeaser() async {
+    try {
+      final weatherService = WeatherService();
+      final styleService = StyleService();
+      final todaySuggestionService = TodaySuggestionService();
+
+      // Fetch data concurrently — fail gracefully if any call errors
+      final results = await Future.wait([
+        weatherService.getCurrentWeather().catchError((_) => <String, dynamic>{}),
+        styleService.fetchQuizResult().catchError((_) => null),
+        styleService.fetchUpcomingEvents().catchError((_) => <Map<String, dynamic>>[]),
+      ]).timeout(const Duration(seconds: 8), onTimeout: () => [{}, null, []]);
+
+      final weather = results[0] as Map<String, dynamic>;
+      final quizResult = results[1] as Map<String, dynamic>?;
+      final events = results[2] as List<Map<String, dynamic>>;
+      final nextEvent = events.isNotEmpty ? events.first : null;
+
+      final suggestion = await todaySuggestionService.fetchTodaySuggestion(
+        weather: weather,
+        quizResult: quizResult,
+        nextEvent: nextEvent,
+      );
+
+      if (suggestion != null) {
+        final description = suggestion['description'] as String? ?? '';
+        final stylingNote = suggestion['styling_note'] as String? ?? '';
+        // Prefer the description, append styling note if short
+        String teaser = description;
+        if (teaser.isEmpty && stylingNote.isNotEmpty) {
+          teaser = stylingNote;
+        } else if (teaser.length < 60 && stylingNote.isNotEmpty) {
+          teaser = '$teaser $stylingNote';
+        }
+
+        if (teaser.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_teaserKey, teaser);
+          if (kDebugMode) debugPrint('✅ Notification teaser cached: $teaser');
+          return teaser;
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ Teaser pre-generation failed: $e');
+    }
+    return null;
   }
 }

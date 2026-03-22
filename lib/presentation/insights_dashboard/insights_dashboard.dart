@@ -8,9 +8,6 @@ import './widgets/ai_insight_card_widget.dart';
 import '../../services/wardrobe_service.dart';
 import '../../services/user_tier_service.dart';
 import '../../widgets/upgrade_prompt_widget.dart';
-import '../../core/utils/app_localizations.dart';
-
-
 /// Insights Dashboard - AI-powered style analytics and wardrobe insights
 ///
 /// Displays analytics including:

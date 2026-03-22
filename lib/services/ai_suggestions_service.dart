@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
 import '../services/user_tier_service.dart';
+import './style_service.dart';
 
 class AiSuggestionsService {
   SupabaseClient get _supabase => SupabaseService.instance.client;
@@ -97,5 +98,4 @@ class AiSuggestionsService {
     if (fullName == null || fullName.trim().isEmpty) return null;
     return fullName.trim().split(' ').first;
   }
-}
 }
