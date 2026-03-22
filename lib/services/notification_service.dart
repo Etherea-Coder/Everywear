@@ -113,8 +113,17 @@ class NotificationService {
     final granted = await requestPermission();
     if (!granted) return false;
 
-    await _scheduleDailyMorningNotification();
+    // Save preference first so the toggle updates even if scheduling
+    // hits an edge-case failure (e.g. exact-alarm restriction).
     await _savePreference(true);
+
+    try {
+      await _scheduleDailyMorningNotification();
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ Morning notification scheduling failed: $e');
+      // Permission was granted and preference is saved — the notification
+      // will be rescheduled on next app launch via restoreIfEnabled().
+    }
     return true;
   }
 
@@ -165,7 +174,7 @@ class NotificationService {
       'Open Everywear to see your personalised outfit suggestion.',
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
@@ -180,7 +189,11 @@ class NotificationService {
     await initialize();
     final enabled = await isMorningSuggestionsEnabled();
     if (enabled) {
-      await _scheduleDailyMorningNotification();
+      try {
+        await _scheduleDailyMorningNotification();
+      } catch (e) {
+        if (kDebugMode) debugPrint('⚠️ Restore morning notification failed: $e');
+      }
     }
   }
 }
