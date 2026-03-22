@@ -35,8 +35,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return false;
 
-    // Check primary provider from app_metadata — this is set at signup
+    // Check primary provider from app_metadata
     final provider = user.appMetadata['provider'] as String?;
+    if (provider != null && provider != 'email') return false;
+
+    // Also verify via identities — OAuth-only users should not see password option
+    final identities = user.identities;
+    if (identities != null && identities.isNotEmpty) {
+      return identities.any((i) => i.provider == 'email');
+    }
+
     return provider == 'email';
   }
 
