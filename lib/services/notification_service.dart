@@ -47,38 +47,46 @@ class NotificationService {
 
   // ─── Permission ───────────────────────────────────────────────────────────
 
-Future<bool> requestPermission() async {
-  // Android 13+
-  final android = _plugin.resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>();
-  
-  if (android != null) {
-    final alreadyGranted = await android.areNotificationsEnabled();
-    if (alreadyGranted == true) return true;
+  Future<bool> requestPermission() async {
+    // ─── Android ───────────────────────────────────────────
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (android != null) {
+      // 1. Check if already enabled
+      final alreadyGranted = await android.areNotificationsEnabled();
+      if (alreadyGranted == true) return true;
 
-    // Request permission for Android 13+
-    final granted = await android.requestNotificationsPermission();
-    if (granted ?? false) return true;
+      // 2. Request permission (Android 13+)
+      final granted = await android.requestNotificationsPermission();
 
-    // If denied, open settings (optional, or just return false)
-    // await AppSettings.openAppSettings(); 
-    return false;
+      // 3. Logic Fix:
+      // - If 'true': User granted permission.
+      // - If 'null': Device is on Android < 13 (like API 16). 
+      //   Permissions are auto-granted on install, so we treat this as SUCCESS.
+      if (granted ?? true) return true;
+
+      // 4. If explicitly denied (false), open settings
+      await AppSettings.openAppSettings();
+      return false;
+    }
+
+    // ─── iOS ────────────────────────────────────────────────
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      final granted = await ios.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      return granted ?? false;
+    }
+
+    // ─── Web / Desktop / Other ──────────────────────────────
+    // If not Android or iOS, assume permissions are not required.
+    return true;
   }
-
-  // iOS
-  final ios = _plugin.resolvePlatformSpecificImplementation<
-      IOSFlutterLocalNotificationsPlugin>();
-  if (ios != null) {
-    final granted = await ios.requestPermissions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    return granted ?? false;
-  }
-
-  return true; 
-}
 
   // ─── Preference persistence ───────────────────────────────────────────────
 
