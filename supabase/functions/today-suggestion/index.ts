@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
   try {
     const {
       userName,
+      localHour,
       userProfile,
       weather,
       occasion,
@@ -40,6 +41,14 @@ Deno.serve(async (req) => {
     const nameLine = userName ? ` for ${userName}` : ''
     const titleName = userName ? `${userName}'s Style Idea for Today` : "Today's Style Idea"
 
+    let timeString = 'unknown'
+    if (typeof localHour === 'number') {
+      if (localHour >= 5 && localHour < 12) timeString = 'Morning'
+      else if (localHour >= 12 && localHour < 17) timeString = 'Afternoon'
+      else if (localHour >= 17 && localHour < 21) timeString = 'Evening'
+      else timeString = 'Night'
+    }
+
     const prompt = `You are a personal stylist${nameLine} inside a wardrobe app.
 Your task is to create one realistic outfit suggestion for today using ONLY items from the user's actual wardrobe list below.
 
@@ -51,10 +60,12 @@ ${userName ? `- Name: ${userName}` : ''}
 - Style intention: ${userProfile?.styleIntention ?? 'not specified'}
 
 TODAY CONTEXT:
+- Time of Day: ${timeString} (local hour: ${localHour ?? '?'})
 - Weather: ${weatherStr}
 - Occasion: ${occasion ?? 'none selected'}
 - Mood: ${mood ?? 'none selected'}
 - Upcoming event: ${eventStr}
+- Instruction: Tone of the description can hint at the time of day (e.g. morning prep, afternoon slump, evening out).
 
 RECENTLY WORN ITEMS (avoid if possible):
 ${recentList}

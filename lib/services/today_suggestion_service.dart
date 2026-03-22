@@ -67,6 +67,7 @@ class TodaySuggestionService {
         'today-suggestion',
         body: {
           'userName': userName,
+          'localHour': DateTime.now().hour,
           'userProfile': profile,
           'weather': weather,
           'occasion': occasion,

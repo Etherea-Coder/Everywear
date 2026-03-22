@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
-    const { userName, mode, userProfile, insights, wardrobeSummary, question, event } = await req.json()
+    const { userName, localHour, mode, userProfile, insights, wardrobeSummary, question, event } = await req.json()
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
@@ -65,11 +65,22 @@ WARDROBE DATA:
     const nameIntro = userName ? ` for ${userName}` : ''
 
     if (mode === 'passive') {
+      let timeString = 'unknown'
+      if (typeof localHour === 'number') {
+        if (localHour >= 5 && localHour < 12) timeString = 'Morning'
+        else if (localHour >= 12 && localHour < 17) timeString = 'Afternoon'
+        else if (localHour >= 17 && localHour < 21) timeString = 'Evening'
+        else timeString = 'Night'
+      }
+      const timeContext = typeof localHour === 'number'
+        ? `\nCURRENT CONTEXT:\n- Time of Day: ${timeString} (local hour: ${localHour})\n- Instruction: Subtly nod to the time of day if it makes the tip feel more relevant (e.g. morning prep, afternoon slump, evening planning).`
+        : ''
+
       prompt = `You are a personal style coach${nameIntro} inside a wardrobe app.
 Your job is to give one short weekly coaching tip. Be warm, encouraging, concise, and practical.
 Do not sound like a chatbot or fashion magazine. Base advice only on the user data below.
 ${profileBlock}
-${insightsBlock}
+${insightsBlock}${timeContext}
 ${guardrails}
 
 TASK:

@@ -268,6 +268,7 @@ class StyleService {
         'style-coach',
         body: {
           'userName': userName,
+          'localHour': DateTime.now().hour,
           'mode': 'passive',
           'userProfile': profile,
           'insights': insights,
