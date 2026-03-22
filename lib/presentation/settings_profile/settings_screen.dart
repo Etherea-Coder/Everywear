@@ -509,7 +509,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   subtitle: Text(localizations.comprehensiveWardrobeReport),
                   onTap: () {
                     Navigator.pop(context);
-                    _handleExportData('PDF');
+                    _handleExportData('PDF', context);
                   },
                 ),
                 ListTile(
@@ -518,7 +518,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   subtitle: Text(localizations.rawDataAnalysis),
                   onTap: () {
                     Navigator.pop(context);
-                    _handleExportData('CSV');
+                    _handleExportData('CSV', context);
                   },
                 ),
               ],
@@ -529,13 +529,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _handleExportData(String format) {
-  if (format == 'PDF') {
-    ExportService.instance.exportAsPDF(context);
-  } else {
-    ExportService.instance.exportAsCSV(context);
+  void _handleExportData(String format, BuildContext context) {
+    if (format == 'PDF') {
+      ExportService.instance.exportAsPDF(context);
+    } else {
+      ExportService.instance.exportAsCSV(context);
+    }
   }
-}
   // ─── Logout ───────────────────────────────────────────────────────────────
 
   void _handleLogout(BuildContext context, AppLocalizations localizations) {
