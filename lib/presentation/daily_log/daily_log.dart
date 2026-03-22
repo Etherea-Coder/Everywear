@@ -737,6 +737,19 @@ class _DailyLogState extends State<DailyLog> {
     return loc.weatherTipDefault;
   }
 
+  String _getCategoryEmoji(String? category) {
+    switch (category?.toLowerCase()) {
+      case 'tops': return '👕';
+      case 'bottoms': return '👖';
+      case 'shoes': return '👟';
+      case 'outerwear': return '🧥';
+      case 'accessories': return '👜';
+      case 'dresses': return '👗';
+      case 'activewear': return '🏃';
+      default: return '👗';
+    }
+  }
+
   Widget _buildTodaySuggestionCard(ThemeData theme) {
     final loc = AppLocalizations.of(context);
     final anchor = _suggestedOutfit['anchor'] as Map<String, dynamic>;
@@ -1035,14 +1048,30 @@ class _DailyLogState extends State<DailyLog> {
     final loc = AppLocalizations.of(context);
     final slot = currentItem['slot'] as String? ?? 'item';
 
-    // Ensure wardrobe is loaded before computing alternatives
+    // Ensure wardrobe is loaded
     if (_wardrobeItems.isEmpty) {
       final items = await _wardrobeService.fetchWardrobeItems();
       if (mounted) setState(() => _wardrobeItems = items);
     }
-
     if (!mounted) return;
-    final alternatives = _getSwapAlternatives(slot);
+
+    // For anchor — show category picker first, then items
+    if (slot == 'anchor') {
+      _showAnchorCategoryPicker(loc);
+    } else {
+      // For supporting slots — show items directly as before
+      final alternatives = _getSwapAlternatives(slot);
+      _showItemList(loc, slot, alternatives);
+    }
+  }
+
+  void _showAnchorCategoryPicker(AppLocalizations loc) {
+    // Get unique categories from wardrobe
+    final categories = _wardrobeItems
+        .map((i) => (i['category'] as String? ?? 'Other'))
+        .toSet()
+        .toList()
+      ..sort();
 
     showModalBottomSheet(
       context: context,
@@ -1056,8 +1085,90 @@ class _DailyLogState extends State<DailyLog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
+              width: 40, height: 4,
+              margin: EdgeInsets.only(bottom: 2.h),
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(2.0),
+              ),
+            ),
+            Text(
+              'Choose a category',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 0.8.h),
+            Text(
+              'What type of anchor piece?',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            SizedBox(height: 2.h),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: categories.map((category) {
+                  return ListTile(
+                    leading: Text(
+                      _getCategoryEmoji(category),
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    title: Text(
+                      category,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${_wardrobeItems.where((i) => i['category'] == category).length} items',
+                      style: TextStyle(fontSize: 11.sp),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // Show items from this category
+                      final categoryItems = _wardrobeItems
+                          .where((i) => i['category'] == category)
+                          .map((i) => {
+                                'slot': 'anchor',
+                                'name': i['name'] ?? i['title'] ?? loc.unknownItem,
+                                'imageUrl': i['image_url'] ?? i['imageUrl'] ?? '',
+                                'category': i['category'] ?? loc.catClothing,
+                                'id': i['id'],
+                              })
+                          .toList();
+                      _showItemList(loc, 'anchor', categoryItems);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            SizedBox(height: 1.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showItemList(AppLocalizations loc, String slot, List<Map<String, dynamic>> alternatives) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(4.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
               margin: EdgeInsets.only(bottom: 2.h),
               decoration: BoxDecoration(
                 color: Theme.of(context).dividerColor,
@@ -1066,10 +1177,7 @@ class _DailyLogState extends State<DailyLog> {
             ),
             Text(
               loc.swapItemTitle(_getLocalizedSlotTitle(loc, slot)),
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 0.8.h),
             Text(
@@ -1110,51 +1218,49 @@ class _DailyLogState extends State<DailyLog> {
                 ),
               )
             else
-              ...alternatives.map((item) {
-                return ListTile(
-                  contentPadding: EdgeInsets.symmetric(vertical: 0.5.h),
-                  leading: Container(
-                    width: 13.w,
-                    height: 13.w,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: (item['imageUrl'] as String? ?? '').isNotEmpty
-                          ? Image.network(
-                              item['imageUrl'] as String,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.checkroom),
-                            )
-                          : const Icon(Icons.checkroom),
-                    ),
-                  ),
-                  title: Text(
-                    item['name'] as String,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    item['category'] as String? ?? '',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.swap_horiz,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _swapSuggestionItem(slot, item);
-                  },
-                );
-              }).toList(),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: alternatives.map((item) {
+                    return ListTile(
+                      contentPadding: EdgeInsets.symmetric(vertical: 0.5.h),
+                      leading: Container(
+                        width: 13.w,
+                        height: 13.w,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: (item['imageUrl'] as String? ?? '').isNotEmpty
+                              ? Image.network(
+                                  item['imageUrl'] as String,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(Icons.checkroom),
+                                )
+                              : const Icon(Icons.checkroom),
+                        ),
+                      ),
+                      title: Text(
+                        item['name'] as String,
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        item['category'] as String? ?? '',
+                        style: TextStyle(fontSize: 11.sp,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      trailing: Icon(Icons.swap_horiz,
+                          color: Theme.of(context).colorScheme.primary),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _swapSuggestionItem(slot, item);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
             SizedBox(height: 1.h),
           ],
         ),
