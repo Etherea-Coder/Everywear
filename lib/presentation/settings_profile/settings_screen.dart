@@ -35,17 +35,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return false;
 
-    // Check primary provider from app_metadata
-    final provider = user.appMetadata['provider'] as String?;
-    if (provider != null && provider != 'email') return false;
+    // Supabase auto-links 'email' when OAuth providers supply a verified email,
+    // so we cannot rely on 'email' being in the providers list. Instead, check
+    // if any OAuth provider is present — if so, the user signed up via OAuth
+    // and does not have a password to change.
+    const oauthProviders = {'google', 'github', 'facebook', 'apple', 'twitter'};
 
-    // Also verify via identities — OAuth-only users should not see password option
-    final identities = user.identities;
-    if (identities != null && identities.isNotEmpty) {
-      return identities.any((i) => i.provider == 'email');
+    final providersList = user.appMetadata['providers'];
+    if (providersList is List) {
+      final hasOAuth = providersList.any((p) => oauthProviders.contains(p));
+      if (hasOAuth) return false;
     }
 
-    return provider == 'email';
+    return true;
   }
 
   @override
