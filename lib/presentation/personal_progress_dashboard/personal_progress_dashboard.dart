@@ -74,7 +74,7 @@ class _PersonalProgressDashboardState extends State<PersonalProgressDashboard> {
             'progress': goal > 0 ? progress / goal : 0.0,
             'currentValue': progress,
             'targetValue': goal,
-            'points': 75,
+            'points': current['points'] ?? 100,
             'icon': 'flag',
             'dueDate': DateTime.now().add(
               Duration(days: 7 - DateTime.now().weekday),

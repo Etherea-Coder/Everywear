@@ -1232,7 +1232,48 @@ class _DailyLogState extends State<DailyLog> {
     setState(() {
       if (slot == 'anchor') {
         _suggestedOutfit['anchor'] = newItem;
+        
+        // Re-derive supporting slots based on new anchor's category
+        final category = (newItem['category'] as String? ?? '').toLowerCase();
+        
+        List<Map<String, dynamic>> newItems;
+        
+        if (category.contains('top') || category.contains('shirt') || 
+            category.contains('blouse') || category.contains('tee')) {
+          // Anchor is a top → suggest bottom, shoes, bag
+          newItems = [
+            {'slot': 'bottom', 'name': loc.itemDarkJeans, 'imageUrl': '', 'category': loc.catBottom},
+            {'slot': 'shoes',  'name': loc.itemSneakers,  'imageUrl': '', 'category': loc.catShoes},
+          ];
+        } else if (category.contains('bottom') || category.contains('jean') || 
+                  category.contains('trouser') || category.contains('skirt')) {
+          // Anchor is a bottom → suggest top, shoes
+          newItems = [
+            {'slot': 'top',   'name': loc.itemWhiteTee,  'imageUrl': '', 'category': loc.catTop},
+            {'slot': 'shoes', 'name': loc.itemSneakers,  'imageUrl': '', 'category': loc.catShoes},
+          ];
+        } else if (category.contains('outerwear') || category.contains('jacket') || 
+                  category.contains('coat') || category.contains('blazer')) {
+          // Anchor is outerwear → suggest top, bottom, shoes
+          newItems = [
+            {'slot': 'top',    'name': loc.itemWhiteTee,       'imageUrl': '', 'category': loc.catTop},
+            {'slot': 'bottom', 'name': loc.itemDarkJeans,      'imageUrl': '', 'category': loc.catBottom},
+            {'slot': 'shoes',  'name': loc.itemSneakers,       'imageUrl': '', 'category': loc.catShoes},
+          ];
+        } else {
+          // Default — keep existing slots but clear names
+          newItems = (_suggestedOutfit['items'] as List<dynamic>)
+              .cast<Map<String, dynamic>>()
+              .map((i) => {...i, 'name': '', 'imageUrl': ''})
+              .toList();
+        }
+        
+        _suggestedOutfit['items'] = newItems;
+        // Try to resolve wardrobe images for new items
+        _suggestedOutfit = _mergeImageUrls(_suggestedOutfit, _suggestedOutfit);
+        
       } else {
+        // Supporting item swap — just replace that slot
         final items = (_suggestedOutfit['items'] as List<dynamic>)
             .cast<Map<String, dynamic>>();
         final index = items.indexWhere((item) => item['slot'] == slot);
