@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
 
   try {
     const {
+      userName,
       userProfile,
       weather,
       occasion,
@@ -36,10 +37,14 @@ Deno.serve(async (req) => {
     const weatherStr = weather ? `${weather.temperature}${weather.unit}, ${weather.condition}` : 'unknown'
     const eventStr = nextEvent ? `${nextEvent.title} in ${nextEvent.daysLeft} days (${nextEvent.event_type}, dress code: ${nextEvent.dress_code ?? 'none'})` : 'none'
 
-    const prompt = `You are a personal stylist inside a wardrobe app.
+    const nameLine = userName ? ` for ${userName}` : ''
+    const titleName = userName ? `${userName}'s Style Idea for Today` : "Today's Style Idea"
+
+    const prompt = `You are a personal stylist${nameLine} inside a wardrobe app.
 Your task is to create one realistic outfit suggestion for today using ONLY items from the user's actual wardrobe list below.
 
 USER PROFILE:
+${userName ? `- Name: ${userName}` : ''}
 - Style profile: ${userProfile?.styleProfile ?? 'not set'}
 - Preferred colors: ${userProfile?.preferredColors ?? 'not specified'}
 - Style goals: ${userProfile?.styleGoals ?? 'not specified'}
@@ -72,7 +77,7 @@ Prefer underused items when they fit the outfit well.
 
 Return ONLY valid JSON in this exact format, no markdown, no explanation:
 {
-  "title": "Today's Style Idea",
+  "title": "${titleName}",
   "description": "one sentence describing the look",
   "styling_note": "one practical tip for wearing this outfit",
   "anchor": {

@@ -8,6 +8,13 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 interface RequestBody {
   imageUrl: string
   language: 'EN' | 'FR' | 'ES'
+  userName?: string
+  userProfile?: {
+    styleProfile?: string
+    preferredColors?: string
+    styleGoals?: string
+    styleIntention?: string
+  }
 }
 
 serve(async (req) => {
@@ -22,7 +29,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, language }: RequestBody = await req.json()
+    const { imageUrl, language, userName, userProfile }: RequestBody = await req.json()
 
     if (!imageUrl || !language) {
       return new Response(
@@ -74,6 +81,30 @@ serve(async (req) => {
       )
     }
 
+    // Fetch style quiz results if not provided by client
+    let profile = userProfile
+    if (!profile) {
+      const { data: quiz } = await supabaseClient
+        .from('style_quiz_results')
+        .select('style_profile, preferred_colors, style_goals, style_intention')
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (quiz) {
+        profile = {
+          styleProfile: quiz.style_profile,
+          preferredColors: Array.isArray(quiz.preferred_colors)
+            ? quiz.preferred_colors.join(', ')
+            : quiz.preferred_colors,
+          styleGoals: Array.isArray(quiz.style_goals)
+            ? quiz.style_goals.join(', ')
+            : quiz.style_goals,
+          styleIntention: quiz.style_intention,
+        }
+      }
+    }
+
     const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
     if (!openRouterApiKey) throw new Error('OPENROUTER_API_KEY not configured')
 
@@ -92,16 +123,32 @@ serve(async (req) => {
       )
     }
 
+    // Build personalized name line
+    const nameIntro = userName ? `You are styling for ${userName}. ` : ''
+
+    // Build style profile context
+    let profileContext = ''
+    if (profile) {
+      const parts = []
+      if (profile.styleProfile) parts.push(`Style: ${profile.styleProfile}`)
+      if (profile.preferredColors) parts.push(`Preferred colors: ${profile.preferredColors}`)
+      if (profile.styleGoals) parts.push(`Goals: ${profile.styleGoals}`)
+      if (profile.styleIntention) parts.push(`Intention: ${profile.styleIntention}`)
+      if (parts.length > 0) {
+        profileContext = `\n\nUSER STYLE PROFILE:\n${parts.join('\n')}\nTailor your suggestions to match this style profile.`
+      }
+    }
+
     const languageInstructions = {
       EN: 'Analyze this clothing image and provide 2-3 short, friendly styling suggestions in English.',
       FR: 'Analysez cette image de vêtements et fournissez 2-3 suggestions de style courtes et amicales en français.',
       ES: 'Analiza esta imagen de ropa y proporciona 2-3 sugerencias de estilo cortas y amigables en español.',
     }
 
-    const systemPrompt = `You are a friendly fashion assistant. Based on the outfit in the image:
+    const systemPrompt = `You are a friendly fashion assistant. ${nameIntro}Based on the outfit in the image:
 1. First, provide an objective description with bullet points (item type, colors, patterns, style elements)
 2. Then give 2-3 short, positive styling suggestions
-Be encouraging and constructive. Keep each suggestion to 1-2 sentences.`
+Be encouraging and constructive. Keep each suggestion to 1-2 sentences.${profileContext}`
 
     const geminiResponse = await fetch(OPENROUTER_API_URL, {
       method: 'POST',

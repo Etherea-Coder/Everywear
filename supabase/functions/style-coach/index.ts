@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
-    const { mode, userProfile, insights, wardrobeSummary, question, event } = await req.json()
+    const { userName, mode, userProfile, insights, wardrobeSummary, question, event } = await req.json()
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
@@ -48,6 +48,7 @@ IMPORTANT:
 
     const profileBlock = `
 USER PROFILE:
+${userName ? `- Name: ${userName}` : ''}
 - Style profile: ${userProfile?.styleProfile ?? 'Not set yet'}
 - Preferred colors: ${userProfile?.preferredColors ?? 'Not specified'}
 - Style goals: ${userProfile?.styleGoals ?? 'Not specified'}
@@ -61,9 +62,10 @@ WARDROBE DATA:
 - Wardrobe summary: ${wardrobeSummary ?? 'Limited data available'}`
 
     let prompt = ''
+    const nameIntro = userName ? ` for ${userName}` : ''
 
     if (mode === 'passive') {
-      prompt = `You are a personal style coach inside a wardrobe app.
+      prompt = `You are a personal style coach${nameIntro} inside a wardrobe app.
 Your job is to give one short weekly coaching tip. Be warm, encouraging, concise, and practical.
 Do not sound like a chatbot or fashion magazine. Base advice only on the user data below.
 ${profileBlock}
@@ -79,7 +81,7 @@ Give exactly one coaching tip for this week.
 - Output only the tip text, nothing else`
 
     } else if (mode === 'active') {
-      prompt = `You are a personal style coach inside a wardrobe app.
+      prompt = `You are a personal style coach${nameIntro} inside a wardrobe app.
 Help users style themselves using their own wardrobe, style profile, and goals.
 Be helpful, personal, concise, and confident.
 ${profileBlock}
@@ -96,7 +98,7 @@ Output a JSON object with keys: "answer" and "next_step"`
 
     } else if (mode === 'event') {
       const daysLeft = event?.daysLeft ?? '?'
-      prompt = `You are a personal style coach inside a wardrobe app.
+      prompt = `You are a personal style coach${nameIntro} inside a wardrobe app.
 Help users prepare outfits for real upcoming events. Be personal, practical, and appropriate.
 Use the user existing wardrobe first. Do not invent wardrobe items not provided.
 ${profileBlock}
