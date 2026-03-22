@@ -34,9 +34,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isEmailUser() {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return false;
+    
     final identities = user.identities ?? [];
-    if (identities.isEmpty) return false;
-    return identities.any((i) => i.provider == 'email');
+    if (identities.isEmpty) {
+      // Fall back to app_metadata
+      final provider = user.appMetadata['provider'] as String?;
+      return provider == 'email';
+    }
+    
+    // Check if ANY identity is NOT google/oauth
+    return identities.any((i) => 
+      i.provider == 'email' || 
+      i.provider == 'username' ||
+      (!['google', 'github', 'facebook', 'apple', 'twitter'].contains(i.provider))
+    );
   }
 
   @override
