@@ -268,6 +268,7 @@ class StyleService {
       final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
       final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
       final itemRatings = await _outfitLogService.fetchItemRatingAverages();
+      final silhouetteEvolution = await _outfitLogService.fetchSilhouetteEvolution();
 
       final response = await _client.functions.invoke(
         'style-coach',
@@ -281,6 +282,7 @@ class StyleService {
           'recentOutfits': recentOutfits,
           'occasionPatterns': occasionPatterns,
           'itemRatings': itemRatings,
+          'silhouetteEvolution': silhouetteEvolution,
         },
       );
 
@@ -311,6 +313,7 @@ class StyleService {
       final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
       final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
       final itemRatings = await _outfitLogService.fetchItemRatingAverages();
+      final silhouetteEvolution = await _outfitLogService.fetchSilhouetteEvolution();
 
       final response = await _client.functions.invoke(
         'style-coach',
@@ -323,6 +326,7 @@ class StyleService {
           'recentOutfits': recentOutfits,
           'occasionPatterns': occasionPatterns,
           'itemRatings': itemRatings,
+          'silhouetteEvolution': silhouetteEvolution,
           'question': question,
         },
       );
@@ -363,6 +367,7 @@ class StyleService {
       final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
       final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
       final itemRatings = await _outfitLogService.fetchItemRatingAverages();
+      final silhouetteEvolution = await _outfitLogService.fetchSilhouetteEvolution();
 
       final response = await _client.functions.invoke(
         'style-coach',
@@ -375,6 +380,7 @@ class StyleService {
           'recentOutfits': recentOutfits,
           'occasionPatterns': occasionPatterns,
           'itemRatings': itemRatings,
+          'silhouetteEvolution': silhouetteEvolution,
           'event': {
             'title': event['title'],
             'type': event['event_type'],

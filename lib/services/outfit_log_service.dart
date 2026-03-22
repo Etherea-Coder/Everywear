@@ -333,6 +333,102 @@ class OutfitLogService {
       return {};
     }
   }
+  /// Computes the silhouette evolution (fitted vs relaxed trend) over the
+  /// last 3 months. Mirrors the logic in generate-ai-insights but runs
+  /// client-side so it can be passed to style-coach prompts.
+  Future<Map<String, dynamic>> fetchSilhouetteEvolution() async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return {};
+
+      final now = DateTime.now();
+      final threeMonthsAgo = DateTime(now.year, now.month - 2, 1);
+
+      final logs = await _client
+          .from('outfit_logs')
+          .select('''
+            worn_date,
+            outfit_items (
+              wardrobe_items (
+                id, name, semantic_label
+              )
+            )
+          ''')
+          .eq('user_id', userId)
+          .gte('worn_date', threeMonthsAgo.toIso8601String());
+
+      final logsList = List<Map<String, dynamic>>.from(logs);
+      if (logsList.isEmpty) return {};
+
+      const fittedKeywords = [
+        'fitted', 'slim', 'skinny', 'tailored', 'formal',
+        'structured', 'blazer', 'pencil',
+      ];
+      const relaxedKeywords = [
+        'oversized', 'loose', 'relaxed', 'wide', 'baggy',
+        'flowy', 'jogger', 'sweat', 'hoodie', 'casual',
+      ];
+      const monthLabels = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+
+      final evolution = <Map<String, dynamic>>[];
+
+      for (int offset = 2; offset >= 0; offset--) {
+        final monthDate = DateTime(now.year, now.month - offset, 1);
+        int fitted = 0;
+        int relaxed = 0;
+
+        for (final log in logsList) {
+          final wornDate = DateTime.tryParse(log['worn_date'] ?? '');
+          if (wornDate == null ||
+              wornDate.month != monthDate.month ||
+              wornDate.year != monthDate.year) continue;
+
+          final items = log['outfit_items'] as List? ?? [];
+          for (final oi in items) {
+            final w = oi['wardrobe_items'] as Map<String, dynamic>?;
+            if (w == null) continue;
+            final label = (w['semantic_label'] as String? ?? '').toLowerCase();
+            if (fittedKeywords.any((k) => label.contains(k))) {
+              fitted++;
+            } else if (relaxedKeywords.any((k) => label.contains(k))) {
+              relaxed++;
+            }
+          }
+        }
+
+        final total = fitted + relaxed;
+        evolution.add({
+          'month': monthLabels[monthDate.month - 1],
+          'fitted': total > 0 ? (fitted / total * 100).round() : 0,
+          'relaxed': total > 0 ? (relaxed / total * 100).round() : 0,
+        });
+      }
+
+      // Generate a human-readable trend description
+      String trend = 'stable';
+      if (evolution.length >= 2) {
+        final first = evolution.first;
+        final last = evolution.last;
+        final fittedDelta = (last['fitted'] as int) - (first['fitted'] as int);
+        if (fittedDelta > 15) {
+          trend = 'moving toward more fitted, structured silhouettes';
+        } else if (fittedDelta < -15) {
+          trend = 'gravitating toward more relaxed, comfortable fits';
+        }
+      }
+
+      return {
+        'months': evolution,
+        'trend': trend,
+      };
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error fetching silhouette evolution: $e');
+      return {};
+    }
+  }
 
   /// Aggregates occasion frequency broken down by weekday vs weekend
   /// from the last [days] days of outfit logs. Used by AI prompts.

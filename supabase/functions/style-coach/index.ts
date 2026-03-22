@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
-    const { userName, localHour, mode, userProfile, insights, wardrobeSummary, recentOutfits, occasionPatterns, itemRatings, question, event } = await req.json()
+    const { userName, localHour, mode, userProfile, insights, wardrobeSummary, recentOutfits, occasionPatterns, itemRatings, silhouetteEvolution, question, event } = await req.json()
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
@@ -103,6 +103,20 @@ WARDROBE DATA:
       }
     }
 
+    // Build style evolution narrative block
+    let evolutionBlock = ''
+    if (silhouetteEvolution && typeof silhouetteEvolution === 'object') {
+      const months = silhouetteEvolution.months
+      const trend = silhouetteEvolution.trend
+      if (Array.isArray(months) && months.length > 0 && trend) {
+        const monthLines = months.map((m: any) => `- ${m.month}: ${m.fitted}% fitted, ${m.relaxed}% relaxed`).join('\n')
+        const trendNote = trend !== 'stable'
+          ? `The user is ${trend}. Acknowledge this positively and build on it in your advice.`
+          : 'The user\'s style silhouette has been consistent \u2014 acknowledge their confidence in their look.'
+        evolutionBlock = `\n\nSTYLE EVOLUTION (last 3 months):\n${monthLines}\n${trendNote}`
+      }
+    }
+
     let prompt = ''
     const nameIntro = userName ? ` for ${userName}` : ''
 
@@ -122,7 +136,7 @@ WARDROBE DATA:
 Your job is to give one short weekly coaching tip. Be warm, encouraging, concise, and practical.
 Do not sound like a chatbot or fashion magazine. Base advice only on the user data below.
 ${profileBlock}
-${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}${timeContext}
+${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}${evolutionBlock}${timeContext}
 ${guardrails}
 
 TASK:
@@ -140,7 +154,7 @@ Give exactly one coaching tip for this week.
 Help users style themselves using their own wardrobe, style profile, and goals.
 Be helpful, personal, concise, and confident.
 ${profileBlock}
-${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}
+${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}${evolutionBlock}
 ${guardrails}
 
 USER QUESTION:
@@ -158,7 +172,7 @@ Output a JSON object with keys: "answer" and "next_step"`
 Help users prepare outfits for real upcoming events. Be personal, practical, and appropriate.
 Use the user existing wardrobe first. Do not invent wardrobe items not provided.
 ${profileBlock}
-${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}
+${insightsBlock}${recentOutfitsBlock}${habitBlock}${ratingsBlock}${evolutionBlock}
 
 EVENT:
 - Title: ${event?.title ?? 'Unknown'}
