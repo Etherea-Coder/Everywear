@@ -510,9 +510,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // ─── Logout ───────────────────────────────────────────────────────────────
 
   void _handleLogout(BuildContext context, AppLocalizations localizations) {
+    final outerContext = context;
     showDialog(
       context: context,
-      builder: (context) => ConfirmationDialogWidget(
+      builder: (dialogContext) => ConfirmationDialogWidget(
         title: localizations.logout,
         message: localizations.logoutConfirmation,
         confirmText: localizations.logout,
@@ -520,8 +521,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         isDestructive: false,
         onConfirm: () async {
           await Supabase.instance.client.auth.signOut();
-          if (context.mounted) {
-            Navigator.of(context)
+          if (outerContext.mounted) {
+            Navigator.of(outerContext)
                 .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
           }
         },
