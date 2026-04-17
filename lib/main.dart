@@ -37,7 +37,7 @@ void main() async {
   };
 
   // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Initial service bootstrapper - Critical services first
   await _initializeEssentialServices();
@@ -46,11 +46,7 @@ void main() async {
   await AdService.instance.initialize(testMode: !kReleaseMode);
 
   // Run the app after critical services are ready
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 
   // Initialize remaining non-critical services in the background
   _initializeBackgroundServices();
@@ -73,7 +69,8 @@ Future<void> _initializeEssentialServices() async {
   try {
     await SupabaseService.initialize().timeout(const Duration(seconds: 10));
   } catch (e) {
-    if (kDebugMode) debugPrint('⚠️ Essential service Supabase failed to init: $e');
+    if (kDebugMode)
+      debugPrint('⚠️ Essential service Supabase failed to init: $e');
   }
 
   try {
@@ -86,7 +83,9 @@ Future<void> _initializeEssentialServices() async {
 // Non-critical services that can load while splash screen is showing
 Future<void> _initializeBackgroundServices() async {
   try {
-    await RevenueCatService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
+    await RevenueCatService.initialize()
+        .timeout(const Duration(seconds: 10))
+        .catchError((_) {});
   } catch (e) {
     if (kDebugMode) debugPrint('⚠️ RevenueCat failed to init: $e');
   }
@@ -95,7 +94,9 @@ Future<void> _initializeBackgroundServices() async {
   try {
     final user = SupabaseService.instance.client.auth.currentUser;
     if (user != null) {
-      await RevenueCatService.logIn(user.id).timeout(const Duration(seconds: 5)).catchError((_) {});
+      await RevenueCatService.logIn(
+        user.id,
+      ).timeout(const Duration(seconds: 5)).catchError((_) {});
     }
   } catch (e) {
     if (kDebugMode) debugPrint('⚠️ RevenueCat login failed: $e');
@@ -159,11 +160,14 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   ThemeMode _parseThemeMode(String theme) {
     switch (theme.toLowerCase()) {
-      case 'dark':   return ThemeMode.dark;
+      case 'dark':
+        return ThemeMode.dark;
       case 'system':
-      case 'auto':   return ThemeMode.system;
+      case 'auto':
+        return ThemeMode.system;
       case 'light':
-      default:       return ThemeMode.light;
+      default:
+        return ThemeMode.light;
     }
   }
 
@@ -225,8 +229,9 @@ class _MyAppState extends ConsumerState<MyApp> {
           // 🚨 CRITICAL: NEVER REMOVE OR MODIFY
           builder: (context, child) {
             return MediaQuery(
-              data: MediaQuery.of(context)
-                  .copyWith(textScaler: const TextScaler.linear(1.0)),
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.0)),
               child: child!,
             );
           },
@@ -258,11 +263,9 @@ class _MyAppState extends ConsumerState<MyApp> {
             // During loading, check current session directly —
             // avoids rebuilding SplashScreen and resetting the login form
             loading: () {
-              final hasSession = SupabaseService
-                  .instance.client.auth.currentSession != null;
-              return hasSession
-                  ? const HomeScreen()
-                  : const SplashScreen();
+              final hasSession =
+                  SupabaseService.instance.client.auth.currentSession != null;
+              return hasSession ? const HomeScreen() : const SplashScreen();
             },
             error: (_, __) => const SplashScreen(),
           ),
