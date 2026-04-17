@@ -119,13 +119,33 @@ class _DailyLogState extends State<DailyLog> {
     }
 
     try {
+      // Important: time out individual calls so the page never spins forever
+      // if a permission prompt / network request / RPC hangs.
       final results = await Future.wait([
-        _outfitLogService.fetchOutfitLogsForDate(_selectedDate).catchError((_) => <Map<String, dynamic>>[]),
-        _outfitLogService.fetchMonthlyStats(_selectedDate).catchError((_) => <String, dynamic>{}),
-        _weatherService.getCurrentWeather().catchError((_) => <String, dynamic>{}),
-        _styleService.fetchUpcomingEvents().catchError((_) => <Map<String, dynamic>>[]),
-        _styleService.fetchQuizResult().catchError((_) => null),
-        _wardrobeService.fetchWardrobeItems().catchError((_) => <Map<String, dynamic>>[]),
+        _outfitLogService
+            .fetchOutfitLogsForDate(_selectedDate)
+            .timeout(const Duration(seconds: 12), onTimeout: () => <Map<String, dynamic>>[])
+            .catchError((_) => <Map<String, dynamic>>[]),
+        _outfitLogService
+            .fetchMonthlyStats(_selectedDate)
+            .timeout(const Duration(seconds: 12), onTimeout: () => <String, dynamic>{})
+            .catchError((_) => <String, dynamic>{}),
+        _weatherService
+            .getCurrentWeather()
+            .timeout(const Duration(seconds: 12), onTimeout: () => <String, dynamic>{})
+            .catchError((_) => <String, dynamic>{}),
+        _styleService
+            .fetchUpcomingEvents()
+            .timeout(const Duration(seconds: 12), onTimeout: () => <Map<String, dynamic>>[])
+            .catchError((_) => <Map<String, dynamic>>[]),
+        _styleService
+            .fetchQuizResult()
+            .timeout(const Duration(seconds: 12), onTimeout: () => null)
+            .catchError((_) => null),
+        _wardrobeService
+            .fetchWardrobeItems()
+            .timeout(const Duration(seconds: 12), onTimeout: () => <Map<String, dynamic>>[])
+            .catchError((_) => <Map<String, dynamic>>[]),
       ]);
 
       if (mounted) {
@@ -312,18 +332,21 @@ class _DailyLogState extends State<DailyLog> {
     if (_isAISuggestionLoading) return;
     setState(() => _isAISuggestionLoading = true);
 
-    final nextEvent = _upcomingEvents.isNotEmpty ? _upcomingEvents.first : null;
-    final result = await _todaySuggestionService.fetchTodaySuggestion(
-      weather: _weather,
-      quizResult: _quizResult,
-      nextEvent: nextEvent,
-      occasion: _selectedOccasion,
-      mood: _selectedMood,
-    );
+    try {
+      final nextEvent =
+          _upcomingEvents.isNotEmpty ? _upcomingEvents.first : null;
+      final result = await _todaySuggestionService
+          .fetchTodaySuggestion(
+            weather: _weather,
+            quizResult: _quizResult,
+            nextEvent: nextEvent,
+            occasion: _selectedOccasion,
+            mood: _selectedMood,
+          )
+          .timeout(const Duration(seconds: 18), onTimeout: () => null);
 
-    if (mounted) {
+      if (!mounted) return;
       setState(() {
-        _isAISuggestionLoading = false;
         if (result != null) {
           // Merge imageUrls from wardrobe / previous state so they never disappear
           _suggestedOutfit = _mergeImageUrls(
@@ -338,6 +361,10 @@ class _DailyLogState extends State<DailyLog> {
           );
         }
       });
+    } catch (e) {
+      if (kDebugMode) debugPrint('Today suggestion load failed: $e');
+    } finally {
+      if (mounted) setState(() => _isAISuggestionLoading = false);
     }
   }
 
