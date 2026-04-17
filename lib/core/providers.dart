@@ -19,19 +19,24 @@ final supabaseAuthProvider = Provider<User?>((ref) {
   );
 });
 
-// Profile from your `profiles` table (membership tier, etc.)
+// Profile from `user_profiles` (membership tier, etc.)
 final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final user = ref.watch(supabaseAuthProvider);
   if (user == null) return null;
 
   try {
     final data = await Supabase.instance.client
-        .from('profiles')
-        .select('membership_tier')
+        .from('user_profiles')
+        .select('tier')
         .eq('id', user.id)
         .single();
 
-    return data;
+    // Maintain backwards compatibility with older UI code that expects
+    // `membership_tier` while the DB stores `tier`.
+    return {
+      ...data,
+      'membership_tier': data['tier'],
+    };
   } catch (e) {
     // Profile may not exist yet, return null
     if (kDebugMode) debugPrint('Profile not found for user ${user.id}: $e');
