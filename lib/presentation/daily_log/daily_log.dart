@@ -864,7 +864,7 @@ class _DailyLogState extends State<DailyLog> {
                   SizedBox(width: 1.5.w),
                   Flexible(
                     child: Text(
-                      _suggestedOutfit['styling_note'] as String,
+                      _suggestedOutfit['styling_note'] as String? ?? '',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.secondary,
                         fontStyle: FontStyle.italic,
