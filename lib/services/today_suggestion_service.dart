@@ -97,6 +97,10 @@ class TodaySuggestionService {
         },
       );
 
+      if (kDebugMode) {
+        debugPrint('Today suggestion function status: ${response.status}');
+      }
+
       final data = _normalizeFunctionData(response.data);
       if (kDebugMode) {
         debugPrint('Today suggestion raw type: ${response.data.runtimeType}');
@@ -119,7 +123,14 @@ class TodaySuggestionService {
 
     // Supabase Functions can return JSON already-decoded, or as a JSON string.
     if (raw is Map) {
-      return Map<String, dynamic>.from(raw);
+      final m = Map<String, dynamic>.from(raw);
+      final nested = m['data'];
+      if (nested is Map) {
+        final n = Map<String, dynamic>.from(nested);
+        // Some clients/wrappers return { data: {...}, ... }.
+        if (n.containsKey('success')) return n;
+      }
+      return m;
     }
 
     if (raw is String) {
@@ -127,7 +138,15 @@ class TodaySuggestionService {
       if (s.isEmpty) return null;
       try {
         final decoded = jsonDecode(s);
-        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+        if (decoded is Map) {
+          final m = Map<String, dynamic>.from(decoded);
+          final nested = m['data'];
+          if (nested is Map) {
+            final n = Map<String, dynamic>.from(nested);
+            if (n.containsKey('success')) return n;
+          }
+          return m;
+        }
       } catch (_) {
         // Not JSON; treat as non-success payload
         return null;
