@@ -12,6 +12,7 @@ import '../../services/weather_service.dart';
 import '../../services/supabase_service.dart';
 import '../../services/wardrobe_service.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/upgrade_prompt_widget.dart';
 import './widgets/outfit_entry_card_widget.dart';
 import './widgets/quick_log_button_widget.dart';
 import './widgets/stats_summary_widget.dart';
@@ -2200,7 +2201,15 @@ class _DailyLogState extends State<DailyLog> {
     if (confirmed != true) return;
 
     final newId = await _outfitLogService.repeatOutfitLog(outfitId);
-    if (newId != null && mounted) {
+    if (newId == 'LIMIT_REACHED') {
+      if (!mounted) return;
+      UpgradePromptWidget.show(
+        context,
+        title: 'Limit reached',
+        message:
+            'You’ve reached your outfit log limit for this month. Upgrade to continue logging more outfits.',
+      );
+    } else if (newId != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).outfitRepeated)),
       );
