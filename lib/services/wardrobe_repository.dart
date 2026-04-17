@@ -83,8 +83,7 @@ class WardrobeRepository {
   /// Deletes an item from both remote and local
   Future<void> deleteItem(String itemId) async {
     await _remoteService.deleteWardrobeItem(itemId);
-    // Local deletion will happen on next sync or we can implement explicit local delete
-    // For simplicity, we can let sync handle it or add a delete method to LocalDatabaseService
+    await _localService.deleteLocalItem(itemId);
   }
 
   /// Subscribes to changes

@@ -70,6 +70,33 @@ class LocalDatabaseService {
     return box.values.toList();
   }
 
+  /// Deletes an item from the local cache.
+  ///
+  /// We store items keyed by their remote id string in most cases, but we also
+  /// guard against older/local ids by scanning for matching `remoteId`.
+  Future<void> deleteLocalItem(String itemId) async {
+    await init();
+
+    // Fast path: key matches the remote id.
+    if (box.containsKey(itemId)) {
+      await box.delete(itemId);
+      return;
+    }
+
+    // Fallback: delete any entries whose remoteId matches.
+    final keysToDelete = <dynamic>[];
+    for (final entry in box.toMap().entries) {
+      final item = entry.value;
+      if (item.remoteId == itemId) {
+        keysToDelete.add(entry.key);
+      }
+    }
+
+    if (keysToDelete.isNotEmpty) {
+      await box.deleteAll(keysToDelete);
+    }
+  }
+
   /// Closes the database
   Future<void> close() async {
     if (_isInitialized) {
