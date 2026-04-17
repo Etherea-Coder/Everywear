@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
 import './wardrobe_service.dart';
@@ -96,10 +97,14 @@ class TodaySuggestionService {
         },
       );
 
-      if (kDebugMode) debugPrint('Today suggestion response: ${response.data}');
+      final data = _normalizeFunctionData(response.data);
+      if (kDebugMode) {
+        debugPrint('Today suggestion raw type: ${response.data.runtimeType}');
+        debugPrint('Today suggestion response: $data');
+      }
 
-      if (response.data != null && response.data['success'] == true) {
-        final result = Map<String, dynamic>.from(response.data);
+      if (data != null && data['success'] == true) {
+        final result = Map<String, dynamic>.from(data);
         return _clientSidePatch(result, wardrobeItems);
       }
       return null;
@@ -107,6 +112,29 @@ class TodaySuggestionService {
       if (kDebugMode) debugPrint('Today suggestion error: $e');
       return null;
     }
+  }
+
+  Map<String, dynamic>? _normalizeFunctionData(dynamic raw) {
+    if (raw == null) return null;
+
+    // Supabase Functions can return JSON already-decoded, or as a JSON string.
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+
+    if (raw is String) {
+      final s = raw.trim();
+      if (s.isEmpty) return null;
+      try {
+        final decoded = jsonDecode(s);
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (_) {
+        // Not JSON; treat as non-success payload
+        return null;
+      }
+    }
+
+    return null;
   }
 
   /// Client-side safety net: if Edge Function returned empty imageUrl for a

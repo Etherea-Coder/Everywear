@@ -66,6 +66,27 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         _quizResult = results[2] as Map<String, dynamic>?;
         _isLoading = false;
       });
+      // Auto-load the passive coach tip once data is ready
+      _loadCoachTip();
+    }
+  }
+
+  Future<void> _loadCoachTip() async {
+    if (_isCoachTipLoading) return;
+    setState(() => _isCoachTipLoading = true);
+
+    final tip = await _styleService.fetchPassiveCoachTip(
+      insights: _insights,
+      quizResult: _quizResult,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isCoachTipLoading = false;
+        if (tip != null && tip.isNotEmpty) {
+          _coachTip = tip;
+        }
+      });
     }
   }
 
