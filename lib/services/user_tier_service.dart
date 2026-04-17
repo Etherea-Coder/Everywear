@@ -235,7 +235,8 @@ class UserTierService {
         'isPremium': tier == 'premium',
         'daily_suggestions_used': suggestionsUsed,
         'suggestions_limit': suggestionsLimit,
-        'suggestions_remaining': suggestionsLimit - suggestionsUsed,
+        'suggestions_remaining':
+            (suggestionsLimit - suggestionsUsed).clamp(0, suggestionsLimit),
         'coaching_used': coachingUsed,
         'coaching_limit': coachingLimit,
         'coaching_remaining': (coachingLimit - coachingUsed).clamp(0, coachingLimit),
