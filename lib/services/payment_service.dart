@@ -9,8 +9,7 @@ class PaymentService {
 
   // ignore: unused_field
   final Dio _dio = Dio();
-  // ignore: unused_field
-  final String _baseUrl = '${SupabaseService.supabaseUrl}/functions/v1';
+  String get _baseUrl => '${SupabaseService.cleanSupabaseUrl}/functions/v1';
 
   /// Initialize Payment Service
   static Future<void> initialize() async {
