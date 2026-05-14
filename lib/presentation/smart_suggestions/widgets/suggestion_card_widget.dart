@@ -33,8 +33,8 @@ class SuggestionCardWidget extends StatelessWidget {
 
     return Dismissible(
       key: Key(suggestion["id"] as String),
-      background: _buildSwipeBackground(theme, isLeft: true),
-      secondaryBackground: _buildSwipeBackground(theme, isLeft: false),
+      background: _buildSwipeBackground(context, theme, isLeft: true),
+      secondaryBackground: _buildSwipeBackground(context, theme, isLeft: false),
       onDismissed: (direction) {
         if (direction == DismissDirection.endToStart) {
           onDismiss();
@@ -73,7 +73,7 @@ class SuggestionCardWidget extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(16),
                     ),
-                    child: _buildOutfitImage(theme),
+                    child: _buildOutfitImage(context, theme),
                   ),
 
                   // AI Badge
@@ -243,7 +243,7 @@ class SuggestionCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSwipeBackground(ThemeData theme, {required bool isLeft}) {
+  Widget _buildSwipeBackground(BuildContext context, ThemeData theme, {required bool isLeft}) {
     return Container(
       margin: EdgeInsets.only(bottom: 2.h),
       decoration: BoxDecoration(
@@ -273,7 +273,8 @@ class SuggestionCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildOutfitImage(ThemeData theme) {
+  Widget _buildOutfitImage(BuildContext context, ThemeData theme) {
+    final loc = AppLocalizations.of(context);
     // For AI-generated suggestions, show item grid
     if (isAIGenerated && suggestion['items'] != null) {
       final items = suggestion['items'] as List<Map<String, dynamic>>;
@@ -289,7 +290,7 @@ class SuggestionCardWidget extends StatelessWidget {
                   height: 30.h,
                   fit: BoxFit.cover,
                   semanticLabel:
-                      item['semanticLabel'] as String? ?? AppLocalizations.of(context).clothingItemFallback,
+                      item['semanticLabel'] as String? ?? loc.clothingItemFallback,
                 ),
               );
             }).toList(),
@@ -309,7 +310,7 @@ class SuggestionCardWidget extends StatelessWidget {
                         height: 15.h,
                         fit: BoxFit.cover,
                         semanticLabel:
-                            item['semanticLabel'] as String? ?? AppLocalizations.of(context).clothingItemFallback,
+                            item['semanticLabel'] as String? ?? loc.clothingItemFallback,
                       ),
                     );
                   }).toList(),
@@ -324,7 +325,7 @@ class SuggestionCardWidget extends StatelessWidget {
                         height: 15.h,
                         fit: BoxFit.cover,
                         semanticLabel:
-                            item['semanticLabel'] as String? ?? AppLocalizations.of(context).clothingItemFallback,
+                            item['semanticLabel'] as String? ?? loc.clothingItemFallback,
                       ),
                     );
                   }).toList(),

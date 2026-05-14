@@ -76,10 +76,6 @@ class AiSuggestionsService {
 
       if (response.data != null) {
         final success = response.data['success'] ?? false;
-        if (success == true) {
-          // Enforce tier limits: count successful AI suggestions.
-          await _tierService.incrementSuggestionCount(user.id);
-        }
         return {
           'success': success,
           'suggestions': response.data['suggestions'] ?? '',

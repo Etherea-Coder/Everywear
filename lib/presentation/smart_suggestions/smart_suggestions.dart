@@ -788,6 +788,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   void _showEventCoachDialog(Map<String, dynamic> event) {
+    final localizations = AppLocalizations.of(context);
     final date = DateTime.parse(event['event_date']);
     final dateStr = DateFormat('MMM dd').format(date);
     final eventType = event['event_type'] as String? ?? 'Other';

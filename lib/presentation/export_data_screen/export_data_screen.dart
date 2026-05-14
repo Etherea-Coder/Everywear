@@ -55,7 +55,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeroCard(theme),
+            _buildHeroCard(theme, l10n),
             SizedBox(height: 2.h),
 
             _buildSection(
@@ -77,7 +77,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               theme,
               title: l10n.whatIsIncluded,
               icon: Icons.inventory_2_outlined,
-              child: _buildIncludedCard(theme),
+              child: _buildIncludedCard(theme, l10n),
             ),
             SizedBox(height: 2.h),
 
@@ -85,7 +85,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               theme,
               title: l10n.privacyNote,
               icon: Icons.verified_user_outlined,
-              child: _buildPrivacyCard(theme),
+              child: _buildPrivacyCard(theme, l10n),
             ),
             SizedBox(height: 3.h),
 
@@ -125,7 +125,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     );
   }
 
-  Widget _buildHeroCard(ThemeData theme) {
+  Widget _buildHeroCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       margin: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 0),
       padding: EdgeInsets.all(4.5.w),
@@ -299,7 +299,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     );
   }
 
-  Widget _buildIncludedCard(ThemeData theme) {
+  Widget _buildIncludedCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
@@ -345,7 +345,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     );
   }
 
-  Widget _buildPrivacyCard(ThemeData theme) {
+  Widget _buildPrivacyCard(ThemeData theme, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(4.w),
