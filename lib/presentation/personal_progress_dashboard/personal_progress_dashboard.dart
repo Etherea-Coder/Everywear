@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../core/app_export.dart';
+
 import '../../widgets/custom_app_bar.dart';
 import '../../routes/app_routes.dart';
 import '../../services/progress_service.dart';

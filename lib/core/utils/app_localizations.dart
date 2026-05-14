@@ -287,8 +287,6 @@ class AppLocalizations {
   String get signUp => translate('sign_up');
   String get continueWithGoogle => translate('continue_with_google');
   String get continueWithEmail => translate('continue_with_email');
-  String get alreadyHaveAccount => translate('already_have_account');
-  String get dontHaveAccount => translate('dont_have_account');
   String get forgotPassword => translate('forgot_password');
   String get orText => translate('or');
 
@@ -313,7 +311,6 @@ class AppLocalizations {
 
   // Wardrobe strings
   String get wardrobe => translate('wardrobe');
-  String get addItem => translate('add_item');
   String get myWardrobe => translate('my_wardrobe');
   String get outfit => translate('outfit');
   String get outfits => translate('outfits');
@@ -331,7 +328,6 @@ class AppLocalizations {
   String get deleteItems => translate('delete_items');
   String get itemsDeletedSuccess => translate('items_deleted_success');
   String get itemsDeleteError => translate('items_delete_error');
-  String get itemAddedToWardrobe => translate('item_added_to_wardrobe');
   String get itemSaveError => translate('item_save_error');
 
   // Language names
@@ -353,8 +349,7 @@ class AppLocalizations {
   String get suggestionDismissed => translate('suggestion_dismissed');
   String get undo => translate('undo');
   String get itemsInThisOutfit => translate('items_in_this_outfit');
-  String get lastWornLabel => translate('last_worn_label');
-  String get stylingTips => translate('styling_tips');
+  String get lastWornLabelText => translate('last_worn_label_text');
 
   // Camera
   String get cameraFlipError => translate('camera_flip_error');
@@ -431,8 +426,6 @@ class AppLocalizations {
   String get viewPrivacyPolicy => translate('view_privacy_policy');
   String get termsOfService => translate('terms_of_service');
   String get viewTermsOfService => translate('view_terms_of_service');
-  String get lightMode => translate('light_mode');
-  String get darkMode => translate('dark_mode');
   String get autoSystem => translate('auto_system');
   String get exportDataFormat => translate('export_data_format');
   String get pdfReport => translate('pdf_report');
@@ -512,10 +505,6 @@ class AppLocalizations {
   String get yourPersonalCollection => translate('your_personal_collection');
   String get updatedEverywhere => translate('updated_everywhere');
   String get itemUpdated => translate('item_updated');
-  String get unsavedChanges => translate('unsaved_changes');
-  String get discard => translate('discard');
-  String get editItem => translate('edit_item');
-  String get changes => translate('changes');
 
   // Smart Suggestions
   String get challenges => translate('challenges');
@@ -553,7 +542,6 @@ class AppLocalizations {
   String get chooseFromGallery => translate('choose_from_gallery');
   String get skipPhoto => translate('skip_photo');
   String get failedToCapturePhoto => translate('failed_to_capture_photo');
-  String get saveError => translate('save_error');
 
   // Purchase Tracking
   String get finalPrice => translate('final_price');
@@ -564,7 +552,6 @@ class AppLocalizations {
   // Additional strings
   String get maximumPhotosAllowed => translate('maximum_photos_allowed');
   String get failedToSelectPhoto => translate('failed_to_select_photo');
-  String get aiDetected => translate('ai_detected');
   String get shareAchievement => translate('share_achievement');
   String get searchAchievements => translate('search_achievements');
   String get addFirstItem => translate('add_first_item');
@@ -695,8 +682,6 @@ class AppLocalizations {
   String get slotAnchor => translate('slot_anchor');
 
   // Daily Log Helpers
-  String get today => translate('today');
-  String get tomorrow => translate('tomorrow');
   String get upcomingEvent => translate('upcoming_event');
   String get styleTip => translate('style_tip');
   String get styleTipNoLogs => translate('style_tip_no_logs');
@@ -709,10 +694,6 @@ class AppLocalizations {
   String styleTipFavoriteOccasion(String occasion) => translate('style_tip_favorite_occasion').replaceFirst('{}', occasion);
   
   String get occasionEveryday => translate('occasion_everyday');
-  String get occasionFormal => translate('occasion_formal');
-  String get occasionSocialEvent => translate('occasion_social_event');
-  String get occasionDateNight => translate('occasion_date_night');
-  String get occasionAthletic => translate('occasion_athletic');
   
   String get outfitsLabel => translate('outfits_label');
   String get itemsLabel => translate('items_label');
@@ -722,9 +703,6 @@ class AppLocalizations {
   String get deleteOutfitTooltip => translate('delete_outfit_tooltip');
   String get outfitImageLabel => translate('outfit_image_label');
 
-  String get goodMorning => translate('good_morning');
-  String get goodAfternoon => translate('good_afternoon');
-  String get goodEvening => translate('good_evening');
   String get slotTop => translate('slot_top');
   String get slotBottom => translate('slot_bottom');
   String get slotShoes => translate('slot_shoes');
@@ -751,7 +729,6 @@ class AppLocalizations {
   String get unlockRequirement => translate('unlock_requirement');
   String get backstory => translate('backstory');
   String get relatedChallenges => translate('related_challenges');
-  String get shareAchievement => translate('share_achievement');
   String get keepGoingToUnlock => translate('keep_going_to_unlock');
   String get yourAchievements => translate('your_achievements');
   String get completionStatus => translate('completion_status');
@@ -764,8 +741,9 @@ class AppLocalizations {
   String get aboutLearningPathsTooltip => translate('about_learning_paths_tooltip');
   String get recentAchievements => translate('recent_achievements');
   String get learningModules => translate('learning_modules');
+  String getLpAchievementTitle(int id) => translate('lp_achievement_title_$id');
+  String getLpAchievementDescription(int id) => translate('lp_achievement_description_$id');
   String get moduleLockedTitle => translate('module_locked_title');
-  String get howItWorks => translate('how_it_works');
   String get aboutLpDescription => translate('about_lp_description');
   String get aboutLpPoint1 => translate('about_lp_point1');
   String get aboutLpPoint2 => translate('about_lp_point2');
@@ -811,9 +789,7 @@ class AppLocalizations {
   // AI Intelligence
   String get aiIntelligenceTitle => translate('ai_intelligence_title');
   String get filterAnalyticsTooltip => translate('filter_analytics_tooltip');
-  String get newAiInsightsGenerated => translate('new_ai_insights_generated');
   String get couldNotLoadInsights => translate('could_not_load_insights');
-  String get retry => translate('retry');
   String get styleTrendsAnalysis => translate('style_trends_analysis');
   String get colorPatternsEvolution => translate('color_patterns_evolution');
   String get outfitVersatilityScores => translate('outfit_versatility_scores');
@@ -826,8 +802,6 @@ class AppLocalizations {
   String get seasonTimeRange => translate('season_time_range');
   String get generatingLabel => translate('generating_label');
   String get generateNewInsights => translate('generate_new_insights');
-  String get customDateRange => translate('custom_date_range');
-  String get filterByCategory => translate('filter_by_category');
   String get allLabel => translate('all_label');
   String get aiWardrobeIntelligence => translate('ai_wardrobe_intelligence');
   String get scoreLabel => translate('score_label');
@@ -838,7 +812,6 @@ class AppLocalizations {
   String get emergingStyleDirections => translate('emerging_style_directions');
   String get mostVersatileItems => translate('most_versatile_items');
   String get underutilizedItems => translate('underutilized_items');
-  String get costPerWear => translate('cost_per_wear');
   String get purchasesPerMonth => translate('purchases_per_month');
   String get decreasingLabel => translate('decreasing_label');
   String get increasingLabel => translate('increasing_label');
@@ -922,7 +895,6 @@ class AppLocalizations {
   String get nextMilestoneInProgress => translate('next_milestone_in_progress');
   String challengeProgressMsg(String title, int pct) => translate('challenge_progress_msg').replaceFirst('{title}', title).replaceFirst('{pct}', pct.toString());
   String get keepGoingLabel => translate('keep_going_label');
-  String get noChallengesFound => translate('no_challenges_found');
   String get changeFilterExploreMore => translate('change_filter_explore_more');
   String get featuredLabel => translate('featured_label');
   String pointsLabel(int pts) => translate('points_label_value').replaceFirst('{}', pts.toString());
@@ -932,7 +904,6 @@ class AppLocalizations {
   String percentCompleteMsg(int pct) => translate('percent_complete_msg').replaceFirst('{}', pct.toString());
   String get featuredChallengeBannerSemantic => translate('featured_challenge_banner_semantic');
 
-  String getLocalizedDifficulty(String difficulty) {
     switch (difficulty.toLowerCase()) {
       case 'easy': return translate('difficulty_easy');
       case 'medium': return translate('difficulty_medium');
@@ -975,7 +946,6 @@ class AppLocalizations {
   String couldNotUpdateProfileMsg(String error) => translate('could_not_update_profile_prefix').replaceFirst('{}', error);
 
   // Wardrobe Management Additional
-  String get noItemsFound => translate('no_items_found');
   String get tryDifferentSearch => translate('try_different_search');
   String get yourWardrobeStartsHere => translate('your_wardrobe_starts_here');
   String get emptyWardrobeSubtitle => translate('empty_wardrobe_subtitle');
@@ -989,7 +959,6 @@ class AppLocalizations {
   String get unnamedItem => translate('unnamed_item');
   String get uncategorized => translate('uncategorized');
   String get itemsLabelPlural => translate('items_label_plural');
-  String get profilePictureSemantic => translate('profile_picture_semantic');
   String get wardrobeItemSemantic => translate('wardrobe_item_semantic');
 
   String progressAmountLabel(num current, num limit, String units) =>
@@ -1039,7 +1008,6 @@ class AppLocalizations {
   String get qStyleUpgrade => translate('q_style_upgrade');
   String get typeQuestionOrPickTopic => translate('type_question_or_pick_topic');
   String get coachHintText => translate('coach_hint_text');
-  String get orPickATopic => translate('or_pick_a_topic');
   String get noInsightsYet => translate('no_insights_yet');
   String get addItemsForInsights => translate('add_items_for_insights');
   String get totalItemsLabel => translate('total_items_label');
@@ -1130,11 +1098,9 @@ class AppLocalizations {
   String get tapToLogProgress => translate('tap_to_log_progress');
   String get acceptChallengeBtn => translate('accept_challenge_btn');
   String get noChallengeThisWeek => translate('no_challenge_this_week');
-  String get checkBackSoon => translate('check_back_soon');
 
   // Challenge Detail Sheet
   String get pickAnchorItemMsg => translate('pick_anchor_item_msg');
-  String get challengeAcceptedMsg => translate('challenge_accepted_msg');
   String get challengeAlreadyCompleteMsg => translate('challenge_already_complete_msg');
   String get styleInsightUnlocked => translate('style_insight_unlocked');
   String get progressLoggedMsg => translate('progress_logged_msg');
@@ -1146,7 +1112,6 @@ class AppLocalizations {
   String get notWornYet => translate('not_worn_yet');
   String get stylistTip => translate('stylist_tip');
   String get colorStylistTip => translate('color_stylist_tip');
-  String get howItWorks => translate('how_it_works');
   String get capsuleHowItWorks => translate('capsule_how_it_works');
   String get currentProgressLabel => translate('current_progress_label');
   String get logOutfitProgressBtn => translate('log_outfit_progress_btn');
@@ -1194,7 +1159,6 @@ class AppLocalizations {
   String get aiBadge => translate('ai_badge');
   String get checkWeatherLabel => translate('check_weather_label');
   String get wearThisBtn => translate('wear_this_btn');
-  String get dismiss => translate('dismiss');
   String get clothingItemFallback => translate('clothing_item_fallback');
 
   String goalOutfitsLabel(int goal) =>
@@ -1227,7 +1191,6 @@ class AppLocalizations {
     }
   }
 
-  String getLocalizedCategory(String category) {
     switch (category) {
       case 'All': return translate('category_all');
       case 'Consistency': return translate('category_consistency');
@@ -1268,16 +1231,7 @@ class AppLocalizations {
   String get boldSuggestionDesc => translate('bold_suggestion_desc');
   String get surpriseSuggestionDesc => translate('surprise_suggestion_desc');
   
-  String get styleTip => translate('style_tip');
-  String get styleTipNoLogs => translate('style_tip_no_logs');
-  String get styleTipFewLogs => translate('style_tip_few_logs');
-  String get styleTipBold => translate('style_tip_bold');
-  String get styleTipComfort => translate('style_tip_comfort');
-  String styleTipFavoriteOccasion(String occasion) => translate('style_tip_favorite_occasion').replaceAll('{occasion}', occasion);
   
-  String get upcomingEvent => translate('upcoming_event');
-  String inDaysLeft(int days) => translate('in_days_left').replaceAll('{days}', days.toString());
-  String dressCodeFormat(String dressCode) => translate('dress_code_format').replaceAll('{dressCode}', dressCode);
   
   // Mock Item Names for Today Page
   String get itemDenimJacket => translate('item_denim_jacket');
@@ -1325,14 +1279,11 @@ class AppLocalizations {
   String get itemTailoredShorts => translate('item_tailored_shorts');
   String get itemLeatherLoafers => translate('item_leather_loafers');
   String get itemMinimalTrainers => translate('item_minimal_trainers');
-  String get occasionEveryday => translate('occasion_everyday');
   String get eventTypeOther => translate('event_type_other');
 
   // Categories
-  String get catOuterwear => translate('cat_outerwear');
   String get catTop => translate('cat_top');
   String get catBottom => translate('cat_bottom');
-  String get catShoes => translate('cat_shoes');
   String get catFootwear => translate('cat_footwear');
   String get catAnchor => translate('cat_anchor');
   String get catClothing => translate('cat_clothing');
@@ -1357,47 +1308,12 @@ class AppLocalizations {
   String get totalOutfits => translate('total_outfits');
   String get uniqueItems => translate('unique_items');
   String get favoriteOccasion => translate('favorite_occasion');
-  String get notes => translate('notes');
   String get noOutfitDisplayedError => translate('no_outfit_displayed_error');
   String get noValidWardrobeItemsError => translate('no_valid_wardrobe_items_error');
   String get outfitLoggedSuccess => translate('outfit_logged_success');
-  String get optionalNotesHint => translate('optional_notes_hint');
   
-  String get outfitImageLabel => translate('outfit_image_label');
-  String get repeatOutfitTooltip => translate('repeat_outfit_tooltip');
-  String get editOutfitTooltip => translate('edit_outfit_tooltip');
-  String get deleteOutfitTooltip => translate('delete_outfit_tooltip');
-  String get outfitsLabel => translate('outfits_label');
-  String get itemsLabel => translate('items_label');
-  String get topLabel => translate('top_label');
   
   // AI Coach (Smart Suggestions)
-  String get tipOfTheWeek => translate('tip_of_the_week');
-  String get personalizedCoaching => translate('personalized_coaching');
-  String get completeQuizForCoaching => translate('complete_quiz_for_coaching');
-  String get coachIsThinking => translate('coach_is_thinking');
-  String get coachIsPreparingTip => translate('coach_is_preparing_tip');
-  String get discoverYourStyle => translate('discover_your_style');
-  String get yourStyleProfile => translate('your_style_profile');
-  String get takeQuizToPersonalise => translate('take_quiz_to_personalise');
-  String get quickQuestions => translate('quick_questions');
-  String get getHelpStylingPieces => translate('get_help_styling_pieces');
-  String get eventCoaching => translate('event_coaching');
-  String suggestionsFor(String title) => translate('suggestions_for').replaceAll('{title}', title);
-  String get addEventToUnlock => translate('add_event_to_unlock');
-  String get coachLimitReached => translate('coach_limit_reached');
-  String get premiumCoachLimitMsg => translate('premium_coach_limit_msg');
-  String get freeCoachLimitMsg => translate('free_coach_limit_msg');
-  String get typeQuestionOrPickTopic => translate('type_question_or_pick_topic');
-  String get coachHintText => translate('coach_hint_text');
-  String get eventName => translate('event_name');
-  String get hintWedding => translate('hint_wedding');
-  String get dateLabel => translate('date_label');
-  String get dressCodeOptional => translate('dress_code_optional');
-  String get editEvent => translate('editEvent');
-  String get noDressCode => translate('noDressCode');
-  String get finish => translate('finish');
-  String get styleQuiz => translate('style_quiz');
   
   // Style Profiles
   String get profileClassic => translate('profile_classic');
@@ -1407,46 +1323,9 @@ class AppLocalizations {
   String get profileStyle => translate('profile_style');
   
   // Insights
-  String get noInsightsYet => translate('no_insights_yet');
-  String get addItemsForInsights => translate('add_items_for_insights');
-  String get totalItemsLabel => translate('total_items');
-  String get outfitsLoggedLabel => translate('outfits_logged');
-  String get topCategoryLabel => translate('top_category');
-  String get topOccasionLabel => translate('top_occasion');
   
   // Quiz
-  String get qStyleAdventures => translate('q_style_adventures');
-  String get qStyleAdventurousSmall => translate('q_style_adv_small');
-  String get qStyleAdventurousOften => translate('q_style_adv_often');
-  String get qStyleAdventurousDepends => translate('q_style_adv_depends');
-  String get qStyleAdventurousWorks => translate('q_style_adv_works');
-  String get topicOutfitIdeas => translate('topic_outfit_ideas');
-  String get topicShoppingAdvice => translate('topic_shopping_advice');
-  String get topicMyWardrobe => translate('topic_my_wardrobe');
-  String get topicForAnEvent => translate('topic_for_an_event');
-  String get topicMoreVariety => translate('topic_more_variety');
-  String get topicStyleUpgrade => translate('topic_style_upgrade');
   
-  String get qFeelLikeYourself => translate('q_feel_like_yourself');
-  String get qFeelRelaxed => translate('q_feel_relaxed');
-  String get qFeelPolished => translate('q_feel_polished');
-  String get qFeelCreative => translate('q_feel_creative');
-  String get qFeelPractical => translate('q_feel_practical');
-  String get qColorsDominate => translate('q_colors_dominate');
-  String get qColorsNeutrals => translate('q_colors_neutrals');
-  String get qColorsEarth => translate('q_colors_earth');
-  String get qColorsBold => translate('q_colors_bold');
-  String get qColorsSoft => translate('q_colors_soft');
-  String get qHelpMost => translate('q_help_most');
-  String get qHelpTogether => translate('q_help_together');
-  String get qHelpVariety => translate('q_help_variety');
-  String get qHelpShopping => translate('q_help_shopping');
-  String get qHelpConfident => translate('q_help_confident');
-  String get qMattersMost => translate('q_matters_most');
-  String get qMattersComfort => translate('q_matters_comfort');
-  String get qMattersElegance => translate('q_matters_elegance');
-  String get qMattersOriginality => translate('q_matters_originality');
-  String get qMattersVersatility => translate('q_matters_versatility');
 
   String get stylistIncludesFavorite => translate('stylistIncludesFavorite');
   String get stylistPerfectTimeToWear => translate('stylistPerfectTimeToWear');
@@ -1468,7 +1347,6 @@ class AppLocalizations {
   String get challengeLogProgress      => translate('challenge_log_progress');
   String get challengeTapToLog         => translate('challenge_tap_to_log');
   String get challengeCompleteInline   => translate('challenge_complete_inline');
-  String get challengeCompleteTitle    => translate('challenge_complete_title');
   String get challengeNextWeek         => translate('challenge_next_week');
   String get challengeInsightTitle     => translate('challenge_insight_title');
   String get challengeInsightCardTitle => translate('challenge_insight_card_title');
@@ -1614,7 +1492,6 @@ class AppLocalizations {
   String get strongPasswordHint => translate('strong_password_hint');
   String get passwordsDoNotMatch => translate('passwords_do_not_match');
   String get minPasswordLengthMsg => translate('min_password_length_msg');
-  String get updatePasswordBtn => translate('update_password_btn');
   String get passwordUpdatedMsg => translate('password_updated_msg');
   String get requiredFieldMsg => translate('required_field_msg');
 
@@ -1628,7 +1505,6 @@ class AppLocalizations {
   String get bestValueHeader => translate('best_value_header');
   String get sustainabilityHeader => translate('sustainability_header');
   String get aiInsightsHeader => translate('ai_insights_header');
-  String get achievementGalleryTitle => translate('achievement_gallery_title');
   String get achievementGallerySubtitle => translate('achievement_gallery_subtitle');
   String get labelWeek => translate('label_week');
   String get labelMonth => translate('label_month');
@@ -1804,26 +1680,8 @@ class AppLocalizations {
   String get testimonialEmmaText => translate('testimonial_emma_text');
   
   // Coach Questions
-  String get qOutfitIdeas => translate('q_outfit_ideas');
-  String get qShoppingAdvice => translate('q_shopping_advice');
-  String get qMyWardrobe => translate('q_my_wardrobe');
-  String get qForAnEvent => translate('q_for_an_event');
-  String get qMoreVariety => translate('q_more_variety');
-  String get qStyleUpgrade => translate('q_style_upgrade');
   String get item => translate('slot_item');
   String get yourStyleInsight => translate('challenge_insight_card_title');
-  String get unlockRequirement => translate('unlock_requirement');
-  String get backstory => translate('backstory');
-  String get relatedChallenges => translate('related_challenges');
-  String get shareAchievement => translate('share_achievement');
-  String get savePreferencesError => translate('save_preferences_error');
-  String get personalizeTitle => translate('personalize_title');
-  String get completeSetup => translate('complete_setup');
-  String get achievementUnlocked => translate('achievement_unlocked');
-  String get keepUpGreatWork => translate('keep_up_great_work');
-  String getStepCountLabel(int current, int total) => translate('step_count')
-      .replaceFirst('{current}', current.toString())
-      .replaceFirst('{total}', total.toString());
 }
 
 class _AppLocalizationsDelegate

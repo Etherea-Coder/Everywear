@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:everywear/core/utils/app_localizations.dart';
+
 
 /// Custom bottom navigation bar for wardrobe analytics app
 /// Implements bottom-heavy interaction design with thumb-accessible navigation

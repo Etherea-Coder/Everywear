@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../core/app_export.dart';
+
 import '../../widgets/custom_app_bar.dart';
 import '../../services/supabase_service.dart';
 

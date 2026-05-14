@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../widgets/custom_app_bar.dart';
+
 import '../../services/challenge_service.dart';
 import './widgets/featured_challenge_banner_widget.dart';
 import './widgets/challenge_category_card_widget.dart';

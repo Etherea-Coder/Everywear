@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:everywear/core/utils/app_localizations.dart';
+
 import 'package:percent_indicator/percent_indicator.dart';
 
 /// Challenge category card widget for browsing challenges

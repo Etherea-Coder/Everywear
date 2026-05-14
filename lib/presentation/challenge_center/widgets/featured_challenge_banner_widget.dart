@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:everywear/core/utils/app_localizations.dart';
+
 
 import '../../../widgets/custom_image_widget.dart';
 

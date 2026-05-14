@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../services/achievement_service.dart';
+
 import '../../widgets/custom_app_bar.dart';
 import './widgets/achievement_badge_card_widget.dart';
 import './widgets/achievement_detail_modal_widget.dart';

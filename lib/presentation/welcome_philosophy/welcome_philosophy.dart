@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../core/app_export.dart';
+
 
 /// Welcome Philosophy Screen - First onboarding screen
 /// Introduces users to Everywear's personal style learning system and philosophy

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:everywear/core/utils/app_localizations.dart';
 
 import '../../../theme/app_theme.dart';
+import '../../../core/app_export.dart';
 
 class SustainabilityImpactCardWidget extends StatefulWidget {
   final Map<String, dynamic> metrics;
@@ -295,9 +297,6 @@ class _SustainabilityImpactCardWidgetState
               color: Colors.green,
             ),
           ),
-          progressColor: Colors.green,
-          backgroundColor: Colors.green.withValues(alpha: 0.2),
-          circularStrokeCap: CircularStrokeCap.round,
         ),
         SizedBox(width: 4.w),
         Expanded(
@@ -322,6 +321,30 @@ class _SustainabilityImpactCardWidgetState
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMetricTile(String label, String value, Color color, ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 0.5.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

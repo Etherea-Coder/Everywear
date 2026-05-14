@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:everywear/core/utils/app_localizations.dart';
 import 'package:sizer/sizer.dart';
 
 

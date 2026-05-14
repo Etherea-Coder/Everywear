@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
+
 
 /// Module card widget displaying learning module information
 class ModuleCardWidget extends StatelessWidget {

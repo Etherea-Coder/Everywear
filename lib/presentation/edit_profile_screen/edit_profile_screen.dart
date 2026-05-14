@@ -6,7 +6,9 @@ import '../../services/profile_service.dart';
 import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../widgets/custom_app_bar.dart';
+
 import '../../widgets/custom_image_widget.dart';
 
 class EditProfileScreen extends StatefulWidget {

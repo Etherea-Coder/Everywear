@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:everywear/core/utils/app_localizations.dart';
 import 'package:sizer/sizer.dart';
+
 
 /// Feature Overview Screen - Second onboarding screen
 /// Showcases core features of Everywear before personalization setup

@@ -4,7 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
+
 import '../../../widgets/custom_icon_widget.dart';
 import '../../../services/ai/vision_engine_service.dart';
 import '../../../core/utils/image_optimizer.dart';

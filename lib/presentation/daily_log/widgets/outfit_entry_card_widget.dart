@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
+
 
 class OutfitEntryCardWidget extends StatelessWidget {
   final Map<String, dynamic> entry;

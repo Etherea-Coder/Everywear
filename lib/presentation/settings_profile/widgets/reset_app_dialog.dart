@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
+
 import '../../../services/reset_service.dart';
 import '../../../routes/app_routes.dart';
 

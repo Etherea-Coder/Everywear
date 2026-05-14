@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
+
 
 /// Outfit confirmation widget for final review and rating
 /// Implements outfit preview with rating system and optional notes

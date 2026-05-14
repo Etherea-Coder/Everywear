@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
+
 
 /// Individual wardrobe item card with swipe actions and selection support
 class WardrobeItemCardWidget extends StatelessWidget {

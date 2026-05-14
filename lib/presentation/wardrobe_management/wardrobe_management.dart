@@ -4,7 +4,9 @@ import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:everywear/core/utils/app_localizations.dart';
 import '../../core/app_export.dart';
+
 import '../../core/providers.dart';
 import '../../services/wardrobe_service.dart';
 import '../../widgets/custom_icon_widget.dart';
