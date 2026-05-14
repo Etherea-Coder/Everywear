@@ -62,13 +62,33 @@ class FeaturedChallengeBannerWidget extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(16.0),
-              child: CustomImageWidget(
-                imageUrl: imageUrl,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                semanticLabel: semanticLabel,
-              ),
+              child: imageUrl.isNotEmpty
+                  ? CustomImageWidget(
+                      imageUrl: imageUrl,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      semanticLabel: semanticLabel,
+                    )
+                  : Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.flag_outlined,
+                        size: 64,
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ),
             ),
             Container(
               decoration: BoxDecoration(
@@ -98,7 +118,7 @@ class FeaturedChallengeBannerWidget extends StatelessWidget {
                     const Icon(Icons.star, size: 16, color: Colors.white),
                     SizedBox(width: 1.w),
                     Text(
-                      'FEATURED',
+                      AppLocalizations.of(context).featuredLabel,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -139,7 +159,7 @@ class FeaturedChallengeBannerWidget extends StatelessWidget {
                     children: [
                       _buildInfoChip(context, Icons.schedule, duration),
                       SizedBox(width: 2.w),
-                      _buildInfoChip(context, Icons.stars, '$points pts'),
+                      _buildInfoChip(context, Icons.stars, AppLocalizations.of(context).pointsLabel(points)),
                       SizedBox(width: 2.w),
                       Container(
                         padding: EdgeInsets.symmetric(
@@ -151,7 +171,7 @@ class FeaturedChallengeBannerWidget extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                         child: Text(
-                          difficulty.toUpperCase(),
+                          AppLocalizations.of(context).getLocalizedDifficulty(difficulty).toUpperCase(),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

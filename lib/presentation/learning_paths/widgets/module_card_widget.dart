@@ -100,7 +100,7 @@ class ModuleCardWidget extends StatelessWidget {
                             ),
                             SizedBox(height: 1.h),
                             Text(
-                              'Locked',
+                              AppLocalizations.of(context).lockedLabel,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -150,7 +150,7 @@ class ModuleCardWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      difficulty,
+                      AppLocalizations.of(context).getLocalizedDifficulty(difficulty),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -212,16 +212,16 @@ class ModuleCardWidget extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'In Progress',
+                              AppLocalizations.of(context).inProgress,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.secondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
                               '${(progress * 100).toInt()}%',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.secondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -234,7 +234,7 @@ class ModuleCardWidget extends StatelessWidget {
                           percent: progress,
                           backgroundColor:
                               theme.colorScheme.surfaceContainerHighest,
-                          progressColor: theme.colorScheme.primary,
+                          progressColor: theme.colorScheme.secondary,
                           barRadius: const Radius.circular(10),
                         ),
                         SizedBox(height: 1.5.h),
@@ -273,7 +273,7 @@ class ModuleCardWidget extends StatelessWidget {
                           LinearPercentIndicator(
                             padding: EdgeInsets.zero,
                             lineHeight: 0.6.h,
-                            percent: requiredOutfits > 0 ? currentOutfits / requiredOutfits : 0.0,
+                            percent: currentOutfits / requiredOutfits,
                             backgroundColor:
                                 theme.colorScheme.surfaceContainerHighest,
                             progressColor: theme.colorScheme.onSurface
@@ -282,7 +282,7 @@ class ModuleCardWidget extends StatelessWidget {
                           ),
                           SizedBox(height: 0.5.h),
                           Text(
-                            '$currentOutfits / $requiredOutfits outfits logged',
+                            AppLocalizations.of(context).progressOutfitsLabel(currentOutfits, requiredOutfits),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withValues(
                                 alpha: 0.5,
@@ -304,7 +304,7 @@ class ModuleCardWidget extends StatelessWidget {
                           vertical: 0.5.h,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -336,12 +336,12 @@ class ModuleCardWidget extends StatelessWidget {
                         children: [
                           Text(
                             isCompleted
-                                ? 'Review Module'
+                                ? AppLocalizations.of(context).reviewModule
                                 : isUnlocked
                                 ? progress > 0
-                                      ? 'Continue'
-                                      : 'Start Module'
-                                : 'View Requirements',
+                                      ? AppLocalizations.of(context).translate('continue')
+                                      : AppLocalizations.of(context).startModule
+                                : AppLocalizations.of(context).viewRequirements,
                           ),
                           SizedBox(width: 2.w),
                           CustomIconWidget(

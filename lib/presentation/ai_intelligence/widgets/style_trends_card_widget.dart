@@ -69,14 +69,14 @@ class _StyleTrendsCardWidgetState extends State<StyleTrendsCardWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Style Trends Analysis',
+                    AppLocalizations.of(context).styleTrendsAnalysis,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
-                    'Color patterns & style evolution',
+                    AppLocalizations.of(context).colorPatternsEvolution,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -103,7 +103,7 @@ class _StyleTrendsCardWidgetState extends State<StyleTrendsCardWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Dominant Colors',
+              AppLocalizations.of(context).dominantColors,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -112,7 +112,7 @@ class _StyleTrendsCardWidgetState extends State<StyleTrendsCardWidget> {
             _buildColorChart(theme),
             SizedBox(height: 3.h),
             Text(
-              'Emerging Style Directions',
+              AppLocalizations.of(context).emergingStyleDirections,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -127,12 +127,29 @@ class _StyleTrendsCardWidgetState extends State<StyleTrendsCardWidget> {
 
   Widget _buildColorChart(ThemeData theme) {
     final colorMap = {
-      'Blue': Colors.blue,
-      'Black': Colors.black,
-      'White': Colors.grey.shade300,
-      'Gray': Colors.grey,
-      'Red': Colors.red,
-      'Green': Colors.green,
+      'Blue':     Colors.blue,
+      'Black':    Colors.black,
+      'White':    Colors.grey.shade200,
+      'Gray':     Colors.grey,
+      'Grey':     Colors.grey,
+      'Red':      Colors.red,
+      'Green':    Colors.green,
+      'Navy':     const Color(0xFF001F5B),
+      'Brown':    const Color(0xFF795548),
+      'Beige':    const Color(0xFFF5F0E8),
+      'Cream':    const Color(0xFFFFFDD0),
+      'Orange':   Colors.orange,
+      'Pink':     Colors.pink.shade200,
+      'Purple':   Colors.purple,
+      'Yellow':   Colors.yellow,
+      'Burgundy': const Color(0xFF800020),
+      'Camel':    const Color(0xFFC19A6B),
+      'Khaki':    const Color(0xFFC3B091),
+      'Olive':    const Color(0xFF808000),
+      'Coral':    const Color(0xFFFF6B6B),
+      'Teal':     Colors.teal,
+      'Gold':     const Color(0xFFFFD700),
+      'Tan':      const Color(0xFFD2B48C),
     };
 
     return Column(
@@ -163,7 +180,7 @@ class _StyleTrendsCardWidgetState extends State<StyleTrendsCardWidget> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          color,
+                          AppLocalizations.of(context).getLocalizedColor(color),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),

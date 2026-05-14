@@ -171,7 +171,7 @@ class ChallengeCategoryCardWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12.0),
                   ),
                   child: Text(
-                    difficulty.toUpperCase(),
+                    AppLocalizations.of(context).getLocalizedDifficulty(difficulty).toUpperCase(),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: difficultyColor,
                       fontWeight: FontWeight.w600,
@@ -196,7 +196,7 @@ class ChallengeCategoryCardWidget extends StatelessWidget {
               ),
               SizedBox(height: 1.h),
               Text(
-                '${(progress * 100).toInt()}% Complete',
+                AppLocalizations.of(context).percentCompleteMsg((progress * 100).toInt()),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: typeColor,
                   fontWeight: FontWeight.w600,
@@ -212,7 +212,7 @@ class ChallengeCategoryCardWidget extends StatelessWidget {
                     const Icon(Icons.stars, size: 20, color: Colors.amber),
                     SizedBox(width: 1.w),
                     Text(
-                      '$points points',
+                      AppLocalizations.of(context).pointsLabel(points),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.amber,
                         fontWeight: FontWeight.w600,
@@ -234,7 +234,7 @@ class ChallengeCategoryCardWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                     ),
-                    child: const Text('Accept'),
+                    child: Text(AppLocalizations.of(context).acceptLabel),
                   )
                 else
                   Container(
@@ -247,7 +247,7 @@ class ChallengeCategoryCardWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Text(
-                      'ACTIVE',
+                      AppLocalizations.of(context).activeLabel,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: typeColor,
                         fontWeight: FontWeight.w700,

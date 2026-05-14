@@ -66,14 +66,14 @@ class _SustainabilityImpactCardWidgetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sustainability Impact',
+                    AppLocalizations.of(context).sustainabilityImpact,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
-                    'Environmental footprint tracking',
+                    AppLocalizations.of(context).environmentFootprintTracking,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -92,12 +92,12 @@ class _SustainabilityImpactCardWidgetState
   }
 
   List<Widget> _buildExpandedContent(ThemeData theme) {
-    final avgCostPerWear = widget.metrics['avgCostPerWear'] as double;
-    final costTrend = widget.metrics['costTrend'] as double;
-    final purchaseFrequency = widget.metrics['purchaseFrequency'] as double;
-    final carbonImpact = widget.metrics['carbonImpact'] as int;
-    final carbonGoal = widget.metrics['carbonGoal'] as int;
-    final goalProgress = widget.metrics['sustainabilityGoalProgress'] as int;
+    final avgCostPerWear    = (widget.metrics['avgCostPerWear']               as num?)?.toDouble() ?? 0.0;
+    final costTrend         = (widget.metrics['costTrend']                    as num?)?.toDouble() ?? 0.0;
+    final purchaseFrequency = (widget.metrics['purchaseFrequency']            as num?)?.toDouble() ?? 0.0;
+    final carbonImpact      = (widget.metrics['carbonImpact']                 as num?)?.toInt()    ?? 0;
+    final carbonGoal        = (widget.metrics['carbonGoal']                   as num?)?.toInt()    ?? 200;
+    final goalProgress      = (widget.metrics['sustainabilityGoalProgress']   as num?)?.toInt()    ?? 0;
 
     return [
       Divider(height: 1, color: theme.dividerColor),
@@ -109,10 +109,12 @@ class _SustainabilityImpactCardWidgetState
             Row(
               children: [
                 Expanded(
-                  child: _buildMetricCard(
-                    'Cost Per Wear',
+                    child: _buildMetricCard(
+                    AppLocalizations.of(context).costPerWear,
                     '\$${avgCostPerWear.toStringAsFixed(2)}',
-                    costTrend < 0 ? 'Decreasing' : 'Increasing',
+                    costTrend < 0
+                        ? AppLocalizations.of(context).decreasingLabel
+                        : AppLocalizations.of(context).increasingLabel,
                     costTrend < 0,
                     Icons.attach_money,
                     theme,
@@ -121,9 +123,9 @@ class _SustainabilityImpactCardWidgetState
                 SizedBox(width: 3.w),
                 Expanded(
                   child: _buildMetricCard(
-                    'Purchases/Month',
+                    AppLocalizations.of(context).purchasesPerMonth,
                     purchaseFrequency.toStringAsFixed(1),
-                    'Average',
+                    AppLocalizations.of(context).averageLabel,
                     false,
                     Icons.shopping_bag_outlined,
                     theme,
@@ -133,7 +135,7 @@ class _SustainabilityImpactCardWidgetState
             ),
             SizedBox(height: 3.h),
             Text(
-              'Carbon Impact',
+              AppLocalizations.of(context).carbonImpact,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -142,7 +144,7 @@ class _SustainabilityImpactCardWidgetState
             _buildCarbonProgress(carbonImpact, carbonGoal, theme),
             SizedBox(height: 3.h),
             Text(
-              'Sustainability Goal Progress',
+              AppLocalizations.of(context).sustainabilityGoalProgress,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -219,7 +221,7 @@ class _SustainabilityImpactCardWidgetState
     int goal,
     ThemeData theme,
   ) {
-    final percentage = goal > 0 ? (current / goal * 100).clamp(0, 100).toInt() : 0;
+    final percentage = (current / goal * 100).clamp(0, 100).toInt();
     final isOnTrack = current <= goal;
 
     return Container(
@@ -242,14 +244,14 @@ class _SustainabilityImpactCardWidgetState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$current kg CO₂',
+                AppLocalizations.of(context).kgCo2Label(current),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: isOnTrack ? Colors.green : Colors.orange,
                 ),
               ),
               Text(
-                'Goal: $goal kg',
+                AppLocalizations.of(context).goalKgLabel(goal),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -267,8 +269,8 @@ class _SustainabilityImpactCardWidgetState
           SizedBox(height: 1.h),
           Text(
             isOnTrack
-                ? 'On track to meet your sustainability goal!'
-                : 'Consider reducing new purchases',
+                ? AppLocalizations.of(context).onTrackSustainabilityGoal
+                : AppLocalizations.of(context).considerReducingPurchases,
             style: theme.textTheme.bodySmall?.copyWith(
               color: isOnTrack ? Colors.green : Colors.orange,
               fontWeight: FontWeight.w500,
@@ -303,7 +305,7 @@ class _SustainabilityImpactCardWidgetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Great progress!',
+                AppLocalizations.of(context).greatProgress,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.green,
@@ -311,7 +313,7 @@ class _SustainabilityImpactCardWidgetState
               ),
               SizedBox(height: 0.5.h),
               Text(
-                'You\'re $progress% towards your monthly sustainability goal. Keep maximizing existing items!',
+                AppLocalizations.of(context).sustainabilityGoalProgressMsg(progress),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),

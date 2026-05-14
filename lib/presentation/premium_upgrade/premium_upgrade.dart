@@ -1,129 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/subscription_service.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
 import '../../services/supabase_service.dart';
+import '../../core/utils/app_localizations.dart';
+import '../../core/providers.dart';
 import './widgets/faq_item_widget.dart';
 import './widgets/feature_comparison_widget.dart';
 import './widgets/hero_section_widget.dart';
 import './widgets/pricing_card_widget.dart';
 import './widgets/testimonial_widget.dart';
 
-class PremiumUpgrade extends StatefulWidget {
+class PremiumUpgrade extends ConsumerStatefulWidget {
   const PremiumUpgrade({Key? key}) : super(key: key);
 
   @override
-  State<PremiumUpgrade> createState() => _PremiumUpgradeState();
+  ConsumerState<PremiumUpgrade> createState() => _PremiumUpgradeState();
 }
 
-class _PremiumUpgradeState extends State<PremiumUpgrade> {
-  String _selectedPlan = 'annual';
-  bool _isProcessingPayment = false;
-
-  // Controllers for billing form (Keep for now if needed for other things, but Stripe-specific ones removed)
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-
-  final List<Map<String, dynamic>> _testimonials = [
-    {
-      'name': 'Sarah Chen',
-      'image':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_1559df74b-1766991425900.png',
-      'text':
-          'Premium analytics helped me reduce impulse purchases by 60%. The AI suggestions are spot-on!',
-      'rating': 5,
-    },
-    {
-      'name': 'Marcus Johnson',
-      'image':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_196e48b77-1764865098990.png',
-      'text':
-          'The detailed cost-per-wear tracking changed how I shop. Worth every penny.',
-      'rating': 5,
-    },
-    {
-      'name': 'Emma Rodriguez',
-      'image':
-          'https://img.rocket.new/generatedImages/rocket_gen_img_1852c4b53-1768226787988.png',
-      'text':
-          'Learning modules taught me sustainable fashion practices I use daily.',
-      'rating': 5,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _faqs = [
-    {
-      'question': 'Can I cancel anytime?',
-      'answer':
-          'Yes! Cancel anytime from your account settings. No questions asked, no hidden fees.',
-    },
-    {
-      'question': 'What happens to my data if I downgrade?',
-      'answer':
-          'Your data is never deleted. You\'ll retain access to all logged outfits, but premium analytics will be limited.',
-    },
-    {
-      'question': 'Is the 7-day trial really free?',
-      'answer':
-          'Absolutely! No credit card required for the trial. You\'ll only be charged if you continue after 7 days.',
-    },
-    {
-      'question': 'Can I share my subscription with family?',
-      'answer':
-          'Yes! Premium plans support family sharing on both iOS and Android platforms.',
-    },
-    {
-      'question': 'Do you offer student discounts?',
-      'answer':
-          'Yes! Students get 30% off annual plans. Contact support with your student ID for verification.',
-    },
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    final user = SupabaseService.instance.client.auth.currentUser;
-    if (user != null) {
-      setState(() {
-        _emailController.text = user.email ?? '';
-        _nameController.text = user.userMetadata?['full_name'] ?? '';
-      });
-    }
-  }
+class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
+  String _selectedPlan = 'yearly';
+  final _subscriptionService = SubscriptionService();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    final List<Map<String, dynamic>> _testimonials = [
+      {
+        'name': 'Sarah Chen',
+        'image': 'assets/images/testimonials/sarah_chen.png',
+        'text': l10n.testimonialSarahText,
+        'rating': 5,
+      },
+      {
+        'name': 'Marcus Johnson',
+        'image': 'assets/images/testimonials/marcus_johnson.png',
+        'text': l10n.testimonialMarcusText,
+        'rating': 5,
+      },
+      {
+        'name': 'Emma Rodriguez',
+        'image': 'assets/images/testimonials/emma_rodriguez.png',
+        'text': l10n.testimonialEmmaText,
+        'rating': 5,
+      },
+    ];
+
+    final List<Map<String, dynamic>> _faqs = [
+      {
+        'question': l10n.faqCancelAnytime,
+        'answer': l10n.faqCancelAnytimeAnswer,
+      },
+      {
+        'question': l10n.faqWhatHappensCancel,
+        'answer': l10n.faqWhatHappensCancelAnswer,
+      },
+      {
+        'question': l10n.faqRestoreSubscription,
+        'answer': l10n.faqRestoreSubscriptionAnswer,
+      },
+      {
+        'question': l10n.faqDiscountCodes,
+        'answer': l10n.faqDiscountCodesAnswer,
+      },
+    ];
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: const CustomAppBar(
-        title: 'Premium Upgrade',
+      appBar: CustomAppBar(
+        title: l10n.premiumUpgrade,
         variant: CustomAppBarVariant.detail,
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Hero Section
             const HeroSectionWidget(),
 
             SizedBox(height: 3.h),
 
-            // Feature Comparison
             const FeatureComparisonWidget(),
 
             SizedBox(height: 4.h),
 
-            // Pricing Plans
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
-                'Choose Your Plan',
+                l10n.chooseYourPlan,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -136,12 +104,13 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             SizedBox(height: 1.h),
 
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              padding: EdgeInsets.symmetric(horizontal: 6.w),
               child: Text(
-                'Start with a 7-day free trial',
+                l10n.upgradeMoreFeatures,
                 style: TextStyle(
                   fontSize: 13.sp,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                  height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -149,17 +118,16 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 3.h),
 
-            // Monthly Plan
             PricingCardWidget(
-              planName: 'Monthly',
-              price: '\$9.99',
-              period: '/month',
+              planName: l10n.monthly,
+              price: '€7.49',
+              period: l10n.perMonth,
               features: [
-                'Unlimited outfit logging',
-                'Advanced AI suggestions',
-                'Detailed analytics dashboard',
-                'Exclusive learning modules',
-                'Priority customer support',
+                l10n.moreAiOutfitSuggestions,
+                l10n.moreCoachInteractions,
+                l10n.moreEventOutfitGenerations,
+                l10n.adFreeExperience,
+                l10n.accessPremiumWhileSubscribed,
               ],
               isSelected: _selectedPlan == 'monthly',
               onSelect: () => setState(() => _selectedPlan = 'monthly'),
@@ -168,32 +136,34 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 2.h),
 
-            // Annual Plan (Best Value)
             PricingCardWidget(
-              planName: 'Annual',
-              price: '\$99.99',
-              period: '/year',
-              savings: 'Save \$20',
+              planName: l10n.yearly,
+              price: '€69.90',
+              period: l10n.perYear,
+              savings: l10n.savePercent,
               features: [
-                'Everything in Monthly',
-                'Family sharing (up to 5 members)',
-                'Early access to new features',
-                'Personalized style coaching',
-                'Annual sustainability report',
+                l10n.everythingInMonthly,
+                l10n.betterYearlyValue,
+                l10n.fewerRenewals,
+                l10n.fullPremiumAllYear,
+                l10n.bestPlanRegularUsers,
               ],
-              isSelected: _selectedPlan == 'annual',
+              isSelected: _selectedPlan == 'yearly',
               isBestValue: true,
-              onSelect: () => setState(() => _selectedPlan = 'annual'),
+              onSelect: () => setState(() => _selectedPlan = 'yearly'),
               onUpgrade: _handleUpgrade,
             ),
 
+            SizedBox(height: 3.h),
+
+            _buildStoreInfoCard(theme, l10n),
+
             SizedBox(height: 4.h),
 
-            // Testimonials
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
-                'What Our Users Say',
+                l10n.whatUsersSay,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -223,11 +193,10 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 4.h),
 
-            // FAQ Section
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
-                'Frequently Asked Questions',
+                l10n.frequentlyAskedQuestions,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -254,22 +223,21 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 3.h),
 
-            // Risk-Free Guarantee
             Container(
               margin: EdgeInsets.symmetric(horizontal: 4.w),
-              padding: EdgeInsets.all(3.w),
+              padding: EdgeInsets.all(3.5.w),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12.0),
                 border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.22),
                   width: 1,
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    Icons.verified_user,
+                    Icons.verified_user_outlined,
                     color: theme.colorScheme.primary,
                     size: 24.sp,
                   ),
@@ -279,7 +247,7 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Risk-Free Guarantee',
+                          l10n.secureStoreBilling,
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -288,12 +256,13 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
                         ),
                         SizedBox(height: 0.5.h),
                         Text(
-                          'Try premium features for 7 days. Cancel anytime with full refund if not satisfied.',
+                          l10n.subscriptionsHandledSecurely,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.7,
+                              alpha: 0.72,
                             ),
+                            height: 1.35,
                           ),
                         ),
                       ],
@@ -305,12 +274,11 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
 
             SizedBox(height: 2.h),
 
-            // Restore Purchases
             Center(
               child: TextButton(
                 onPressed: _handleRestorePurchases,
                 child: Text(
-                  'Restore Purchases',
+                  l10n.restorePurchases,
                   style: TextStyle(
                     fontSize: 13.sp,
                     color: theme.colorScheme.primary,
@@ -324,132 +292,121 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
           ],
         ),
       ),
-      bottomNavigationBar: _isProcessingPayment
-          ? Container(
-              padding: EdgeInsets.all(2.h),
-              child: Center(
-                child: CircularProgressIndicator(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            )
-          : Container(
-              padding: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 2.h),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
+    );
+  }
+
+  Widget _buildStoreInfoCard(ThemeData theme, AppLocalizations l10n) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, color: theme.colorScheme.primary, size: 22),
+          SizedBox(width: 3.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.howBillingWorks,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                ],
-              ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _selectedPlan == 'annual'
-                                    ? 'Annual Plan'
-                                    : 'Monthly Plan',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              SizedBox(height: 0.3.h),
-                              Text(
-                                _selectedPlan == 'annual'
-                                    ? '\$99.99/year'
-                                    : '\$9.99/month',
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 3.w),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: _handleUpgrade,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              padding: EdgeInsets.symmetric(vertical: 1.8.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              elevation: 2,
-                            ),
-                            child: Text(
-                              'Continue to Payment',
-                              style: TextStyle(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 1.h),
-                    Text(
-                      '7-day free trial • Cancel anytime',
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
                 ),
-              ),
+                SizedBox(height: 0.6.h),
+                Text(
+                  l10n.billingManagedByStore,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
+          ),
+        ],
+      ),
     );
   }
 
   Future<void> _handleUpgrade() async {
+    final l10n = AppLocalizations.of(context);
     final user = SupabaseService.instance.client.auth.currentUser;
     if (user == null) {
-      _showErrorDialog('Please login to continue');
+      _showErrorDialog(l10n.pleaseLoginContinue);
       return;
     }
-
-    _showComingSoonDialog();
+    try {
+      final offerings = await _subscriptionService.getOfferings();
+      if (offerings == null || offerings.current == null) {
+        _showErrorDialog(l10n.noOfferingsAvailable);
+        return;
+      }
+      final packages = offerings.current!.availablePackages;
+      Package? selectedPackage;
+      if (_selectedPlan == 'yearly') {
+        selectedPackage = packages.firstWhere(
+          (p) => p.packageType == PackageType.annual,
+          orElse: () => packages.first,
+        );
+      } else {
+        selectedPackage = packages.firstWhere(
+          (p) => p.packageType == PackageType.monthly,
+          orElse: () => packages.first,
+        );
+      }
+      final success = await _subscriptionService.purchase(selectedPackage);
+      if (success && mounted) {
+        final user = ref.read(supabaseAuthProvider);
+        if (user != null) {
+          await ref.read(userTierServiceProvider).upgradeToPremium(user.id);
+        }
+        ref.invalidate(userTierProvider);
+        ref.invalidate(userProfileProvider);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.welcomeToSignature)));
+        Navigator.pop(context);
+      }
+    } on PurchasesErrorCode catch (e) {
+      if (e != PurchasesErrorCode.purchaseCancelledError) {
+        _showErrorDialog('${l10n.purchaseFailed}: ${e.name}');
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    }
   }
 
-  void _showComingSoonDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Play Store Payment'),
-          content: const Text(
-            'We are switching to Google Play Store payments. This feature will be available in the next update.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _handleRestorePurchases() async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      final hasAccess = await _subscriptionService.restorePurchases();
+      if (!mounted) return;
+      if (hasAccess) {
+        final user = ref.read(supabaseAuthProvider);
+        if (user != null) {
+          await ref.read(userTierServiceProvider).upgradeToPremium(user.id);
+        }
+        ref.invalidate(userTierProvider);
+        ref.invalidate(userProfileProvider);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.purchasesRestoredSuccess)));
+        Navigator.pop(context);
+      } else {
+        _showErrorDialog(l10n.noActiveSubscriptionRestore);
+      }
+    } catch (e) {
+      _showErrorDialog('${l10n.restoreFailed}: ${e.toString()}');
+    }
   }
 
   void _showErrorDialog(String message) {
@@ -460,18 +417,5 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
         duration: const Duration(seconds: 4),
       ),
     );
-  }
-
-  void _handleRestorePurchases() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Checking for previous purchases...')),
-    );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    super.dispose();
   }
 }

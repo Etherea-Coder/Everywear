@@ -57,11 +57,11 @@ class _RecommendationsCardWidgetState extends State<RecommendationsCardWidget> {
     Map<String, dynamic> recommendation,
     ThemeData theme,
   ) {
-    final type = recommendation['type'] as String;
-    final title = recommendation['title'] as String;
-    final description = recommendation['description'] as String;
-    final confidence = recommendation['confidence'] as int;
-    final reasoning = recommendation['reasoning'] as String;
+    final type        = (recommendation['type']        as String?)  ?? 'style';
+    final title       = (recommendation['title']       as String?)  ?? 'Recommendation';
+    final description = (recommendation['description'] as String?)  ?? '';
+    final confidence  = (recommendation['confidence']  as num?)?.toInt() ?? 70;
+    final reasoning   = (recommendation['reasoning']   as String?)  ?? '';
 
     final colors = _getTypeColors(type);
 
@@ -103,7 +103,7 @@ class _RecommendationsCardWidgetState extends State<RecommendationsCardWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _getTypeLabel(type),
+                      AppLocalizations.of(context).getLocalizedRecommendationType(type),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors['text']!.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w600,
@@ -211,40 +211,17 @@ class _RecommendationsCardWidgetState extends State<RecommendationsCardWidget> {
   }
 
   Map<String, Color> _getTypeColors(String type) {
-    switch (type) {
-      case 'gap':
-        return {
-          'background': Colors.blue.shade50,
-          'border': Colors.blue.shade200,
-          'iconBg': Colors.blue.shade100,
-          'icon': Colors.blue.shade700,
-          'text': Colors.blue.shade900,
-        };
-      case 'seasonal':
-        return {
-          'background': Colors.orange.shade50,
-          'border': Colors.orange.shade200,
-          'iconBg': Colors.orange.shade100,
-          'icon': Colors.orange.shade700,
-          'text': Colors.orange.shade900,
-        };
-      case 'style':
-        return {
-          'background': Colors.purple.shade50,
-          'border': Colors.purple.shade200,
-          'iconBg': Colors.purple.shade100,
-          'icon': Colors.purple.shade700,
-          'text': Colors.purple.shade900,
-        };
-      default:
-        return {
-          'background': Colors.grey.shade50,
-          'border': Colors.grey.shade200,
-          'iconBg': Colors.grey.shade100,
-          'icon': Colors.grey.shade700,
-          'text': Colors.grey.shade900,
-        };
-    }
+    final theme = Theme.of(context);
+    final secondary = theme.colorScheme.secondary;
+    final onSurface = theme.colorScheme.onSurface;
+
+    return {
+      'background': secondary.withValues(alpha: 0.05),
+      'border': secondary.withValues(alpha: 0.14),
+      'iconBg': secondary.withValues(alpha: 0.10),
+      'icon': secondary,
+      'text': onSurface,
+    };
   }
 
   IconData _getTypeIcon(String type) {

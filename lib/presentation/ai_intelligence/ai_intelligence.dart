@@ -1,146 +1,316 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/app_export.dart';
-import '../../core/providers.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_bottom_bar.dart';
-import '../../routes/app_routes.dart';
+import '../../services/ai_intelligence_service.dart';
+
 import './widgets/ai_hero_section_widget.dart';
 import './widgets/style_trends_card_widget.dart';
 import './widgets/versatility_scores_card_widget.dart';
 import './widgets/sustainability_impact_card_widget.dart';
 import './widgets/recommendations_card_widget.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AIIntelligence extends ConsumerStatefulWidget {
+class AIIntelligence extends StatefulWidget {
   const AIIntelligence({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<AIIntelligence> createState() => _AIIntelligenceState();
+  State<AIIntelligence> createState() => _AIIntelligenceState();
 }
 
-class _AIIntelligenceState extends ConsumerState<AIIntelligence> {
-  int _selectedTimeRange = 1;
+class _AIIntelligenceState extends State<AIIntelligence> {
+  // ── State ────────────────────────────────────────────────────────────────
+  int _selectedTimeRange = 1;       // 0=week 1=month 2=season
   bool _isGenerating = false;
+  bool _isLoading = true;
+  String? _error;
+  String? _selectedCategory;        // null = all categories
 
+  Map<String, dynamic> _aiData = {};
+
+  static const _timeRangeKeys = ['week', 'month', 'season'];
+
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      _loadInsights();
+    } else {
+      // Wait for session to be restored, then load
+      Supabase.instance.client.auth.onAuthStateChange.first.then((_) {
+        if (mounted) _loadInsights();
+      });
+    }
+  }
+
+  String get _currentTimeRange => _timeRangeKeys[_selectedTimeRange];
+
+  Future<void> _loadInsights({bool forceRefresh = false}) async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; _error = null; });
+
+    try {
+      final data = await AIIntelligenceService.instance.getInsights(
+        timeRange: _currentTimeRange,
+        category: _selectedCategory,
+        forceRefresh: forceRefresh,
+      );
+      if (mounted) setState(() { _aiData = data; _isLoading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
+    }
+  }
+
+  // ── Public actions ───────────────────────────────────────────────────────
+
+  /// Pull-to-refresh: reload from network, update cache.
+  Future<void> _refreshInsights() => _loadInsights(forceRefresh: true);
+
+  /// "Generate New Insights" button: force AI re-generation.
+  Future<void> _generateNewInsights() async {
+    setState(() => _isGenerating = true);
+    AIIntelligenceService.instance.clearCache();
+    try {
+      await _loadInsights(forceRefresh: true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).newAiInsightsGenerated),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
+    }
+  }
+
+  /// Time range chip tap: change window and re-fetch.
+  void _onTimeRangeChanged(int index) {
+    if (_selectedTimeRange == index) return;
+    setState(() => _selectedTimeRange = index);
+    _loadInsights();
+  }
+
+  // ── Filter sheet ─────────────────────────────────────────────────────────
+  void _showFilterOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => _FilterSheet(
+        selectedCategory: _selectedCategory,
+        onCategorySelected: (category) {
+          Navigator.pop(ctx);
+          if (category == _selectedCategory) return;
+          setState(() => _selectedCategory = category);
+          _loadInsights();
+        },
+        onCustomDateRange: () {
+          Navigator.pop(ctx);
+          _pickCustomDateRange();
+        },
+      ),
+    );
+  }
+
+  Future<void> _pickCustomDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: now,
+      initialDateRange: DateTimeRange(
+        start: now.subtract(const Duration(days: 30)),
+        end: now,
+      ),
+    );
+    if (picked == null || !mounted) return;
+
+    // Map the picked range to the closest time-range key
+    final days = picked.end.difference(picked.start).inDays;
+    int newIndex;
+    if (days <= 9)       newIndex = 0; // week
+    else if (days <= 45) newIndex = 1; // month
+    else                 newIndex = 2; // season
+
+    setState(() => _selectedTimeRange = newIndex);
+    _loadInsights();
+  }
+
+  // ── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final insightsAsync = ref.watch(aiInsightsProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'AI Intelligence',
+        title: AppLocalizations.of(context).aiIntelligenceTitle,
         actions: [
+          if (_selectedCategory != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Chip(
+                label: Text(AppLocalizations.of(context).getLocalizedCategory(_selectedCategory!),
+                    style: TextStyle(fontSize: 11.sp)),
+                onDeleted: () {
+                  setState(() => _selectedCategory = null);
+                  _loadInsights();
+                },
+                deleteIconColor: theme.colorScheme.onPrimary,
+                backgroundColor: theme.colorScheme.primary,
+                labelStyle: TextStyle(color: theme.colorScheme.onPrimary),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterOptions,
-            tooltip: 'Filter analytics',
+            tooltip: AppLocalizations.of(context).filterAnalyticsTooltip,
           ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _refreshInsights,
-        child: insightsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Failed to load insights: $e')),
-          data: (aiData) => SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AIHeroSectionWidget(
-                  confidenceScore: aiData['confidenceScore'] as int? ?? 0,
-                  styleProfile: aiData['styleProfile'] as String? ?? 'Undetermined',
-                ),
-                SizedBox(height: 2.h),
-                _buildTimeRangeSelector(theme),
-                SizedBox(height: 3.h),
-                _buildSectionHeader('Style Trends Analysis', theme),
-                StyleTrendsCardWidget(
-                  dominantColors: (aiData['dominantColors'] as List<dynamic>? ?? []).cast<String>(),
-                  colorPercentages: (aiData['colorPercentages'] as List<dynamic>? ?? []).cast<int>(),
-                  silhouetteEvolution: (aiData['silhouetteEvolution'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
-                  emergingStyles: (aiData['emergingStyles'] as List<dynamic>? ?? []).cast<String>(),
-                ),
-                SizedBox(height: 3.h),
-                _buildSectionHeader('Outfit Versatility Scores', theme),
-                VersatilityScoresCardWidget(
-                  versatilityScores: (aiData['versatilityScores'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
-                  underutilizedItems: (aiData['underutilizedItems'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
-                ),
-                SizedBox(height: 3.h),
-                _buildSectionHeader('Sustainability Impact', theme),
-                SustainabilityImpactCardWidget(
-                  metrics: (aiData['sustainabilityMetrics'] as Map<String, dynamic>?) ?? {},
-                ),
-                SizedBox(height: 3.h),
-                _buildSectionHeader('Personalized Recommendations', theme),
-                RecommendationsCardWidget(
-                  recommendations: (aiData['recommendations'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
-                ),
-                SizedBox(height: 3.h),
-                _buildGenerateInsightsButton(theme),
-                SizedBox(height: 10.h),
-              ],
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: CustomBottomBar(
-        currentIndex: 3,
-        onTap: _handleNavigation,
+        child: _buildBody(theme),
       ),
     );
   }
 
-  Widget _buildTimeRangeSelector(ThemeData theme) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-      child: Row(
+  Widget _buildBody(ThemeData theme) {
+    if (_isLoading && _aiData.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null && _aiData.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(8.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              SizedBox(height: 2.h),
+              Text(AppLocalizations.of(context).couldNotLoadInsights, style: theme.textTheme.titleMedium),
+              SizedBox(height: 1.h),
+              Text(_error!, textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall),
+              SizedBox(height: 3.h),
+              ElevatedButton(
+                onPressed: () => _loadInsights(forceRefresh: true),
+                child: Text(AppLocalizations.of(context).retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTimeRangeChip('Week', 0, theme),
-          SizedBox(width: 2.w),
-          _buildTimeRangeChip('Month', 1, theme),
-          SizedBox(width: 2.w),
-          _buildTimeRangeChip('Season', 2, theme),
+          // Show a slim loading bar while refreshing (data already present)
+          if (_isLoading)
+            LinearProgressIndicator(
+                minHeight: 2, color: theme.colorScheme.primary),
+
+          AIHeroSectionWidget(
+            confidenceScore: (_aiData['confidenceScore'] as num?)?.toInt() ?? 0,
+            styleProfile:    _aiData['styleProfile']    ?? '—',
+          ),
+          SizedBox(height: 2.h),
+          _buildTimeRangeSelector(theme),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader(AppLocalizations.of(context).styleTrendsAnalysis, theme),
+          StyleTrendsCardWidget(
+            dominantColors:      List<String>.from(_aiData['dominantColors']     ?? []),
+            colorPercentages: (_aiData['colorPercentages'] as List? ?? [])
+                .map((e) => (e as num).toInt())
+                .toList(),
+            silhouetteEvolution: List<Map<String, dynamic>>.from(
+                (_aiData['silhouetteEvolution'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+            emergingStyles:      List<String>.from(_aiData['emergingStyles']     ?? []),
+          ),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader(AppLocalizations.of(context).outfitVersatilityScores, theme),
+          VersatilityScoresCardWidget(
+            versatilityScores: List<Map<String, dynamic>>.from(
+                (_aiData['versatilityScores'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+            underutilizedItems: List<Map<String, dynamic>>.from(
+                (_aiData['underutilizedItems'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+          ),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader(AppLocalizations.of(context).sustainabilityImpact, theme),
+          SustainabilityImpactCardWidget(
+            metrics: Map<String, dynamic>.from(_aiData['sustainabilityMetrics'] ?? {}),
+          ),
+          SizedBox(height: 3.h),
+
+          _buildSectionHeader(AppLocalizations.of(context).personalizedRecommendations, theme),
+          RecommendationsCardWidget(
+            recommendations: List<Map<String, dynamic>>.from(
+                (_aiData['recommendations'] ?? [])
+                    .map((e) => Map<String, dynamic>.from(e))),
+          ),
+          SizedBox(height: 3.h),
+          _buildGenerateInsightsButton(theme),
+          SizedBox(height: 10.h),
         ],
       ),
     );
   }
 
-  Widget _buildTimeRangeChip(String label, int index, ThemeData theme) {
-    final isSelected = _selectedTimeRange == index;
+  // ── Sub-widgets ──────────────────────────────────────────────────────────
+  Widget _buildTimeRangeSelector(ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+      child: Row(
+        children: [
+          _buildChip(AppLocalizations.of(context).weekTimeRange,   0, theme),
+          SizedBox(width: 2.w),
+          _buildChip(AppLocalizations.of(context).monthTimeRange,  1, theme),
+          SizedBox(width: 2.w),
+          _buildChip(AppLocalizations.of(context).seasonTimeRange, 2, theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, int index, ThemeData theme) {
+    final selected = _selectedTimeRange == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() => _selectedTimeRange = index);
-          final ranges = ['week', 'month', 'season'];
-          ref.read(aiIntelligenceTimeRangeProvider.notifier).state = ranges[index];
-        },
-        child: Container(
+        onTap: () => _onTimeRangeChanged(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(vertical: 1.5.h),
           decoration: BoxDecoration(
-            color: isSelected
+            color: selected
                 ? theme.colorScheme.primary
                 : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.dividerColor,
-              width: 1,
+              color: selected ? theme.colorScheme.primary : theme.dividerColor,
             ),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isSelected
+              color: selected
                   ? theme.colorScheme.onPrimary
                   : theme.colorScheme.onSurface,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
         ),
@@ -151,12 +321,9 @@ class _AIIntelligenceState extends ConsumerState<AIIntelligence> {
   Widget _buildSectionHeader(String title, ThemeData theme) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-      child: Text(
-        title,
-        style: theme.textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: Text(title,
+          style: theme.textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w600)),
     );
   }
 
@@ -168,16 +335,12 @@ class _AIIntelligenceState extends ConsumerState<AIIntelligence> {
         onPressed: _isGenerating ? null : _generateNewInsights,
         icon: _isGenerating
             ? SizedBox(
-                width: 20,
-                height: 20,
+                width: 20, height: 20,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.onPrimary,
-                ),
-              )
+                    strokeWidth: 2, color: theme.colorScheme.onPrimary))
             : const Icon(Icons.auto_awesome),
         label: Text(
-          _isGenerating ? 'Generating...' : 'Generate New Insights',
+          _isGenerating ? AppLocalizations.of(context).generatingLabel : AppLocalizations.of(context).generateNewInsights,
           style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
@@ -185,72 +348,92 @@ class _AIIntelligenceState extends ConsumerState<AIIntelligence> {
           foregroundColor: theme.colorScheme.onPrimary,
           padding: EdgeInsets.symmetric(vertical: 2.h),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
+              borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
   }
+}
 
-  Future<void> _refreshInsights() async {
-    ref.invalidate(aiInsightsProvider);
-  }
+// ── Filter bottom sheet ──────────────────────────────────────────────────────
+class _FilterSheet extends StatelessWidget {
+  final String? selectedCategory;
+  final ValueChanged<String?> onCategorySelected;
+  final VoidCallback onCustomDateRange;
 
-  Future<void> _generateNewInsights() async {
-    setState(() => _isGenerating = true);
-    ref.invalidate(aiInsightsProvider);
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() => _isGenerating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('New AI insights generated successfully!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  }
+  static const _categories = [
+  'Tops',
+  'Bottoms',
+  'Dresses',
+  'Shoes',
+  'Accessories',
+  ];
 
-  void _showFilterOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
+  const _FilterSheet({
+    required this.selectedCategory,
+    required this.onCategorySelected,
+    required this.onCustomDateRange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Padding(
         padding: EdgeInsets.all(4.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Custom date range
             ListTile(
               leading: const Icon(Icons.calendar_today),
-              title: const Text('Custom Date Range'),
-              onTap: () => Navigator.pop(context),
+              title: Text(AppLocalizations.of(context).customDateRange),
+              onTap: onCustomDateRange,
             ),
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Filter by Category'),
-              onTap: () => Navigator.pop(context),
+            const Divider(),
+
+            // Category filter
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+              child: Text(AppLocalizations.of(context).filterByCategory,
+                  style: theme.textTheme.titleSmall),
             ),
-            ListTile(
-              leading: const Icon(Icons.style),
-              title: const Text('Filter by Style'),
-              onTap: () => Navigator.pop(context),
+            Wrap(
+              spacing: 2.w,
+              runSpacing: 1.h,
+              children: [
+                // "All" chip
+                FilterChip(
+                  label: Text(AppLocalizations.of(context).allLabel),
+                  selected: selectedCategory == null,
+                  onSelected: (_) => onCategorySelected(null),
+                ),
+                ..._categories.map(
+                  (cat) => FilterChip(
+                    label: Text(AppLocalizations.of(context).getLocalizedCategory(cat)),
+                    selected: selectedCategory == cat,
+                    onSelected: (_) => onCategorySelected(cat),
+                  ),
+                ),
+              ],
             ),
+            SizedBox(height: 2.h),
           ],
         ),
       ),
     );
-  }
-
-  void _handleNavigation(int index) {
-    if (index == 3) return;
-
-    final routes = [
-      AppRoutes.dailyLog,
-      AppRoutes.wardrobeManagement,
-      AppRoutes.smartSuggestions,
-      AppRoutes.insightsDashboard,
-      AppRoutes.purchaseTracking,
-    ];
-
-    Navigator.pushReplacementNamed(context, routes[index]);
   }
 }

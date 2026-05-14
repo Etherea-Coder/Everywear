@@ -62,14 +62,14 @@ class _VersatilityScoresCardWidgetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Outfit Versatility Scores',
+                    AppLocalizations.of(context).outfitVersatilityScores,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
-                    'Item combination potential',
+                    AppLocalizations.of(context).itemCombinationPotential,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -96,7 +96,7 @@ class _VersatilityScoresCardWidgetState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Most Versatile Items',
+              AppLocalizations.of(context).mostVersatileItems,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -107,7 +107,7 @@ class _VersatilityScoresCardWidgetState
             }),
             SizedBox(height: 3.h),
             Text(
-              'Underutilized Items',
+              AppLocalizations.of(context).underutilizedItems,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -123,8 +123,8 @@ class _VersatilityScoresCardWidgetState
   }
 
   Widget _buildVersatilityItem(Map<String, dynamic> item, ThemeData theme) {
-    final score = item['score'] as int;
-    final combinations = item['combinations'] as int;
+    final score        = (item['score']        as num?)?.toInt() ?? 0;
+    final combinations = (item['combinations'] as num?)?.toInt() ?? 0;
     final itemName = item['item'] as String;
 
     Color scoreColor;
@@ -158,7 +158,7 @@ class _VersatilityScoresCardWidgetState
                 ),
                 SizedBox(height: 0.5.h),
                 Text(
-                  '$combinations outfit combinations',
+                  AppLocalizations.of(context).outfitCombinationsLabel(combinations),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
@@ -213,7 +213,7 @@ class _VersatilityScoresCardWidgetState
                 ),
                 SizedBox(height: 0.5.h),
                 Text(
-                  'Last worn: ${item['lastWorn']}',
+                  AppLocalizations.of(context).lastWornLabel(item['lastWorn'].toString()),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
@@ -224,7 +224,7 @@ class _VersatilityScoresCardWidgetState
           TextButton(
             onPressed: () {},
             child: Text(
-              '${item['suggestions']} tips',
+              AppLocalizations.of(context).tipsLabel(item['suggestions'] as int? ?? 0),
               style: TextStyle(
                 fontSize: 11.sp,
                 color: Colors.orange,
