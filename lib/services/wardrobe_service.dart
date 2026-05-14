@@ -2,15 +2,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 
-import '../services/user_tier_service.dart';
 import './supabase_service.dart';
 
 /// Service layer for wardrobe management with real-time synchronization
 /// Provides CRUD operations and real-time subscription capabilities
 class WardrobeService {
   SupabaseClient get _client => SupabaseService.instance.client;
-  final UserTierService _tierService = UserTierService();
-
+  
   /// Retry mechanism with exponential backoff
   Future<T> _retryOperation<T>(
     Future<T> Function() operation, {
@@ -29,7 +27,7 @@ class WardrobeService {
           rethrow;
         }
         
-        debugPrint('Operation failed, retrying in ${delay.inSeconds}s... (attempt $attempts/$maxRetries)');
+        if (kDebugMode) debugPrint('Operation failed, retrying in ${delay.inSeconds}s... (attempt $attempts/$maxRetries)');
         await Future.delayed(delay);
         delay *= 2; // Exponential backoff
       }
@@ -53,7 +51,7 @@ class WardrobeService {
         
         var query = _client
             .from('wardrobe_items')
-            .select()
+            .select('*, image_url')
             .eq('user_id', userId);
 
         if (category != null && category != 'All') {
@@ -72,7 +70,7 @@ class WardrobeService {
     } catch (error) {
       // Return empty list on any error (including Supabase not initialized)
       // This prevents white screen crashes
-      debugPrint('Wardrobe fetch error: $error');
+      if (kDebugMode) debugPrint('Wardrobe fetch error: $error');
       return [];
     }
   }
@@ -127,13 +125,7 @@ class WardrobeService {
         .subscribe();
   }
 
-  /// Create new wardrobe item with tier limit checking
-  static const _allowedItemFields = {
-    'name', 'category', 'brand', 'image_url', 'semantic_label',
-    'purchase_price', 'purchase_date', 'notes', 'color', 'material',
-    'style_vibe', 'is_favorite',
-  };
-
+  /// Create new wardrobe item
   Future<Map<String, dynamic>> createItem(Map<String, dynamic> itemData) async {
     try {
       final user = _client.auth.currentUser;
@@ -141,23 +133,8 @@ class WardrobeService {
         throw Exception('User not authenticated');
       }
 
-      final canAdd = await _tierService.canAddItem(user.id);
-      if (!canAdd) {
-        final tierInfo = await _tierService.getUserTierInfo(user.id);
-        final tier = tierInfo['tier'] as String;
-        final limit = tierInfo['items_limit'] as int;
-
-        throw Exception(
-          'Item limit reached. You have reached your $tier tier limit of $limit items. '
-          'Upgrade to premium for 100 items.',
-        );
-      }
-
-      final sanitizedData = Map<String, dynamic>.from(itemData)
-        ..removeWhere((key, _) => !_allowedItemFields.contains(key));
-
       final response = await _client.from('wardrobe_items').insert({
-        ...sanitizedData,
+        ...itemData,
         'user_id': user.id,
         'created_at': DateTime.now().toIso8601String(),
       }).select();
@@ -183,11 +160,6 @@ class WardrobeService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
         throw Exception('User must be authenticated to add items');
-      }
-
-      final canAdd = await _tierService.canAddItem(userId);
-      if (!canAdd) {
-        throw Exception('Item limit reached. Upgrade to premium for more items.');
       }
 
       final response = await _client
@@ -236,8 +208,9 @@ class WardrobeService {
       if (imageUrl != null) updateData['image_url'] = imageUrl;
       if (semanticLabel != null) updateData['semantic_label'] = semanticLabel;
       if (wearCount != null) updateData['wear_count'] = wearCount;
-      if (lastWorn != null)
+      if (lastWorn != null) {
         updateData['last_worn'] = lastWorn.toIso8601String();
+      }
       if (costPerWear != null) updateData['cost_per_wear'] = costPerWear;
       if (purchasePrice != null) updateData['purchase_price'] = purchasePrice;
       if (purchaseDate != null) {
@@ -282,7 +255,7 @@ class WardrobeService {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
-        throw Exception('User must be authenticated');
+        return _emptyStats();
       }
 
       final totalItemsData = await _client
@@ -305,7 +278,7 @@ class WardrobeService {
 
       final categoryCounts = <String, int>{};
       for (final item in categoryCountsResponse) {
-        final category = item['category'] as String;
+        final category = item['category'] as String? ?? 'Other';
         categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
       }
 
@@ -315,51 +288,18 @@ class WardrobeService {
         'category_counts': categoryCounts,
       };
     } catch (error) {
-      throw Exception('Failed to get wardrobe statistics: $error');
+      if (kDebugMode) debugPrint('Error getting wardrobe statistics: $error');
+      return _emptyStats();
     }
   }
 
-  /// Creates an outfit log with associated items
-  Future<Map<String, dynamic>> createOutfitLog({
-    required List<String> itemIds,
-    String? outfitName,
-    int? rating,
-    String? notes,
-    String? weather,
-    String? occasion,
-  }) async {
-    try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) {
-        throw Exception('User must be authenticated');
-      }
+  Map<String, dynamic> _emptyStats() => {
+    'total_items': 0,
+    'favorite_items': 0,
+    'category_counts': <String, int>{},
+  };
 
-      // Create outfit log
-      final outfitLog = await _client
-          .from('outfit_logs')
-          .insert({
-            'user_id': userId,
-            'outfit_name': outfitName,
-            'rating': rating,
-            'notes': notes,
-            'weather': weather,
-            'occasion': occasion,
-          })
-          .select()
-          .single();
 
-      // Associate items with outfit
-      final outfitItems = itemIds
-          .map((itemId) => {'outfit_id': outfitLog['id'], 'item_id': itemId})
-          .toList();
-
-      await _client.from('outfit_items').insert(outfitItems);
-
-      return outfitLog;
-    } catch (error) {
-      throw Exception('Failed to create outfit log: $error');
-    }
-  }
 
   /// Fetches outfit history for the authenticated user
   Future<List<Map<String, dynamic>>> fetchOutfitHistory({
@@ -368,7 +308,7 @@ class WardrobeService {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
-        throw Exception('User must be authenticated');
+        return [];
       }
 
       final response = await _client
@@ -380,7 +320,8 @@ class WardrobeService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (error) {
-      throw Exception('Failed to fetch outfit history: $error');
+      if (kDebugMode) debugPrint('Error fetching outfit history: $error');
+      return [];
     }
   }
 }

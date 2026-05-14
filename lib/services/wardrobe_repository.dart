@@ -15,7 +15,7 @@ class WardrobeRepository {
   }) async {
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
-      final isOnline = connectivityResult != ConnectivityResult.none;
+      final isOnline = connectivityResult.isNotEmpty && !connectivityResult.contains(ConnectivityResult.none);
 
       if (isOnline) {
         try {
@@ -27,14 +27,14 @@ class WardrobeRepository {
           await _localService.syncItems(remoteItems).timeout(const Duration(seconds: 3));
           return remoteItems;
         } catch (e) {
-          debugPrint('Remote fetch failed, falling back to local: $e');
+          if (kDebugMode) debugPrint('Remote fetch failed, falling back to local: $e');
           return _fetchLocalAsMap(category, searchQuery);
         }
       } else {
         return _fetchLocalAsMap(category, searchQuery);
       }
     } catch (e) {
-      debugPrint('Complete wardrobe fetch failure: $e');
+      if (kDebugMode) debugPrint('Complete wardrobe fetch failure: $e');
       // Return empty list as last resort to prevent white screens
       return [];
     }
@@ -83,8 +83,7 @@ class WardrobeRepository {
   /// Deletes an item from both remote and local
   Future<void> deleteItem(String itemId) async {
     await _remoteService.deleteWardrobeItem(itemId);
-    // Local deletion will happen on next sync or we can implement explicit local delete
-    // For simplicity, we can let sync handle it or add a delete method to LocalDatabaseService
+    await _localService.deleteLocalItem(itemId);
   }
 
   /// Subscribes to changes
