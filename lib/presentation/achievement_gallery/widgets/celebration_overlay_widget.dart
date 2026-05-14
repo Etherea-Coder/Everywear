@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'dart:math' as math;
 import '../../../../core/utils/app_localizations.dart';
