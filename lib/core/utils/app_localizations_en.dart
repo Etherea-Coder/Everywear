@@ -1175,6 +1175,7 @@ const Map<String, String> appLocalizationsEn = {
   'pdf_header_title': 'Title',
   'pdf_header_type': 'Type',
   'pdf_header_dress_code': 'Dress Code',
+  'pdf_header_events': 'Style Events',
   'pdf_not_set': 'Not set',
   'pdf_goals_label': 'Goals: {}',
   'style_insights_title': 'Style Insights',

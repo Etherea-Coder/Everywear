@@ -1616,6 +1616,7 @@ class AppLocalizations {
   String get pdfHeaderTitle => translate('pdf_header_title');
   String get pdfHeaderType => translate('pdf_header_type');
   String get pdfHeaderDressCode => translate('pdf_header_dress_code');
+  String get pdfHeaderEvents => translate('pdf_header_events');
   String get pdfNotSet => translate('pdf_not_set');
   String pdfGoalsLabel(String goals) => translate('pdf_goals_label').replaceFirst('{}', goals);
 

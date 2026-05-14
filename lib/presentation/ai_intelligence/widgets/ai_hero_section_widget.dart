@@ -17,6 +17,7 @@ class AIHeroSectionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context);
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
@@ -44,7 +45,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                   color: theme.colorScheme.secondary, size: 28),
               SizedBox(width: 2.w),
               Text(
-                AppLocalizations.of(context).aiWardrobeIntelligence,
+                loc.aiWardrobeIntelligence,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.secondary,
@@ -55,14 +56,17 @@ class AIHeroSectionWidget extends StatelessWidget {
           SizedBox(height: 3.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [_buildConfidenceScore(theme), _buildStyleProfile(theme)],
+            children: [
+              _buildConfidenceScore(theme, loc),
+              _buildStyleProfile(theme, loc),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildConfidenceScore(ThemeData theme) {
+  Widget _buildConfidenceScore(ThemeData theme, AppLocalizations loc) {
     return Column(
       children: [
         CircularPercentIndicator(
@@ -80,7 +84,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                 ),
               ),
               Text(
-                AppLocalizations.of(context).scoreLabel,
+                loc.scoreLabel,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -93,7 +97,7 @@ class AIHeroSectionWidget extends StatelessWidget {
         ),
         SizedBox(height: 1.h),
         Text(
-          AppLocalizations.of(context).aiConfidence,
+          loc.aiConfidence,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -102,7 +106,7 @@ class AIHeroSectionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStyleProfile(ThemeData theme) {
+  Widget _buildStyleProfile(ThemeData theme, AppLocalizations loc) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -125,7 +129,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                   ),
                   SizedBox(width: 2.w),
                   Text(
-                    AppLocalizations.of(context).yourStyle,
+                    loc.yourStyle,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -147,7 +151,7 @@ class AIHeroSectionWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6.0),
                 ),
                 child: Text(
-                  AppLocalizations.of(context).highAccuracy,
+                  loc.highAccuracy,
                   style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w600,

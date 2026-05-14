@@ -41,7 +41,7 @@ class ExportService {
     try {
       _showProgress(context, l10n.preparingPdfExport);
       final data = await _fetchAllData();
-      final file = await _buildPDF(data);
+      final file = await _buildPDF(data, l10n);
       if (context.mounted) Navigator.of(context).pop();
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'application/pdf')],
@@ -111,7 +111,7 @@ class ExportService {
       buffer.writeln([
         _csvCell(item['name']),
         _csvCell(item['category']),
-        _csvCell(item['semantic_label']),  // ✅
+        _csvCell(item['semantic_label']),
         _csvCell(item['brand']),
         _csvCell(item['purchase_price']),
         _csvCell(item['notes']),
@@ -179,7 +179,7 @@ class ExportService {
 
   // ─── PDF builder ─────────────────────────────────────────────────────────
 
-  Future<File> _buildPDF(Map<String, dynamic> data) async {
+  Future<File> _buildPDF(Map<String, dynamic> data, AppLocalizations l10n) async {
     final pdf = pw.Document();
     final now = data['exportedAt'] as DateTime;
     final wardrobe = data['wardrobe'] as List<Map<String, dynamic>>;
@@ -231,7 +231,7 @@ class ExportService {
               children: [
                 _statBox(l10n.exportItemWardrobe, '${wardrobe.length}', accentColor),
                 _statBox(l10n.exportItemLogs, '${outfits.length}', accentColor),
-                _statBox(l10n.pdfHeaderType, '${events.length}', accentColor),
+                _statBox(l10n.pdfHeaderEvents, '${events.length}', accentColor),
               ],
             ),
 
@@ -294,7 +294,7 @@ class ExportService {
               data: wardrobe.map((i) => [
                 i['name'] ?? '',
                 i['category'] ?? '',
-                i['semantic_label'] ?? '',   // ✅
+                i['semantic_label'] ?? '',
                 i['brand'] ?? '',
                 i['purchase_price'] != null ? '${i['purchase_price']}' : '',
               ]).toList(),
@@ -371,7 +371,7 @@ class ExportService {
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
           build: (ctx) => [
-            pw.Text(l10n.pdfHeaderType, style: sectionStyle),
+            pw.Text(l10n.pdfHeaderEvents, style: sectionStyle),
             pw.SizedBox(height: 8),
             pw.TableHelper.fromTextArray(
               headers: [
