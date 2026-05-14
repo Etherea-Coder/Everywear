@@ -1,13 +1,12 @@
-import 'dart:io' show File;
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../core/app_export.dart';
 
 extension ImageTypeExtension on String {
   ImageType get imageType {
-    if (startsWith('http://') || startsWith('https://')) {
+    if (startsWith('http') || startsWith('https')) {
       return ImageType.network;
     } else if (endsWith('.svg')) {
       return ImageType.svg;
@@ -21,21 +20,8 @@ extension ImageTypeExtension on String {
 
 enum ImageType { svg, png, network, file, unknown }
 
+// ignore_for_file: must_be_immutable
 class CustomImageWidget extends StatelessWidget {
-  final String? imageUrl;
-  final double? height;
-  final double? width;
-  final Color? color;
-  final BoxFit? fit;
-  final String placeHolder;
-  final Alignment? alignment;
-  final VoidCallback? onTap;
-  final BorderRadius? radius;
-  final EdgeInsetsGeometry? margin;
-  final BoxBorder? border;
-  final Widget? errorWidget;
-  final String? semanticLabel;
-
   const CustomImageWidget({
     super.key,
     this.imageUrl,
@@ -53,6 +39,36 @@ class CustomImageWidget extends StatelessWidget {
     this.semanticLabel,
   });
 
+  ///[imageUrl] is required parameter for showing image
+  final String? imageUrl;
+
+  final double? height;
+
+  final double? width;
+
+  final BoxFit? fit;
+
+  final String placeHolder;
+
+  final Color? color;
+
+  final Alignment? alignment;
+
+  final VoidCallback? onTap;
+
+  final BorderRadius? radius;
+
+  final EdgeInsetsGeometry? margin;
+
+  final BoxBorder? border;
+
+  /// Optional widget to show when the image fails to load.
+  /// If null, a default asset image is shown.
+  final Widget? errorWidget;
+
+  /// Semantic label for the image to improve accessibility
+  final String? semanticLabel;
+
   @override
   Widget build(BuildContext context) {
     return alignment != null
@@ -67,6 +83,7 @@ class CustomImageWidget extends StatelessWidget {
     );
   }
 
+  ///build the image with border radius
   _buildCircleImage() {
     if (radius != null) {
       return ClipRRect(
@@ -78,6 +95,7 @@ class CustomImageWidget extends StatelessWidget {
     }
   }
 
+  ///build the image with border and border radius style
   _buildImageWithBorder() {
     if (border != null) {
       return Container(
@@ -90,10 +108,10 @@ class CustomImageWidget extends StatelessWidget {
   }
 
   Widget _buildImageView() {
-    if (imageUrl != null) {
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
       switch (imageUrl!.imageType) {
         case ImageType.svg:
-          return Container(
+          return SizedBox(
             height: height,
             width: width,
             child: SvgPicture.asset(
@@ -102,36 +120,22 @@ class CustomImageWidget extends StatelessWidget {
               width: width,
               fit: fit ?? BoxFit.contain,
               colorFilter: color != null
-                  ? ColorFilter.mode(color!, BlendMode.srcIn)
+                  ? ColorFilter.mode(
+                      color ?? Colors.transparent,
+                      BlendMode.srcIn,
+                    )
                   : null,
               semanticsLabel: semanticLabel,
             ),
           );
         case ImageType.file:
-          if (kIsWeb) {
-            return Image.asset(
-              placeHolder,
-              height: height,
-              width: width,
-              fit: fit ?? BoxFit.cover,
-              semanticLabel: semanticLabel,
-            );
-          }
-          final filePath = Uri.tryParse(imageUrl!)?.toFilePath() ?? imageUrl!;
           return Image.file(
-            File(filePath),
+            File(imageUrl!),
             height: height,
             width: width,
             fit: fit ?? BoxFit.cover,
             color: color,
             semanticLabel: semanticLabel,
-            errorBuilder: (_, __, ___) => Image.asset(
-              placeHolder,
-              height: height,
-              width: width,
-              fit: fit ?? BoxFit.cover,
-              semanticLabel: semanticLabel,
-            ),
           );
         case ImageType.network:
           return CachedNetworkImage(
@@ -141,8 +145,8 @@ class CustomImageWidget extends StatelessWidget {
             imageUrl: imageUrl!,
             color: color,
             placeholder: (context, url) => Container(
-              height: height ?? 30,
-              width: width ?? 30,
+              height: 30,
+              width: 30,
               child: LinearProgressIndicator(
                 color: Colors.grey.shade200,
                 backgroundColor: Colors.grey.shade100,
@@ -159,7 +163,6 @@ class CustomImageWidget extends StatelessWidget {
                 ),
           );
         case ImageType.png:
-        case ImageType.unknown:
         default:
           return Image.asset(
             imageUrl!,
@@ -171,12 +174,6 @@ class CustomImageWidget extends StatelessWidget {
           );
       }
     }
-    return Image.asset(
-      placeHolder,
-      height: height,
-      width: width,
-      fit: fit ?? BoxFit.cover,
-      semanticLabel: semanticLabel,
-    );
+    return SizedBox();
   }
 }

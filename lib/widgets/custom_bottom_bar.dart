@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 /// Custom bottom navigation bar for wardrobe analytics app
 /// Implements bottom-heavy interaction design with thumb-accessible navigation
 ///
-/// Navigation items based on Mobile Navigation Hierarchy:
-/// 1. Daily Log (Today/Camera) - Core daily interaction
-/// 2. Wardrobe Management (Closet/Hanger) - Essential wardrobe organization
-/// 3. Smart Suggestions (Lightbulb/Sparkle) - AI-powered recommendations
-/// 4. Insights Dashboard (Graph/Chart) - Analytics and learning paths
-/// 5. Purchase Tracking (Shopping Bag) - Purchase logging and spending analysis
+/// Reduced to 5 tabs for better UX and to prevent label truncation:
+/// 1. Today (Daily Log) - Core daily interaction
+/// 2. Wardrobe - Essential wardrobe organization
+/// 3. Style (Smart Suggestions) - AI-powered recommendations
+/// 4. Purchases - Purchase logging and spending analysis
+/// 5. Profile - User profile and settings (includes Insights link)
 class CustomBottomBar extends StatelessWidget {
-  /// Current selected index
+  /// Current selected index (0-4)
   final int currentIndex;
 
   /// Callback when navigation item is tapped
@@ -47,45 +47,47 @@ class CustomBottomBar extends StatelessWidget {
         unselectedLabelStyle:
             theme.bottomNavigationBarTheme.unselectedLabelStyle,
         elevation: 0,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
         items: [
           // Daily Log - Core daily interaction
           BottomNavigationBarItem(
             icon: const Icon(Icons.today_outlined, size: 24),
             activeIcon: const Icon(Icons.today, size: 24),
-            label: 'Today',
-            tooltip: 'Daily outfit log',
+            label: AppLocalizations.of(context).tabToday,
+            tooltip: AppLocalizations.of(context).tooltipToday,
           ),
 
           // Wardrobe Management - Essential wardrobe organization
           BottomNavigationBarItem(
             icon: const Icon(Icons.checkroom_outlined, size: 24),
             activeIcon: const Icon(Icons.checkroom, size: 24),
-            label: 'Wardrobe',
-            tooltip: 'Manage wardrobe items',
+            label: AppLocalizations.of(context).tabWardrobe,
+            tooltip: AppLocalizations.of(context).tooltipWardrobe,
           ),
 
           // Smart Suggestions - AI-powered recommendations
           BottomNavigationBarItem(
-            icon: const Icon(Icons.lightbulb_outline, size: 24),
-            activeIcon: const Icon(Icons.lightbulb, size: 24),
-            label: 'Suggestions',
-            tooltip: 'Smart outfit suggestions',
-          ),
-
-          // Insights Dashboard - Analytics and learning paths
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.insights_outlined, size: 24),
-            activeIcon: const Icon(Icons.insights, size: 24),
-            label: 'Insights',
-            tooltip: 'Analytics and insights',
+            icon: const Icon(Icons.auto_awesome_outlined, size: 24),
+            activeIcon: const Icon(Icons.auto_awesome, size: 24),
+            label: AppLocalizations.of(context).tabStyle,
+            tooltip: AppLocalizations.of(context).tooltipStyle,
           ),
 
           // Purchase Tracking - Purchase logging and spending analysis
           BottomNavigationBarItem(
             icon: const Icon(Icons.shopping_bag_outlined, size: 24),
             activeIcon: const Icon(Icons.shopping_bag, size: 24),
-            label: 'Purchases',
-            tooltip: 'Track purchases',
+            label: AppLocalizations.of(context).tabPurchases,
+            tooltip: AppLocalizations.of(context).tooltipPurchases,
+          ),
+
+          // Profile - User profile and settings (includes Insights)
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline, size: 24),
+            activeIcon: const Icon(Icons.person, size: 24),
+            label: AppLocalizations.of(context).tabProfile,
+            tooltip: AppLocalizations.of(context).tooltipProfile,
           ),
         ],
       ),
