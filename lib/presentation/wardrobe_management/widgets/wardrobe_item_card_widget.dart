@@ -27,12 +27,12 @@ class WardrobeItemCardWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Update field access to match database schema
-    final name = item['name'] as String? ?? 'Unnamed Item';
-    final category = item['category'] as String? ?? 'Uncategorized';
+    final name = item['name'] as String? ?? AppLocalizations.of(context).unnamedItem;
+    final category = item['category'] as String? ?? AppLocalizations.of(context).uncategorized;
     final brand = item['brand'] as String? ?? '';
     final wearCount = item['wear_count'] as int? ?? 0;
     final imageUrl = item['image_url'] as String? ?? '';
-    final semanticLabel = item['semantic_label'] as String? ?? 'Wardrobe item';
+    final semanticLabel = item['semantic_label'] as String? ?? AppLocalizations.of(context).wardrobeItemSemantic;
 
     return GestureDetector(
       onTap: onTap,

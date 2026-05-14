@@ -1,30 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
-import '../../core/providers.dart';
 import '../../widgets/custom_icon_widget.dart';
+import '../../services/wardrobe_service.dart';
+import '../../services/storage_service.dart';
 import './widgets/item_details_form.dart';
 import './widgets/photo_capture_section.dart';
 import './widgets/purchase_info_section.dart';
+import '../../services/purchase_service.dart';
+import '../../core/utils/app_localizations.dart';
 
 /// Add Clothing Item Screen
 /// Captures new wardrobe pieces through streamlined mobile form optimized for quick entry
-class AddClothingItem extends ConsumerStatefulWidget {
+class AddClothingItem extends StatefulWidget {
   const AddClothingItem({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<AddClothingItem> createState() => _AddClothingItemState();
+  State<AddClothingItem> createState() => _AddClothingItemState();
 }
 
-class _AddClothingItemState extends ConsumerState<AddClothingItem> {
+class _AddClothingItemState extends State<AddClothingItem> {
   final _formKey = GlobalKey<FormState>();
   final _itemNameController = TextEditingController();
   final _brandController = TextEditingController();
   final _priceController = TextEditingController();
+  final PurchaseService _purchaseService = PurchaseService();
   final _storeController = TextEditingController();
-  final _purchaseDateController = TextEditingController();
+  final WardrobeService _wardrobeService = WardrobeService();
+  final StorageService _storageService = StorageService();
+
+  // Track if we're editing an existing item
+  String? _existingItemId;
 
   List<String> _capturedPhotos = [];
   String? _selectedCategory;
@@ -52,6 +59,28 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
     _brandController.addListener(_onFormChanged);
     _priceController.addListener(_onFormChanged);
     _storeController.addListener(_onFormChanged);
+    // Pre-populate if editing existing item
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map<String, dynamic> && args.containsKey('name')) {
+        setState(() {
+          // Store the item ID if editing
+          _existingItemId = args['id'] as String?;
+          _itemNameController.text = args['name'] as String? ?? '';
+          _brandController.text = args['brand'] as String? ?? '';
+          _selectedCategory = args['category'] as String?;
+          if (args['purchase_price'] != null) {
+            _priceController.text = args['purchase_price'].toString();
+          }
+          if (args['image_url'] != null) {
+            _capturedPhotos = [args['image_url'] as String];
+          }
+          if (args['notes'] != null) {
+            _storeController.text = args['notes'] as String;
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -60,7 +89,6 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
     _brandController.dispose();
     _priceController.dispose();
     _storeController.dispose();
-    _purchaseDateController.dispose();
     super.dispose();
   }
 
@@ -87,12 +115,18 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
         _selectedCategory = aiCategory;
       }
 
-      // Auto-populate item name if empty
-      if (_itemNameController.text.trim().isEmpty) {
+      // Auto-populate item name if empty and AI is confident
+      final confidence = (analysisResult['confidence'] as num?)?.toDouble() ?? 0.0;
+      if (_itemNameController.text.trim().isEmpty && confidence > 0.6) {
         final color = analysisResult['color'] as String? ?? '';
         final material = analysisResult['material'] as String? ?? '';
-        final category = analysisResult['category'] as String? ?? 'Item';
-        _itemNameController.text = '$color $material $category';
+        final category = analysisResult['category'] as String? ?? '';
+        final parts = [color, material, category]
+            .where((s) => s.isNotEmpty && s.toLowerCase() != 'unknown')
+            .toList();
+        if (parts.isNotEmpty) {
+          _itemNameController.text = parts.join(' ');
+        }
       }
 
       _hasUnsavedChanges = true;
@@ -109,9 +143,6 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
   void _onPurchaseDateChanged(DateTime? date) {
     setState(() {
       _purchaseDate = date;
-      _purchaseDateController.text = date != null
-          ? '${date.month}/${date.day}/${date.year}'
-          : '';
       _hasUnsavedChanges = true;
     });
   }
@@ -126,6 +157,7 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
   Future<void> _saveItem() async {
     if (!_isFormValid()) return;
 
+    final l10n = localizations;
     setState(() => _isSaving = true);
 
     try {
@@ -135,23 +167,68 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
           ? double.tryParse(_priceController.text.trim())
           : null;
 
-      final savedItem = await ref.read(wardrobeServiceProvider).addWardrobeItem(
-        name: _itemNameController.text.trim(),
-        category: _selectedCategory!, // We validated it's not null
-        brand: _brandController.text.trim(),
-        imageUrl: _capturedPhotos.isNotEmpty ? _capturedPhotos.first : null,
-        semanticLabel: _aiAnalysisData != null 
-            ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
-            : null,
-        purchasePrice: price,
-        purchaseDate: _purchaseDate,
-        notes: _storeController.text.trim(), // Reusing store as notes for now
-      );
+      // Upload image to Supabase Storage first (only if new photo captured)
+      String? imageUrl;
+      if (_capturedPhotos.isNotEmpty && !_capturedPhotos.first.startsWith('http')) {
+        imageUrl = await _storageService.uploadWardrobeImage(_capturedPhotos.first);
+      } else if (_capturedPhotos.isNotEmpty) {
+        // Keep existing image URL
+        imageUrl = _capturedPhotos.first;
+      }
+
+      Map<String, dynamic> savedItem;
+      final bool isEditing = _existingItemId != null;
+
+      if (isEditing) {
+        // Update existing item
+        savedItem = await _wardrobeService.updateWardrobeItem(
+          itemId: _existingItemId!,
+          name: _itemNameController.text.trim(),
+          category: _selectedCategory!,
+          brand: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
+          imageUrl: imageUrl,
+          semanticLabel: _aiAnalysisData != null 
+              ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
+              : null,
+          purchasePrice: price,
+          purchaseDate: _purchaseDate,
+          notes: _storeController.text.trim().isNotEmpty ? _storeController.text.trim() : null,
+        );
+      } else {
+        // Create new item
+        savedItem = await _wardrobeService.addWardrobeItem(
+          name: _itemNameController.text.trim(),
+          category: _selectedCategory!, // We validated it's not null
+          brand: _brandController.text.trim(),
+          imageUrl: imageUrl,
+          semanticLabel: _aiAnalysisData != null 
+              ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
+              : null,
+          purchasePrice: price,
+          purchaseDate: _purchaseDate,
+          notes: _storeController.text.trim(), // Reusing store as notes for now
+        );
+      }
+
+      // Also add to purchases table if price is provided and it's a new item
+      if (!isEditing && price != null && price > 0) {
+        await _purchaseService.addPurchase(
+          name: _itemNameController.text.trim(),
+          price: price,
+          purchaseDate: _purchaseDate ?? DateTime.now(),
+          brand: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
+          category: _selectedCategory,
+          imageUrl: imageUrl,
+          wardrobeItemId: savedItem['id']?.toString(),
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_itemNameController.text} ${localizations.itemAddedToWardrobe}'),
+            content: Text(isEditing 
+                ? '${_itemNameController.text} ${l10n.itemUpdatedSuccess}'
+                : '${_itemNameController.text} ${l10n.itemAddedToWardrobe}'),
             backgroundColor: theme.colorScheme.primary,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
@@ -163,10 +240,9 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
       }
     } catch (e) {
       if (mounted) {
-        final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.itemSaveError),
+            content: Text('${l10n.saveError}: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -182,22 +258,23 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges) return true;
 
+    final l10n = localizations;
     final shouldPop = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Discard changes?'),
-        content: const Text(
-          'You have unsaved changes. Are you sure you want to leave?',
+        title: Text('${l10n.discard} ${l10n.changes}?'),
+        content: Text(
+          l10n.unsavedChanges,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
-              'Discard',
+              l10n.discard,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -211,6 +288,7 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = localizations;
 
     return PopScope(
       canPop: false,
@@ -225,13 +303,14 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text('Add Clothing Item'),
+          title: Text(_existingItemId != null ? l10n.editItem : l10n.addItem),
           leading: IconButton(
             icon: CustomIconWidget(
               iconName: 'close',
               color: theme.colorScheme.onSurface,
               size: 24,
             ),
+            tooltip: l10n.cancel,
             onPressed: () async {
               if (await _onWillPop()) {
                 if (mounted) {
@@ -239,7 +318,6 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
                 }
               }
             },
-            tooltip: 'Cancel',
           ),
           actions: [
             Padding(
@@ -262,7 +340,7 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
                           ),
                         ),
                       )
-                    : const Text('Save'),
+                    : Text(l10n.save),
               ),
             ),
           ],
@@ -296,7 +374,6 @@ class _AddClothingItemState extends ConsumerState<AddClothingItem> {
               PurchaseInfoSection(
                 priceController: _priceController,
                 storeController: _storeController,
-                purchaseDateController: _purchaseDateController,
                 purchaseDate: _purchaseDate,
                 onPurchaseDateChanged: _onPurchaseDateChanged,
               ),

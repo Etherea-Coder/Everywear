@@ -3,6 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 import '../../../widgets/custom_icon_widget.dart';
+import '../../../core/utils/app_localizations.dart';
 
 /// Item details form widget for clothing item information
 /// Includes item name, category selection, and brand fields
@@ -46,9 +47,24 @@ class ItemDetailsForm extends StatelessWidget {
     }
   }
 
+  String _getCategoryLabel(String category, AppLocalizations l10n) {
+    switch (category) {
+      case 'Tops': return l10n.catTops;
+      case 'Bottoms': return l10n.catBottoms;
+      case 'Dresses': return l10n.catDresses;
+      case 'Outerwear': return l10n.catOuterwear;
+      case 'Shoes': return l10n.catShoes;
+      case 'Accessories': return l10n.catAccessories;
+      case 'Activewear': return l10n.catActivewear;
+      case 'Sleepwear': return l10n.catSleepwear;
+      default: return category;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       width: double.infinity,
@@ -58,7 +74,7 @@ class ItemDetailsForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Item Details',
+            l10n.itemDetailsTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -69,9 +85,9 @@ class ItemDetailsForm extends StatelessWidget {
           TextFormField(
             controller: itemNameController,
             decoration: InputDecoration(
-              labelText: 'Item Name *',
-              hintText: 'e.g., Blue Denim Jacket',
-              helperText: 'AI can auto-fill this based on your photo',
+              labelText: l10n.itemNameLabel,
+              hintText: l10n.itemNameHint,
+              helperText: l10n.itemNameHelper,
               prefixIcon: Padding(
                 padding: EdgeInsets.all(3.w),
                 child: CustomIconWidget(
@@ -84,7 +100,7 @@ class ItemDetailsForm extends StatelessWidget {
             textInputAction: TextInputAction.next,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter an item name';
+                return l10n.itemNameRequired;
               }
               return null;
             },
@@ -96,7 +112,7 @@ class ItemDetailsForm extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Category *',
+                l10n.categoryLabel,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -110,7 +126,7 @@ class ItemDetailsForm extends StatelessWidget {
                 ),
                 SizedBox(width: 1.w),
                 Text(
-                  'AI detected',
+                  l10n.aiDetected,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
                   ),
@@ -161,7 +177,7 @@ class ItemDetailsForm extends StatelessWidget {
                       ),
                       SizedBox(height: 0.5.h),
                       Text(
-                        category,
+                        _getCategoryLabel(category, l10n),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isSelected
                               ? theme.colorScheme.primary
@@ -187,8 +203,8 @@ class ItemDetailsForm extends StatelessWidget {
           TextFormField(
             controller: brandController,
             decoration: InputDecoration(
-              labelText: 'Brand (Optional)',
-              hintText: 'e.g., Levi\'s',
+              labelText: l10n.brandLabel,
+              hintText: l10n.brandHint,
               prefixIcon: Padding(
                 padding: EdgeInsets.all(3.w),
                 child: CustomIconWidget(

@@ -39,7 +39,7 @@ class EmptyStateWidget extends StatelessWidget {
             SizedBox(height: 3.h),
 
             Text(
-              'Building your suggestions',
+              AppLocalizations.of(context).buildingSuggestionsTitle,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -49,7 +49,7 @@ class EmptyStateWidget extends StatelessWidget {
             SizedBox(height: 2.h),
 
             Text(
-              'We need a bit more data to create personalized outfit suggestions for you.',
+              AppLocalizations.of(context).buildingSuggestionsSubtitle,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -70,22 +70,22 @@ class EmptyStateWidget extends StatelessWidget {
                 children: [
                   _buildTimelineItem(
                     theme,
-                    'Log 3 outfits',
-                    'Start tracking your daily outfits',
+                    AppLocalizations.of(context).stepLogOutfitsTitle,
+                    AppLocalizations.of(context).stepLogOutfitsSubtitle,
                     isCompleted: false,
                   ),
                   SizedBox(height: 2.h),
                   _buildTimelineItem(
                     theme,
-                    'Rate your outfits',
-                    'Tell us how you felt wearing them',
+                    AppLocalizations.of(context).stepRateOutfitsTitle,
+                    AppLocalizations.of(context).stepRateOutfitsSubtitle,
                     isCompleted: false,
                   ),
                   SizedBox(height: 2.h),
                   _buildTimelineItem(
                     theme,
-                    'Get suggestions',
-                    'We\'ll recommend outfits you\'ll love',
+                    AppLocalizations.of(context).stepGetSuggestionsTitle,
+                    AppLocalizations.of(context).stepGetSuggestionsSubtitle,
                     isCompleted: false,
                   ),
                 ],
@@ -99,7 +99,7 @@ class EmptyStateWidget extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 1.5.h),
               ),
-              child: const Text('Log Your First Outfit'),
+              child: Text(AppLocalizations.of(context).logFirstOutfitBtn),
             ),
           ],
         ),

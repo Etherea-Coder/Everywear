@@ -98,7 +98,7 @@ class SuggestionCardWidget extends StatelessWidget {
                             ),
                             SizedBox(width: 1.w),
                             Text(
-                              'AI',
+                              AppLocalizations.of(context).aiBadge,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onPrimary,
                                 fontWeight: FontWeight.w600,
@@ -169,7 +169,7 @@ class SuggestionCardWidget extends StatelessWidget {
                                 ),
                                 SizedBox(width: 1.w),
                                 Text(
-                                  'Check weather',
+                                  AppLocalizations.of(context).checkWeatherLabel,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.error,
                                     fontWeight: FontWeight.w500,
@@ -210,7 +210,7 @@ class SuggestionCardWidget extends StatelessWidget {
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 1.2.h),
                             ),
-                            child: const Text('Wear This'),
+                            child: Text(AppLocalizations.of(context).wearThisBtn),
                           ),
                         ),
                         SizedBox(width: 2.w),
@@ -260,7 +260,7 @@ class SuggestionCardWidget extends StatelessWidget {
           ),
           SizedBox(height: 0.5.h),
           Text(
-            isLeft ? 'Save' : 'Dismiss',
+            isLeft ? AppLocalizations.of(context).save : AppLocalizations.of(context).dismiss,
             style: theme.textTheme.bodySmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -287,7 +287,7 @@ class SuggestionCardWidget extends StatelessWidget {
                   height: 30.h,
                   fit: BoxFit.cover,
                   semanticLabel:
-                      item['semanticLabel'] as String? ?? 'Clothing item',
+                      item['semanticLabel'] as String? ?? AppLocalizations.of(context).clothingItemFallback,
                 ),
               );
             }).toList(),
@@ -307,7 +307,7 @@ class SuggestionCardWidget extends StatelessWidget {
                         height: 15.h,
                         fit: BoxFit.cover,
                         semanticLabel:
-                            item['semanticLabel'] as String? ?? 'Clothing item',
+                            item['semanticLabel'] as String? ?? AppLocalizations.of(context).clothingItemFallback,
                       ),
                     );
                   }).toList(),
@@ -322,7 +322,7 @@ class SuggestionCardWidget extends StatelessWidget {
                         height: 15.h,
                         fit: BoxFit.cover,
                         semanticLabel:
-                            item['semanticLabel'] as String? ?? 'Clothing item',
+                            item['semanticLabel'] as String? ?? AppLocalizations.of(context).clothingItemFallback,
                       ),
                     );
                   }).toList(),

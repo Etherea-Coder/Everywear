@@ -1,19 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
-import '../../../core/providers.dart';
 import '../../../widgets/custom_icon_widget.dart';
+import '../../../services/ai/vision_engine_service.dart';
 import '../../../core/utils/image_optimizer.dart';
 import 'dart:io';
 
 /// Photo capture section widget for adding clothing item photos
 /// Supports up to 3 photos with camera and gallery options
-class PhotoCaptureSection extends ConsumerStatefulWidget {
+class PhotoCaptureSection extends StatefulWidget {
   final List<String> photos;
   final Function(List<String>) onPhotosChanged;
   final Function(Map<String, dynamic>)? onAIAnalysisComplete;
@@ -26,20 +25,22 @@ class PhotoCaptureSection extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<PhotoCaptureSection> createState() => _PhotoCaptureSectionState();
+  State<PhotoCaptureSection> createState() => _PhotoCaptureSectionState();
 }
 
-class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
+class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
   final ImagePicker _picker = ImagePicker();
   final int _maxPhotos = 3;
+  final VisionEngineService _visionEngine = VisionEngineService();
   bool _isAnalyzing = false;
   Map<String, dynamic>? _aiAnalysisResult;
 
   Future<void> _showPhotoOptions() async {
+    final localizations = AppLocalizations.of(context);
     if (widget.photos.length >= _maxPhotos) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Maximum $_maxPhotos photos allowed'),
+          content: Text(localizations.maxPhotosAllowed(_maxPhotos)),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -63,7 +64,7 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
                   color: Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
-                title: const Text('Take Photo'),
+                title: Text(localizations.takePhoto),
                 onTap: () {
                   Navigator.pop(context);
                   _takePhoto();
@@ -75,7 +76,7 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
                   color: Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
-                title: const Text('Choose from Gallery'),
+                title: Text(localizations.chooseFromGallery),
                 onTap: () {
                   Navigator.pop(context);
                   _pickFromGallery();
@@ -89,7 +90,7 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
                   ).colorScheme.onSurface.withValues(alpha: 0.6),
                   size: 24,
                 ),
-                title: const Text('Skip Photo'),
+                title: Text(localizations.skipPhoto),
                 onTap: () => Navigator.pop(context),
               ),
             ],
@@ -100,13 +101,14 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
   }
 
   Future<void> _takePhoto() async {
+    final localizations = AppLocalizations.of(context);
     try {
       bool hasPermission = await _requestCameraPermission();
       if (!hasPermission) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Camera permission is required to take photos'),
+            SnackBar(
+              content: Text(localizations.cameraPermissionRequired),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -134,8 +136,8 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to capture photo. Please try again.'),
+          SnackBar(
+            content: Text(localizations.failedToCapturePhoto),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -144,6 +146,7 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
   }
 
   Future<void> _pickFromGallery() async {
+    final localizations = AppLocalizations.of(context);
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -165,31 +168,24 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to select photo. Please try again.'),
+          SnackBar(
+            content: Text(localizations.failedToSelectPhoto),
             behavior: SnackBarBehavior.floating,
-          ),
+          )
         );
       }
     }
   }
 
-  /// Analyze photo using AI vision engine
+  /// Analyze photo using AI vision engine (cloud-based)
   Future<void> _analyzePhoto(String imagePath) async {
     setState(() {
       _isAnalyzing = true;
     });
 
     try {
-      // Initialize model if needed
-      final isModelReady = await ref.read(visionEngineServiceProvider).isModelDownloaded();
-      if (!isModelReady) {
-        // Model will be downloaded in background
-        await ref.read(visionEngineServiceProvider).downloadModel();
-      }
-
-      // Run AI analysis
-      final result = await ref.read(visionEngineServiceProvider).analyzeClothing(imagePath);
+      // Run AI analysis (cloud-based via Gemini)
+      final result = await _visionEngine.analyzeClothing(imagePath);
 
       setState(() {
         _aiAnalysisResult = result;
@@ -199,15 +195,15 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
       // Notify parent widget
       widget.onAIAnalysisComplete?.call(result);
 
-      // Show success feedback
-      if (mounted) {
+      final confidence = (result['confidence'] as num?)?.toDouble() ?? 0.0;
+      final detectedCategory = result['category'] as String? ?? '';
+      final detectedColor = result['color'] as String? ?? '';
+      final isUnknown = detectedCategory.toLowerCase() == 'unknown' || detectedColor.toLowerCase() == 'unknown';
+      if (mounted && confidence > 0.6 && !isUnknown) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'AI detected: ${result['category']} (${(result['confidence'] * 100).toInt()}% confident)',
-            ),
+            content: Text(AppLocalizations.of(context).aiDetectedSummary(detectedColor, '', detectedCategory)),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -219,9 +215,9 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'AI analysis unavailable. You can still add the item manually.',
+              AppLocalizations.of(context).aiAnalysisUnavailable,
             ),
             behavior: SnackBarBehavior.floating,
           ),
@@ -256,7 +252,7 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
           Row(
             children: [
               Text(
-                'Photos',
+                AppLocalizations.of(context).photosLabel,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -275,7 +271,7 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
                 ),
                 SizedBox(width: 2.w),
                 Text(
-                  'AI analyzing...',
+                  AppLocalizations.of(context).aiAnalyzing,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
                   ),
@@ -285,12 +281,14 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
           ),
           SizedBox(height: 1.h),
           Text(
-            'Add up to $_maxPhotos photos of your clothing item',
+            AppLocalizations.of(context).addPhotosHint(_maxPhotos),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
-          if (_aiAnalysisResult != null) ...[
+          if (_aiAnalysisResult != null && 
+              ((_aiAnalysisResult!['confidence'] as num?)?.toDouble() ?? 0.0) > 0.6 &&
+              (_aiAnalysisResult!['category'] as String? ?? '').toLowerCase() != 'unknown') ...[
             SizedBox(height: 1.h),
             Container(
               padding: EdgeInsets.all(2.w),
@@ -308,7 +306,11 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
                   SizedBox(width: 2.w),
                   Expanded(
                     child: Text(
-                      'AI detected: ${_aiAnalysisResult!['color']} ${_aiAnalysisResult!['material']} ${_aiAnalysisResult!['category']}',
+                      AppLocalizations.of(context).aiDetectedSummary(
+                        _aiAnalysisResult!['color'] ?? '',
+                        _aiAnalysisResult!['material'] ?? '',
+                        _aiAnalysisResult!['category'] ?? '',
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w500,
@@ -365,7 +367,7 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
             ),
             SizedBox(height: 1.h),
             Text(
-              'Add Photo',
+              AppLocalizations.of(context).addPhotoBtn,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w500,
@@ -403,8 +405,8 @@ class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
                       ),
                     ),
                   )
-                : Image.network(
-                    widget.photos[index],
+                : Image.file(
+                    File(widget.photos[index]),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: CustomIconWidget(

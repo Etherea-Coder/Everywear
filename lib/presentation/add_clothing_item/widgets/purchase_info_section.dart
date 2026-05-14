@@ -4,13 +4,13 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 import '../../../widgets/custom_icon_widget.dart';
+import '../../../core/utils/app_localizations.dart';
 
 /// Purchase information section widget for tracking clothing item purchases
 /// Includes price, purchase date, and store/website fields
 class PurchaseInfoSection extends StatelessWidget {
   final TextEditingController priceController;
   final TextEditingController storeController;
-  final TextEditingController purchaseDateController;
   final DateTime? purchaseDate;
   final Function(DateTime?) onPurchaseDateChanged;
 
@@ -18,7 +18,6 @@ class PurchaseInfoSection extends StatelessWidget {
     Key? key,
     required this.priceController,
     required this.storeController,
-    required this.purchaseDateController,
     required this.purchaseDate,
     required this.onPurchaseDateChanged,
   }) : super(key: key);
@@ -53,6 +52,7 @@ class PurchaseInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       width: double.infinity,
@@ -62,14 +62,14 @@ class PurchaseInfoSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Purchase Information (Optional)',
+            l10n.purchaseInfoTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           SizedBox(height: 1.h),
           Text(
-            'Track cost-per-wear and spending patterns',
+            l10n.purchaseInfoSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
@@ -80,8 +80,8 @@ class PurchaseInfoSection extends StatelessWidget {
           TextFormField(
             controller: priceController,
             decoration: InputDecoration(
-              labelText: 'Price',
-              hintText: '0.00',
+              labelText: l10n.priceLabel,
+              hintText: l10n.priceHint,
               prefixIcon: Padding(
                 padding: EdgeInsets.all(3.w),
                 child: CustomIconWidget(
@@ -106,8 +106,8 @@ class PurchaseInfoSection extends StatelessWidget {
             child: AbsorbPointer(
               child: TextFormField(
                 decoration: InputDecoration(
-                  labelText: 'Purchase Date',
-                  hintText: 'Select date',
+                  labelText: l10n.purchaseDateLabel,
+                  hintText: l10n.purchaseDateHint,
                   prefixIcon: Padding(
                     padding: EdgeInsets.all(3.w),
                     child: CustomIconWidget(
@@ -129,7 +129,9 @@ class PurchaseInfoSection extends StatelessWidget {
                         )
                       : null,
                 ),
-                controller: purchaseDateController,
+                controller: TextEditingController(
+                  text: purchaseDate != null ? _formatDate(purchaseDate!) : '',
+                ),
               ),
             ),
           ),
@@ -140,8 +142,8 @@ class PurchaseInfoSection extends StatelessWidget {
           TextFormField(
             controller: storeController,
             decoration: InputDecoration(
-              labelText: 'Store/Website',
-              hintText: 'e.g., Nordstrom',
+              labelText: l10n.storeLabel,
+              hintText: l10n.storeHint,
               prefixIcon: Padding(
                 padding: EdgeInsets.all(3.w),
                 child: CustomIconWidget(
@@ -176,7 +178,7 @@ class PurchaseInfoSection extends StatelessWidget {
                 SizedBox(width: 3.w),
                 Expanded(
                   child: Text(
-                    'Adding purchase info helps track cost-per-wear and identify high-value items',
+                    l10n.costPerWearInfo,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                     ),

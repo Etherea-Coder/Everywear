@@ -41,7 +41,7 @@ class NeglectedItemsWidget extends StatelessWidget {
               SizedBox(width: 2.w),
               Expanded(
                 child: Text(
-                  'Items needing attention',
+                  AppLocalizations.of(context).neglectedItemsTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -53,7 +53,7 @@ class NeglectedItemsWidget extends StatelessWidget {
           SizedBox(height: 1.h),
 
           Text(
-            'These pieces haven\'t been worn in a while. Give them some love!',
+            AppLocalizations.of(context).neglectedItemsSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -114,7 +114,7 @@ class NeglectedItemsWidget extends StatelessWidget {
                               ),
                               SizedBox(height: 0.5.h),
                               Text(
-                                '${item["lastWorn"]} ago',
+                                AppLocalizations.of(context).timeAgo(item["lastWorn"] as String? ?? ''),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontSize: 10.sp,
