@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
-import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../services/supabase_service.dart';
+import '../../services/revenuecat_service.dart';
+import 'package:flutter/services.dart';
+import 'package:sizer/sizer.dart';
 
+import 'dart:async';
 import '../../core/app_export.dart';
 import '../../widgets/custom_image_widget.dart';
+import '../../core/utils/app_localizations.dart';
 
 /// Splash Screen with Authentication - Branded login experience
 /// Displays app logo with authentication options (Google & Email)
@@ -35,11 +39,14 @@ class _SplashScreenState extends State<SplashScreen>
   final _nameController = TextEditingController();
   bool _obscurePassword = true;
 
+  StreamSubscription<AuthState>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     _initializeDisplay();
+    _listenToAuthChanges();
   }
 
   void _setupAnimations() {
@@ -72,6 +79,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -79,10 +87,30 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  void _listenToAuthChanges() {
+    if (!SupabaseService.isInitialized) {
+      if (kDebugMode) debugPrint('⚠️ SplashScreen: Supabase not initialized, skipping auth listener');
+      return;
+    }
+    
+    _authSubscription = SupabaseService.instance.client.auth.onAuthStateChange
+        .listen((data) {
+      if (!mounted) return;
+      // Only react to explicit sign-in — ignore tokenRefreshed, initialSession, etc.
+      if (data.event == AuthChangeEvent.signedIn && data.session != null) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.home,
+          (route) => false,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -108,25 +136,25 @@ class _SplashScreenState extends State<SplashScreen>
           ),
           child: SafeArea(
             child: _showEmailForm
-                ? _buildEmailAuthForm(theme)
-                : _buildMainAuthScreen(theme),
+                ? _buildEmailAuthForm(theme, l10n)
+                : _buildMainAuthScreen(theme, l10n),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMainAuthScreen(ThemeData theme) {
+  Widget _buildMainAuthScreen(ThemeData theme, AppLocalizations l10n) {
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 6.w),
         child: Column(
           children: [
             SizedBox(height: 8.h),
-            _buildBrandingSection(theme),
+            _buildBrandingSection(theme, l10n),
             SizedBox(height: _showAuthOptions ? 6.h : 12.h),
             if (_showAuthOptions) ...[
-              _buildAuthOptionsSection(theme),
+              _buildAuthOptionsSection(theme, l10n),
             ] else ...[
               _buildLoadingIndicator(theme),
             ],
@@ -137,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildBrandingSection(ThemeData theme) {
+  Widget _buildBrandingSection(ThemeData theme, AppLocalizations l10n) {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Column(
@@ -145,7 +173,7 @@ class _SplashScreenState extends State<SplashScreen>
           _buildLogo(theme),
           SizedBox(height: 3.h),
           Text(
-            'Everywear',
+            l10n.appName,
             style: theme.textTheme.headlineLarge?.copyWith(
               color: theme.colorScheme.onPrimary,
               fontWeight: FontWeight.w700,
@@ -155,7 +183,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
           SizedBox(height: 1.h),
           Text(
-            'Understand Your Style',
+            l10n.appTagline,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
               fontSize: 14.sp,
@@ -186,9 +214,9 @@ class _SplashScreenState extends State<SplashScreen>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: CustomImageWidget(
-            imageUrl: 'assets/images/icon-1768225114910.png',
-            width: 70.w,
-            height: 70.w,
+            imageUrl: 'assets/images/splash-screen.png',
+            width: 90.w,
+            height: 90.w,
             fit: BoxFit.contain,
           ),
         ),
@@ -196,27 +224,27 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildAuthOptionsSection(ThemeData theme) {
+  Widget _buildAuthOptionsSection(ThemeData theme, AppLocalizations l10n) {
     return SlideTransition(
       position: _slideAnimation,
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: Column(
           children: [
-            _buildGoogleSignInButton(theme),
+            _buildGoogleSignInButton(theme, l10n),
             SizedBox(height: 3.h),
-            _buildDivider(theme),
+            _buildDivider(theme, l10n),
             SizedBox(height: 3.h),
-            _buildEmailSignInButton(theme),
+            _buildEmailSignInButton(theme, l10n),
             SizedBox(height: 3.h),
-            _buildTermsText(theme),
+            _buildTermsText(theme, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildGoogleSignInButton(ThemeData theme) {
+  Widget _buildGoogleSignInButton(ThemeData theme, AppLocalizations l10n) {
     return Material(
       elevation: 4,
       borderRadius: BorderRadius.circular(12),
@@ -233,21 +261,15 @@ class _SplashScreenState extends State<SplashScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
+              SvgPicture.asset(
+                'assets/icons/google_logo.svg',
                 width: 6.w,
                 height: 6.w,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      'https://cdn.cdnlogo.com/logos/g/35/google-icon.svg',
-                    ),
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                fit: BoxFit.contain,
               ),
               SizedBox(width: 3.w),
               Text(
-                'Continue with Google',
+                l10n.continueGoogle,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w600,
@@ -261,7 +283,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildEmailSignInButton(ThemeData theme) {
+  Widget _buildEmailSignInButton(ThemeData theme, AppLocalizations l10n) {
     return Material(
       elevation: 0,
       borderRadius: BorderRadius.circular(12),
@@ -289,7 +311,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               SizedBox(width: 3.w),
               Text(
-                'Continue with Email',
+                l10n.continueEmail,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
@@ -303,7 +325,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildDivider(ThemeData theme) {
+  Widget _buildDivider(ThemeData theme, AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -315,7 +337,7 @@ class _SplashScreenState extends State<SplashScreen>
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: Text(
-            'OR',
+            l10n.orDivider,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onPrimary.withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
@@ -332,11 +354,11 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildTermsText(ThemeData theme) {
+  Widget _buildTermsText(ThemeData theme, AppLocalizations l10n) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Text(
-        'By continuing, you agree to our Terms of Service and Privacy Policy',
+        l10n.termsPrivacyAgreement,
         textAlign: TextAlign.center,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onPrimary.withValues(alpha: 0.7),
@@ -347,7 +369,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildEmailAuthForm(ThemeData theme) {
+  Widget _buildEmailAuthForm(ThemeData theme, AppLocalizations l10n) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(6.w),
       child: Form(
@@ -358,16 +380,16 @@ class _SplashScreenState extends State<SplashScreen>
             SizedBox(height: 2.h),
             _buildBackButton(theme),
             SizedBox(height: 4.h),
-            _buildFormHeader(theme),
+            _buildFormHeader(theme, l10n),
             SizedBox(height: 4.h),
             if (_isSignUp) ...[
               _buildTextField(
                 controller: _nameController,
-                label: 'Full Name',
+                label: l10n.labelFullName,
                 icon: Icons.person_outline,
                 theme: theme,
                 validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Name is required';
+                  if (value?.isEmpty ?? true) return l10n.nameRequired;
                   return null;
                 },
               ),
@@ -375,16 +397,16 @@ class _SplashScreenState extends State<SplashScreen>
             ],
             _buildTextField(
               controller: _emailController,
-              label: 'Email',
+              label: l10n.email,
               icon: Icons.email_outlined,
               theme: theme,
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
-                if (value?.isEmpty ?? true) return 'Email is required';
+                if (value?.isEmpty ?? true) return l10n.emailRequired;
                 if (!RegExp(
                   r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                 ).hasMatch(value!)) {
-                  return 'Enter a valid email';
+                  return l10n.emailInvalid;
                 }
                 return null;
               },
@@ -392,7 +414,7 @@ class _SplashScreenState extends State<SplashScreen>
             SizedBox(height: 2.h),
             _buildTextField(
               controller: _passwordController,
-              label: 'Password',
+              label: l10n.labelPassword,
               icon: Icons.lock_outline,
               theme: theme,
               obscureText: _obscurePassword,
@@ -405,16 +427,21 @@ class _SplashScreenState extends State<SplashScreen>
                     setState(() => _obscurePassword = !_obscurePassword),
               ),
               validator: (value) {
-                if (value?.isEmpty ?? true) return 'Password is required';
-                if (value!.length < 6)
-                  return 'Password must be at least 6 characters';
+                if (value?.isEmpty ?? true) return l10n.passwordRequired;
+                if (value!.length < 6) {
+                  return l10n.passwordMinLengthMsg;
+                }
                 return null;
               },
             ),
-            SizedBox(height: 4.h),
-            _buildSubmitButton(theme),
+            if (!_isSignUp) ...[
+              SizedBox(height: 1.h),
+              _buildForgotPasswordButton(theme, l10n),
+            ],
             SizedBox(height: 2.h),
-            _buildToggleAuthMode(theme),
+            _buildSubmitButton(theme, l10n),
+            SizedBox(height: 2.h),
+            _buildToggleAuthMode(theme, l10n),
           ],
         ),
       ),
@@ -435,12 +462,12 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildFormHeader(ThemeData theme) {
+  Widget _buildFormHeader(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isSignUp ? 'Create Account' : 'Welcome Back',
+          _isSignUp ? l10n.createAccountTitle : l10n.welcomeBackTitle,
           style: theme.textTheme.headlineMedium?.copyWith(
             color: theme.colorScheme.onPrimary,
             fontWeight: FontWeight.w700,
@@ -450,8 +477,8 @@ class _SplashScreenState extends State<SplashScreen>
         SizedBox(height: 1.h),
         Text(
           _isSignUp
-              ? 'Sign up to start tracking your wardrobe'
-              : 'Sign in to continue your style journey',
+              ? l10n.signupSubtitle
+              : l10n.signinSubtitle,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
             fontSize: 13.sp,
@@ -519,7 +546,49 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildSubmitButton(ThemeData theme) {
+  Widget _buildForgotPasswordButton(ThemeData theme, AppLocalizations l10n) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: _isLoading ? null : _handleForgotPassword,
+        child: Text(
+          'Forgot password?', // TODO: Add to AppLocalizations
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showErrorSnackBar('Please enter your email address first');
+      return;
+    }
+
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+       _showErrorSnackBar('Please enter a valid email address');
+       return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await SupabaseService.instance.client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'io.supabase.everywear://login-callback',
+      );
+      _showSuccessSnackBar('Password reset email sent!');
+    } catch (e) {
+      _showErrorSnackBar('Failed to send reset email: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildSubmitButton(ThemeData theme, AppLocalizations l10n) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -545,7 +614,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               )
             : Text(
-                _isSignUp ? 'Sign Up' : 'Sign In',
+                _isSignUp ? l10n.signupBtn : l10n.signinBtn,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w600,
@@ -556,7 +625,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildToggleAuthMode(ThemeData theme) {
+  Widget _buildToggleAuthMode(ThemeData theme, AppLocalizations l10n) {
     return Center(
       child: TextButton(
         onPressed: () => setState(() {
@@ -566,15 +635,15 @@ class _SplashScreenState extends State<SplashScreen>
         child: RichText(
           text: TextSpan(
             text: _isSignUp
-                ? 'Already have an account? '
-                : "Don't have an account? ",
+                ? l10n.alreadyHaveAccount
+                : l10n.dontHaveAccount,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
               fontSize: 13.sp,
             ),
             children: [
               TextSpan(
-                text: _isSignUp ? 'Sign In' : 'Sign Up',
+                text: _isSignUp ? l10n.signinBtn : l10n.signupBtn,
                 style: TextStyle(
                   color: theme.colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
@@ -602,48 +671,17 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _handleGoogleSignIn() async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _isLoading = true);
-
     try {
-      debugPrint('🔐 Starting Google sign-in...');
-
-      // Robustness: Try to re-init if not already initialized
-      if (!SupabaseService.isInitialized) {
-        debugPrint('⚠️ Supabase not initialized, attempting to initialize...');
-        final initialized = await SupabaseService.initialize();
-        if (!initialized) {
-          throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
-        }
-        debugPrint('✅ Supabase initialized successfully');
-      }
-
-      if (!SupabaseService.isInitialized) {
-        throw Exception('Authentication service (Supabase) not available. Please verify your internet connection and environment variables.');
-      }
-      
-      debugPrint('🔐 Calling signInWithOAuth...');
-      // For mobile, this usually requires the google_sign_in package
-      // For now, we'll use the standard Supabase OAuth flow
       await SupabaseService.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: kIsWeb ? null : 'io.supabase.everywear://login-callback/',
+        redirectTo: 'io.supabase.everywear://login-callback',
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
-      
-      debugPrint('✅ Google sign-in initiated successfully');
-      
-      if (mounted) {
-        HapticFeedback.mediumImpact();
-      }
     } catch (e) {
-      debugPrint('❌ Google sign-in failed: $e');
       if (mounted) {
-        String errorMessage = 'Google sign-in failed. Please try again.';
-        
-        if (e.toString().contains('not available') || e.toString().contains('not ready')) {
-          errorMessage = 'Authentication service unavailable. Please try again later.';
-        }
-        
-        _showErrorSnackBar(errorMessage);
+        _showErrorSnackBar(l10n.googleSigninFailed);
       }
     } finally {
       if (mounted) {
@@ -653,93 +691,63 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _handleEmailAuth() async {
+    final l10n = AppLocalizations.of(context);
+    
+    if (!SupabaseService.isInitialized) {
+      _showErrorSnackBar('Supabase is not initialized. Please check your credentials and connection.');
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
     try {
-      debugPrint('🔐 Starting email authentication (${_isSignUp ? 'sign-up' : 'sign-in'})...');
-
-      // Robustness: Try to re-init if not already initialized
-      if (!SupabaseService.isInitialized) {
-        debugPrint('⚠️ Supabase not initialized, attempting to initialize...');
-        final initialized = await SupabaseService.initialize();
-        if (!initialized) {
-          throw Exception('Authentication service (Supabase) not available. Please check your environment configuration.');
-        }
-        debugPrint('✅ Supabase initialized successfully');
-      }
-
-      if (!SupabaseService.isInitialized) {
-        throw Exception('Supabase Client not ready. Check environment variables in your build dashboard.');
-      }
-
-      debugPrint('🔐 Calling ${_isSignUp ? 'signUp' : 'signInWithPassword'}...');
       if (_isSignUp) {
         await SupabaseService.instance.client.auth.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
-          data: {'full_name': _nameController.text.trim()},
         );
-        debugPrint('✅ Sign-up initiated successfully');
         if (mounted) {
-          _showErrorSnackBar(
-            'Success! Check your inbox for a confirmation email.', 
-            isError: false,
-          );
+          _showSuccessSnackBar(l10n.confirmEmailMsg);
         }
       } else {
         await SupabaseService.instance.client.auth.signInWithPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-        debugPrint('✅ Sign-in successful');
-      }
-
-      if (mounted) {
-        HapticFeedback.mediumImpact();
-      }
-    } catch (e) {
-      debugPrint('❌ Email authentication failed: $e');
-      if (mounted) {
-        String userFriendlyError;
-        
-        if (e.toString().contains('not available') || e.toString().contains('not ready')) {
-          userFriendlyError = 'Authentication service unavailable. Please try again later.';
-        } else if (e.toString().contains('SocketException')) {
-          userFriendlyError = 'Connection failed. Please check your internet.';
-        } else if (e.toString().contains('Invalid login') || e.toString().contains('wrong password')) {
-          userFriendlyError = 'Invalid email or password.';
-        } else if (e.toString().contains('already registered')) {
-          userFriendlyError = 'This email is already registered. Please sign in instead.';
-        } else {
-          userFriendlyError = _isSignUp
-              ? 'Sign up failed. Please try again.'
-              : 'Sign in failed. Please try again.';
+        final user = SupabaseService.instance.client.auth.currentUser;
+        if (user != null) {
+          await RevenueCatService.logIn(user.id);
         }
-        
-        _showErrorSnackBar(userFriendlyError);
+      }
+    } on AuthException catch (e) {
+      if (mounted) _showErrorSnackBar(e.message);
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(_isSignUp ? l10n.signupFailed : l10n.signinFailed);
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showErrorSnackBar(String message, {bool isError = true}) {
+  void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : const Color(0xFF2D5A27),
+        backgroundColor: Colors.redAccent,
         behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: isError ? 5 : 3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: isError ? SnackBarAction(
-          label: 'DISMISS', 
-          textColor: Colors.white,
-          onPressed: () {},
-        ) : null,
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

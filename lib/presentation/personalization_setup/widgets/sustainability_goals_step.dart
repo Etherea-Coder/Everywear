@@ -29,7 +29,7 @@ class SustainabilityGoalsStep extends StatelessWidget {
         children: [
           SizedBox(height: 2.h),
           Text(
-            'Your Sustainability Goals',
+            AppLocalizations.of(context).sustainabilityStepTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -37,7 +37,7 @@ class SustainabilityGoalsStep extends StatelessWidget {
           ),
           SizedBox(height: 1.h),
           Text(
-            'Help us understand your priorities for sustainable fashion.',
+            AppLocalizations.of(context).sustainabilityStepSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(179),
             ),
@@ -46,19 +46,19 @@ class SustainabilityGoalsStep extends StatelessWidget {
           // Purchase frequency
           _buildSliderSection(
             context,
-            title: 'Purchase Frequency',
-            description: 'How often do you buy new clothing?',
+            title: AppLocalizations.of(context).purchaseFrequencyLabel,
+            description: AppLocalizations.of(context).purchaseFrequencyDesc,
             icon: Icons.shopping_bag_outlined,
             value: purchaseFrequency,
             min: 1,
             max: 5,
             divisions: 4,
             labels: [
-              'Rarely',
-              'Occasionally',
-              'Regularly',
-              'Often',
-              'Frequently',
+              AppLocalizations.of(context).rarelyLabel,
+              AppLocalizations.of(context).occasionalSustainabilityLabel,
+              AppLocalizations.of(context).regularlyLabel,
+              AppLocalizations.of(context).oftenLabel,
+              AppLocalizations.of(context).frequentlyLabel,
             ],
             onChanged: (value) => onSustainabilityChanged(purchase: value),
           ),
@@ -66,19 +66,19 @@ class SustainabilityGoalsStep extends StatelessWidget {
           // Budget consciousness
           _buildSliderSection(
             context,
-            title: 'Budget Consciousness',
-            description: 'How important is staying within budget?',
+            title: AppLocalizations.of(context).budgetConsciousnessLabel,
+            description: AppLocalizations.of(context).budgetConsciousnessDesc,
             icon: Icons.account_balance_wallet_outlined,
             value: budgetConsciousness,
             min: 1,
             max: 5,
             divisions: 4,
             labels: [
-              'Flexible',
-              'Somewhat',
-              'Moderate',
-              'Important',
-              'Very Important',
+              AppLocalizations.of(context).flexibleLabel,
+              AppLocalizations.of(context).somewhatLabel,
+              AppLocalizations.of(context).moderateSustainabilityLabel,
+              AppLocalizations.of(context).importantLabel,
+              AppLocalizations.of(context).veryImportantLabel,
             ],
             onChanged: (value) => onSustainabilityChanged(budget: value),
           ),
@@ -86,14 +86,20 @@ class SustainabilityGoalsStep extends StatelessWidget {
           // Environmental impact
           _buildSliderSection(
             context,
-            title: 'Environmental Impact',
-            description: 'How much do you prioritize eco-friendly choices?',
+            title: AppLocalizations.of(context).environmentalImpactLabel,
+            description: AppLocalizations.of(context).environmentalImpactDesc,
             icon: Icons.eco_outlined,
             value: environmentalImpact,
             min: 1,
             max: 5,
             divisions: 4,
-            labels: ['Low', 'Some', 'Moderate', 'High', 'Very High'],
+            labels: [
+              AppLocalizations.of(context).lowLabel,
+              AppLocalizations.of(context).someLabel,
+              AppLocalizations.of(context).moderateSustainabilityLabel,
+              AppLocalizations.of(context).highLabel,
+              AppLocalizations.of(context).veryHighLabel,
+            ],
             onChanged: (value) => onSustainabilityChanged(environmental: value),
           ),
           SizedBox(height: 3.h),
@@ -113,7 +119,7 @@ class SustainabilityGoalsStep extends StatelessWidget {
                 SizedBox(width: 3.w),
                 Expanded(
                   child: Text(
-                    'These preferences help us suggest ways to maximize your wardrobe and reduce waste.',
+                    AppLocalizations.of(context).sustainabilityConfirmation,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                     ),

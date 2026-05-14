@@ -51,6 +51,7 @@ class _WelcomePhilosophyState extends State<WelcomePhilosophy>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -74,7 +75,7 @@ class _WelcomePhilosophyState extends State<WelcomePhilosophy>
                   ),
                   SizedBox(height: 3.h),
                   Text(
-                    'Welcome to Everywear',
+                    localizations.welcomeTitle,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
@@ -83,7 +84,7 @@ class _WelcomePhilosophyState extends State<WelcomePhilosophy>
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    'Your Personal Style Learning System',
+                    localizations.welcomeSubtitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withAlpha(179),
                     ),
@@ -98,33 +99,29 @@ class _WelcomePhilosophyState extends State<WelcomePhilosophy>
                           _buildPhilosophyCard(
                             context,
                             icon: Icons.psychology_outlined,
-                            title: 'Learn Your Style',
-                            description:
-                                'Everywear learns from every outfit you wear, understanding what makes you feel confident and comfortable.',
+                            title: localizations.philosophyLearnTitle,
+                            description: localizations.philosophyLearnDesc,
                           ),
                           SizedBox(height: 2.h),
                           _buildPhilosophyCard(
                             context,
                             icon: Icons.eco_outlined,
-                            title: 'Sustainable Choices',
-                            description:
-                                'Make the most of what you own. Discover forgotten pieces and reduce unnecessary purchases.',
+                            title: localizations.philosophySustainableTitle,
+                            description: localizations.philosophySustainableDesc,
                           ),
                           SizedBox(height: 2.h),
                           _buildPhilosophyCard(
                             context,
                             icon: Icons.lightbulb_outline,
-                            title: 'Smart Insights',
-                            description:
-                                'Get personalized recommendations based on weather, occasion, and your unique style preferences.',
+                            title: localizations.philosophySmartTitle,
+                            description: localizations.philosophySmartDesc,
                           ),
                           SizedBox(height: 2.h),
                           _buildPhilosophyCard(
                             context,
                             icon: Icons.trending_up_outlined,
-                            title: 'Grow With You',
-                            description:
-                                'Your style evolves, and so does Everywear. The more you use it, the better it understands you.',
+                            title: localizations.philosophyGrowTitle,
+                            description: localizations.philosophyGrowDesc,
                           ),
                         ],
                       ),
@@ -146,7 +143,7 @@ class _WelcomePhilosophyState extends State<WelcomePhilosophy>
                         ),
                       ),
                       child: Text(
-                        'Continue',
+                        localizations.continueText,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: theme.colorScheme.onPrimary,
                           fontWeight: FontWeight.w600,

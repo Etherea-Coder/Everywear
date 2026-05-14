@@ -1,77 +1,78 @@
 import 'package:flutter/material.dart';
-import '../insights_dashboard/insights_dashboard.dart';
-import '../wardrobe_management/wardrobe_management.dart';
-import '../outfit_capture_flow/outfit_capture_flow.dart';
-import '../smart_suggestions/smart_suggestions.dart';
-import '../settings_profile/settings_profile.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeScreen extends StatefulWidget {
+import '../daily_log/daily_log.dart';
+import '../wardrobe_management/wardrobe_management.dart';
+import '../smart_suggestions/smart_suggestions.dart';
+import '../purchase_tracking/purchase_tracking.dart';
+import '../settings_profile/profile_screen.dart';
+import '../../widgets/custom_bottom_bar.dart';
+import '../../layout/ad_layout.dart';
+import '../../providers/ad_providers.dart';
+
+/// Home Screen - Main navigation hub for the Everywear app
+///
+/// Uses IndexedStack for preserving state across tabs.
+/// Includes AdLayout wrapper for banner ad space.
+///
+/// Navigation structure (5 tabs):
+/// - Index 0: Today (Daily Log)
+/// - Index 1: Wardrobe (Wardrobe Management)
+/// - Index 2: Style (Smart Suggestions)
+/// - Index 3: Purchases (Purchase Tracking)
+/// - Index 4: Profile (Settings & Insights)
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
+  static void goToTab(BuildContext context, int index) {
+    context.findAncestorStateOfType<_HomeScreenState>()?._onTabChanged(index);
+  }
+
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
-  final Set<int> _initializedTabs = {0};
 
-  Widget _buildScreen(int index) {
-    if (!_initializedTabs.contains(index)) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    switch (index) {
-      case 0: return const InsightsDashboard();
-      case 1: return const WardrobeManagement();
-      case 2: return const OutfitCaptureFlow();
-      case 3: return const SmartSuggestions();
-      case 4: return const SettingsProfile();
-      default: return const InsightsDashboard();
+  /// Screens for each tab - Insights moved to Profile screen
+  /// for better organization and to reduce nav bar clutter
+  final List<Widget> _screens = [
+    const DailyLog(),           // Index 0: Today
+    const WardrobeManagement(), // Index 1: Wardrobe
+    const SmartSuggestions(),   // Index 2: Style
+    const PurchaseTracking(),   // Index 3: Purchases
+    const ProfileScreen(),      // Index 4: Profile (includes Insights link)
+  ];
+
+  /// Track navigation as actions for interstitial ads
+  void _onTabChanged(int index) {
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Get premium status from provider
+    final isPremium = ref.watch(isPremiumProvider);
+
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: List.generate(5, (i) => _buildScreen(i)),
+      // AdLayout wraps the body to add banner space at top
+      body: AdLayout(
+        isPremium: isPremium,
+        showDebugBackground: kDebugMode, // Only show in debug mode
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-            _initializedTabs.add(index);
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.checkroom_outlined),
-            selectedIcon: Icon(Icons.checkroom),
-            label: 'Wardrobe',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.camera_alt_outlined),
-            selectedIcon: Icon(Icons.camera_alt),
-            label: 'Capture',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.lightbulb_outline), // Or auto_awesome
-            selectedIcon: Icon(Icons.lightbulb),
-            label: 'Ideas',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+      bottomNavigationBar: CustomBottomBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabChanged,
       ),
     );
   }

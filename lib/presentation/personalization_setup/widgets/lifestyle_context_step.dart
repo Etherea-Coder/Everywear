@@ -29,7 +29,7 @@ class LifestyleContextStep extends StatelessWidget {
         children: [
           SizedBox(height: 2.h),
           Text(
-            'Tell Us About Your Lifestyle',
+            AppLocalizations.of(context).lifestyleStepTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -37,32 +37,36 @@ class LifestyleContextStep extends StatelessWidget {
           ),
           SizedBox(height: 1.h),
           Text(
-            'This helps us suggest outfits for the right occasions.',
+            AppLocalizations.of(context).lifestyleStepSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(179),
             ),
           ),
           SizedBox(height: 3.h),
           // Work environment
-          _buildSectionTitle(context, 'Work Environment'),
+          _buildSectionTitle(context, AppLocalizations.of(context).workEnvironmentLabel),
           SizedBox(height: 1.h),
           _buildOptionGroup(
             context,
             options: [
               {
                 'id': 'office',
-                'label': 'Office',
+                'label': AppLocalizations.of(context).officeLabel,
                 'icon': Icons.business_outlined,
               },
-              {'id': 'remote', 'label': 'Remote', 'icon': Icons.home_outlined},
+              {
+                'id': 'remote',
+                'label': AppLocalizations.of(context).remoteLabel,
+                'icon': Icons.home_outlined
+              },
               {
                 'id': 'creative',
-                'label': 'Creative',
+                'label': AppLocalizations.of(context).creativeLabel,
                 'icon': Icons.brush_outlined,
               },
               {
                 'id': 'casual',
-                'label': 'Casual',
+                'label': AppLocalizations.of(context).casualLabel,
                 'icon': Icons.weekend_outlined,
               },
             ],
@@ -71,43 +75,55 @@ class LifestyleContextStep extends StatelessWidget {
           ),
           SizedBox(height: 3.h),
           // Social activities
-          _buildSectionTitle(context, 'Social Activities'),
+          _buildSectionTitle(context, AppLocalizations.of(context).socialActivitiesLabel),
           SizedBox(height: 1.h),
           _buildOptionGroup(
             context,
             options: [
               {
                 'id': 'frequent',
-                'label': 'Frequent',
+                'label': AppLocalizations.of(context).frequentLabel,
                 'icon': Icons.groups_outlined,
               },
               {
                 'id': 'occasional',
-                'label': 'Occasional',
+                'label': AppLocalizations.of(context).occasionalLabel,
                 'icon': Icons.people_outline,
               },
-              {'id': 'rare', 'label': 'Rare', 'icon': Icons.person_outline},
+              {
+                'id': 'rare',
+                'label': AppLocalizations.of(context).rareLabel,
+                'icon': Icons.person_outline
+              },
             ],
             selectedValue: socialFrequency,
             onChanged: (value) => onLifestyleChanged(social: value),
           ),
           SizedBox(height: 3.h),
           // Climate
-          _buildSectionTitle(context, 'Climate'),
+          _buildSectionTitle(context, AppLocalizations.of(context).climateLabel),
           SizedBox(height: 1.h),
           _buildOptionGroup(
             context,
             options: [
-              {'id': 'warm', 'label': 'Warm', 'icon': Icons.wb_sunny_outlined},
+              {
+                'id': 'warm',
+                'label': AppLocalizations.of(context).warmLabel,
+                'icon': Icons.wb_sunny_outlined
+              },
               {
                 'id': 'moderate',
-                'label': 'Moderate',
+                'label': AppLocalizations.of(context).moderateLabel,
                 'icon': Icons.cloud_outlined,
               },
-              {'id': 'cold', 'label': 'Cold', 'icon': Icons.ac_unit_outlined},
+              {
+                'id': 'cold',
+                'label': AppLocalizations.of(context).coldLabel,
+                'icon': Icons.ac_unit_outlined
+              },
               {
                 'id': 'variable',
-                'label': 'Variable',
+                'label': AppLocalizations.of(context).variableLabel,
                 'icon': Icons.thermostat_outlined,
               },
             ],

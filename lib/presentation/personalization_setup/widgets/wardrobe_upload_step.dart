@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 /// Wardrobe Upload Step - Fourth step in personalization wizard
 /// Optional wardrobe photo upload for AI analysis
-class WardrobeUploadStep extends StatelessWidget {
+class WardrobeUploadStep extends StatefulWidget {
   final List<String> photos;
   final Function(List<String>) onPhotosChanged;
 
@@ -13,17 +15,53 @@ class WardrobeUploadStep extends StatelessWidget {
     required this.onPhotosChanged,
   }) : super(key: key);
 
-  void _addPhoto() {
-    // Simulate photo selection
-    final newPhotos = List<String>.from(photos);
-    newPhotos.add('https://images.unsplash.com/photo-1489987707025-afc232f7ea0f');
-    onPhotosChanged(newPhotos);
+  @override
+  State<WardrobeUploadStep> createState() => _WardrobeUploadStepState();
+}
+
+class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
+
+  Future<void> _addPhoto() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(AppLocalizations.of(context).takePhotoLabel),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(AppLocalizations.of(context).galleryPhotoLabel),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+    );
+
+    if (picked != null) {
+      final newPhotos = List<String>.from(widget.photos);
+      newPhotos.add(picked.path);
+      widget.onPhotosChanged(newPhotos);
+    }
   }
 
   void _removePhoto(int index) {
-    final newPhotos = List<String>.from(photos);
+    final newPhotos = List<String>.from(widget.photos);
     newPhotos.removeAt(index);
-    onPhotosChanged(newPhotos);
+    widget.onPhotosChanged(newPhotos);
   }
 
   @override
@@ -37,7 +75,7 @@ class WardrobeUploadStep extends StatelessWidget {
         children: [
           SizedBox(height: 2.h),
           Text(
-            'Upload Wardrobe Photos',
+            AppLocalizations.of(context).uploadWardrobeTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -45,7 +83,7 @@ class WardrobeUploadStep extends StatelessWidget {
           ),
           SizedBox(height: 1.h),
           Text(
-            'Optional: Upload photos of your wardrobe for AI-powered analysis and better recommendations.',
+            AppLocalizations.of(context).uploadWardrobeSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(179),
             ),
@@ -68,7 +106,7 @@ class WardrobeUploadStep extends StatelessWidget {
                 SizedBox(width: 3.w),
                 Expanded(
                   child: Text(
-                    'Your photos are private and used only to improve your recommendations. You can delete them anytime.',
+                    AppLocalizations.of(context).uploadPrivacyNotice,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                     ),
@@ -79,7 +117,7 @@ class WardrobeUploadStep extends StatelessWidget {
           ),
           SizedBox(height: 3.h),
           // Photo grid
-          if (photos.isNotEmpty) ...[
+          if (widget.photos.isNotEmpty) ...[
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -89,7 +127,7 @@ class WardrobeUploadStep extends StatelessWidget {
                 mainAxisSpacing: 2.w,
                 childAspectRatio: 1,
               ),
-              itemCount: photos.length,
+              itemCount: widget.photos.length,
               itemBuilder: (context, index) {
                 return Stack(
                   children: [
@@ -98,7 +136,9 @@ class WardrobeUploadStep extends StatelessWidget {
                         color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(8.0),
                         image: DecorationImage(
-                          image: NetworkImage(photos[index]),
+                          image: widget.photos[index].startsWith('assets/')
+                              ? AssetImage(widget.photos[index]) as ImageProvider
+                              : FileImage(File(widget.photos[index])),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -130,7 +170,7 @@ class WardrobeUploadStep extends StatelessWidget {
           ],
           // Upload button
           GestureDetector(
-            onTap: _addPhoto,
+            onTap: () async => await _addPhoto(),
             child: Container(
               height: 20.h,
               decoration: BoxDecoration(
@@ -152,7 +192,7 @@ class WardrobeUploadStep extends StatelessWidget {
                   ),
                   SizedBox(height: 1.h),
                   Text(
-                    'Add Photos',
+                    AppLocalizations.of(context).addPhotosBtn,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -160,7 +200,7 @@ class WardrobeUploadStep extends StatelessWidget {
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
-                    'Tap to select from gallery or camera',
+                    AppLocalizations.of(context).uploadMethodSubtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withAlpha(153),
                     ),
@@ -175,10 +215,10 @@ class WardrobeUploadStep extends StatelessWidget {
             child: TextButton(
               onPressed: () {
                 // Clear photos to indicate skip
-                onPhotosChanged([]);
+                widget.onPhotosChanged([]);
               },
               child: Text(
-                'Skip this step',
+                AppLocalizations.of(context).skipStepBtn,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.primary,
                   decoration: TextDecoration.underline,

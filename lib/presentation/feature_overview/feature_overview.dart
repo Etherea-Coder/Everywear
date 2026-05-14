@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import './widgets/ai_download_prompt_widget.dart';
 
 /// Feature Overview Screen - Second onboarding screen
 /// Showcases core features of Everywear before personalization setup
@@ -14,36 +13,31 @@ class FeatureOverview extends StatefulWidget {
 class _FeatureOverviewState extends State<FeatureOverview> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  bool _showAIPrompt = false;
 
-  final List<Map<String, dynamic>> _features = [
+  List<Map<String, dynamic>> _getFeatures(AppLocalizations localizations) => [
     {
       'icon': Icons.camera_alt_outlined,
-      'title': 'Capture Your Outfits',
-      'description':
-          'Simply snap a photo of what you\'re wearing. Everywear learns from every outfit to understand your style.',
-      'color': Color(0xFF2D5A27),
+      'title': localizations.featureCaptureTitle,
+      'description': localizations.featureCaptureDesc,
+      'color': const Color(0xFF2D5A27),
     },
     {
       'icon': Icons.checkroom_outlined,
-      'title': 'Digital Wardrobe',
-      'description':
-          'Build a complete digital catalog of your clothing. Track what you own, when you bought it, and how often you wear it.',
-      'color': Color(0xFF8B4513),
+      'title': localizations.featureWardrobeTitle,
+      'description': localizations.featureWardrobeDesc,
+      'color': const Color(0xFF8B4513),
     },
     {
       'icon': Icons.auto_awesome_outlined,
-      'title': 'Smart Suggestions',
-      'description':
-          'Get personalized outfit recommendations based on weather, occasion, and your unique style preferences.',
-      'color': Color(0xFF4A7C59),
+      'title': localizations.featureSuggestionsTitle,
+      'description': localizations.featureSuggestionsDesc,
+      'color': const Color(0xFF4A7C59),
     },
     {
       'icon': Icons.insights_outlined,
-      'title': 'Style Insights',
-      'description':
-          'Discover patterns in your wardrobe. Find neglected items, track cost-per-wear, and make sustainable choices.',
-      'color': Color(0xFFB8860B),
+      'title': localizations.featureInsightsTitle,
+      'description': localizations.featureInsightsDesc,
+      'color': const Color(0xFFB8860B),
     },
   ];
 
@@ -57,36 +51,15 @@ class _FeatureOverviewState extends State<FeatureOverview> {
     setState(() => _currentPage = page);
   }
 
-  void _navigateToAIPrompt() {
-    setState(() => _showAIPrompt = true);
-  }
-
   void _navigateToPersonalization() {
     Navigator.of(context).pushReplacementNamed('/personalization-setup');
-  }
-
-  void _skipToPersonalization() {
-    _navigateToPersonalization();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Show AI download prompt after features
-    if (_showAIPrompt) {
-      return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        body: SafeArea(
-          child: AIDownloadPromptWidget(
-            onDownloadStarted: () {
-              // Download started, keep showing progress
-            },
-            onSkipped: _navigateToPersonalization,
-          ),
-        ),
-      );
-    }
+    final localizations = AppLocalizations.of(context);
+    final features = _getFeatures(localizations);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -99,9 +72,9 @@ class _FeatureOverviewState extends State<FeatureOverview> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: _skipToPersonalization,
+                  onPressed: _navigateToPersonalization,
                   child: Text(
-                    'Skip',
+                    localizations.skip,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -115,9 +88,9 @@ class _FeatureOverviewState extends State<FeatureOverview> {
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
-                itemCount: _features.length,
+                itemCount: features.length,
                 itemBuilder: (context, index) {
-                  return _buildFeaturePage(context, _features[index]);
+                  return _buildFeaturePage(context, features[index]);
                 },
               ),
             ),
@@ -127,7 +100,7 @@ class _FeatureOverviewState extends State<FeatureOverview> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  _features.length,
+                  features.length,
                   (index) => _buildPageIndicator(context, index),
                 ),
               ),
@@ -158,7 +131,7 @@ class _FeatureOverviewState extends State<FeatureOverview> {
                           padding: EdgeInsets.symmetric(vertical: 1.8.h),
                         ),
                         child: Text(
-                          'Back',
+                          localizations.back,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -170,13 +143,13 @@ class _FeatureOverviewState extends State<FeatureOverview> {
                     flex: _currentPage == 0 ? 1 : 1,
                     child: ElevatedButton(
                       onPressed: () {
-                        if (_currentPage < _features.length - 1) {
+                        if (_currentPage < features.length - 1) {
                           _pageController.nextPage(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
                           );
                         } else {
-                          _navigateToAIPrompt();
+                          _navigateToPersonalization();
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -189,9 +162,9 @@ class _FeatureOverviewState extends State<FeatureOverview> {
                         padding: EdgeInsets.symmetric(vertical: 1.8.h),
                       ),
                       child: Text(
-                        _currentPage < _features.length - 1
-                            ? 'Next'
-                            : 'Continue',
+                        _currentPage < features.length - 1
+                            ? localizations.next
+                            : localizations.continueText,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: theme.colorScheme.onPrimary,
                           fontWeight: FontWeight.w600,

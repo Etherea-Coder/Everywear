@@ -13,42 +13,42 @@ class StylePreferenceStep extends StatelessWidget {
     required this.onStylesChanged,
   }) : super(key: key);
 
-  final List<Map<String, dynamic>> _styleOptions = const [
+  List<Map<String, dynamic>> _getStyleOptions(AppLocalizations localizations) => [
     {
       'id': 'minimalist',
-      'label': 'Minimalist',
+      'label': localizations.styleMinimalist,
       'icon': Icons.circle_outlined,
-      'description': 'Clean lines, neutral colors',
+      'description': localizations.styleMinimalistDesc,
     },
     {
       'id': 'bohemian',
-      'label': 'Bohemian',
+      'label': localizations.styleBohemian,
       'icon': Icons.nature_people_outlined,
-      'description': 'Flowing, eclectic, earthy',
+      'description': localizations.styleBohemianDesc,
     },
     {
       'id': 'classic',
-      'label': 'Classic',
+      'label': localizations.styleClassic,
       'icon': Icons.checkroom_outlined,
-      'description': 'Timeless, elegant, refined',
+      'description': localizations.styleClassicDesc,
     },
     {
       'id': 'trendy',
-      'label': 'Trendy',
+      'label': localizations.styleTrendy,
       'icon': Icons.auto_awesome_outlined,
-      'description': 'Fashion-forward, bold',
+      'description': localizations.styleTrendyDesc,
     },
     {
       'id': 'eclectic',
-      'label': 'Eclectic',
+      'label': localizations.styleEclectic,
       'icon': Icons.palette_outlined,
-      'description': 'Mix and match, unique',
+      'description': localizations.styleEclecticDesc,
     },
     {
       'id': 'sporty',
-      'label': 'Sporty',
+      'label': localizations.styleSporty,
       'icon': Icons.directions_run_outlined,
-      'description': 'Athletic, comfortable',
+      'description': localizations.styleSportyDesc,
     },
   ];
 
@@ -65,6 +65,8 @@ class StylePreferenceStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
+    final styleOptions = _getStyleOptions(localizations);
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 6.w),
@@ -73,7 +75,7 @@ class StylePreferenceStep extends StatelessWidget {
         children: [
           SizedBox(height: 2.h),
           Text(
-            'What\'s Your Style?',
+            localizations.styleStepTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -81,7 +83,7 @@ class StylePreferenceStep extends StatelessWidget {
           ),
           SizedBox(height: 1.h),
           Text(
-            'Select all styles that resonate with you. You can choose multiple.',
+            localizations.styleStepSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(179),
             ),
@@ -96,9 +98,9 @@ class StylePreferenceStep extends StatelessWidget {
               mainAxisSpacing: 2.h,
               childAspectRatio: 1.1,
             ),
-            itemCount: _styleOptions.length,
+            itemCount: styleOptions.length,
             itemBuilder: (context, index) {
-              final style = _styleOptions[index];
+              final style = styleOptions[index];
               final isSelected = selectedStyles.contains(style['id']);
 
               return GestureDetector(
@@ -173,7 +175,7 @@ class StylePreferenceStep extends StatelessWidget {
                   SizedBox(width: 2.w),
                   Expanded(
                     child: Text(
-                      'Great! We\'ll use these preferences to personalize your recommendations.',
+                      localizations.styleSelectionConfirmation,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),

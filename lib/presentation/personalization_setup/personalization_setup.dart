@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../core/providers.dart';
 import '../../routes/app_routes.dart';
+import '../../services/supabase_service.dart';
 import './widgets/lifestyle_context_step.dart';
 import './widgets/style_preference_step.dart';
 import './widgets/sustainability_goals_step.dart';
@@ -11,14 +14,14 @@ import './widgets/wardrobe_upload_step.dart';
 
 /// Personalization Setup Screen - Final onboarding screen
 /// Multi-step wizard collecting user preferences through progressive disclosure
-class PersonalizationSetup extends StatefulWidget {
+class PersonalizationSetup extends ConsumerStatefulWidget {
   const PersonalizationSetup({Key? key}) : super(key: key);
 
   @override
-  State<PersonalizationSetup> createState() => _PersonalizationSetupState();
+  ConsumerState<PersonalizationSetup> createState() => _PersonalizationSetupState();
 }
 
-class _PersonalizationSetupState extends State<PersonalizationSetup> {
+class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   final int _totalSteps = 4;
@@ -112,7 +115,7 @@ class _PersonalizationSetupState extends State<PersonalizationSetup> {
     setState(() => _isCompleting = true);
 
     try {
-      // Save user preferences
+      // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('selectedStyles', _selectedStyles);
       await prefs.setString('workEnvironment', _workEnvironment ?? '');
@@ -123,31 +126,43 @@ class _PersonalizationSetupState extends State<PersonalizationSetup> {
       await prefs.setDouble('environmentalImpact', _environmentalImpact);
       await prefs.setBool('hasSeenOnboarding', true);
 
-      // Simulate generating insights
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (mounted) {
-        // Navigate to main app
-        Navigator.of(
-          context,
-          rootNavigator: true,
-        ).pushReplacementNamed(AppRoutes.outfitCaptureFlow);
+      // Save to Supabase user_profiles
+      final client = SupabaseService.instance.client;
+      final userId = client.auth.currentUser?.id;
+      if (userId != null) {
+        await client.from('user_profiles').upsert({
+          'id': userId,
+          'style_preferences': _selectedStyles,
+          'work_environment': _workEnvironment,
+          'social_frequency': _socialFrequency,
+          'climate': _climate,
+          'purchase_frequency': _purchaseFrequency,
+          'budget_consciousness': _budgetConsciousness,
+          'environmental_impact': _environmentalImpact,
+          'onboarding_completed': true,
+        });
       }
+
+        // Invalidate the provider so AuthGate rebuilds with the new completion status
+        ref.invalidate(userProfileProvider);
+
+        if (mounted) {
+          // Go to home screen, which will then allow the capture flow to overlay if needed,
+          // or just start fresh at Home.
+          Navigator.of(context, rootNavigator: true)
+              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+        }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-              'Failed to save preferences. Please try again.',
-            ),
+            content: Text(AppLocalizations.of(context).savePreferencesError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isCompleting = false);
-      }
+      if (mounted) setState(() => _isCompleting = false);
     }
   }
 
@@ -170,7 +185,7 @@ class _PersonalizationSetupState extends State<PersonalizationSetup> {
               )
             : null,
         title: Text(
-          'Personalize Your Experience',
+          AppLocalizations.of(context).personalizeTitle,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -245,7 +260,7 @@ class _PersonalizationSetupState extends State<PersonalizationSetup> {
           ),
           SizedBox(height: 1.h),
           Text(
-            'Step ${_currentStep + 1} of $_totalSteps',
+            AppLocalizations.of(context).getStepCountLabel(_currentStep + 1, _totalSteps),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(153),
             ),
@@ -288,7 +303,9 @@ class _PersonalizationSetupState extends State<PersonalizationSetup> {
                   ),
                 )
               : Text(
-                  isLastStep ? 'Complete Setup' : 'Continue',
+                  isLastStep
+                      ? AppLocalizations.of(context).completeSetup
+                      : AppLocalizations.of(context).continueText,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.w600,
