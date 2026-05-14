@@ -22,9 +22,9 @@ class LocalDatabaseService {
       }
       _box = await Hive.openBox<LocalWardrobeItem>(_boxName);
       _isInitialized = true;
-      debugPrint('✅ LocalDatabaseService initialized');
+      if (kDebugMode) debugPrint('✅ LocalDatabaseService initialized');
     } catch (e) {
-      debugPrint('❌ Failed to initialize LocalDatabaseService: $e');
+      if (kDebugMode) debugPrint('❌ Failed to initialize LocalDatabaseService: $e');
       _isInitialized = false;
     }
   }
@@ -44,11 +44,8 @@ class LocalDatabaseService {
     final localItems = <String, LocalWardrobeItem>{};
     
     for (var item in remoteItems) {
-      final id = item['id']?.toString() ?? '';
-      if (id.isEmpty) continue;
-      
       final localItem = LocalWardrobeItem()
-        ..id = id
+        ..id = item['id']?.toString() ?? ''
         ..remoteId = item['id']?.toString()
         ..name = item['name']
         ..category = item['category']
@@ -64,15 +61,6 @@ class LocalDatabaseService {
       localItems[localItem.id] = localItem;
     }
 
-    final remoteIds = localItems.keys.toSet();
-    final existingKeys = box.keys.cast<String>().toSet();
-
-    for (final key in existingKeys) {
-      if (!remoteIds.contains(key)) {
-        await box.delete(key);
-      }
-    }
-
     await box.putAll(localItems);
   }
 
@@ -80,6 +68,33 @@ class LocalDatabaseService {
   Future<List<LocalWardrobeItem>> getLocalItems() async {
     await init();
     return box.values.toList();
+  }
+
+  /// Deletes an item from the local cache.
+  ///
+  /// We store items keyed by their remote id string in most cases, but we also
+  /// guard against older/local ids by scanning for matching `remoteId`.
+  Future<void> deleteLocalItem(String itemId) async {
+    await init();
+
+    // Fast path: key matches the remote id.
+    if (box.containsKey(itemId)) {
+      await box.delete(itemId);
+      return;
+    }
+
+    // Fallback: delete any entries whose remoteId matches.
+    final keysToDelete = <dynamic>[];
+    for (final entry in box.toMap().entries) {
+      final item = entry.value;
+      if (item.remoteId == itemId) {
+        keysToDelete.add(entry.key);
+      }
+    }
+
+    if (keysToDelete.isNotEmpty) {
+      await box.deleteAll(keysToDelete);
+    }
   }
 
   /// Closes the database

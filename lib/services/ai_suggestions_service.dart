@@ -1,9 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
 import '../services/user_tier_service.dart';
-import './user_profile_helper.dart';
+import './style_service.dart';
 
-class AiSuggestionsService with UserProfileHelper {
+class AiSuggestionsService {
   SupabaseClient get _supabase => SupabaseService.instance.client;
   final UserTierService _tierService = UserTierService();
 
@@ -29,6 +29,24 @@ class AiSuggestionsService with UserProfileHelper {
         return {'success': false, 'error': 'User not authenticated'};
       }
 
+      final userName = _getUserFirstName(user);
+      
+      // Fetch quiz result to inject style profile if available
+      Map<String, dynamic>? profile;
+      try {
+        final quizResult = await StyleService().fetchQuizResult();
+        if (quizResult != null) {
+          profile = {
+            'styleProfile': quizResult['style_profile'],
+            'preferredColors': quizResult['preferred_colors']?.toString(),
+            'styleGoals': quizResult['style_goals']?.toString(),
+            'styleIntention': quizResult['style_intention']?.toString(),
+          };
+        }
+      } catch (e) {
+        // Ignore failure, we'll just not send profile data
+      }
+
       // Check suggestion limit before making API call
       final canRequest = await _tierService.canRequestSuggestion(user.id);
       if (!canRequest) {
@@ -44,22 +62,26 @@ class AiSuggestionsService with UserProfileHelper {
         };
       }
 
-      final firstName = await getUserFirstName();
-
       final response = await _supabase.functions.invoke(
         'ai-suggestions',
         body: {
           'imageUrl': imageUrl,
           'language': language,
+          'userName': userName,
+          'userProfile': profile,
           'weather': weatherContext,
           'itemsInfo': itemHistory,
-          'firstName': firstName,
         },
       );
 
       if (response.data != null) {
+        final success = response.data['success'] ?? false;
+        if (success == true) {
+          // Enforce tier limits: count successful AI suggestions.
+          await _tierService.incrementSuggestionCount(user.id);
+        }
         return {
-          'success': response.data['success'] ?? false,
+          'success': success,
           'suggestions': response.data['suggestions'] ?? '',
           'error': response.data['error'],
         };
@@ -72,5 +94,13 @@ class AiSuggestionsService with UserProfileHelper {
         'error': 'Failed to connect to AI service: ${e.toString()}',
       };
     }
+  }
+
+  String? _getUserFirstName(User? user) {
+    if (user == null) return null;
+    final fullName = user.userMetadata?['full_name'] as String? ?? 
+                     user.userMetadata?['name'] as String?;
+    if (fullName == null || fullName.trim().isEmpty) return null;
+    return fullName.trim().split(' ').first;
   }
 }
