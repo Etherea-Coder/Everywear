@@ -3,7 +3,7 @@ import '../presentation/smart_suggestions/smart_suggestions.dart';
 import '../presentation/learning_paths/learning_paths.dart';
 import '../presentation/outfit_capture_flow/outfit_capture_flow.dart';
 import '../presentation/splash_screen/splash_screen.dart';
-import '../presentation/home_screen/home_screen.dart';
+import '../presentation/auth_gate.dart';
 import '../presentation/add_clothing_item/add_clothing_item.dart';
 import '../presentation/wardrobe_management/wardrobe_management.dart';
 import '../presentation/welcome_philosophy/welcome_philosophy.dart';
@@ -13,66 +13,173 @@ import '../presentation/daily_log/daily_log.dart';
 import '../presentation/outfit_rating/outfit_rating.dart';
 import '../presentation/insights_dashboard/insights_dashboard.dart';
 import '../presentation/purchase_tracking/purchase_tracking.dart';
-import '../presentation/settings_profile/settings_profile.dart';
+import '../presentation/settings_profile/profile_screen.dart';     // ← renamed
+import '../presentation/settings_profile/settings_screen.dart';    // ← new
 import '../presentation/premium_upgrade/premium_upgrade.dart';
 import '../presentation/ai_intelligence/ai_intelligence.dart';
 import '../presentation/personal_progress_dashboard/personal_progress_dashboard.dart';
 import '../presentation/challenge_center/challenge_center.dart';
 import '../presentation/achievement_gallery/achievement_gallery.dart';
+import '../presentation/home_screen/home_screen.dart';
+import '../presentation/send_feedback_screen/send_feedback_screen.dart';
+import '../presentation/help_center_screen/help_center_screen.dart';
+import '../presentation/export_data_screen/export_data_screen.dart';
+import '../presentation/edit_profile_screen/edit_profile_screen.dart';
+import '../presentation/change_password_screen/change_password_screen.dart';
+import '../presentation/legal/terms_screen.dart';
+import '../presentation/legal/privacy_policy_screen.dart';
+import '../presentation/support/contact_support_screen.dart';
+import '../presentation/outfit_history/outfit_history_screen.dart';
 
 class AppRoutes {
-  // TODO: Add your routes here
-  static const String initial = '/';
-  static const String smartSuggestions = '/smart-suggestions';
-  static const String learningPaths = '/learning-paths';
-  static const String outfitCaptureFlow = '/outfit-capture-flow';
-  static const String splash = '/splash-screen';
-  static const String addClothingItem = '/add-clothing-item';
-  static const String wardrobeManagement = '/wardrobe-management';
-  static const String welcomePhilosophy = '/welcome-philosophy';
-  static const String featureOverview = '/feature-overview';
-  static const String personalizationSetup = '/personalization-setup';
-  static const String dailyLog = '/daily-log';
-  static const String outfitRating = '/outfit-rating';
-  static const String insightsDashboard = '/insights-dashboard';
-  static const String purchaseTracking = '/purchase-tracking';
-  static const String settingsProfile = '/settings-profile';
-  static const String premiumUpgrade = '/premium-upgrade';
-  static const String aiIntelligence = '/ai-intelligence';
-  static const String personalProgressDashboard =
-      '/personal-progress-dashboard';
-  static const String home = '/home';
-  static const String challengeCenter = '/challenge-center';
-  static const String achievementGallery = '/achievement-gallery';
+  AppRoutes._();
 
-  static final Map<String, WidgetBuilder> routes = {
-    initial: (context) => const SplashScreen(),
-    home: (context) => const HomeScreen(),
-    smartSuggestions: (context) => const SmartSuggestions(),
-    learningPaths: (context) => const LearningPaths(),
-    outfitCaptureFlow: (context) => const OutfitCaptureFlow(),
-    splash: (context) => const SplashScreen(),
-    addClothingItem: (context) => const AddClothingItem(),
+  // ============================================
+  // MAIN NAVIGATION ROUTES (Bottom Bar)
+  // ============================================
+  static const String initial            = '/';
+  static const String home               = '/home';
+
+  // Primary tabs (indexes 0–4)
+  static const String dailyLog           = '/daily-log';
+  static const String wardrobeManagement = '/wardrobe-management';
+  static const String smartSuggestions   = '/smart-suggestions';
+  static const String purchaseTracking   = '/purchase-tracking';
+  static const String profile            = '/profile';             // ← was settingsProfile
+
+  // ============================================
+  // SETTINGS (pushed from Profile)
+  // ============================================
+  static const String settings           = '/settings';            // ← new
+
+  // ============================================
+  // INSIGHTS & ANALYTICS (pushed from Profile)
+  // ============================================
+  static const String insightsDashboard          = '/insights-dashboard';
+  static const String personalProgressDashboard  = '/personal-progress-dashboard';
+  static const String achievementGallery         = '/achievement-gallery';
+
+  // ============================================
+  // ONBOARDING & SETUP
+  // ============================================
+  static const String splash               = '/splash-screen';
+  static const String welcomePhilosophy    = '/welcome-philosophy';
+  static const String featureOverview      = '/feature-overview';
+  static const String personalizationSetup = '/personalization-setup';
+
+  // ============================================
+  // WARDROBE OPERATIONS
+  // ============================================
+  static const String addClothingItem   = '/add-clothing-item';
+  static const String outfitCaptureFlow = '/outfit-capture-flow';
+  static const String outfitRating      = '/outfit-rating';
+  static const String outfitHistory = '/outfit-history';
+
+  // ============================================
+  // AI & INTELLIGENCE
+  // ============================================
+  static const String aiIntelligence = '/ai-intelligence';
+  static const String learningPaths  = '/learning-paths';
+  static const String challengeCenter = '/challenge-center';
+
+  // ============================================
+  // PREMIUM & BILLING
+  // ============================================
+  static const String premiumUpgrade = '/premium-upgrade';
+         
+  // ============================================
+  // PROFILE ACTIONS
+  // ============================================
+  static const String editProfile    = '/edit-profile';           
+  static const String changePassword = '/change-password';
+  static const String helpCenter     = '/help-center';            
+  static const String sendFeedback   = '/send-feedback';
+  static const String exportData      = '/export-data';  
+
+  // ============================================
+  // LEGAL & SUPPORT
+  // ============================================
+  static const privacyPolicy = "/privacy-policy";
+  static const terms = "/terms";
+  static const contactSupport = "/contact-support";        
+
+  // ============================================
+  // ROUTE MAP
+  // ============================================
+  static Map<String, WidgetBuilder> routes = {
+    // Entry point — use AuthGate for both root and home
+    initial: (context) => const AuthGate(),
+    home: (context) => const AuthGate(),
+
+    // Primary tabs
+    dailyLog:           (context) => const DailyLog(),
     wardrobeManagement: (context) => const WardrobeManagement(),
-    welcomePhilosophy: (context) => const WelcomePhilosophy(),
-    featureOverview: (context) => const FeatureOverview(),
-    personalizationSetup: (context) => const PersonalizationSetup(),
-    dailyLog: (context) => const DailyLog(),
-    outfitRating: (context) => const OutfitRating(),
-    insightsDashboard: (context) => const InsightsDashboard(),
-    purchaseTracking: (context) => const PurchaseTracking(),
-    settingsProfile: (context) => const SettingsProfile(),
-    premiumUpgrade: (context) => const PremiumUpgrade(),
-    aiIntelligence: (context) => const AIIntelligence(),
+    smartSuggestions:   (context) => const SmartSuggestions(),
+    purchaseTracking:   (context) => const PurchaseTracking(),
+    profile:            (context) => const ProfileScreen(),        // ← new
+
+    // Settings (pushed from Profile)
+    settings:           (context) => const SettingsScreen(),       // ← new
+    helpCenter:         (context) => const HelpCenterScreen(),
+    sendFeedback:       (context) => const SendFeedbackScreen(),
+    exportData:          (context) => const ExportDataScreen(),
+    insightsDashboard:         (context) => const InsightsDashboard(),
     personalProgressDashboard: (context) => const PersonalProgressDashboard(),
+    achievementGallery:        (context) => const AchievementGallery(),
+
+    // Onboarding
+    splash:               (context) => const SplashScreen(),
+    welcomePhilosophy:    (context) => const WelcomePhilosophy(),
+    featureOverview:      (context) => const FeatureOverview(),
+    personalizationSetup: (context) => const PersonalizationSetup(),
+
+    // Wardrobe operations
+    addClothingItem:   (context) => const AddClothingItem(),
+    outfitCaptureFlow: (context) => const OutfitCaptureFlow(),
+    outfitRating:      (context) => const OutfitRating(),
+    outfitHistory: (context) => const OutfitHistoryScreen(),
+
+    // AI & Intelligence
+    aiIntelligence:  (context) => const AIIntelligence(),
+    learningPaths:   (context) => const LearningPaths(),
     challengeCenter: (context) => const ChallengeCenter(),
-    achievementGallery: (context) => const AchievementGallery(),
-    // TODO: Add your other routes here
+
+    // Profile Actions
+    editProfile:      (context) => const EditProfileScreen(),
+    changePassword:   (context) => const ChangePasswordScreen(),
+
+    // Legal & Support
+    privacyPolicy: (context)    => const PrivacyPolicyScreen(),
+    terms: (context)            => const TermsScreen(),
+    contactSupport: (context)   => const ContactSupportScreen(),
+
+    // Premium
+    premiumUpgrade: (context) => const PremiumUpgrade(),
   };
 
-  static Route<dynamic>? onUnknownRoute(RouteSettings settings) {
-    return MaterialPageRoute(
-      builder: (context) => const SplashScreen(),
-    );
+  // ============================================
+  // HELPER METHODS
+  // ============================================
+
+  static String getBottomNavRoute(int index) {
+    switch (index) {
+      case 0: return dailyLog;
+      case 1: return wardrobeManagement;
+      case 2: return smartSuggestions;
+      case 3: return purchaseTracking;
+      case 4: return profile;              // ← updated
+      default: return dailyLog;
+    }
+  }
+
+  static int getBottomNavIndex(String route) {
+    switch (route) {
+      case dailyLog:           return 0;
+      case wardrobeManagement: return 1;
+      case smartSuggestions:   return 2;
+      case purchaseTracking:   return 3;
+      case profile:            return 4;  // ← updated
+      default:                 return 0;
+    }
   }
 }

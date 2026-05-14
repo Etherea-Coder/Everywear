@@ -7,16 +7,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
 import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
 import './core/providers.dart';
-import './services/payment_service.dart';
 import './services/supabase_service.dart';
+import './services/revenuecat_service.dart';
+import './services/notification_service.dart';
+import './services/analytics_service.dart';
 import './widgets/custom_error_widget.dart';
 import './presentation/home_screen/home_screen.dart';
 import './presentation/splash_screen/splash_screen.dart';
+import './presentation/auth_gate.dart';
 import 'core/app_export.dart';
+import './ads/ad_service.dart';
 
 void main() async {
   // Ensure widgets are initialized
@@ -35,20 +38,21 @@ void main() async {
   };
 
   // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Initial service bootstrapper - Critical services first
   await _initializeEssentialServices();
 
+  // ✅ NEW: Initialize Ad Service
+  await AdService.instance.initialize(testMode: !kReleaseMode);
+
   // Run the app after critical services are ready
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 
   // Initialize remaining non-critical services in the background
-  _initializeBackgroundServices();
+  _initializeBackgroundServices().catchError((e) {
+    if (kDebugMode) debugPrint('⚠️ Background services init failed: $e');
+  });
 }
 
 // Essential services that the UI depends on immediately
@@ -56,34 +60,37 @@ Future<void> _initializeEssentialServices() async {
   // Sentry tracking first
   try {
     await SentryFlutter.init((options) {
-      options.dsn = const String.fromEnvironment(
-        'SENTRY_DSN',
-        defaultValue: '',
-      );
-      options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
+      options.dsn = const String.fromEnvironment('SENTRY_DSN');
+      options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
       options.debug = kDebugMode;
     });
-  } catch (_) {}
+  } catch (e) {
+    if (kDebugMode) debugPrint('⚠️ Sentry failed to init: $e');
+  }
 
   // Initialize Supabase and Hive sequentially to ensure stability
   try {
     await SupabaseService.initialize().timeout(const Duration(seconds: 10));
   } catch (e) {
-    debugPrint('Essential service Supabase failed to init: $e');
+    if (kDebugMode)
+      debugPrint('⚠️ Essential service Supabase failed to init: $e');
   }
 
   try {
     await Hive.initFlutter().timeout(const Duration(seconds: 5));
   } catch (e) {
-    debugPrint('Essential service Hive failed to init: $e');
+    if (kDebugMode) debugPrint('⚠️ Essential service Hive failed to init: $e');
   }
 }
 
 // Non-critical services that can load while splash screen is showing
 Future<void> _initializeBackgroundServices() async {
-  try {
-    await PaymentService.initialize().timeout(const Duration(seconds: 10)).catchError((_) {});
-  } catch (_) {}
+  await RevenueCatService.initialize().timeout(const Duration(seconds: 10));
+
+  final user = SupabaseService.instance.client.auth.currentUser;
+  if (user != null) {
+    await RevenueCatService.logIn(user.id).timeout(const Duration(seconds: 5));
+  }
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -101,24 +108,15 @@ class _MyAppState extends ConsumerState<MyApp> {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.light;
   bool _isInitialized = false;
-  bool _showBrandedLoader = true;
 
   @override
   void initState() {
     super.initState();
     _initializeApp();
-    
-    // Safety timeout: Never show the branded loader for more than 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && _showBrandedLoader) {
-        setState(() => _showBrandedLoader = false);
-      }
-    });
   }
 
   Future<void> _initializeApp() async {
     try {
-      // SharedPreferences often hangs on poor hardware - 2s limit
       final results = await Future.wait([
         LocaleManager.getSavedLocale(),
         LocaleManager.getSavedThemeMode(),
@@ -132,14 +130,14 @@ class _MyAppState extends ConsumerState<MyApp> {
           _locale = savedLocale ?? const Locale('en');
           _themeMode = _parseThemeMode(savedTheme);
           _isInitialized = true;
-          // If we finished loading locale, we can potentially hide the branded loader
-          // but we still wait for auth if it's very fast (handled by the builder logic)
         });
-        
         ref.read(themeModeProvider.notifier).state = _themeMode;
         ref.read(localeProvider.notifier).state = _locale!;
+        await NotificationService.instance.restoreIfEnabled();
+        await AnalyticsService.instance.applyStoredPreference();
       }
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ App initialization failed: $e');
       if (mounted) {
         setState(() {
           _locale = const Locale('en');
@@ -163,43 +161,25 @@ class _MyAppState extends ConsumerState<MyApp> {
     }
   }
 
-  /// Public method to update locale and force complete app rebuild
   void updateLocale(Locale locale) {
     if (_locale?.languageCode != locale.languageCode) {
-      setState(() {
-        _locale = locale;
-      });
+      setState(() => _locale = locale);
       ref.read(localeProvider.notifier).state = locale;
     }
   }
 
-  /// Public method to update theme mode and force complete app rebuild
   void updateThemeMode(String theme) {
     final newThemeMode = _parseThemeMode(theme);
     if (_themeMode != newThemeMode) {
-      setState(() {
-        _themeMode = newThemeMode;
-      });
+      setState(() => _themeMode = newThemeMode);
       ref.read(themeModeProvider.notifier).state = newThemeMode;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show branded loading screen until locale and auth are loaded
-    final authState = ref.watch(authStateProvider);
-
-    // ROBUST BUILD LOGIC:
-    // Only show the branded loader if:
-    // 1. Initialized is false AND We haven't hit our safety timeout
-    // OR 
-    // 2. Locale is missing AND We haven't hit our safety timeout
-    // OR
-    // 3. Auth is specifically LOADING AND We haven't hit our safety timeout
-    final stillLoading = !_isInitialized || _locale == null || authState.isLoading;
-
-    if (_showBrandedLoader && stillLoading) {
-      debugPrint('📱 Showing branded loader - initialized: $_isInitialized, locale: $_locale, authLoading: ${authState.isLoading}');
+    // Show plain loader until locale is ready
+    if (!_isInitialized || _locale == null) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
@@ -215,7 +195,7 @@ class _MyAppState extends ConsumerState<MyApp> {
                     'assets/images/icon-1768225114910.png',
                     width: 120,
                     height: 120,
-                   ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(color: Colors.white),
@@ -226,12 +206,12 @@ class _MyAppState extends ConsumerState<MyApp> {
       );
     }
 
-    final effectiveLocale = _locale ?? const Locale('en');
+    final authState = ref.watch(authStateProvider);
 
     return Sizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
-          key: ValueKey(effectiveLocale.languageCode + _themeMode.toString()),
+          key: ValueKey(_locale!.languageCode + _themeMode.toString()),
           title: 'everywear',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
@@ -247,8 +227,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           },
           // 🚨 END CRITICAL SECTION
           debugShowCheckedModeBanner: false,
-          // Localization configuration
-          locale: effectiveLocale,
+          locale: _locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -266,27 +245,8 @@ class _MyAppState extends ConsumerState<MyApp> {
             }
             return supportedLocales.first;
           },
-          // Determine home based on auth state
-          home: authState.when(
-            data: (state) {
-              final hasSession = state.session != null;
-              debugPrint('🏠 Navigation decision: hasSession=$hasSession, event=${state.event}');
-              if (hasSession) {
-                return HomeScreen(); 
-              }
-              return SplashScreen();
-            },
-            loading: () {
-              debugPrint('⏳ Auth state loading, showing SplashScreen');
-              return SplashScreen(); 
-            },
-            error: (error, stack) {
-              debugPrint('❌ Auth state error: $error, showing SplashScreen');
-              return SplashScreen();
-            },
-          ),
+          home: const AuthGate(),
           routes: AppRoutes.routes,
-          onUnknownRoute: AppRoutes.onUnknownRoute,
         );
       },
     );
