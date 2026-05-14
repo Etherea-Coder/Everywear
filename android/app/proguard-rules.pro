@@ -43,6 +43,10 @@
 # shared_preferences
 -keep class io.flutter.plugins.sharedpreferences.** { *; }
 
+# Google Play Core (deferred components, in-app updates)
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+
 # Kotlin stdlib & coroutines
 -dontwarn kotlinx.coroutines.**
 -keep class kotlinx.coroutines.** { *; }
