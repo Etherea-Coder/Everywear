@@ -1810,6 +1810,8 @@ class AppLocalizations {
   String get qForAnEvent => translate('q_for_an_event');
   String get qMoreVariety => translate('q_more_variety');
   String get qStyleUpgrade => translate('q_style_upgrade');
+  String get item => translate('slot_item');
+  String get yourStyleInsight => translate('challenge_insight_card_title');
 }
 
 class _AppLocalizationsDelegate

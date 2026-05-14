@@ -3,6 +3,8 @@ import 'package:sizer/sizer.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 import '../../../widgets/custom_icon_widget.dart';
+import '../../../core/utils/app_localizations.dart';
+
 
 /// Achievement statistics widget displaying overall progress and highlights
 class AchievementStatsWidget extends StatelessWidget {
