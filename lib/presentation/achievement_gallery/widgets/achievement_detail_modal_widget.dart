@@ -3,6 +3,8 @@ import 'package:sizer/sizer.dart';
 import 'package:intl/intl.dart';
 
 import '../../../widgets/custom_icon_widget.dart';
+import '../../../core/utils/app_localizations.dart';
+
 
 /// Achievement detail modal showing comprehensive achievement information
 class AchievementDetailModalWidget extends StatelessWidget {

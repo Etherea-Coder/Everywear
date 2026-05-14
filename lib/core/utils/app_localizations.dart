@@ -1812,6 +1812,18 @@ class AppLocalizations {
   String get qStyleUpgrade => translate('q_style_upgrade');
   String get item => translate('slot_item');
   String get yourStyleInsight => translate('challenge_insight_card_title');
+  String get unlockRequirement => translate('unlock_requirement');
+  String get backstory => translate('backstory');
+  String get relatedChallenges => translate('related_challenges');
+  String get shareAchievement => translate('share_achievement');
+  String get savePreferencesError => translate('save_preferences_error');
+  String get personalizeTitle => translate('personalize_title');
+  String get completeSetup => translate('complete_setup');
+  String get achievementUnlocked => translate('achievement_unlocked');
+  String get keepUpGreatWork => translate('keep_up_great_work');
+  String getStepCountLabel(int current, int total) => translate('step_count')
+      .replaceFirst('{current}', current.toString())
+      .replaceFirst('{total}', total.toString());
 }
 
 class _AppLocalizationsDelegate

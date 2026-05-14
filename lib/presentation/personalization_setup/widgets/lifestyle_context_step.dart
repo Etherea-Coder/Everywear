@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../../core/utils/app_localizations.dart';
+
+
 
 /// Lifestyle Context Step - Second step in personalization wizard
 /// Captures work environment, social activities, and climate preferences

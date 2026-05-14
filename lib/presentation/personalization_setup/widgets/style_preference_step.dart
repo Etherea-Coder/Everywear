@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../../core/utils/app_localizations.dart';
+
 
 /// Style Preference Step - First step in personalization wizard
 /// Visual mood board for selecting fashion aesthetics

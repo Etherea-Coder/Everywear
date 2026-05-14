@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../../core/utils/app_localizations.dart';
+
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../../core/utils/app_localizations.dart';
+
 
 /// Sustainability Goals Step - Third step in personalization wizard
 /// Captures sustainability preferences using slider controls

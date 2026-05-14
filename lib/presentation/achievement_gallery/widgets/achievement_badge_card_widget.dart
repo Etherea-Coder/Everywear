@@ -4,6 +4,8 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:intl/intl.dart';
 
 import '../../../widgets/custom_icon_widget.dart';
+import '../../../core/utils/app_localizations.dart';
+
 
 /// Achievement badge card displaying individual achievement with unlock status
 class AchievementBadgeCardWidget extends StatelessWidget {

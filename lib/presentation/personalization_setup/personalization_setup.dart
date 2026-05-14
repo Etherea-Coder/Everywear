@@ -11,6 +11,8 @@ import './widgets/lifestyle_context_step.dart';
 import './widgets/style_preference_step.dart';
 import './widgets/sustainability_goals_step.dart';
 import './widgets/wardrobe_upload_step.dart';
+import '../../core/utils/app_localizations.dart';
+
 
 /// Personalization Setup Screen - Final onboarding screen
 /// Multi-step wizard collecting user preferences through progressive disclosure
