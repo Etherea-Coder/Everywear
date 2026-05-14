@@ -742,7 +742,7 @@ class AppLocalizations {
   String get recentAchievements => translate('recent_achievements');
   String get learningModules => translate('learning_modules');
   String getLpAchievementTitle(int id) => translate('lp_achievement_title_$id');
-  String getLpAchievementDescription(int id) => translate('lp_achievement_description_$id');
+  String getLpAchievementDescription(int id) => translate('lp_achievement_descr_$id');
   String get moduleLockedTitle => translate('module_locked_title');
   String get aboutLpDescription => translate('about_lp_description');
   String get aboutLpPoint1 => translate('about_lp_point1');
@@ -778,13 +778,14 @@ class AppLocalizations {
       case 'beginner': return translate('difficulty_beginner');
       case 'intermediate': return translate('difficulty_intermediate');
       case 'advanced': return translate('difficulty_advanced');
+      case 'easy': return translate('difficulty_easy');
+      case 'medium': return translate('difficulty_medium');
+      case 'hard': return translate('difficulty_hard');
       default: return difficulty;
     }
   }
 
   // Learning Path Achievements
-  String get lpAchievementTitle(int id) => translate('lp_achievement_title_$id');
-  String get lpAchievementDescription(int id) => translate('lp_achievement_descr_$id');
 
   // AI Intelligence
   String get aiIntelligenceTitle => translate('ai_intelligence_title');
@@ -904,6 +905,7 @@ class AppLocalizations {
   String percentCompleteMsg(int pct) => translate('percent_complete_msg').replaceFirst('{}', pct.toString());
   String get featuredChallengeBannerSemantic => translate('featured_challenge_banner_semantic');
 
+  String getLocalizedChallengeDifficulty(String difficulty) {
     switch (difficulty.toLowerCase()) {
       case 'easy': return translate('difficulty_easy');
       case 'medium': return translate('difficulty_medium');
@@ -1191,6 +1193,7 @@ class AppLocalizations {
     }
   }
 
+  String getLocalizedChallengeCategory(String category) {
     switch (category) {
       case 'All': return translate('category_all');
       case 'Consistency': return translate('category_consistency');
