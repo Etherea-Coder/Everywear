@@ -3,6 +3,7 @@
 *.log
 *.pyc
 *.swp
+*.swo
 .DS_Store
 .atom/
 .build/
@@ -19,10 +20,12 @@ pubspec.lock
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code
+# FIX: Uncommented — launch configs and tasks should not be in version
+# control for a team project. If you DO want to share debug configs,
+# use a dedicated .vscode/launch.json that doesn't contain secrets.
+.vscode/
+*.code-workspace
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -30,6 +33,7 @@ pubspec.lock
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
 /build/
@@ -46,6 +50,66 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 android/app/.cxx
-/env.json
+
+# ─── ANDROID SIGNING ──────────────────────────────────────
+# FIX: Missing from original. Without these, your Play Store
+# signing key could be accidentally committed.
+key.properties
+**/*.keystore
+**/*.jks
+
+# ─── SECRETS & ENVIRONMENT ─────────────────────────────────
+# FIX: The original only had env.json and supabase/.env.local.
+# Missing .env, .env.*, Firebase files, and service accounts.
+
+# Environment variable files
+.env
+.env.*
+!.env.example
+env.json
+
+# Supabase local config
 supabase/.env.local
-.vscode/launch.json
+supabase/.env
+
+# Firebase — contains project IDs and app IDs that should not be public
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# API keys & service accounts
+**/secrets/
+**/credentials/
+service-account*.json
+
+# RevenueCat / payment keys
+**/revenuecat_keys.*
+
+# ─── iOS / macOS GENERATED ─────────────────────────────────
+# FIX: Missing from original. These are generated at build time.
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/xcuserdata
+**/ios/Flutter/ephemeral/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+
+# ─── COVERAGE & TESTING ────────────────────────────────────
+coverage/
+
+# ─── GENERATED CODE ────────────────────────────────────────
+# FIX: Missing. These are auto-generated and should not be committed.
+*.g.dart
+*.freezed.dart
+
+# ─── SUPABASE ──────────────────────────────────────────────
+supabase/.temp/
+supabase/functions/node_modules/
