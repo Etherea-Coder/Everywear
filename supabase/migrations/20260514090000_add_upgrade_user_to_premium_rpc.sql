@@ -1,6 +1,9 @@
 -- Location: supabase/migrations/20260514090000_add_upgrade_user_to_premium_rpc.sql
 -- Purpose: Create the upgrade_user_to_premium RPC function called by UserTierService
 
+-- Drop existing function if return type has changed (e.g. VOID -> JSONB)
+DROP FUNCTION IF EXISTS public.upgrade_user_to_premium(UUID);
+
 CREATE OR REPLACE FUNCTION public.upgrade_user_to_premium(user_uuid UUID)
 RETURNS JSONB
 SECURITY DEFINER
