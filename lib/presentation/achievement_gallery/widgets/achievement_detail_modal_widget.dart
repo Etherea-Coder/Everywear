@@ -84,7 +84,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          achievement['title'],
+                          AppLocalizations.of(context).getAchievementTitle(achievement['id']),
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -100,7 +100,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            rarity,
+                            AppLocalizations.of(context).getLocalizedRarity(rarity),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -116,7 +116,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
 
               // Description
               Text(
-                achievement['description'],
+                AppLocalizations.of(context).getAchievementDescription(achievement['id']),
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
@@ -153,7 +153,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isUnlocked ? 'Unlocked' : 'Locked',
+                            isUnlocked ? AppLocalizations.of(context).unlocked : AppLocalizations.of(context).locked,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -162,6 +162,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
                             Text(
                               DateFormat(
                                 'MMMM d, yyyy',
+                                Localizations.localeOf(context).toString(),
                               ).format(achievement['unlockedDate']),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface.withValues(
@@ -171,7 +172,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
                             ),
                           if (!isUnlocked)
                             Text(
-                              '${(achievement['progress'] * 100).toInt()}% complete',
+                              AppLocalizations.of(context).percentComplete((achievement['progress'] * 100).toInt()),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface.withValues(
                                   alpha: 0.6,
@@ -189,8 +190,8 @@ class AchievementDetailModalWidget extends StatelessWidget {
               // Requirement
               _buildSection(
                 theme,
-                'Unlock Requirement',
-                achievement['requirement'],
+                AppLocalizations.of(context).unlockRequirement,
+                AppLocalizations.of(context).getAchievementRequirement(achievement['id']),
                 Icons.flag,
               ),
               SizedBox(height: 2.h),
@@ -198,15 +199,15 @@ class AchievementDetailModalWidget extends StatelessWidget {
               // Backstory
               _buildSection(
                 theme,
-                'Backstory',
-                achievement['backstory'],
+                AppLocalizations.of(context).backstory,
+                AppLocalizations.of(context).getAchievementBackstory(achievement['id']),
                 Icons.auto_stories,
               ),
               SizedBox(height: 2.h),
 
               // Related challenges
               Text(
-                'Related Challenges',
+                AppLocalizations.of(context).relatedChallenges,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -233,7 +234,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          challenge,
+                          AppLocalizations.of(context).getLocalizedChallenge(challenge),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.secondary,
                             fontWeight: FontWeight.w600,
@@ -252,7 +253,7 @@ class AchievementDetailModalWidget extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: onShare,
                     icon: const Icon(Icons.share),
-                    label: const Text('Share Achievement'),
+                    label: Text(AppLocalizations.of(context).shareAchievement),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: theme.colorScheme.onPrimary,

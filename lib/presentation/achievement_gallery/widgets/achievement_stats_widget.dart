@@ -54,7 +54,7 @@ class AchievementStatsWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your Achievements',
+                    AppLocalizations.of(context).yourAchievements,
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.w700,
@@ -62,7 +62,7 @@ class AchievementStatsWidget extends StatelessWidget {
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
-                    'Keep going to unlock more!',
+                    AppLocalizations.of(context).keepGoingToUnlock,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                     ),
@@ -101,7 +101,7 @@ class AchievementStatsWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Complete',
+                  AppLocalizations.of(context).completionStatus,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                   ),
@@ -120,7 +120,7 @@ class AchievementStatsWidget extends StatelessWidget {
               Expanded(
                 child: _buildStatCard(
                   theme,
-                  'Unlocked',
+                  AppLocalizations.of(context).unlocked,
                   '$unlockedCount/$totalAchievements',
                   Icons.lock_open,
                 ),
@@ -129,7 +129,7 @@ class AchievementStatsWidget extends StatelessWidget {
               Expanded(
                 child: _buildStatCard(
                   theme,
-                  'Rarest Badge',
+                  AppLocalizations.of(context).rarestBadgeLabel,
                   rarestBadge,
                   Icons.workspace_premium,
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../../core/utils/app_localizations.dart';
 
 /// Feedback section for outfit notes and comments
 /// Provides a text field for users to add detailed feedback about their outfit
@@ -12,6 +13,7 @@ class FeedbackSectionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Card(
       elevation: 2,
@@ -21,14 +23,14 @@ class FeedbackSectionWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Additional Notes',
+              l10n.additionalNotes,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             SizedBox(height: 1.h),
             Text(
-              'Share your thoughts about this outfit',
+              l10n.shareThoughtsOutfit,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
@@ -39,7 +41,7 @@ class FeedbackSectionWidget extends StatelessWidget {
               maxLines: 4,
               maxLength: 500,
               decoration: InputDecoration(
-                hintText: 'What worked well? What would you change?',
+                hintText: l10n.feedbackHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),

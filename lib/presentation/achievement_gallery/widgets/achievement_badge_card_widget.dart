@@ -91,7 +91,7 @@ class AchievementBadgeCardWidget extends StatelessWidget {
 
                   // Title
                   Text(
-                    achievement['title'],
+                    AppLocalizations.of(context).getAchievementTitle(achievement['id']),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: isUnlocked
@@ -106,7 +106,7 @@ class AchievementBadgeCardWidget extends StatelessWidget {
 
                   // Description
                   Text(
-                    achievement['description'],
+                    AppLocalizations.of(context).getAchievementDescription(achievement['id']),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       fontSize: 11.sp,
@@ -132,7 +132,7 @@ class AchievementBadgeCardWidget extends StatelessWidget {
                         ),
                         SizedBox(height: 0.5.h),
                         Text(
-                          '${(progress * 100).toInt()}% complete',
+                          AppLocalizations.of(context).percentComplete((progress * 100).toInt()),
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 10.sp,
                             color: theme.colorScheme.onSurface.withValues(
@@ -146,7 +146,7 @@ class AchievementBadgeCardWidget extends StatelessWidget {
                   // Unlock date for unlocked achievements
                   if (isUnlocked && achievement['unlockedDate'] != null)
                     Text(
-                      'Unlocked ${DateFormat('MMM d, y').format(achievement['unlockedDate'])}',
+                      AppLocalizations.of(context).unlockedOn(DateFormat('MMM d, y', Localizations.localeOf(context).toString()).format(achievement['unlockedDate'])),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 10.sp,
                         color: theme.colorScheme.primary,
@@ -168,7 +168,7 @@ class AchievementBadgeCardWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  rarity,
+                  AppLocalizations.of(context).getLocalizedRarity(rarity),
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 9.sp,
                     color: Colors.white,

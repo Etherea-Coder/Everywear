@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../../../core/utils/app_localizations.dart';
 
 class ThemeSelectorDialog extends StatelessWidget {
   final String currentTheme;
@@ -14,10 +15,11 @@ class ThemeSelectorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
       title: Text(
-        'Select Theme',
+        l10n.selectTheme,
         style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
       ),
       contentPadding: EdgeInsets.symmetric(vertical: 2.h),
@@ -28,32 +30,32 @@ class ThemeSelectorDialog extends StatelessWidget {
             context,
             theme,
             'light',
-            'Light Mode',
+            l10n.lightMode,
             Icons.light_mode,
-            'Bright and clear interface',
+            l10n.lightModeDesc,
           ),
           _buildThemeOption(
             context,
             theme,
             'dark',
-            'Dark Mode',
+            l10n.darkMode,
             Icons.dark_mode,
-            'Easy on the eyes at night',
+            l10n.darkModeDesc,
           ),
           _buildThemeOption(
             context,
             theme,
             'auto',
-            'Auto',
+            l10n.systemAuto,
             Icons.brightness_auto,
-            'Follows system settings',
+            l10n.systemAutoDesc,
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
       ],
     );

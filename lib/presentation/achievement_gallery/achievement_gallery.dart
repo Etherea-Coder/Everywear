@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../services/achievement_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import './widgets/achievement_badge_card_widget.dart';
 import './widgets/achievement_detail_modal_widget.dart';
@@ -22,6 +23,8 @@ class _AchievementGalleryState extends State<AchievementGallery>
   String _searchQuery = '';
   bool _showCelebration = false;
   late AnimationController _celebrationController;
+  List<Map<String, dynamic>> _achievements = [];
+  bool _isLoading = true;
 
   final List<String> _categories = [
     'All',
@@ -31,128 +34,7 @@ class _AchievementGalleryState extends State<AchievementGallery>
     'Sustainability',
   ];
 
-  final List<Map<String, dynamic>> _achievements = [
-    {
-      'id': '1',
-      'title': 'First Steps',
-      'description': 'Logged your first outfit',
-      'category': 'Consistency',
-      'icon': 'emoji_events',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 5),
-      'rarity': 'Common',
-      'progress': 1.0,
-      'requirement': 'Log 1 outfit',
-      'backstory':
-          'Every journey begins with a single step. You\'ve started your mindful fashion journey!',
-      'relatedChallenges': ['Daily Logger', 'Wardrobe Explorer'],
-    },
-    {
-      'id': '2',
-      'title': 'Week Warrior',
-      'description': 'Logged outfits for 7 consecutive days',
-      'category': 'Consistency',
-      'icon': 'local_fire_department',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 12),
-      'rarity': 'Rare',
-      'progress': 1.0,
-      'requirement': 'Log outfits for 7 days straight',
-      'backstory':
-          'Consistency is the foundation of mindful living. Your dedication is inspiring!',
-      'relatedChallenges': ['Streak Master', 'Daily Dedication'],
-    },
-    {
-      'id': '3',
-      'title': 'Style Innovator',
-      'description': 'Created 10 unique outfit combinations',
-      'category': 'Style',
-      'icon': 'palette',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 10),
-      'rarity': 'Uncommon',
-      'progress': 1.0,
-      'requirement': 'Create 10 different outfits',
-      'backstory':
-          'Creativity flourishes when you explore your wardrobe\'s potential. Keep experimenting!',
-      'relatedChallenges': ['Mix Master', 'Creative Dresser'],
-    },
-    {
-      'id': '4',
-      'title': 'Mindful Shopper',
-      'description': 'Tracked 5 purchases with reflection notes',
-      'category': 'Mindful',
-      'icon': 'shopping_bag',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 8),
-      'rarity': 'Uncommon',
-      'progress': 1.0,
-      'requirement': 'Log 5 purchases with notes',
-      'backstory':
-          'Mindful consumption starts with awareness. You\'re making intentional choices!',
-      'relatedChallenges': ['Thoughtful Buyer', 'Purchase Tracker'],
-    },
-    {
-      'id': '5',
-      'title': 'Sustainability Champion',
-      'description': 'Achieved 50% cost-per-wear reduction',
-      'category': 'Sustainability',
-      'icon': 'eco',
-      'isUnlocked': false,
-      'unlockedDate': null,
-      'rarity': 'Epic',
-      'progress': 0.35,
-      'requirement': 'Reduce cost-per-wear by 50%',
-      'backstory':
-          'True sustainability means maximizing what you already own. You\'re on the right path!',
-      'relatedChallenges': ['Eco Warrior', 'Value Maximizer'],
-    },
-    {
-      'id': '6',
-      'title': 'Century Club',
-      'description': 'Logged 100 outfits',
-      'category': 'Consistency',
-      'icon': 'military_tech',
-      'isUnlocked': false,
-      'unlockedDate': null,
-      'rarity': 'Epic',
-      'progress': 0.42,
-      'requirement': 'Log 100 total outfits',
-      'backstory':
-          'Persistence creates transformation. You\'re building lasting habits!',
-      'relatedChallenges': ['Dedication Master', 'Long Hauler'],
-    },
-    {
-      'id': '7',
-      'title': 'Wardrobe Optimizer',
-      'description': 'Wore every item at least once',
-      'category': 'Style',
-      'icon': 'check_circle',
-      'isUnlocked': false,
-      'unlockedDate': null,
-      'rarity': 'Rare',
-      'progress': 0.78,
-      'requirement': 'Wear all wardrobe items',
-      'backstory':
-          'Every piece deserves its moment. You\'re maximizing your wardrobe\'s potential!',
-      'relatedChallenges': ['Full Utilization', 'No Item Left Behind'],
-    },
-    {
-      'id': '8',
-      'title': 'Monthly Milestone',
-      'description': 'Completed your first month',
-      'category': 'Consistency',
-      'icon': 'calendar_month',
-      'isUnlocked': true,
-      'unlockedDate': DateTime(2026, 1, 5),
-      'rarity': 'Uncommon',
-      'progress': 1.0,
-      'requirement': 'Use app for 30 days',
-      'backstory':
-          'A month of mindfulness is a powerful achievement. You\'re building lasting change!',
-      'relatedChallenges': ['Time Traveler', 'Commitment Champion'],
-    },
-  ];
+
 
   @override
   void initState() {
@@ -161,6 +43,13 @@ class _AchievementGalleryState extends State<AchievementGallery>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
+    _loadAchievements();
+  }
+
+  Future<void> _loadAchievements() async {
+    setState(() => _isLoading = true);
+    final data = await AchievementService.instance.fetchAchievements();
+    if (mounted) setState(() { _achievements = data; _isLoading = false; });
   }
 
   @override
@@ -173,15 +62,15 @@ class _AchievementGalleryState extends State<AchievementGallery>
     return _achievements.where((achievement) {
       final matchesCategory =
           _selectedCategory == 'All' ||
-          achievement['category'] == _selectedCategory;
+              achievement['category'] == _selectedCategory;
       final matchesSearch =
           _searchQuery.isEmpty ||
-          achievement['title'].toString().toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ) ||
-          achievement['description'].toString().toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          );
+              AppLocalizations.of(context).getAchievementTitle(achievement['id']).toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ||
+              AppLocalizations.of(context).getAchievementDescription(achievement['id']).toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              );
       return matchesCategory && matchesSearch;
     }).toList();
   }
@@ -190,7 +79,7 @@ class _AchievementGalleryState extends State<AchievementGallery>
       _achievements.where((a) => a['isUnlocked'] == true).length;
 
   double get _completionPercentage =>
-      (_unlockedCount / _achievements.length) * 100;
+      _achievements.isEmpty ? 0 : (_unlockedCount / _achievements.length) * 100;
 
   String get _rarestBadge {
     final unlocked = _achievements.where((a) => a['isUnlocked'] == true);
@@ -202,7 +91,18 @@ class _AchievementGalleryState extends State<AchievementGallery>
       final bRarity = rarityOrder[b['rarity']] ?? 0;
       return aRarity > bRarity ? a : b;
     });
-    return rarest['title'];
+    return AppLocalizations.of(context).getAchievementTitle(rarest['id']);
+  }
+
+  Map<String, dynamic>? get _nextAchievement {
+    final locked = _achievements
+        .where((a) => a['isUnlocked'] != true)
+        .toList()
+      ..sort((a, b) =>
+          (b['progress'] as double).compareTo(a['progress'] as double));
+
+    if (locked.isEmpty) return null;
+    return locked.first;
   }
 
   void _showAchievementDetail(Map<String, dynamic> achievement) {
@@ -221,7 +121,8 @@ class _AchievementGalleryState extends State<AchievementGallery>
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Sharing "${achievement['title']}" achievement...'),
+        content: Text(AppLocalizations.of(context).sharingAchievementMsg(
+            AppLocalizations.of(context).getAchievementTitle(achievement['id']))),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -234,24 +135,29 @@ class _AchievementGalleryState extends State<AchievementGallery>
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: 'Achievement Gallery',
+        title: AppLocalizations.of(context).achievementGalleryTitle,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => _showSearchDialog(theme),
-            tooltip: 'Search achievements',
+            tooltip: AppLocalizations.of(context).searchAchievementsTooltip,
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          RefreshIndicator(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                RefreshIndicator(
             onRefresh: _refreshAchievements,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildHeroCard(theme),
+                  SizedBox(height: 2.h),
+
                   AchievementStatsWidget(
                     totalAchievements: _achievements.length,
                     unlockedCount: _unlockedCount,
@@ -259,10 +165,17 @@ class _AchievementGalleryState extends State<AchievementGallery>
                     rarestBadge: _rarestBadge,
                   ),
                   SizedBox(height: 2.h),
+
+                  _buildSectionHeader(AppLocalizations.of(context).browseByCategory, theme),
+                  SizedBox(height: 1.h),
                   _buildCategoryFilter(theme),
                   SizedBox(height: 2.h),
+
+                  if (_searchQuery.isNotEmpty)
+                    _buildSearchState(theme),
+
                   _buildAchievementGrid(theme),
-                  SizedBox(height: 2.h),
+                  SizedBox(height: 3.h),
                 ],
               ),
             ),
@@ -273,6 +186,154 @@ class _AchievementGalleryState extends State<AchievementGallery>
               onComplete: () => setState(() => _showCelebration = false),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeroCard(ThemeData theme) {
+    final nextAchievement = _nextAchievement;
+
+    final loc = AppLocalizations.of(context);
+    String title = loc.heroTitleDefault;
+    String subtitle = loc.heroSubtitleDefault;
+    String chip = loc.heroChipUnlocked.replaceFirst('{}', _unlockedCount.toString());
+
+    if (nextAchievement != null) {
+      final progress = ((nextAchievement['progress'] as double) * 100).round();
+      final aTitle = loc.getAchievementTitle(nextAchievement['id']);
+      title = loc.heroTitleProgress;
+      subtitle = loc.achievementProgressSubtitle(aTitle, progress);
+      chip = loc.heroChipNext;
+    }
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.78),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 13.w,
+            height: 13.w,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.emoji_events,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          SizedBox(width: 4.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 2.5.w,
+                    vertical: 0.4.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    chip,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 0.6.h),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchState(ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(3.5.w),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.18),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.search,
+              size: 18,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            SizedBox(width: 2.w),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context).showingResultsFor(_searchQuery),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _searchQuery = ''),
+              child: Text(
+                AppLocalizations.of(context).translate('clear'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, ThemeData theme) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Text(
+        title,
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -307,7 +368,7 @@ class _AchievementGalleryState extends State<AchievementGallery>
               ),
               child: Center(
                 child: Text(
-                  category,
+                  AppLocalizations.of(context).getLocalizedCategory(category),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isSelected
                         ? theme.colorScheme.onPrimary
@@ -332,20 +393,22 @@ class _AchievementGalleryState extends State<AchievementGallery>
         child: Column(
           children: [
             Icon(
-              Icons.search_off,
+              Icons.emoji_events_outlined,
               size: 64,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
             SizedBox(height: 2.h),
             Text(
-              'No achievements found',
+              AppLocalizations.of(context).noAchievementsFound,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             SizedBox(height: 1.h),
             Text(
-              'Try adjusting your filters or search',
+              _searchQuery.isNotEmpty
+                  ? AppLocalizations.of(context).translate('try_different_search_or_clear')
+                  : AppLocalizations.of(context).translate('try_adjusting_category_filter'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
@@ -380,20 +443,24 @@ class _AchievementGalleryState extends State<AchievementGallery>
   }
 
   void _showSearchDialog(ThemeData theme) {
+    final controller = TextEditingController(text: _searchQuery);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Search Achievements'),
+        title: Text(AppLocalizations.of(context).searchAchievementsTitle),
         content: TextField(
+          controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: 'Enter achievement name...',
+            hintText: AppLocalizations.of(context).enterAchievementNameHint,
             prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onChanged: (value) {
             setState(() => _searchQuery = value);
-            Navigator.pop(context);
           },
         ),
         actions: [
@@ -402,7 +469,11 @@ class _AchievementGalleryState extends State<AchievementGallery>
               setState(() => _searchQuery = '');
               Navigator.pop(context);
             },
-            child: const Text('Clear'),
+            child: Text(AppLocalizations.of(context).translate('clear')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context).translate('done')),
           ),
         ],
       ),
@@ -410,7 +481,6 @@ class _AchievementGalleryState extends State<AchievementGallery>
   }
 
   Future<void> _refreshAchievements() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {});
+    await _loadAchievements();
   }
 }

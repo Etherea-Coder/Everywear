@@ -8,7 +8,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../core/utils/app_localizations.dart';
 import '../../core/providers.dart';
+import '../../services/ai_suggestions_service.dart';
+import '../../services/outfit_log_service.dart';
+import '../../services/wardrobe_service.dart';
+import '../../services/weather_service.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
 import '../../widgets/custom_icon_widget.dart';
 import './widgets/camera_view_widget.dart';
@@ -43,9 +48,12 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
   // Loading state
   bool _isLoading = false;
 
+  final AiSuggestionsService _aiSuggestionsService = AiSuggestionsService();
+  final WeatherService _weatherService = WeatherService();
+  final WardrobeService _wardrobeService = WardrobeService();
+  final OutfitLogService _outfitLogService = OutfitLogService();
   String? _aiSuggestions;
   bool _isLoadingSuggestions = false;
-  String _selectedLanguage = 'EN';
 
   AppLocalizations get localizations => AppLocalizations.of(context);
 
@@ -107,7 +115,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('No cameras available on this device'),
+              content: Text(AppLocalizations.of(context).cameraInitError),
               duration: const Duration(seconds: 3),
             ),
           );
@@ -136,14 +144,14 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
       try {
         await _cameraController!.setFocusMode(FocusMode.auto);
       } catch (e) {
-        debugPrint('Focus mode not supported: $e');
+        if (kDebugMode) debugPrint('Focus mode not supported: $e');
       }
 
       if (!kIsWeb) {
         try {
           await _cameraController!.setFlashMode(FlashMode.auto);
         } catch (e) {
-          debugPrint('Flash mode not supported: $e');
+          if (kDebugMode) debugPrint('Flash mode not supported: $e');
         }
       }
 
@@ -154,14 +162,14 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
         });
       }
     } catch (e) {
-      debugPrint('Camera initialization error: $e');
+      if (kDebugMode) debugPrint('Camera initialization error: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Camera initialization failed: ${e.toString()}'),
+            content: Text('${AppLocalizations.of(context).cameraInitError}: ${e.toString()}'),
             duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: 'Retry',
@@ -214,15 +222,38 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
     try {
       setState(() => _isLoading = true);
       
-      final weatherContext = await ref.read(weatherServiceProvider).getCurrentWeather();
+      final weatherContext = await _weatherService.getCurrentWeather();
       final itemIds = _selectedItems.map((item) => item['id'] as String).toList();
       
-      await ref.read(wardrobeServiceProvider).createOutfitLog(
+      final result = await _outfitLogService.createOutfitLog(
         itemIds: itemIds,
         outfitName: outfitName,
         rating: rating,
         weather: '${weatherContext['temperature']}${weatherContext['unit']} ${weatherContext['condition']}',
+        occasion: 'Casual', // Default for capture flow
+        wornDate: DateTime.now(),
       );
+
+      if (result == 'LIMIT_REACHED') {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(localizations.outfitLimitReached),
+              action: SnackBarAction(
+                label: 'Upgrade',
+                onPressed: () => Navigator.of(context, rootNavigator: true)
+                    .pushNamed(AppRoutes.premiumVp),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (result == null) {
+        throw Exception('Failed to create outfit log');
+      }
 
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop({
@@ -235,7 +266,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save outfit: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
         );
       }
     }
@@ -270,7 +301,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
     });
 
     // Fetch weather context
-    final weatherContext = await ref.read(weatherServiceProvider).getCurrentWeather();
+    final weatherContext = await _weatherService.getCurrentWeather();
 
     // Prepare items context (if building from wardrobe)
     final itemsContext =
@@ -286,9 +317,9 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
                 .toList()
             : null;
 
-    final result = await ref.read(aiSuggestionsServiceProvider).generateSuggestions(
+    final result = await _aiSuggestionsService.generateSuggestions(
       imageUrl: imageUrl,
-      language: _selectedLanguage,
+      language: ref.read(localeProvider).languageCode.toUpperCase(),
       weatherContext: weatherContext,
       itemHistory: itemsContext,
     );
@@ -407,55 +438,6 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
                   ),
                 ),
               ),
-
-            // Language selector button
-            Positioned(
-              top: 12.h,
-              right: 4.w,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(26),
-                      blurRadius: 8.0,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: PopupMenuButton<String>(
-                  initialValue: _selectedLanguage,
-                  onSelected: (value) {
-                    setState(() {
-                      _selectedLanguage = value;
-                    });
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(value: 'EN', child: Text('🇬🇧 English')),
-                    PopupMenuItem(value: 'FR', child: Text('🇫🇷 Français')),
-                    PopupMenuItem(value: 'ES', child: Text('🇪🇸 Español')),
-                  ],
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 3.w,
-                      vertical: 1.h,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.language, size: 18.sp),
-                        SizedBox(width: 1.w),
-                        Text(
-                          _selectedLanguage,
-                          style: TextStyle(fontSize: 13.sp),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
             // AI Suggestions trigger button (after photo capture)
             if (_capturedImage != null && !_isLoadingSuggestions)
@@ -646,7 +628,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
         });
       }
     } catch (e) {
-      debugPrint('Gallery pick error: $e');
+      if (kDebugMode) debugPrint('Gallery pick error: $e');
       if (mounted) {
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(

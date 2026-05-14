@@ -21,8 +21,7 @@ class OutfitPreviewWidget extends StatelessWidget {
               top: Radius.circular(12.0),
             ),
             child: CustomImageWidget(
-              imageUrl:
-                  'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg',
+              imageUrl: 'assets/images/placeholders/outfit_preview.jpg',
               semanticLabel:
                   'Woman in casual denim jacket and white shirt outfit',
               width: double.infinity,

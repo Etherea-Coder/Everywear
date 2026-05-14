@@ -24,9 +24,7 @@ class _CelebrationOverlayWidgetState extends State<CelebrationOverlayWidget> {
     super.initState();
     widget.controller.forward().then((_) {
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          widget.onComplete();
-        }
+        widget.onComplete();
       });
     });
   }
@@ -102,7 +100,7 @@ class _CelebrationOverlayWidgetState extends State<CelebrationOverlayWidget> {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          'Achievement Unlocked!',
+                          AppLocalizations.of(context).achievementUnlocked,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: theme.colorScheme.primary,
@@ -111,7 +109,7 @@ class _CelebrationOverlayWidgetState extends State<CelebrationOverlayWidget> {
                         ),
                         SizedBox(height: 1.h),
                         Text(
-                          'Keep up the great work!',
+                          AppLocalizations.of(context).keepUpGreatWork,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(
                               alpha: 0.7,
