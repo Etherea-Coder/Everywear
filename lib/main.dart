@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart';
 import './core/utils/app_localizations.dart';
 import './core/utils/locale_manager.dart';
 import './core/providers.dart';
@@ -57,8 +56,11 @@ Future<void> _initializeEssentialServices() async {
   // Sentry tracking first
   try {
     await SentryFlutter.init((options) {
-      options.dsn = 'https://2042b302417e66a6d6e0e4814a7de53c@o4510754518138880.ingest.de.sentry.io/4510754526789712';
-      options.tracesSampleRate = 1.0;
+      options.dsn = const String.fromEnvironment(
+        'SENTRY_DSN',
+        defaultValue: '',
+      );
+      options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
       options.debug = kDebugMode;
     });
   } catch (_) {}
@@ -67,13 +69,13 @@ Future<void> _initializeEssentialServices() async {
   try {
     await SupabaseService.initialize().timeout(const Duration(seconds: 10));
   } catch (e) {
-    print('⚠️ Essential service Supabase failed to init: $e');
+    debugPrint('Essential service Supabase failed to init: $e');
   }
 
   try {
     await Hive.initFlutter().timeout(const Duration(seconds: 5));
   } catch (e) {
-    print('⚠️ Essential service Hive failed to init: $e');
+    debugPrint('Essential service Hive failed to init: $e');
   }
 }
 
@@ -202,7 +204,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: Scaffold(
-          backgroundColor: const Color(0xFF2D5A27), // Branded Primary Light
+          backgroundColor: const Color(0xFF2D5A27),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -224,10 +226,12 @@ class _MyAppState extends ConsumerState<MyApp> {
       );
     }
 
+    final effectiveLocale = _locale ?? const Locale('en');
+
     return Sizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
-          key: ValueKey(_locale!.languageCode + _themeMode.toString()),
+          key: ValueKey(effectiveLocale.languageCode + _themeMode.toString()),
           title: 'everywear',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
@@ -244,7 +248,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           // 🚨 END CRITICAL SECTION
           debugShowCheckedModeBanner: false,
           // Localization configuration
-          locale: _locale,
+          locale: effectiveLocale,
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -282,6 +286,7 @@ class _MyAppState extends ConsumerState<MyApp> {
             },
           ),
           routes: AppRoutes.routes,
+          onUnknownRoute: AppRoutes.onUnknownRoute,
         );
       },
     );

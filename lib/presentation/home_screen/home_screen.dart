@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/app_export.dart';
 import '../insights_dashboard/insights_dashboard.dart';
 import '../wardrobe_management/wardrobe_management.dart';
 import '../outfit_capture_flow/outfit_capture_flow.dart';
@@ -15,34 +14,35 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final Set<int> _initializedTabs = {0};
 
-  final List<Widget> _screens = [
-    const InsightsDashboard(),
-    const WardrobeManagement(),
-    const OutfitCaptureFlow(),
-    const SmartSuggestions(),
-    const SettingsProfile(),
-  ];
+  Widget _buildScreen(int index) {
+    if (!_initializedTabs.contains(index)) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    switch (index) {
+      case 0: return const InsightsDashboard();
+      case 1: return const WardrobeManagement();
+      case 2: return const OutfitCaptureFlow();
+      case 3: return const SmartSuggestions();
+      case 4: return const SettingsProfile();
+      default: return const InsightsDashboard();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Get localizations
-    // ignore: unused_local_variable
-    final theme = Theme.of(context);
-
-    // If localizations are needed for tab labels, we would access them here
-    // final l10n = AppLocalizations.of(context)!; 
-
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: List.generate(5, (i) => _buildScreen(i)),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
           setState(() {
             _currentIndex = index;
+            _initializedTabs.add(index);
           });
         },
         destinations: const [

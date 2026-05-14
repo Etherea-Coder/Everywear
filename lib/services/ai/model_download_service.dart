@@ -76,10 +76,14 @@ class ModelDownloadService {
     try {
       final file = await _getModelFile();
 
-      // Check if already exists
+      // Check if already exists and is valid
       if (await file.exists()) {
-        onProgress?.call(1.0);
-        return true;
+        final length = await file.length();
+        if (length > 1024 * 1024) {
+          onProgress?.call(1.0);
+          return true;
+        }
+        await file.delete();
       }
 
       // Download with progress
@@ -95,16 +99,22 @@ class ModelDownloadService {
       var downloaded = 0;
 
       final sink = file.openWrite();
-      await response.stream
-          .map((chunk) {
-            downloaded += chunk.length;
-            final progress = downloaded / total;
-            onProgress?.call(progress);
-            return chunk;
-          })
-          .pipe(sink);
+      try {
+        await response.stream
+            .map((chunk) {
+              downloaded += chunk.length;
+              final progress = downloaded / total;
+              onProgress?.call(progress);
+              return chunk;
+            })
+            .pipe(sink);
+      } catch (e) {
+        if (await file.exists()) {
+          await file.delete();
+        }
+        rethrow;
+      }
 
-      await sink.close();
       client.close();
 
       // Save download status

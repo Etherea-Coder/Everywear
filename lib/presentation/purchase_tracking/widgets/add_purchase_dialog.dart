@@ -20,6 +20,9 @@ class _AddPurchaseDialogState extends State<AddPurchaseDialog> {
   final _brandController = TextEditingController();
   final _priceController = TextEditingController();
   final _notesController = TextEditingController();
+  late final _dateController = TextEditingController(
+    text: DateFormat('MMM dd, yyyy').format(_purchaseDate),
+  );
 
   DateTime _purchaseDate = DateTime.now();
   String _selectedCategory = 'Tops';
@@ -39,6 +42,7 @@ class _AddPurchaseDialogState extends State<AddPurchaseDialog> {
     _brandController.dispose();
     _priceController.dispose();
     _notesController.dispose();
+    _dateController.dispose();
     super.dispose();
   }
 
@@ -61,7 +65,10 @@ class _AddPurchaseDialogState extends State<AddPurchaseDialog> {
     );
 
     if (picked != null) {
-      setState(() => _purchaseDate = picked);
+      setState(() {
+        _purchaseDate = picked;
+        _dateController.text = DateFormat('MMM dd, yyyy').format(_purchaseDate);
+      });
     }
   }
 
@@ -70,7 +77,7 @@ class _AddPurchaseDialogState extends State<AddPurchaseDialog> {
       widget.onSave({
         'name': _nameController.text.trim(),
         'brand': _brandController.text.trim(),
-        'price': double.parse(_priceController.text.trim()),
+        'price': double.tryParse(_priceController.text.trim()) ?? 0.0,
         'purchaseDate': _purchaseDate,
         'category': _selectedCategory,
         'notes': _notesController.text.trim(),
@@ -84,7 +91,6 @@ class _AddPurchaseDialogState extends State<AddPurchaseDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Container(
       decoration: BoxDecoration(
@@ -223,9 +229,7 @@ class _AddPurchaseDialogState extends State<AddPurchaseDialog> {
                         hintText: 'Select date',
                         prefixIcon: const Icon(Icons.calendar_today),
                       ),
-                      controller: TextEditingController(
-                        text: dateFormat.format(_purchaseDate),
-                      ),
+                      controller: _dateController,
                     ),
                   ),
                 ),

@@ -23,7 +23,6 @@ class PersonalProgressDashboard extends StatefulWidget {
 class _PersonalProgressDashboardState extends State<PersonalProgressDashboard>
     with SingleTickerProviderStateMixin {
   late AnimationController _celebrationController;
-  bool _showCelebration = false;
 
   // Mock data - Current streak and progress
   final Map<String, dynamic> _progressData = {

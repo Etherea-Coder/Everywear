@@ -2,14 +2,13 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
-import '../../services/ai_suggestions_service.dart';
-import '../../services/wardrobe_service.dart';
-import '../../services/weather_service.dart';
+import '../../core/providers.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
 import '../../widgets/custom_icon_widget.dart';
 import './widgets/camera_view_widget.dart';
@@ -18,14 +17,14 @@ import './widgets/wardrobe_selection_widget.dart';
 
 /// Outfit Capture Flow screen for quick outfit photography and item selection
 /// Implements streamlined mobile interface with camera integration and wardrobe selection
-class OutfitCaptureFlow extends StatefulWidget {
+class OutfitCaptureFlow extends ConsumerStatefulWidget {
   const OutfitCaptureFlow({Key? key}) : super(key: key);
 
   @override
-  State<OutfitCaptureFlow> createState() => _OutfitCaptureFlowState();
+  ConsumerState<OutfitCaptureFlow> createState() => _OutfitCaptureFlowState();
 }
 
-class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
+class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
   // Flow state management
   int _currentStep =
       0; // 0: Method selection, 1: Camera/Wardrobe, 2: Confirmation
@@ -36,7 +35,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   List<CameraDescription> _cameras = [];
   bool _isCameraInitialized = false;
   bool _isCameraPermissionDenied = false;
-  bool _isCameraUnavailable = false;
   XFile? _capturedImage;
 
   // Wardrobe selection state
@@ -45,9 +43,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
   // Loading state
   bool _isLoading = false;
 
-  final AiSuggestionsService _aiSuggestionsService = AiSuggestionsService();
-  final WeatherService _weatherService = WeatherService();
-  final WardrobeService _wardrobeService = WardrobeService();
   String? _aiSuggestions;
   bool _isLoadingSuggestions = false;
   String _selectedLanguage = 'EN';
@@ -100,7 +95,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       if (_isCameraPermissionDenied) {
         setState(() {
           _isLoading = false;
-          _isCameraUnavailable = true;
         });
         return;
       }
@@ -109,10 +103,8 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       if (_cameras.isEmpty) {
         setState(() {
           _isLoading = false;
-          _isCameraUnavailable = true;
         });
         if (mounted) {
-          final localizations = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('No cameras available on this device'),
@@ -159,7 +151,6 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
         setState(() {
           _isCameraInitialized = true;
           _isLoading = false;
-          _isCameraUnavailable = false;
         });
       }
     } catch (e) {
@@ -167,9 +158,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _isCameraUnavailable = true;
         });
-        final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Camera initialization failed: ${e.toString()}'),
@@ -225,10 +214,10 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
     try {
       setState(() => _isLoading = true);
       
-      final weatherContext = await _weatherService.getCurrentWeather();
+      final weatherContext = await ref.read(weatherServiceProvider).getCurrentWeather();
       final itemIds = _selectedItems.map((item) => item['id'] as String).toList();
       
-      await _wardrobeService.createOutfitLog(
+      await ref.read(wardrobeServiceProvider).createOutfitLog(
         itemIds: itemIds,
         outfitName: outfitName,
         rating: rating,
@@ -281,7 +270,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
     });
 
     // Fetch weather context
-    final weatherContext = await _weatherService.getCurrentWeather();
+    final weatherContext = await ref.read(weatherServiceProvider).getCurrentWeather();
 
     // Prepare items context (if building from wardrobe)
     final itemsContext =
@@ -297,7 +286,7 @@ class _OutfitCaptureFlowState extends State<OutfitCaptureFlow> {
                 .toList()
             : null;
 
-    final result = await _aiSuggestionsService.generateSuggestions(
+    final result = await ref.read(aiSuggestionsServiceProvider).generateSuggestions(
       imageUrl: imageUrl,
       language: _selectedLanguage,
       weatherContext: weatherContext,

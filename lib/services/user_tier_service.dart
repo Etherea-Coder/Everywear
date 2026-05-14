@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 import './supabase_service.dart';
 
 /// Service for managing user tier limits and usage tracking
@@ -21,8 +22,8 @@ class UserTierService {
 
       return itemsCount < itemsLimit;
     } catch (e) {
-      // If error, default to allowing (fail open for better UX)
-      return true;
+      debugPrint('canAddItem check failed: $e');
+      return false;
     }
   }
 
@@ -41,8 +42,8 @@ class UserTierService {
 
       return suggestionsUsed < suggestionsLimit;
     } catch (e) {
-      // If error, default to allowing (fail open for better UX)
-      return true;
+      debugPrint('canRequestSuggestion check failed: $e');
+      return false;
     }
   }
 
@@ -88,17 +89,21 @@ class UserTierService {
   /// Sets items_limit to 100 and suggestions_limit to higher value
   Future<bool> upgradeToPremium(String userId) async {
     try {
-      await _supabase
-          .from('user_profiles')
-          .update({
-            'tier': 'premium',
-            'items_limit': 100,
-            'suggestions_limit': 50, // Premium gets 50 suggestions/month
-          })
-          .eq('id', userId);
+      final user = _supabase.auth.currentUser;
+      if (user == null || user.id != userId) {
+        throw Exception('Only the authenticated user can request tier changes');
+      }
+
+      final result = await _supabase
+          .rpc('upgrade_user_to_premium', params: {'user_uuid': userId});
+
+      if (result == null) {
+        throw Exception('RPC call returned null');
+      }
 
       return true;
     } catch (e) {
+      debugPrint('upgradeToPremium failed: $e');
       return false;
     }
   }

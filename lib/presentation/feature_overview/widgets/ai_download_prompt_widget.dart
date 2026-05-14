@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../services/ai/model_download_service.dart';
+import '../../../core/providers.dart';
 
 /// AI Download Prompt Widget
 /// Shown during onboarding to offer optional AI model download
-class AIDownloadPromptWidget extends StatefulWidget {
+class AIDownloadPromptWidget extends ConsumerStatefulWidget {
   final VoidCallback onDownloadStarted;
   final VoidCallback onSkipped;
 
@@ -17,11 +18,10 @@ class AIDownloadPromptWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AIDownloadPromptWidget> createState() => _AIDownloadPromptWidgetState();
+  ConsumerState<AIDownloadPromptWidget> createState() => _AIDownloadPromptWidgetState();
 }
 
-class _AIDownloadPromptWidgetState extends State<AIDownloadPromptWidget> {
-  final ModelDownloadService _modelService = ModelDownloadService();
+class _AIDownloadPromptWidgetState extends ConsumerState<AIDownloadPromptWidget> {
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
   bool _downloadComplete = false;
@@ -34,7 +34,7 @@ class _AIDownloadPromptWidgetState extends State<AIDownloadPromptWidget> {
 
     widget.onDownloadStarted();
 
-    final success = await _modelService.downloadModel(
+    final success = await ref.read(modelDownloadServiceProvider).downloadModel(
       onProgress: (progress) {
         if (mounted) {
           setState(() {

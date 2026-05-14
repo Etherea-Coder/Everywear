@@ -39,7 +39,6 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
   bool _twoFactorAuth = true;
   bool _dataSharing = false;
   bool _analyticsOptIn = true;
-  String _measurementUnit = 'metric';
 
   // Subscription data (mock)
   final Map<String, dynamic> _subscriptionData = {
@@ -344,12 +343,6 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
     }
   }
 
-  void _toggleMeasurementUnit() {
-    setState(() {
-      _measurementUnit = _measurementUnit == 'metric' ? 'imperial' : 'metric';
-    });
-  }
-
   void _showLanguageSelector(BuildContext context) {
     final localizations = AppLocalizations.of(context);
 
@@ -537,10 +530,11 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
 
   void _handleLogout() {
     final localizations = AppLocalizations.of(context);
+    final outerContext = context;
 
     showDialog(
-      context: context,
-      builder: (context) => ConfirmationDialogWidget(
+      context: outerContext,
+      builder: (dialogContext) => ConfirmationDialogWidget(
         title: localizations.logout,
         message: localizations.logout_confirmation,
         confirmText: localizations.logout,
@@ -548,8 +542,8 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
         isDestructive: false,
         onConfirm: () {
           Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil('/splash-screen', (route) => false);
+            outerContext,
+          ).pushNamedAndRemoveUntil(AppRoutes.splash, (route) => false);
         },
       ),
     );

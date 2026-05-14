@@ -273,7 +273,7 @@ class ModuleCardWidget extends StatelessWidget {
                           LinearPercentIndicator(
                             padding: EdgeInsets.zero,
                             lineHeight: 0.6.h,
-                            percent: currentOutfits / requiredOutfits,
+                            percent: requiredOutfits > 0 ? currentOutfits / requiredOutfits : 0.0,
                             backgroundColor:
                                 theme.colorScheme.surfaceContainerHighest,
                             progressColor: theme.colorScheme.onSurface

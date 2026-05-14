@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../core/providers.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_bottom_bar.dart';
 import '../../routes/app_routes.dart';
 import './widgets/metric_card_widget.dart';
 import './widgets/ai_insight_card_widget.dart';
-import '../../services/wardrobe_service.dart';
 
 /// Insights Dashboard - AI-powered style analytics and wardrobe insights
 /// Displays comprehensive analytics including usage patterns, cost-per-wear,
 /// sustainability metrics, and personalized AI recommendations
-class InsightsDashboard extends StatefulWidget {
+class InsightsDashboard extends ConsumerStatefulWidget {
   const InsightsDashboard({Key? key}) : super(key: key);
 
   @override
-  State<InsightsDashboard> createState() => _InsightsDashboardState();
+  ConsumerState<InsightsDashboard> createState() => _InsightsDashboardState();
 }
 
-class _InsightsDashboardState extends State<InsightsDashboard> {
-  int _selectedTimeRange = 0; // 0: Week, 1: Month, 2: Year
-  bool _isLoading = false; // Start with false to show content immediately
-  final WardrobeService _wardrobeService = WardrobeService();
+class _InsightsDashboardState extends ConsumerState<InsightsDashboard> {
+  int _selectedTimeRange = 0;
+  bool _isLoading = false;
 
   // Analytics data with sensible defaults
   Map<String, dynamic> _analyticsData = {
@@ -78,11 +78,11 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     try {
       // Use Future.wait with timeout to prevent hanging
       final results = await Future.wait([
-        _wardrobeService.getWardrobeStatistics().timeout(
+        ref.read(wardrobeServiceProvider).getWardrobeStatistics().timeout(
           const Duration(seconds: 3),
           onTimeout: () => {'total_items': 0, 'favorite_items': 0, 'category_counts': {}},
         ),
-        _wardrobeService.fetchOutfitHistory(limit: 50).timeout(
+        ref.read(wardrobeServiceProvider).fetchOutfitHistory(limit: 50).timeout(
           const Duration(seconds: 3),
           onTimeout: () => [],
         ),
@@ -354,35 +354,6 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     );
   }
 
-  void _showFilterOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: EdgeInsets.all(4.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Filter by Category'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.date_range),
-              title: const Text('Custom Date Range'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.download),
-              title: const Text('Export Data'),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _refreshData() async {
     await _loadStats();
   }
@@ -391,11 +362,11 @@ class _InsightsDashboardState extends State<InsightsDashboard> {
     if (index == 3) return;
 
     final routes = [
-      '/daily-log',
-      '/wardrobe-management',
-      '/smart-suggestions',
-      '/insights-dashboard',
-      '/learning-paths',
+      AppRoutes.dailyLog,
+      AppRoutes.wardrobeManagement,
+      AppRoutes.smartSuggestions,
+      AppRoutes.insightsDashboard,
+      AppRoutes.learningPaths,
     ];
 
     Navigator.pushReplacementNamed(context, routes[index]);

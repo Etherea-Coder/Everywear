@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
-import '../../services/ai/stylist_engine_service.dart';
+import '../../core/providers.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
 import './widgets/empty_state_widget.dart';
 import './widgets/filter_chip_widget.dart';
@@ -11,20 +12,19 @@ import './widgets/suggestion_card_widget.dart';
 
 /// Smart Suggestions Screen - AI-powered outfit recommendations
 /// Accessed via tab bar navigation structure
-class SmartSuggestions extends StatefulWidget {
+class SmartSuggestions extends ConsumerStatefulWidget {
   const SmartSuggestions({Key? key}) : super(key: key);
 
   @override
-  State<SmartSuggestions> createState() => _SmartSuggestionsState();
+  ConsumerState<SmartSuggestions> createState() => _SmartSuggestionsState();
 }
 
-class _SmartSuggestionsState extends State<SmartSuggestions> {
+class _SmartSuggestionsState extends ConsumerState<SmartSuggestions> {
   String _selectedOccasion = 'all';
   bool _isRefreshing = false;
   bool _isGeneratingAI = false;
   bool _showAIBubble = true; // Always show on initial load
   final List<String> _savedSuggestions = [];
-  final StylistEngineService _stylistEngine = StylistEngineService();
   List<Map<String, dynamic>> _aiGeneratedSuggestions = [];
 
   // Mock weather data
@@ -232,7 +232,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     });
 
     try {
-      final suggestions = await _stylistEngine.generateSuggestions(
+      final suggestions = await ref.read(stylistEngineServiceProvider).generateSuggestions(
         wardrobeItems: _wardrobeItems,
         occasion: _selectedOccasion == 'all' ? 'casual' : _selectedOccasion,
         weatherData: _weatherData,
@@ -363,7 +363,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     Navigator.of(
                       context,
                       rootNavigator: true,
-                    ).pushNamed('/outfit-capture-flow');
+                    ).pushNamed(AppRoutes.outfitCaptureFlow);
                   },
                 ),
         ),
@@ -596,7 +596,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     Navigator.of(
       context,
       rootNavigator: true,
-    ).pushNamed('/outfit-capture-flow');
+    ).pushNamed(AppRoutes.outfitCaptureFlow);
 
     final localizations = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -901,6 +901,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     Navigator.of(
       context,
       rootNavigator: true,
-    ).pushNamed('/wardrobe-management');
+    ).pushNamed(AppRoutes.wardrobeManagement);
   }
 }

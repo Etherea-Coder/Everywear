@@ -23,7 +23,6 @@ class _LearningPathsState extends State<LearningPaths> {
   int _totalModules = 12;
   double _overallProgress = 0.25;
   int _outfitsLogged = 15;
-  int _wardrobeItems = 42;
 
   // Learning modules data with unlock requirements
   final List<Map<String, dynamic>> _learningModules = [

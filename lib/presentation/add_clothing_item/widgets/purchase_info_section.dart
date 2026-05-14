@@ -10,6 +10,7 @@ import '../../../widgets/custom_icon_widget.dart';
 class PurchaseInfoSection extends StatelessWidget {
   final TextEditingController priceController;
   final TextEditingController storeController;
+  final TextEditingController purchaseDateController;
   final DateTime? purchaseDate;
   final Function(DateTime?) onPurchaseDateChanged;
 
@@ -17,6 +18,7 @@ class PurchaseInfoSection extends StatelessWidget {
     Key? key,
     required this.priceController,
     required this.storeController,
+    required this.purchaseDateController,
     required this.purchaseDate,
     required this.onPurchaseDateChanged,
   }) : super(key: key);
@@ -127,9 +129,7 @@ class PurchaseInfoSection extends StatelessWidget {
                         )
                       : null,
                 ),
-                controller: TextEditingController(
-                  text: purchaseDate != null ? _formatDate(purchaseDate!) : '',
-                ),
+                controller: purchaseDateController,
               ),
             ),
           ),

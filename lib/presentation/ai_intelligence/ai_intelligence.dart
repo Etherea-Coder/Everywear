@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/app_export.dart';
+import '../../core/providers.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_bottom_bar.dart';
 import '../../routes/app_routes.dart';
@@ -10,81 +13,21 @@ import './widgets/versatility_scores_card_widget.dart';
 import './widgets/sustainability_impact_card_widget.dart';
 import './widgets/recommendations_card_widget.dart';
 
-/// AI Intelligence Screen - Comprehensive wardrobe analytics powered by local AI
-/// Displays style trends, outfit versatility, sustainability metrics, and personalized recommendations
-class AIIntelligence extends StatefulWidget {
+class AIIntelligence extends ConsumerStatefulWidget {
   const AIIntelligence({Key? key}) : super(key: key);
 
   @override
-  State<AIIntelligence> createState() => _AIIntelligenceState();
+  ConsumerState<AIIntelligence> createState() => _AIIntelligenceState();
 }
 
-class _AIIntelligenceState extends State<AIIntelligence> {
+class _AIIntelligenceState extends ConsumerState<AIIntelligence> {
   int _selectedTimeRange = 1;
   bool _isGenerating = false;
-
-  final Map<String, dynamic> _aiData = {
-    'confidenceScore': 87,
-    'styleProfile': 'Casual Minimalist',
-    'dominantColors': ['Blue', 'Black', 'White', 'Gray'],
-    'colorPercentages': [35, 25, 20, 15],
-    'silhouetteEvolution': [
-      {'month': 'Jan', 'fitted': 40, 'relaxed': 60},
-      {'month': 'Feb', 'fitted': 45, 'relaxed': 55},
-      {'month': 'Mar', 'fitted': 50, 'relaxed': 50},
-    ],
-    'emergingStyles': ['Athleisure', 'Smart Casual'],
-    'versatilityScores': [
-      {'item': 'Black Jeans', 'score': 92, 'combinations': 18},
-      {'item': 'White T-Shirt', 'score': 88, 'combinations': 16},
-      {'item': 'Denim Jacket', 'score': 75, 'combinations': 12},
-      {'item': 'Red Dress', 'score': 35, 'combinations': 4},
-    ],
-    'underutilizedItems': [
-      {'item': 'Formal Blazer', 'lastWorn': '45 days ago', 'suggestions': 3},
-      {'item': 'Floral Skirt', 'lastWorn': '32 days ago', 'suggestions': 2},
-    ],
-    'sustainabilityMetrics': {
-      'avgCostPerWear': 8.75,
-      'costTrend': -12.5,
-      'purchaseFrequency': 2.3,
-      'carbonImpact': 145,
-      'carbonGoal': 200,
-      'sustainabilityGoalProgress': 72,
-    },
-    'recommendations': [
-      {
-        'type': 'gap',
-        'title': 'Add Versatile Bottoms',
-        'description':
-            'Your wardrobe lacks neutral-colored pants. Consider adding khaki or gray trousers for more outfit combinations.',
-        'confidence': 85,
-        'reasoning': 'Analysis shows 60% of your tops lack compatible bottoms',
-      },
-      {
-        'type': 'seasonal',
-        'title': 'Spring Transition Pieces',
-        'description':
-            'Light cardigans and linen shirts would expand your spring wardrobe options.',
-        'confidence': 78,
-        'reasoning':
-            'Seasonal analysis indicates limited transitional layering options',
-      },
-      {
-        'type': 'style',
-        'title': 'Elevate Your Casual Style',
-        'description':
-            'Adding structured blazers could bridge your casual and professional looks.',
-        'confidence': 72,
-        'reasoning':
-            'Style evolution suggests growing interest in smart casual aesthetics',
-      },
-    ],
-  };
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final insightsAsync = ref.watch(aiInsightsProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -99,45 +42,49 @@ class _AIIntelligenceState extends State<AIIntelligence> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshInsights,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AIHeroSectionWidget(
-                confidenceScore: _aiData['confidenceScore'],
-                styleProfile: _aiData['styleProfile'],
-              ),
-              SizedBox(height: 2.h),
-              _buildTimeRangeSelector(theme),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Style Trends Analysis', theme),
-              StyleTrendsCardWidget(
-                dominantColors: _aiData['dominantColors'],
-                colorPercentages: _aiData['colorPercentages'],
-                silhouetteEvolution: _aiData['silhouetteEvolution'],
-                emergingStyles: _aiData['emergingStyles'],
-              ),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Outfit Versatility Scores', theme),
-              VersatilityScoresCardWidget(
-                versatilityScores: _aiData['versatilityScores'],
-                underutilizedItems: _aiData['underutilizedItems'],
-              ),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Sustainability Impact', theme),
-              SustainabilityImpactCardWidget(
-                metrics: _aiData['sustainabilityMetrics'],
-              ),
-              SizedBox(height: 3.h),
-              _buildSectionHeader('Personalized Recommendations', theme),
-              RecommendationsCardWidget(
-                recommendations: _aiData['recommendations'],
-              ),
-              SizedBox(height: 3.h),
-              _buildGenerateInsightsButton(theme),
-              SizedBox(height: 10.h),
-            ],
+        child: insightsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Failed to load insights: $e')),
+          data: (aiData) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AIHeroSectionWidget(
+                  confidenceScore: aiData['confidenceScore'] as int? ?? 0,
+                  styleProfile: aiData['styleProfile'] as String? ?? 'Undetermined',
+                ),
+                SizedBox(height: 2.h),
+                _buildTimeRangeSelector(theme),
+                SizedBox(height: 3.h),
+                _buildSectionHeader('Style Trends Analysis', theme),
+                StyleTrendsCardWidget(
+                  dominantColors: (aiData['dominantColors'] as List<dynamic>? ?? []).cast<String>(),
+                  colorPercentages: (aiData['colorPercentages'] as List<dynamic>? ?? []).cast<int>(),
+                  silhouetteEvolution: (aiData['silhouetteEvolution'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
+                  emergingStyles: (aiData['emergingStyles'] as List<dynamic>? ?? []).cast<String>(),
+                ),
+                SizedBox(height: 3.h),
+                _buildSectionHeader('Outfit Versatility Scores', theme),
+                VersatilityScoresCardWidget(
+                  versatilityScores: (aiData['versatilityScores'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
+                  underutilizedItems: (aiData['underutilizedItems'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
+                ),
+                SizedBox(height: 3.h),
+                _buildSectionHeader('Sustainability Impact', theme),
+                SustainabilityImpactCardWidget(
+                  metrics: (aiData['sustainabilityMetrics'] as Map<String, dynamic>?) ?? {},
+                ),
+                SizedBox(height: 3.h),
+                _buildSectionHeader('Personalized Recommendations', theme),
+                RecommendationsCardWidget(
+                  recommendations: (aiData['recommendations'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>(),
+                ),
+                SizedBox(height: 3.h),
+                _buildGenerateInsightsButton(theme),
+                SizedBox(height: 10.h),
+              ],
+            ),
           ),
         ),
       ),
@@ -167,7 +114,11 @@ class _AIIntelligenceState extends State<AIIntelligence> {
     final isSelected = _selectedTimeRange == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedTimeRange = index),
+        onTap: () {
+          setState(() => _selectedTimeRange = index);
+          final ranges = ['week', 'month', 'season'];
+          ref.read(aiIntelligenceTimeRangeProvider.notifier).state = ranges[index];
+        },
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 1.5.h),
           decoration: BoxDecoration(
@@ -242,14 +193,12 @@ class _AIIntelligenceState extends State<AIIntelligence> {
   }
 
   Future<void> _refreshInsights() async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() {});
-    }
+    ref.invalidate(aiInsightsProvider);
   }
 
   Future<void> _generateNewInsights() async {
     setState(() => _isGenerating = true);
+    ref.invalidate(aiInsightsProvider);
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() => _isGenerating = false);

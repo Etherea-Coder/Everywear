@@ -1,9 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './supabase_service.dart';
 import './wardrobe_service.dart';
 
 class LookbookService {
   final WardrobeService _wardrobeService = WardrobeService();
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => SupabaseService.instance.client;
 
   /// Generates a summary of the best outfits for the current month
   Future<Map<String, dynamic>> generateMonthlyLookbook() async {

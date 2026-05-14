@@ -1,8 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
 import '../services/user_tier_service.dart';
+import './user_profile_helper.dart';
 
-class AiSuggestionsService {
+class AiSuggestionsService with UserProfileHelper {
   SupabaseClient get _supabase => SupabaseService.instance.client;
   final UserTierService _tierService = UserTierService();
 
@@ -43,6 +44,8 @@ class AiSuggestionsService {
         };
       }
 
+      final firstName = await getUserFirstName();
+
       final response = await _supabase.functions.invoke(
         'ai-suggestions',
         body: {
@@ -50,6 +53,7 @@ class AiSuggestionsService {
           'language': language,
           'weather': weatherContext,
           'itemsInfo': itemHistory,
+          'firstName': firstName,
         },
       );
 

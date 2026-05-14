@@ -37,8 +37,6 @@ dependencies:
   path_provider: ^2.1.2       # Model file caching and local storage management
   http: ^1.6.0                # Downloading ML models from remote sources
   universal_html: ^2.2.4
-  flutter_stripe: ^12.4.0     # Stripe payment integration (mobile and web support)
-  flutter_stripe_web: ^7.4.0  # Stripe web-specific functionality
   
   # Modernization dependencies
   flutter_riverpod: ^2.5.1
@@ -52,6 +50,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0 # CRITICAL: Required for code quality - DO NOT REMOVE
   hive_generator: ^2.0.1
   build_runner: ^2.4.9
+  mocktail: ^1.0.5
 
 flutter:
   uses-material-design: true # CRITICAL: Required for Material icon font - DO NOT REMOVE

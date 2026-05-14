@@ -637,13 +637,10 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (e) {
       debugPrint('❌ Google sign-in failed: $e');
       if (mounted) {
-        String errorMessage = 'Google sign-in failed';
+        String errorMessage = 'Google sign-in failed. Please try again.';
         
-        // Provide user-friendly error messages
         if (e.toString().contains('not available') || e.toString().contains('not ready')) {
-          errorMessage = 'Authentication service unavailable. Please configure Supabase credentials.';
-        } else {
-          errorMessage = 'Google sign-in failed: ${e.toString()}';
+          errorMessage = 'Authentication service unavailable. Please try again later.';
         }
         
         _showErrorSnackBar(errorMessage);
@@ -705,35 +702,29 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (e) {
       debugPrint('❌ Email authentication failed: $e');
       if (mounted) {
-        String userFriendlyError = e.toString();
+        String userFriendlyError;
         
-        // Provide user-friendly error messages
-        if (userFriendlyError.contains('not available') || userFriendlyError.contains('not ready')) {
-          userFriendlyError = 'Authentication service unavailable. Please configure Supabase credentials.';
-        } else if (userFriendlyError.contains('AuthApiError')) {
-          userFriendlyError = 'Auth Error: Ensure your Email provider is enabled in Supabase Dashboard.';
-        } else if (userFriendlyError.contains('SocketException')) {
+        if (e.toString().contains('not available') || e.toString().contains('not ready')) {
+          userFriendlyError = 'Authentication service unavailable. Please try again later.';
+        } else if (e.toString().contains('SocketException')) {
           userFriendlyError = 'Connection failed. Please check your internet.';
+        } else if (e.toString().contains('Invalid login') || e.toString().contains('wrong password')) {
+          userFriendlyError = 'Invalid email or password.';
+        } else if (e.toString().contains('already registered')) {
+          userFriendlyError = 'This email is already registered. Please sign in instead.';
+        } else {
+          userFriendlyError = _isSignUp
+              ? 'Sign up failed. Please try again.'
+              : 'Sign in failed. Please try again.';
         }
         
-        _showErrorSnackBar(
-          _isSignUp
-              ? 'Sign up failed: $userFriendlyError'
-              : 'Sign in failed: $userFriendlyError',
-        );
+        _showErrorSnackBar(userFriendlyError);
       }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  void _navigateToSettings() {
-    Navigator.of(
-      context,
-      rootNavigator: true,
-    ).pushReplacementNamed(AppRoutes.home);
   }
 
   void _showErrorSnackBar(String message, {bool isError = true}) {

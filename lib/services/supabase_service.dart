@@ -39,20 +39,20 @@ class SupabaseService {
   static Future<bool> initialize() async {
     if (_isInitialized) return true;
 
-    print('📡 Initializing Supabase...');
-    print('   URL: ${_mask(supabaseUrl)}');
-    print('   Key: ${_mask(supabaseAnonKey)}');
+    debugPrint('Initializing Supabase...');
+    debugPrint('   URL: ${_mask(supabaseUrl)}');
+    debugPrint('   Key: ${_mask(supabaseAnonKey)}');
 
     final url = cleanSupabaseUrl;
     final anonKey = cleanSupabaseAnonKey;
 
     if (url.isEmpty || anonKey.isEmpty) {
-      print('❌ SUPABASE_URL or SUPABASE_ANON_KEY is missing/empty. Please configure environment variables.');
+      debugPrint('SUPABASE_URL or SUPABASE_ANON_KEY is missing/empty. Please configure environment variables.');
       return false;
     }
 
-    if (url.contains('$') || anonKey.contains('$')) {
-      print('❌ ERROR: Environment variables contain unresolved placeholders (detecting \$). Check your CI configuration.');
+    if (url.contains('\$') || anonKey.contains('\$')) {
+      debugPrint('ERROR: Environment variables contain unresolved placeholders (detecting \$). Check your CI configuration.');
       return false;
     }
 
@@ -63,10 +63,10 @@ class SupabaseService {
         debug: kDebugMode,
       );
       _isInitialized = true;
-      print('✅ Supabase initialized successfully.');
+      debugPrint('Supabase initialized successfully.');
       return true;
     } catch (e) {
-      print('❌ Failed to initialize Supabase: $e');
+      debugPrint('Failed to initialize Supabase: $e');
       return false;
     }
   }

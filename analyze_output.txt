@@ -1,0 +1,43 @@
+Analyzing Everywear-main...                                     
+
+warning • Unused import: 'package:supabase_flutter/supabase_flutter.dart' • lib/main.dart:11:8 • unused_import
+   info • The import of './core/utils/app_localizations.dart' is unnecessary because all of the used elements are also provided by the import of 'core/app_export.dart' • lib/main.dart:12:8 • unnecessary_import
+   info • The import of '../../widgets/custom_icon_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' • lib/presentation/add_clothing_item/add_clothing_item.dart:6:8 • unnecessary_import
+warning • Unused import: '../../core/app_export.dart' • lib/presentation/home_screen/home_screen.dart:2:8 • unused_import
+warning • Unused import: '../../routes/app_routes.dart' • lib/presentation/insights_dashboard/insights_dashboard.dart:6:8 • unused_import
+warning • The declaration '_showFilterOptions' isn't referenced • lib/presentation/insights_dashboard/insights_dashboard.dart:357:8 • unused_element
+warning • The value of the field '_wardrobeItems' isn't used • lib/presentation/learning_paths/learning_paths.dart:26:7 • unused_field
+   info • The import of '../../widgets/custom_icon_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' • lib/presentation/outfit_capture_flow/outfit_capture_flow.dart:14:8 • unnecessary_import
+warning • The value of the field '_isCameraUnavailable' isn't used • lib/presentation/outfit_capture_flow/outfit_capture_flow.dart:39:8 • unused_field
+warning • The value of the local variable 'localizations' isn't used • lib/presentation/outfit_capture_flow/outfit_capture_flow.dart:115:17 • unused_local_variable
+warning • The value of the local variable 'localizations' isn't used • lib/presentation/outfit_capture_flow/outfit_capture_flow.dart:172:15 • unused_local_variable
+   info • The import of '../../../widgets/custom_icon_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' • lib/presentation/outfit_capture_flow/widgets/camera_view_widget.dart:7:8 • unnecessary_import
+   info • The import of '../../../widgets/custom_icon_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' • lib/presentation/outfit_capture_flow/widgets/wardrobe_selection_widget.dart:6:8 • unnecessary_import
+   info • The import of '../../../widgets/custom_image_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' • lib/presentation/outfit_capture_flow/widgets/wardrobe_selection_widget.dart:7:8 • unnecessary_import
+   info • The import of '../../../core/utils/app_localizations.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' • lib/presentation/outfit_capture_flow/widgets/wardrobe_selection_widget.dart:8:8 • unnecessary_import
+warning • The value of the field '_showCelebration' isn't used • lib/presentation/personal_progress_dashboard/personal_progress_dashboard.dart:26:8 • unused_field
+warning • Unused import: '../../services/payment_service.dart' • lib/presentation/premium_upgrade/premium_upgrade.dart:5:8 • unused_import
+warning • Unused import: '../../services/user_tier_service.dart' • lib/presentation/premium_upgrade/premium_upgrade.dart:6:8 • unused_import
+   info • The import of '../../core/utils/app_localizations.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' • lib/presentation/settings_profile/settings_profile.dart:7:8 • unnecessary_import
+   info • The import of '../../routes/app_routes.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' • lib/presentation/settings_profile/settings_profile.dart:10:8 • unnecessary_import
+warning • The declaration '_toggleMeasurementUnit' isn't referenced • lib/presentation/settings_profile/settings_profile.dart:347:8 • unused_element
+warning • The declaration '_buildFeatureItem' isn't referenced • lib/presentation/settings_profile/widgets/ai_model_management_dialog.dart:437:10 • unused_element
+   info • The import of '../../widgets/custom_image_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' • lib/presentation/splash_screen/splash_screen.dart:9:8 • unnecessary_import
+warning • The declaration '_navigateToSettings' isn't referenced • lib/presentation/splash_screen/splash_screen.dart:732:8 • unused_element
+warning • Unused import: '../../services/user_tier_service.dart' • lib/presentation/wardrobe_management/wardrobe_management.dart:8:8 • unused_import
+warning • Unused import: '../../services/supabase_service.dart' • lib/presentation/wardrobe_management/wardrobe_management.dart:10:8 • unused_import
+   info • The import of '../../widgets/custom_icon_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' • lib/presentation/wardrobe_management/wardrobe_management.dart:12:8 • unnecessary_import
+warning • The value of the field '_isModelLoaded' isn't used • lib/services/ai/vision_engine_service.dart:32:8 • unused_field
+warning • The value of the field '_isModelLoaded' isn't used • lib/services/ai/vision_engine_service.dart:130:8 • unused_field
+warning • The value of the field '_dio' isn't used • lib/services/payment_service.dart:10:13 • unused_field
+warning • The value of the field '_baseUrl' isn't used • lib/services/payment_service.dart:11:16 • unused_field
+  error • Expected an identifier • lib/services/supabase_service.dart:54:24 • missing_identifier
+  error • Expected an identifier • lib/services/supabase_service.dart:54:49 • missing_identifier
+warning • Unused import: '../models/local_wardrobe_item.dart' • lib/services/wardrobe_repository.dart:4:8 • unused_import
+warning • The value of the field '_realtimeChannel' isn't used • lib/services/wardrobe_service.dart:13:20 • unused_field
+warning • Dead code • lib/services/wardrobe_service.dart:301:45 • dead_code
+warning • The left operand can't be null, so the right operand is never executed • lib/services/wardrobe_service.dart:301:48 • dead_null_aware_expression
+warning • The left operand can't be null, so the right operand is never executed • lib/services/wardrobe_service.dart:302:54 • dead_null_aware_expression
+warning • This default clause is covered by the previous cases • lib/widgets/custom_app_bar.dart:74:7 • unreachable_switch_default
+
+39 issues found. (ran in 1.6s)

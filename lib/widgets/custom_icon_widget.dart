@@ -12,10 +12,7 @@ class CustomIconWidget extends StatelessWidget {
     this.color,
   }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    // Map of available icons
-    final Map<String, IconData> iconMap = {
+  static final Map<String, IconData> _iconMap = {
       // A
       'abc': Icons.abc,
       'abc_outlined': Icons.abc_outlined,
@@ -9011,21 +9008,22 @@ class CustomIconWidget extends StatelessWidget {
       'zoom_out_sharp': Icons.zoom_out_sharp,
     };
 
-    // Check if the icon exists
-    if (iconMap.containsKey(iconName)) {
+  @override
+  Widget build(BuildContext context) {
+    final iconData = _iconMap[iconName];
+    if (iconData != null) {
       return Icon(
-        iconMap[iconName],
+        iconData,
         size: size,
         color: color,
         semanticLabel: iconName,
       );
     } else {
-      // Return a fallback icon
       return Icon(
         Icons.help_outline,
         size: size,
-        color: Colors.grey,
-        semanticLabel: '$iconName',
+        color: color ?? Colors.grey,
+        semanticLabel: iconName,
       );
     }
   }

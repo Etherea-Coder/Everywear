@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
-import '../../services/wardrobe_service.dart';
+import '../../core/providers.dart';
 import '../../widgets/custom_icon_widget.dart';
 import './widgets/item_details_form.dart';
 import './widgets/photo_capture_section.dart';
@@ -10,20 +11,20 @@ import './widgets/purchase_info_section.dart';
 
 /// Add Clothing Item Screen
 /// Captures new wardrobe pieces through streamlined mobile form optimized for quick entry
-class AddClothingItem extends StatefulWidget {
+class AddClothingItem extends ConsumerStatefulWidget {
   const AddClothingItem({Key? key}) : super(key: key);
 
   @override
-  State<AddClothingItem> createState() => _AddClothingItemState();
+  ConsumerState<AddClothingItem> createState() => _AddClothingItemState();
 }
 
-class _AddClothingItemState extends State<AddClothingItem> {
+class _AddClothingItemState extends ConsumerState<AddClothingItem> {
   final _formKey = GlobalKey<FormState>();
   final _itemNameController = TextEditingController();
   final _brandController = TextEditingController();
   final _priceController = TextEditingController();
   final _storeController = TextEditingController();
-  final WardrobeService _wardrobeService = WardrobeService();
+  final _purchaseDateController = TextEditingController();
 
   List<String> _capturedPhotos = [];
   String? _selectedCategory;
@@ -59,6 +60,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
     _brandController.dispose();
     _priceController.dispose();
     _storeController.dispose();
+    _purchaseDateController.dispose();
     super.dispose();
   }
 
@@ -107,6 +109,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
   void _onPurchaseDateChanged(DateTime? date) {
     setState(() {
       _purchaseDate = date;
+      _purchaseDateController.text = date != null
+          ? '${date.month}/${date.day}/${date.year}'
+          : '';
       _hasUnsavedChanges = true;
     });
   }
@@ -130,7 +135,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
           ? double.tryParse(_priceController.text.trim())
           : null;
 
-      final savedItem = await _wardrobeService.addWardrobeItem(
+      final savedItem = await ref.read(wardrobeServiceProvider).addWardrobeItem(
         name: _itemNameController.text.trim(),
         category: _selectedCategory!, // We validated it's not null
         brand: _brandController.text.trim(),
@@ -291,6 +296,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
               PurchaseInfoSection(
                 priceController: _priceController,
                 storeController: _storeController,
+                purchaseDateController: _purchaseDateController,
                 purchaseDate: _purchaseDate,
                 onPurchaseDateChanged: _onPurchaseDateChanged,
               ),

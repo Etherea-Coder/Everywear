@@ -12,13 +12,13 @@ class SpendingChartWidget extends StatelessWidget {
   const SpendingChartWidget({Key? key, required this.purchases})
     : super(key: key);
 
-  Map<int, double> _getMonthlySpending() {
-    final Map<int, double> monthlyData = {};
+  Map<String, double> _getMonthlySpending() {
+    final Map<String, double> monthlyData = {};
 
     for (var purchase in purchases) {
       final date = purchase['purchaseDate'] as DateTime;
-      final month = date.month;
-      monthlyData[month] = (monthlyData[month] ?? 0.0) + purchase['price'];
+      final key = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+      monthlyData[key] = (monthlyData[key] ?? 0.0) + (purchase['price'] as num).toDouble();
     }
 
     return monthlyData;
@@ -81,7 +81,7 @@ class SpendingChartWidget extends StatelessWidget {
 
   LineChartData _buildLineChartData(
     ThemeData theme,
-    Map<int, double> monthlySpending,
+    Map<String, double> monthlySpending,
   ) {
     final spots = _buildSpots(monthlySpending);
     final maxY = monthlySpending.values.isEmpty
@@ -121,9 +121,13 @@ class SpendingChartWidget extends StatelessWidget {
             showTitles: true,
             reservedSize: 30,
             getTitlesWidget: (value, meta) {
-              final month = value.toInt();
-              if (month < 1 || month > 12) return const SizedBox();
-              final monthName = DateFormat('MMM').format(DateTime(2024, month));
+              final keys = monthlySpending.keys.toList()..sort();
+              final index = value.toInt();
+              if (index < 0 || index >= keys.length) return const SizedBox();
+              final key = keys[index];
+              final parts = key.split('-');
+              final month = int.tryParse(parts[1]) ?? 1;
+              final monthName = DateFormat('MMM yyyy').format(DateTime(int.tryParse(parts[0]) ?? 2024, month));
               return Padding(
                 padding: EdgeInsets.only(top: 1.h),
                 child: Text(
@@ -143,8 +147,8 @@ class SpendingChartWidget extends StatelessWidget {
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
       ),
       borderData: FlBorderData(show: false),
-      minX: 1,
-      maxX: 12,
+      minX: 0,
+      maxX: (monthlySpending.length - 1).toDouble(),
       minY: 0,
       maxY: maxY,
       lineBarsData: [
@@ -174,14 +178,14 @@ class SpendingChartWidget extends StatelessWidget {
     );
   }
 
-  List<FlSpot> _buildSpots(Map<int, double> monthlySpending) {
+  List<FlSpot> _buildSpots(Map<String, double> monthlySpending) {
     final List<FlSpot> spots = [];
+    final sortedKeys = monthlySpending.keys.toList()..sort();
 
-    for (var entry in monthlySpending.entries) {
-      spots.add(FlSpot(entry.key.toDouble(), entry.value));
+    for (int i = 0; i < sortedKeys.length; i++) {
+      spots.add(FlSpot(i.toDouble(), monthlySpending[sortedKeys[i]]!));
     }
 
-    spots.sort((a, b) => a.x.compareTo(b.x));
     return spots;
   }
 }

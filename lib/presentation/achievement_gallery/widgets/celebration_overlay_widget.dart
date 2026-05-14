@@ -24,7 +24,9 @@ class _CelebrationOverlayWidgetState extends State<CelebrationOverlayWidget> {
     super.initState();
     widget.controller.forward().then((_) {
       Future.delayed(const Duration(milliseconds: 500), () {
-        widget.onComplete();
+        if (mounted) {
+          widget.onComplete();
+        }
       });
     });
   }

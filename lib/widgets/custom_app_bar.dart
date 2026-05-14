@@ -71,7 +71,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       case CustomAppBarVariant.detail:
         return _buildDetailAppBar(context, theme);
       case CustomAppBarVariant.standard:
-      default:
         return _buildStandardAppBar(context, theme);
     }
   }

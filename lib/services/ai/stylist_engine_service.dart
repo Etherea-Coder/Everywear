@@ -91,7 +91,7 @@ class StylistEngineService {
       final occasionKey = occasion.toLowerCase();
       final occasionRule =
           _occasionRules[occasionKey] ?? _occasionRules['casual']!;
-      final weatherRule = _getWeatherRule(weatherData['temperature'] as int);
+      final weatherRule = _getWeatherRule((weatherData['temperature'] as num).toInt());
 
       // Filter items based on occasion and weather
       final suitableItems = _filterSuitableItems(
@@ -113,6 +113,7 @@ class StylistEngineService {
           occasionRule,
           weatherRule,
           weatherData,
+          occasion,
         );
 
         if (outfit != null) {
@@ -150,6 +151,7 @@ class StylistEngineService {
     Map<String, dynamic> occasionRule,
     Map<String, dynamic> weatherRule,
     Map<String, dynamic> weatherData,
+    String occasion,
   ) async {
     try {
       // Select items for outfit (2-4 items depending on weather)
@@ -201,7 +203,7 @@ class StylistEngineService {
         'items': outfitItems,
         'confidence': confidence,
         'reasoning': reasoning,
-        'occasion': occasionRule.keys.first,
+        'occasion': occasion,
         'stylingTips': stylingTips,
         'weatherAppropriate': true,
         'aiGenerated': true,
@@ -280,11 +282,11 @@ class StylistEngineService {
     }
 
     // Weather consideration
-    final temp = weatherData['temperature'] as int;
+    final temp = (weatherData['temperature'] as num).toInt();
     if (temp > 75) {
-      reasons.add('Light and breathable for ${temp}°F weather');
+      reasons.add('Light and breathable for warm weather');
     } else if (temp < 50) {
-      reasons.add('Warm and cozy for ${temp}°F weather');
+      reasons.add('Warm and cozy for cold weather');
     }
 
     // Occasion match

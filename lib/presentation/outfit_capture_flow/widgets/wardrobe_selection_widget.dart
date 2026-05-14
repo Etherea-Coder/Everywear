@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 import '../../../core/app_export.dart';
-import '../../../services/wardrobe_service.dart';
+import '../../../core/providers.dart';
 import '../../../widgets/custom_icon_widget.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../core/utils/app_localizations.dart';
 
 /// Wardrobe selection widget for building outfits from existing items
 /// Implements categorized horizontal scrolling with multi-select interface
-class WardrobeSelectionWidget extends StatefulWidget {
+class WardrobeSelectionWidget extends ConsumerStatefulWidget {
   final Function(List<Map<String, dynamic>>) onItemsSelected;
 
   const WardrobeSelectionWidget({Key? key, required this.onItemsSelected})
       : super(key: key);
 
   @override
-  State<WardrobeSelectionWidget> createState() =>
+  ConsumerState<WardrobeSelectionWidget> createState() =>
       _WardrobeSelectionWidgetState();
 }
 
-class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
-  final WardrobeService _wardrobeService = WardrobeService();
+class _WardrobeSelectionWidgetState extends ConsumerState<WardrobeSelectionWidget> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _wardrobeItems = [];
   Set<String> _selectedItemIds = {};
@@ -36,7 +36,7 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
 
   Future<void> _fetchProductionData() async {
     try {
-      final items = await _wardrobeService.fetchWardrobeItems();
+      final items = await ref.read(wardrobeServiceProvider).fetchWardrobeItems();
       if (mounted) {
         setState(() {
           _wardrobeItems = items;

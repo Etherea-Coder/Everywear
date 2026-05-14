@@ -5,9 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_export.dart';
 import '../../core/providers.dart';
-import '../../services/user_tier_service.dart';
-import '../../services/wardrobe_service.dart';
-import '../../services/supabase_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_icon_widget.dart';
 import '../../widgets/shimmer_loading.dart';
@@ -26,8 +23,6 @@ class WardrobeManagement extends ConsumerStatefulWidget {
 
 class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   final TextEditingController _searchController = TextEditingController();
-  final WardrobeService _wardrobeService = WardrobeService();
-
   bool _isMultiSelectMode = false;
   final Set<String> _selectedItems = {};
 
@@ -63,7 +58,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   /// Sets up real-time subscription for wardrobe changes
   void _setupRealtimeSubscription() {
     try {
-      _realtimeChannel = _wardrobeService.subscribeToWardrobeChanges(
+      _realtimeChannel = ref.read(wardrobeServiceProvider).subscribeToWardrobeChanges(
         onInsert: (payload) {
           if (!mounted) return;
           ref.read(wardrobeItemsProvider.notifier).refresh();
@@ -116,7 +111,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       Navigator.of(
         context,
         rootNavigator: true,
-      ).pushNamed('/add-clothing-item', arguments: item);
+      ).pushNamed(AppRoutes.addClothingItem, arguments: item);
     }
   }
 
@@ -169,7 +164,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   Future<void> _deleteItem(String itemId) async {
     try {
       final localizations = AppLocalizations.of(context);
-      await _wardrobeService.deleteWardrobeItem(itemId);
+      await ref.read(wardrobeServiceProvider).deleteWardrobeItem(itemId);
       _showSnackBar(localizations.itemDeletedSuccess);
     } catch (error) {
       final localizations = AppLocalizations.of(context);
@@ -214,7 +209,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
   Future<void> _deleteBatchItems() async {
     try {
       final localizations = AppLocalizations.of(context);
-      await _wardrobeService.deleteMultipleItems(_selectedItems.toList());
+      await ref.read(wardrobeServiceProvider).deleteMultipleItems(_selectedItems.toList());
       setState(() {
         _selectedItems.clear();
         _isMultiSelectMode = false;
@@ -466,7 +461,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
                         Navigator.of(
                           context,
                           rootNavigator: true,
-                        ).pushNamed('/add-clothing-item');
+                        ).pushNamed(AppRoutes.addClothingItem);
                       },
                     )
                   : RefreshIndicator(

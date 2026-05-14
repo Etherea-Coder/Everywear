@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 
 import '../../widgets/custom_app_bar.dart';
-import '../../services/payment_service.dart';
-import '../../services/user_tier_service.dart';
 import '../../services/supabase_service.dart';
 import './widgets/faq_item_widget.dart';
 import './widgets/feature_comparison_widget.dart';
@@ -22,12 +19,10 @@ class PremiumUpgrade extends StatefulWidget {
 class _PremiumUpgradeState extends State<PremiumUpgrade> {
   String _selectedPlan = 'annual';
   bool _isProcessingPayment = false;
-  bool _showPaymentSheet = false;
 
-  // Controllers for billing form
+  // Controllers for billing form (Keep for now if needed for other things, but Stripe-specific ones removed)
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
 
   final List<Map<String, dynamic>> _testimonials = [
     {
@@ -326,9 +321,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
             ),
 
             SizedBox(height: 3.h),
-
-            // Payment Sheet Dialog
-            if (_showPaymentSheet) _buildPaymentSheet(theme),
           ],
         ),
       ),
@@ -430,131 +422,6 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
     );
   }
 
-  Widget _buildPaymentSheet(ThemeData theme) {
-    return Container(
-      margin: EdgeInsets.all(4.w),
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Payment Details',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    setState(() => _showPaymentSheet = false);
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Full Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your name';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 2.h),
-            TextFormField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty || !value.contains('@')) {
-                  return 'Please enter a valid email';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 2.h),
-            Text(
-              'Card Information',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            SizedBox(height: 1.h),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: EdgeInsets.all(3.w),
-              child: stripe.CardField(
-                onCardChanged: (card) {
-                  // Card validation handled by CardField
-                },
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  helperText: 'Enter your card details',
-                ),
-              ),
-            ),
-            SizedBox(height: 3.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _processPayment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  padding: EdgeInsets.symmetric(vertical: 1.8.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                ),
-                child: Text(
-                  'Pay ${_selectedPlan == 'annual' ? '\$99.99' : '\$9.99'}',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _handleUpgrade() async {
     final user = SupabaseService.instance.client.auth.currentUser;
     if (user == null) {
@@ -562,104 +429,22 @@ class _PremiumUpgradeState extends State<PremiumUpgrade> {
       return;
     }
 
-    setState(() => _showPaymentSheet = true);
+    _showComingSoonDialog();
   }
 
-  Future<void> _processPayment() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    setState(() => _isProcessingPayment = true);
-
-    try {
-      final user = SupabaseService.instance.client.auth.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final amount = _selectedPlan == 'annual' ? 99.99 : 9.99;
-
-      final paymentIntentResponse = await PaymentService.instance
-          .createPaymentIntent(
-            amount: amount,
-            userId: user.id,
-            planType: _selectedPlan,
-            currency: 'usd',
-          );
-
-      final billingDetails = stripe.BillingDetails(
-        name: _nameController.text,
-        email: _emailController.text,
-        address: stripe.Address(
-          line1: '',
-          line2: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          country: 'US',
-        ),
-      );
-
-      final result = await PaymentService.instance.processPayment(
-        clientSecret: paymentIntentResponse.clientSecret,
-        billingDetails: billingDetails,
-      );
-
-      if (result.success) {
-        final upgraded = await UserTierService().upgradeToPremium(user.id);
-        if (upgraded) {
-          _showSuccessDialog();
-        } else {
-          throw Exception('Failed to upgrade account');
-        }
-      } else {
-        throw Exception(result.message);
-      }
-    } catch (e) {
-      _showErrorDialog(e.toString());
-    } finally {
-      setState(() {
-        _isProcessingPayment = false;
-        _showPaymentSheet = false;
-      });
-    }
-  }
-
-  void _showSuccessDialog() {
+  void _showComingSoonDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(width: 12),
-              const Text('Welcome to Premium!'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Your payment was successful! You now have access to all premium features.',
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                'Plan: ${_selectedPlan == 'annual' ? 'Annual' : 'Monthly'}',
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-              ),
-            ],
+          title: const Text('Play Store Payment'),
+          content: const Text(
+            'We are switching to Google Play Store payments. This feature will be available in the next update.',
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Got it!'),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
             ),
           ],
         );

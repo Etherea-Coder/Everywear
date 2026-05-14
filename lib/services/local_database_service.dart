@@ -44,8 +44,11 @@ class LocalDatabaseService {
     final localItems = <String, LocalWardrobeItem>{};
     
     for (var item in remoteItems) {
+      final id = item['id']?.toString() ?? '';
+      if (id.isEmpty) continue;
+      
       final localItem = LocalWardrobeItem()
-        ..id = item['id']?.toString() ?? ''
+        ..id = id
         ..remoteId = item['id']?.toString()
         ..name = item['name']
         ..category = item['category']
@@ -59,6 +62,15 @@ class LocalDatabaseService {
         ..createdAt = item['created_at'] != null ? DateTime.parse(item['created_at']) : null;
       
       localItems[localItem.id] = localItem;
+    }
+
+    final remoteIds = localItems.keys.toSet();
+    final existingKeys = box.keys.cast<String>().toSet();
+
+    for (final key in existingKeys) {
+      if (!remoteIds.contains(key)) {
+        await box.delete(key);
+      }
     }
 
     await box.putAll(localItems);

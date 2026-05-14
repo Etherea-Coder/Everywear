@@ -10,7 +10,6 @@ import './supabase_service.dart';
 class WardrobeService {
   SupabaseClient get _client => SupabaseService.instance.client;
   final UserTierService _tierService = UserTierService();
-  RealtimeChannel? _realtimeChannel;
 
   /// Retry mechanism with exponential backoff
   Future<T> _retryOperation<T>(
@@ -129,6 +128,12 @@ class WardrobeService {
   }
 
   /// Create new wardrobe item with tier limit checking
+  static const _allowedItemFields = {
+    'name', 'category', 'brand', 'image_url', 'semantic_label',
+    'purchase_price', 'purchase_date', 'notes', 'color', 'material',
+    'style_vibe', 'is_favorite',
+  };
+
   Future<Map<String, dynamic>> createItem(Map<String, dynamic> itemData) async {
     try {
       final user = _client.auth.currentUser;
@@ -136,7 +141,6 @@ class WardrobeService {
         throw Exception('User not authenticated');
       }
 
-      // Check tier limit before allowing item creation
       final canAdd = await _tierService.canAddItem(user.id);
       if (!canAdd) {
         final tierInfo = await _tierService.getUserTierInfo(user.id);
@@ -149,8 +153,11 @@ class WardrobeService {
         );
       }
 
+      final sanitizedData = Map<String, dynamic>.from(itemData)
+        ..removeWhere((key, _) => !_allowedItemFields.contains(key));
+
       final response = await _client.from('wardrobe_items').insert({
-        ...itemData,
+        ...sanitizedData,
         'user_id': user.id,
         'created_at': DateTime.now().toIso8601String(),
       }).select();
@@ -176,6 +183,11 @@ class WardrobeService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
         throw Exception('User must be authenticated to add items');
+      }
+
+      final canAdd = await _tierService.canAddItem(userId);
+      if (!canAdd) {
+        throw Exception('Item limit reached. Upgrade to premium for more items.');
       }
 
       final response = await _client
@@ -298,8 +310,8 @@ class WardrobeService {
       }
 
       return {
-        'total_items': totalItemsData.count ?? 0,
-        'favorite_items': favoriteItemsData.count ?? 0,
+        'total_items': totalItemsData.count,
+        'favorite_items': favoriteItemsData.count,
         'category_counts': categoryCounts,
       };
     } catch (error) {

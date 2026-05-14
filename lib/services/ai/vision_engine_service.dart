@@ -29,6 +29,7 @@ abstract class VisionEngineService {
 
 /// Web implementation (heuristic + cloud fallback)
 class VisionEngineServiceWeb implements VisionEngineService {
+  // ignore: unused_field
   bool _isModelLoaded = false;
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
@@ -127,6 +128,7 @@ class VisionEngineServiceWeb implements VisionEngineService {
 
 /// Mobile implementation with three-tier system
 class VisionEngineServiceMobile implements VisionEngineService {
+  // ignore: unused_field
   bool _isModelLoaded = false;
   bool _isDownloading = false;
   double _downloadProgress = 0.0;

@@ -219,7 +219,7 @@ class _SustainabilityImpactCardWidgetState
     int goal,
     ThemeData theme,
   ) {
-    final percentage = (current / goal * 100).clamp(0, 100).toInt();
+    final percentage = goal > 0 ? (current / goal * 100).clamp(0, 100).toInt() : 0;
     final isOnTrack = current <= goal;
 
     return Container(

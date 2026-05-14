@@ -45,7 +45,7 @@ class AppRoutes {
   static const String challengeCenter = '/challenge-center';
   static const String achievementGallery = '/achievement-gallery';
 
-  static Map<String, WidgetBuilder> routes = {
+  static final Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
     home: (context) => const HomeScreen(),
     smartSuggestions: (context) => const SmartSuggestions(),
@@ -69,4 +69,10 @@ class AppRoutes {
     achievementGallery: (context) => const AchievementGallery(),
     // TODO: Add your other routes here
   };
+
+  static Route<dynamic>? onUnknownRoute(RouteSettings settings) {
+    return MaterialPageRoute(
+      builder: (context) => const SplashScreen(),
+    );
+  }
 }

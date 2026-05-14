@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../models/local_wardrobe_item.dart';
 import './wardrobe_service.dart';
 import './local_database_service.dart';
 

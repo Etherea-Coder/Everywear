@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../../core/providers.dart';
 import '../../../widgets/custom_icon_widget.dart';
-import '../../../services/ai/vision_engine_service.dart';
-import '../../../services/ai/model_download_service.dart';
 
 /// AI Model Management Dialog
 /// Allows users to download and manage the local AI model
 /// Enhanced for three-tier AI system
-class AIModelManagementDialog extends StatefulWidget {
+class AIModelManagementDialog extends ConsumerStatefulWidget {
   const AIModelManagementDialog({Key? key}) : super(key: key);
 
   @override
-  State<AIModelManagementDialog> createState() =>
+  ConsumerState<AIModelManagementDialog> createState() =>
       _AIModelManagementDialogState();
 }
 
-class _AIModelManagementDialogState extends State<AIModelManagementDialog> {
-  final VisionEngineService _visionEngine = VisionEngineService();
-  final ModelDownloadService _modelService = ModelDownloadService();
+class _AIModelManagementDialogState extends ConsumerState<AIModelManagementDialog> {
   bool _isModelDownloaded = false;
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
@@ -38,8 +36,8 @@ class _AIModelManagementDialogState extends State<AIModelManagementDialog> {
     });
 
     try {
-      final isDownloaded = await _visionEngine.isModelDownloaded();
-      final sizeMB = await _modelService.getModelSize();
+      final isDownloaded = await ref.read(visionEngineServiceProvider).isModelDownloaded();
+      final sizeMB = await ref.read(modelDownloadServiceProvider).getModelSize();
       setState(() {
         _isModelDownloaded = isDownloaded;
         _modelSizeMB = sizeMB;
@@ -60,7 +58,7 @@ class _AIModelManagementDialogState extends State<AIModelManagementDialog> {
     });
 
     try {
-      await _visionEngine.downloadModel(
+      await ref.read(visionEngineServiceProvider).downloadModel(
         onProgress: (progress) {
           if (mounted) {
             setState(() {
@@ -87,7 +85,7 @@ class _AIModelManagementDialogState extends State<AIModelManagementDialog> {
       }
 
       // Refresh size
-      final sizeMB = await _modelService.getModelSize();
+      final sizeMB = await ref.read(modelDownloadServiceProvider).getModelSize();
       setState(() => _modelSizeMB = sizeMB);
     } catch (e) {
       setState(() {
@@ -132,7 +130,7 @@ class _AIModelManagementDialogState extends State<AIModelManagementDialog> {
     );
 
     if (confirmed == true) {
-      final success = await _modelService.deleteModel();
+      final success = await ref.read(modelDownloadServiceProvider).deleteModel();
       if (success && mounted) {
         setState(() {
           _isModelDownloaded = false;
@@ -434,45 +432,4 @@ class _AIModelManagementDialogState extends State<AIModelManagementDialog> {
     );
   }
 
-  Widget _buildFeatureItem(
-    ThemeData theme,
-    String iconName,
-    String title,
-    String description,
-  ) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 1.5.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CustomIconWidget(
-            iconName: iconName,
-            color: theme.colorScheme.primary,
-            size: 20,
-          ),
-          SizedBox(width: 3.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 0.5.h),
-                Text(
-                  description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
