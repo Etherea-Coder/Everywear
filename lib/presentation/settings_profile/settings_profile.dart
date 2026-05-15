@@ -424,7 +424,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
               ListTile(
                 leading: const Icon(Icons.picture_as_pdf),
                 title: Text(localizations.pdfReport),
-                subtitle: Text(localizations.comprehensive_wardrobe_report),
+                subtitle: Text(localizations.comprehensiveWardrobeReport),
                 onTap: () {
                   Navigator.pop(context);
                   _handleExportData('PDF');
@@ -433,7 +433,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
               ListTile(
                 leading: const Icon(Icons.table_chart),
                 title: Text(localizations.csvSpreadsheet),
-                subtitle: Text(localizations.raw_data_analysis),
+                subtitle: Text(localizations.rawDataAnalysis),
                 onTap: () {
                   Navigator.pop(context);
                   _handleExportData('CSV');
@@ -516,7 +516,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
       builder: (context) => AlertDialog(
         title: Text(localizations.about),
         content: Text(
-          '${localizations.appName} - ${localizations.aboutEverywear}
+          '${localizations.appName} - ${localizations.aboutEverywear}\\n\\n${localizations.version}\\n© 2026 ${localizations.appName}',
         ),
         actions: [
           TextButton(
