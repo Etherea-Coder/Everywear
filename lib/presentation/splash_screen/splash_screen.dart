@@ -415,7 +415,7 @@ class _SplashScreenState extends State<SplashScreen>
             SizedBox(height: 2.h),
             _buildTextField(
               controller: _passwordController,
-              label: l10n.labelPassword,
+              label: l10n.password,
               icon: Icons.lock_outline,
               theme: theme,
               obscureText: _obscurePassword,

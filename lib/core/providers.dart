@@ -48,7 +48,7 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!SupabaseService.isInitialized) {
     if (kDebugMode) debugPrint('⚠️ authStateProvider: Supabase not initialized, returning signedOut state');
     // Return a stream that immediately emits signedOut so the UI shows the Splash/Login
-    return Stream.value(const AuthState(event: AuthChangeEvent.signedOut, session: null));
+    return Stream.value(const AuthState(AuthChangeEvent.signedOut, null));
   }
   if (kDebugMode) debugPrint('✅ authStateProvider: Listening to auth state changes');
   return SupabaseService.instance.client.auth.onAuthStateChange;
