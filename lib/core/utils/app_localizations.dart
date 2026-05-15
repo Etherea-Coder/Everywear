@@ -396,6 +396,7 @@ class AppLocalizations {
   String get noItemsFound => translate('no_items_found');
   String get costPerWear => translate('cost_per_wear');
   String get perWear => translate('per_wear');
+  String get outfitLimitReached => translate('outfit_limit_reached');
 
   // Settings detail strings
   String get emailPreferences => translate('email_preferences');

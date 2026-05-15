@@ -11,6 +11,7 @@ import './widgets/versatility_scores_card_widget.dart';
 import './widgets/sustainability_impact_card_widget.dart';
 import './widgets/recommendations_card_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../widgets/custom_app_bar.dart';
 
 class AIIntelligence extends StatefulWidget {
   const AIIntelligence({Key? key}) : super(key: key);

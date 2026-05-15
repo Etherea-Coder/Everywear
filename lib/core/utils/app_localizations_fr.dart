@@ -362,6 +362,7 @@ const Map<String, String> appLocalizationsFr = {
   'continue_with_items_plural': 'Continuer avec {count} articles',
   'cost_per_wear': 'Coût par usage',
   'per_wear': '/usage',
+  'outfit_limit_reached': 'Limite de tenues atteinte',
 
   // Progress Dashborad
   'my_progress': 'Ma Progression',

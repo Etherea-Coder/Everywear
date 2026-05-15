@@ -89,7 +89,7 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
       _loadChallenges();
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).errorLabel(error))),
+        SnackBar(content: Text(AppLocalizations.of(context).errorLabel(error ?? ''))),
       );
     }
   }

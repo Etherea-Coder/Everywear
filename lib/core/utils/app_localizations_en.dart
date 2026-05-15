@@ -362,6 +362,7 @@ const Map<String, String> appLocalizationsEn = {
   'continue_with_items_plural': 'Continue with {count} items',
   'cost_per_wear': 'Cost Per Wear',
   'per_wear': '/wear',
+  'outfit_limit_reached': 'Outfit limit reached',
 
   'stylistIncludesFavorite': 'Includes your favorite %s',
   'stylistPerfectTimeToWear': 'Perfect time to wear your %s',

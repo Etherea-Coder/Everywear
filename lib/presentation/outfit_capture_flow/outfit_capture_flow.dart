@@ -243,7 +243,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
               action: SnackBarAction(
                 label: 'Upgrade',
                 onPressed: () => Navigator.of(context, rootNavigator: true)
-                    .pushNamed(AppRoutes.premiumVp),
+                    .pushNamed(AppRoutes.premiumUpgrade),
               ),
             ),
           );

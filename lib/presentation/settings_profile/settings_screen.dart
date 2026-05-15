@@ -19,6 +19,7 @@ import '../../services/export_service.dart';
 import '../../services/supabase_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/analytics_service.dart';
+import '../../services/revenuecat_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
