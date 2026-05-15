@@ -23,12 +23,16 @@ subprojects {
     // third-party modules compiled with older kotlinc (e.g. sentry_flutter with
     // languageVersion 1.6) do not fail when Kotlin 2.2.0 stdlib is on the
     // classpath.
-    afterEvaluate { proj ->
-        proj.plugins.withId('org.jetbrains.kotlin.android') {
-            proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all { task ->
-                task.compilerOptions.languageVersion.convention(
-                    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0
-                )
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
+            def kotlinOptions = project.extensions.getByName("kotlinOptions")
+            kotlinOptions.languageVersion = "1.8"
+            kotlinOptions.apiVersion = "1.8"
+            kotlinOptions.jvmTarget = "1.8"
+            project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all { task ->
+                task.compilerOptions.languageVersion = "1.8"
+                task.compilerOptions.apiVersion = "1.8"
+                task.compilerOptions.jvmTarget = "1.8"
             }
         }
     }
