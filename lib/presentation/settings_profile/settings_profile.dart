@@ -242,7 +242,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
                 SettingsTileWidget(
                   icon: Icons.help_outline,
                   title: localizations.helpCenter,
-                  subtitle: localizations.faqs_and_guides,
+                   subtitle: localizations.faqsAndGuides,
                   onTap: _handleHelpCenter,
                 ),
                 SettingsTileWidget(
@@ -298,7 +298,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
       case 'dark':
         return localizations.darkMode;
       case 'auto':
-        return localizations.auto_system;
+        return localizations.autoSystem;
       default:
         return localizations.lightMode;
     }
@@ -516,7 +516,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
       builder: (context) => AlertDialog(
         title: Text(localizations.about),
         content: Text(
-          '${localizations.appName} - ${localizations.about_everywear}\n\n${localizations.version}\n© 2026 ${localizations.appName}',
+          '${localizations.appName} - ${localizations.aboutEverywear}
         ),
         actions: [
           TextButton(
@@ -536,7 +536,7 @@ class _SettingsProfileState extends ConsumerState<SettingsProfile> {
       context: outerContext,
       builder: (dialogContext) => ConfirmationDialogWidget(
         title: localizations.logout,
-        message: localizations.logout_confirmation,
+        message: localizations.logoutConfirmation,
         confirmText: localizations.logout,
         cancelText: localizations.cancel,
         isDestructive: false,

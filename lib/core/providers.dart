@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 import '../services/wardrobe_repository.dart';
 import '../services/user_tier_service.dart';
+import '../services/outfit_log_service.dart';
+import '../services/ai/model_download_service.dart';
 import './utils/locale_manager.dart';
 
 final wardrobeRepositoryProvider = Provider((ref) => WardrobeRepository());
@@ -183,4 +185,24 @@ class SettingsNotifier extends StateNotifier<AsyncValue<void>> {
 
 final settingsNotifierProvider = StateNotifierProvider<SettingsNotifier, AsyncValue<void>>((ref) {
   return SettingsNotifier();
+});
+
+/// Daily log entry operations (delete, etc.)
+class DailyLogEntriesNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
+  @override
+  Future<List<Map<String, dynamic>>> build() async => [];
+
+  Future<bool> deleteEntry(String entryId) async {
+    final service = OutfitLogService();
+    return await service.deleteOutfitLog(entryId);
+  }
+}
+
+final dailyLogEntriesProvider =
+    AsyncNotifierProvider<DailyLogEntriesNotifier, List<Map<String, dynamic>>>(
+        () => DailyLogEntriesNotifier());
+
+/// AI model download service
+final modelDownloadServiceProvider = Provider<ModelDownloadService>((ref) {
+  return ModelDownloadService();
 });
