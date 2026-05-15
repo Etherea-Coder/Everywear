@@ -60,12 +60,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
     - assets/images/
-    - assets/images/challenges/
-    - assets/images/learning/
-    - assets/images/testimonials/
-    - assets/images/placeholders/
     - assets/icons/
 
 flutter_launcher_icons:
