@@ -25,10 +25,12 @@ subprojects {
     // classpath.
     afterEvaluate { project ->
         if (project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
-            def kotlinOptions = project.extensions.getByName("kotlinOptions")
-            kotlinOptions.languageVersion = "1.8"
-            kotlinOptions.apiVersion = "1.8"
-            kotlinOptions.jvmTarget = "1.8"
+            def androidExt = project.extensions.getByName("android")
+            if (androidExt) {
+                androidExt.kotlinOptions.languageVersion = "1.8"
+                androidExt.kotlinOptions.apiVersion = "1.8"
+                androidExt.kotlinOptions.jvmTarget = "1.8"
+            }
             project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all { task ->
                 task.compilerOptions.languageVersion = "1.8"
                 task.compilerOptions.apiVersion = "1.8"
