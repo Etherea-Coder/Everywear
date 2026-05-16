@@ -10,7 +10,6 @@ import 'package:sizer/sizer.dart';
 
 import 'dart:async';
 import '../../core/app_export.dart';
-import '../../widgets/custom_image_widget.dart';
 import '../../core/utils/app_localizations.dart';
 
 /// Splash Screen with Authentication - Branded login experience
@@ -214,8 +213,8 @@ class _SplashScreenState extends State<SplashScreen>
       child: Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: CustomImageWidget(
-            imageUrl: 'assets/images/splash-screen.png',
+          child: SvgPicture.asset(
+            'assets/images/img_app_logo.svg',
             width: 90.w,
             height: 90.w,
             fit: BoxFit.contain,

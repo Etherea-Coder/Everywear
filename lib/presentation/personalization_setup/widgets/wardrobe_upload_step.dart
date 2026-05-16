@@ -10,11 +10,13 @@ import 'package:image_picker/image_picker.dart';
 class WardrobeUploadStep extends StatefulWidget {
   final List<String> photos;
   final Function(List<String>) onPhotosChanged;
+  final VoidCallback onSkip;
 
   const WardrobeUploadStep({
     Key? key,
     required this.photos,
     required this.onPhotosChanged,
+    required this.onSkip,
   }) : super(key: key);
 
   @override
@@ -216,8 +218,8 @@ class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
           Center(
             child: TextButton(
               onPressed: () {
-                // Clear photos to indicate skip
                 widget.onPhotosChanged([]);
+                widget.onSkip();
               },
               child: Text(
                 AppLocalizations.of(context).skipStepBtn,

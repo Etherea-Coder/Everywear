@@ -117,7 +117,6 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
     setState(() => _isCompleting = true);
 
     try {
-      // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('selectedStyles', _selectedStyles);
       await prefs.setString('workEnvironment', _workEnvironment ?? '');
@@ -128,32 +127,32 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
       await prefs.setDouble('environmentalImpact', _environmentalImpact);
       await prefs.setBool('hasSeenOnboarding', true);
 
-      // Save to Supabase user_profiles
       final client = SupabaseService.instance.client;
       final userId = client.auth.currentUser?.id;
       if (userId != null) {
-        await client.from('user_profiles').upsert({
-          'id': userId,
-          'style_preferences': _selectedStyles,
-          'work_environment': _workEnvironment,
-          'social_frequency': _socialFrequency,
-          'climate': _climate,
-          'purchase_frequency': _purchaseFrequency,
-          'budget_consciousness': _budgetConsciousness,
-          'environmental_impact': _environmentalImpact,
-          'onboarding_completed': true,
-        });
+        try {
+          await client.from('user_profiles').upsert({
+            'id': userId,
+            'style_preferences': _selectedStyles,
+            'work_environment': _workEnvironment,
+            'social_frequency': _socialFrequency,
+            'climate': _climate,
+            'purchase_frequency': _purchaseFrequency,
+            'budget_consciousness': _budgetConsciousness,
+            'environmental_impact': _environmentalImpact,
+            'onboarding_completed': true,
+          });
+        } catch (supabaseError) {
+          debugPrint('Supabase save failed, continuing with local prefs: $supabaseError');
+        }
       }
 
-        // Invalidate the provider so AuthGate rebuilds with the new completion status
-        ref.invalidate(userProfileProvider);
+      ref.invalidate(userProfileProvider);
 
-        if (mounted) {
-          // Go to home screen, which will then allow the capture flow to overlay if needed,
-          // or just start fresh at Home.
-          Navigator.of(context, rootNavigator: true)
-              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
-        }
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true)
+            .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -222,6 +221,7 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
                 WardrobeUploadStep(
                   photos: _wardrobePhotos,
                   onPhotosChanged: _onPhotosChanged,
+                  onSkip: _completeSetup,
                 ),
               ],
             ),
