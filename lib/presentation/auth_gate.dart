@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers.dart';
 import './home_screen/home_screen.dart';
 import './welcome_philosophy/welcome_philosophy.dart';
@@ -7,10 +8,11 @@ import './splash_screen/splash_screen.dart';
 import './password_reset/password_reset_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// AuthGate - Decides where to send the user after authentication
-/// 
-/// If onboarding_completed is true -> HomeScreen
-/// If onboarding_completed is false or null -> WelcomePhilosophy (Onboarding)
+final hasSeenOnboardingProvider = FutureProvider<bool>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('hasSeenOnboarding') ?? false;
+});
+
 class AuthGate extends ConsumerWidget {
   const AuthGate({Key? key}) : super(key: key);
 
@@ -28,21 +30,33 @@ class AuthGate extends ConsumerWidget {
           return const SplashScreen();
         }
 
-        // User is authenticated, now check onboarding status
-        return ref.watch(userProfileProvider).when(
+        final profileAsync = ref.watch(userProfileProvider);
+        final onboardLocalAsync = ref.watch(hasSeenOnboardingProvider);
+
+        return profileAsync.when(
           data: (profile) {
             final isComplete = profile?['onboarding_completed'] ?? false;
-            
-            if (isComplete) {
-              return const HomeScreen();
-            } else {
-              return const WelcomePhilosophy();
-            }
+            if (isComplete) return const HomeScreen();
+
+            return onboardLocalAsync.when(
+              data: (localComplete) {
+                if (localComplete) return const HomeScreen();
+                return const WelcomePhilosophy();
+              },
+              loading: () => const _GateLoadingScreen(),
+              error: (_, __) => const WelcomePhilosophy(),
+            );
           },
           loading: () => const _GateLoadingScreen(),
           error: (err, stack) {
-            // If profile check fails, default to onboarding to be safe
-            return const WelcomePhilosophy();
+            return onboardLocalAsync.when(
+              data: (localComplete) {
+                if (localComplete) return const HomeScreen();
+                return const WelcomePhilosophy();
+              },
+              loading: () => const _GateLoadingScreen(),
+              error: (_, __) => const WelcomePhilosophy(),
+            );
           },
         );
       },
