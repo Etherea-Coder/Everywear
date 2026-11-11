@@ -147,20 +147,17 @@ class CustomImageWidget extends StatelessWidget {
           final image = imageUrl!;
           return _networkImage(image);
         case ImageType.storage:
-          return FutureBuilder<String?>(
+          return _StorageImageView(
             key: ValueKey('${StorageService.currentUserId}:$imageUrl'),
-            future: (storageUrlResolver ?? StorageService().resolveImageUrl)(
-              imageUrl!,
-            ),
-            builder: (context, snapshot) => snapshot.data == null
-                ? (errorWidget ??
-                      Image.asset(
-                        placeHolder,
-                        height: height,
-                        width: width,
-                        fit: fit ?? BoxFit.cover,
-                      ))
-                : _networkImage(snapshot.data!),
+            reference: imageUrl!,
+            height: height,
+            width: width,
+            fit: fit,
+            color: color,
+            placeholder: placeHolder,
+            errorWidget: errorWidget,
+            semanticLabel: semanticLabel,
+            resolver: storageUrlResolver ?? StorageService().resolveImageUrl,
           );
         case ImageType.png:
         default:
@@ -201,4 +198,113 @@ class CustomImageWidget extends StatelessWidget {
           semanticLabel: semanticLabel,
         ),
   );
+}
+
+class _StorageImageView extends StatefulWidget {
+  const _StorageImageView({
+    super.key,
+    required this.reference,
+    required this.resolver,
+    required this.placeholder,
+    this.height,
+    this.width,
+    this.fit,
+    this.color,
+    this.errorWidget,
+    this.semanticLabel,
+  });
+
+  final String reference;
+  final Future<String?> Function(String reference) resolver;
+  final String placeholder;
+  final double? height;
+  final double? width;
+  final BoxFit? fit;
+  final Color? color;
+  final Widget? errorWidget;
+  final String? semanticLabel;
+
+  @override
+  State<_StorageImageView> createState() => _StorageImageViewState();
+}
+
+class _StorageImageViewState extends State<_StorageImageView> {
+  String? _resolvedUrl;
+  bool _loading = true;
+  bool _refreshScheduled = false;
+  bool _refreshed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  Future<void> _resolve() async {
+    String? url;
+    try {
+      url = await widget.resolver(widget.reference);
+    } catch (_) {
+      url = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      _resolvedUrl = url;
+      _loading = false;
+      _refreshScheduled = false;
+    });
+  }
+
+  void _refreshExpiredUrl() {
+    if (_refreshScheduled || _refreshed || !mounted) return;
+    _refreshScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _refreshed = true;
+      setState(() {
+        _loading = true;
+        _resolvedUrl = null;
+      });
+      _resolve();
+    });
+  }
+
+  Widget _fallback() =>
+      widget.errorWidget ??
+      Image.asset(
+        widget.placeholder,
+        height: widget.height,
+        width: widget.width,
+        fit: widget.fit ?? BoxFit.cover,
+        semanticLabel: widget.semanticLabel,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final url = _resolvedUrl;
+    if (_loading) {
+      return SizedBox(
+        height: widget.height,
+        width: widget.width,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (url == null) return _fallback();
+    return CachedNetworkImage(
+      imageUrl: url,
+      height: widget.height,
+      width: widget.width,
+      fit: widget.fit,
+      color: widget.color,
+      placeholder: (context, url) => SizedBox(
+        height: widget.height ?? 30,
+        width: widget.width ?? 30,
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      errorWidget: (context, url, error) {
+        _refreshExpiredUrl();
+        return _fallback();
+      },
+    );
+  }
 }

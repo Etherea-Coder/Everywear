@@ -22,6 +22,22 @@ class SubscriptionActionResult {
 }
 
 class SubscriptionService {
+  static bool _storeOperationInProgress = false;
+
+  @visibleForTesting
+  static bool acceptsVerifiedResult({
+    required String expectedUserId,
+    required String? currentUserId,
+    required String? revenueCatUserId,
+    required int responseStatus,
+    required dynamic responseBody,
+  }) =>
+      expectedUserId == currentUserId &&
+      expectedUserId == revenueCatUserId &&
+      responseStatus == 200 &&
+      responseBody is Map &&
+      responseBody['success'] == true;
+
   Future<Offerings?> getOfferings() async {
     if (!RevenueCatService.isConfigured) return null;
     try {
@@ -39,19 +55,33 @@ class SubscriptionService {
         'Purchases are not configured for this build.',
       );
     }
+    if (_storeOperationInProgress) {
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.failed,
+        'Another purchase or restore is already in progress.',
+      );
+    }
+    _storeOperationInProgress = true;
     try {
-      if (!await RevenueCatService.ensureCurrentUser()) {
+      final userId = SupabaseService.instance.client.auth.currentUser?.id;
+      if (userId == null ||
+          !await RevenueCatService.ensureCurrentUser(expectedUserId: userId)) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.unavailable,
           'Sign in again before purchasing.',
         );
       }
-      final userId = SupabaseService.instance.client.auth.currentUser!.id;
       final result = await Purchases.purchasePackage(package);
       if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.verificationFailed,
           'Your account changed during the purchase. Sign in and restore purchases.',
+        );
+      }
+      if (await Purchases.appUserID != userId) {
+        return const SubscriptionActionResult(
+          SubscriptionActionStatus.verificationFailed,
+          'Your store account changed during the purchase. Restore after signing in again.',
         );
       }
       if (!_hasPaidEntitlement(result.customerInfo)) {
@@ -60,7 +90,7 @@ class SubscriptionService {
           'The store purchase did not activate the required entitlement.',
         );
       }
-      if (!await _verifyWithBackend()) {
+      if (!await _verifyWithBackend(userId)) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.verificationFailed,
           'The purchase could not be verified with Everywear.',
@@ -86,6 +116,8 @@ class SubscriptionService {
         SubscriptionActionStatus.failed,
         'Purchase failed.',
       );
+    } finally {
+      _storeOperationInProgress = false;
     }
   }
 
@@ -96,19 +128,33 @@ class SubscriptionService {
         'Purchases are not configured for this build.',
       );
     }
+    if (_storeOperationInProgress) {
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.failed,
+        'Another purchase or restore is already in progress.',
+      );
+    }
+    _storeOperationInProgress = true;
     try {
-      if (!await RevenueCatService.ensureCurrentUser()) {
+      final userId = SupabaseService.instance.client.auth.currentUser?.id;
+      if (userId == null ||
+          !await RevenueCatService.ensureCurrentUser(expectedUserId: userId)) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.unavailable,
           'Sign in again before restoring purchases.',
         );
       }
-      final userId = SupabaseService.instance.client.auth.currentUser!.id;
       final result = await Purchases.restorePurchases();
       if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.verificationFailed,
           'Your account changed during restore. Please try again.',
+        );
+      }
+      if (await Purchases.appUserID != userId) {
+        return const SubscriptionActionResult(
+          SubscriptionActionStatus.verificationFailed,
+          'Your store account changed during restore. Please sign in again.',
         );
       }
       if (!_hasPaidEntitlement(result)) {
@@ -117,7 +163,7 @@ class SubscriptionService {
           'No active subscription was found for the required entitlement.',
         );
       }
-      if (!await _verifyWithBackend()) {
+      if (!await _verifyWithBackend(userId)) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.verificationFailed,
           'The restored purchase could not be verified with Everywear.',
@@ -130,6 +176,8 @@ class SubscriptionService {
         SubscriptionActionStatus.failed,
         'Restore failed.',
       );
+    } finally {
+      _storeOperationInProgress = false;
     }
   }
 
@@ -139,12 +187,23 @@ class SubscriptionService {
     return entitlement != null && entitlement.isActive;
   }
 
-  Future<bool> _verifyWithBackend() async {
+  Future<bool> _verifyWithBackend(String expectedUserId) async {
     try {
+      if (SupabaseService.instance.client.auth.currentUser?.id !=
+          expectedUserId) {
+        return false;
+      }
       final response = await SupabaseService.instance.client.functions.invoke(
         'verify-purchase',
       );
-      return response.status == 200 && response.data?['success'] == true;
+      final storeUserId = await Purchases.appUserID;
+      return acceptsVerifiedResult(
+        expectedUserId: expectedUserId,
+        currentUserId: SupabaseService.instance.client.auth.currentUser?.id,
+        revenueCatUserId: storeUserId,
+        responseStatus: response.status,
+        responseBody: response.data,
+      );
     } catch (error) {
       if (kDebugMode)
         debugPrint('Backend purchase verification failed: $error');

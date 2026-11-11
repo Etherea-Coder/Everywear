@@ -10,6 +10,19 @@ import UserNotifications
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
     GeneratedPluginRegistrant.register(with: self)
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let timezoneChannel = FlutterMethodChannel(
+        name: "com.everywear/system_timezone",
+        binaryMessenger: controller.binaryMessenger
+      )
+      timezoneChannel.setMethodCallHandler { call, result in
+        if call.method == "getTimeZoneName" {
+          result(TimeZone.current.identifier)
+        } else {
+          result(FlutterMethodNotImplemented)
+        }
+      }
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

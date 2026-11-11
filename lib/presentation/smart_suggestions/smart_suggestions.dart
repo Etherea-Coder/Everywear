@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
 import '../../services/style_service.dart';
 import '../../services/user_tier_service.dart';
-import '../../widgets/upgrade_prompt_widget.dart';
 import '../../core/utils/app_localizations.dart';
 import './widgets/challenges_card.dart';
 

@@ -16,8 +16,6 @@ import './services/revenuecat_service.dart';
 import './services/notification_service.dart';
 import './services/analytics_service.dart';
 import './widgets/custom_error_widget.dart';
-import './presentation/home_screen/home_screen.dart';
-import './presentation/splash_screen/splash_screen.dart';
 import './presentation/auth_gate.dart';
 import 'core/app_export.dart';
 import './ads/ad_service.dart';
@@ -70,6 +68,8 @@ Future<void> _initializeEssentialServices() async {
       options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
       options.debug = kDebugMode;
       options.beforeSend = (event, hint) =>
+          AnalyticsService.instance.reportingEnabled ? event : null;
+      options.beforeSendTransaction = (event, hint) =>
           AnalyticsService.instance.reportingEnabled ? event : null;
     });
   } catch (e) {
@@ -214,8 +214,6 @@ class _MyAppState extends ConsumerState<MyApp> {
       );
     }
 
-    final authState = ref.watch(authStateProvider);
-
     return Sizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
@@ -227,9 +225,9 @@ class _MyAppState extends ConsumerState<MyApp> {
           // 🚨 CRITICAL: NEVER REMOVE OR MODIFY
           builder: (context, child) {
             return MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: const TextScaler.linear(1.0)),
+              // Preserve the system text scale so Android accessibility
+              // settings are honored throughout the application.
+              data: MediaQuery.of(context),
               child: child!,
             );
           },

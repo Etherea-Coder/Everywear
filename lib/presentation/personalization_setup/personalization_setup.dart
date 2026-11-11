@@ -120,6 +120,25 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
       final client = SupabaseService.instance.client;
       final userId = client.auth.currentUser?.id;
       if (userId == null) throw StateError('User is not authenticated');
+      final savedProfile = await client
+          .from('user_profiles')
+          .update({
+            'style_preferences': _selectedStyles,
+            'work_environment': _workEnvironment,
+            'social_frequency': _socialFrequency,
+            'climate': _climate,
+            'purchase_frequency': _purchaseFrequency,
+            'budget_consciousness': _budgetConsciousness,
+            'environmental_impact': _environmentalImpact,
+            'onboarding_completed': true,
+          })
+          .eq('id', userId)
+          .select('id')
+          .maybeSingle();
+      if (savedProfile == null || client.auth.currentUser?.id != userId) {
+        throw StateError('Could not save onboarding to the signed-in account');
+      }
+
       final prefix = '$userId:';
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('${prefix}selectedStyles', _selectedStyles);
@@ -136,26 +155,6 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
         _environmentalImpact,
       );
       await prefs.setBool('hasSeenOnboarding:$userId', true);
-
-      try {
-        await client
-            .from('user_profiles')
-            .update({
-              'style_preferences': _selectedStyles,
-              'work_environment': _workEnvironment,
-              'social_frequency': _socialFrequency,
-              'climate': _climate,
-              'purchase_frequency': _purchaseFrequency,
-              'budget_consciousness': _budgetConsciousness,
-              'environmental_impact': _environmentalImpact,
-              'onboarding_completed': true,
-            })
-            .eq('id', userId);
-      } catch (supabaseError) {
-        debugPrint(
-          'Supabase save failed, continuing with local prefs: $supabaseError',
-        );
-      }
 
       ref.invalidate(userProfileProvider);
 

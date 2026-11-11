@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,10 +16,9 @@ final userTierServiceProvider = Provider((ref) => UserTierService());
 
 // Auth user — derived from authStateProvider, no second stream subscription
 final supabaseAuthProvider = Provider<User?>((ref) {
-  return ref.watch(authStateProvider).maybeWhen(
-    data: (state) => state.session?.user,
-    orElse: () => null,
-  );
+  return ref
+      .watch(authStateProvider)
+      .maybeWhen(data: (state) => state.session?.user, orElse: () => null);
 });
 
 // Profile from `user_profiles` (membership tier, etc.)
@@ -29,30 +29,36 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   try {
     final data = await Supabase.instance.client
         .from('user_profiles')
-        .select('tier, onboarding_completed')
+        .select('onboarding_completed')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-    // Maintain backwards compatibility with older UI code that expects
-    // `membership_tier` while the DB stores `tier`.
-    return {
-      ...data,
-      'membership_tier': data['tier'],
-    };
+    if (data == null) return null;
+
+    // Resolve entitlement state through the server-owned status/expiry fields.
+    // A stale tier flag or a backend schema that has not received the reviewed
+    // entitlement migration must never make the UI present paid access.
+    final tier = await UserTierService().getUserTier(expectedUserId: user.id);
+    if (Supabase.instance.client.auth.currentUser?.id != user.id) return null;
+    return {...data, 'membership_tier': tier};
   } catch (e) {
-    // Profile may not exist yet, return null
-    if (kDebugMode) debugPrint('Profile not found for user ${user.id}: $e');
-    return null;
+    if (kDebugMode)
+      debugPrint('Unable to load profile for user ${user.id}: $e');
+    rethrow;
   }
 });
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!SupabaseService.isInitialized) {
-    if (kDebugMode) debugPrint('⚠️ authStateProvider: Supabase not initialized, returning signedOut state');
+    if (kDebugMode)
+      debugPrint(
+        '⚠️ authStateProvider: Supabase not initialized, returning signedOut state',
+      );
     // Return a stream that immediately emits signedOut so the UI shows the Splash/Login
     return Stream.value(const AuthState(AuthChangeEvent.signedOut, null));
   }
-  if (kDebugMode) debugPrint('✅ authStateProvider: Listening to auth state changes');
+  if (kDebugMode)
+    debugPrint('✅ authStateProvider: Listening to auth state changes');
   return SupabaseService.instance.client.auth.onAuthStateChange;
 });
 
@@ -61,50 +67,35 @@ final currentUserProvider = Provider<User?>((ref) {
     return null;
   }
   // Safe watch with fallback
-  return ref.watch(authStateProvider).maybeWhen(
-    data: (state) => state.session?.user,
-    orElse: () => null,
-  );
+  return ref
+      .watch(authStateProvider)
+      .maybeWhen(data: (state) => state.session?.user, orElse: () => null);
 });
 
 class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   @override
   Future<List<Map<String, dynamic>>> build() async {
-    try {
-      final repository = ref.watch(wardrobeRepositoryProvider);
-      return await repository.getWardrobeItems().timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => [],
-      );
-    } catch (e) {
-      if (kDebugMode) debugPrint('WardrobeItemsNotifier build error: $e');
-      return []; // Return empty list on error to prevent white screens
-    }
+    final repository = ref.watch(wardrobeRepositoryProvider);
+    return repository.getWardrobeItems().timeout(const Duration(seconds: 10));
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      try {
-        final repository = ref.read(wardrobeRepositoryProvider);
-        return await repository.getWardrobeItems().timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => [],
-        );
-      } catch (e) {
-        if (kDebugMode) debugPrint('WardrobeItemsNotifier refresh error: $e');
-        return []; // Return empty list on error
-      }
+      final repository = ref.read(wardrobeRepositoryProvider);
+      return repository.getWardrobeItems().timeout(const Duration(seconds: 10));
     });
   }
 
   Future<void> addItem(Map<String, dynamic> itemData) async {
     try {
       final repository = ref.read(wardrobeRepositoryProvider);
-      final result = await repository.addItem(itemData).timeout(
-        const Duration(seconds: 8),
-        onTimeout: () => {'success': false, 'error': 'Timeout'},
-      );
+      final result = await repository
+          .addItem(itemData)
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () => {'success': false, 'error': 'Timeout'},
+          );
       if (result['success'] == true) {
         await refresh();
       }
@@ -116,10 +107,14 @@ class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   Future<void> deleteItem(String itemId) async {
     try {
       final repository = ref.read(wardrobeRepositoryProvider);
-      await repository.deleteItem(itemId).timeout(
-        const Duration(seconds: 8),
-        onTimeout: () { if (kDebugMode) debugPrint('Delete timeout for item: $itemId'); },
-      );
+      await repository
+          .deleteItem(itemId)
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () {
+              if (kDebugMode) debugPrint('Delete timeout for item: $itemId');
+            },
+          );
       await refresh();
     } catch (e) {
       if (kDebugMode) debugPrint('WardrobeItemsNotifier deleteItem error: $e');
@@ -127,35 +122,48 @@ class WardrobeItemsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   }
 }
 
-final wardrobeItemsProvider = AsyncNotifierProvider<WardrobeItemsNotifier, List<Map<String, dynamic>>>(() {
-  return WardrobeItemsNotifier();
-});
+final wardrobeItemsProvider =
+    AsyncNotifierProvider<WardrobeItemsNotifier, List<Map<String, dynamic>>>(
+      () {
+        return WardrobeItemsNotifier();
+      },
+    );
 
 final wardrobeSearchQueryProvider = StateProvider<String>((ref) => '');
 final wardrobeCategoryProvider = StateProvider<String>((ref) => 'All');
 
-final filteredWardrobeItemsProvider = Provider<AsyncValue<List<Map<String, dynamic>>>>((ref) {
-  final itemsAsync = ref.watch(wardrobeItemsProvider);
-  final searchQuery = ref.watch(wardrobeSearchQueryProvider);
-  final category = ref.watch(wardrobeCategoryProvider);
+final filteredWardrobeItemsProvider =
+    Provider<AsyncValue<List<Map<String, dynamic>>>>((ref) {
+      final itemsAsync = ref.watch(wardrobeItemsProvider);
+      final searchQuery = ref.watch(wardrobeSearchQueryProvider);
+      final category = ref.watch(wardrobeCategoryProvider);
 
-  return itemsAsync.whenData((items) {
-    var filtered = items;
-    if (category != 'All' && category != 'all') {
-      filtered = filtered.where((item) => 
-        (item['category']?.toString().toLowerCase() ?? '') == category.toLowerCase()
-      ).toList();
-    }
-    if (searchQuery.isNotEmpty) {
-      final query = searchQuery.toLowerCase();
-      filtered = filtered.where((item) => 
-        (item['name']?.toString().toLowerCase().contains(query) ?? false) || 
-        (item['brand']?.toString().toLowerCase().contains(query) ?? false)
-      ).toList();
-    }
-    return filtered;
-  });
-});
+      return itemsAsync.whenData((items) {
+        var filtered = items;
+        if (category != 'All' && category != 'all') {
+          filtered = filtered
+              .where(
+                (item) =>
+                    (item['category']?.toString().toLowerCase() ?? '') ==
+                    category.toLowerCase(),
+              )
+              .toList();
+        }
+        if (searchQuery.isNotEmpty) {
+          final query = searchQuery.toLowerCase();
+          filtered = filtered
+              .where(
+                (item) =>
+                    (item['name']?.toString().toLowerCase().contains(query) ??
+                        false) ||
+                    (item['brand']?.toString().toLowerCase().contains(query) ??
+                        false),
+              )
+              .toList();
+        }
+        return filtered;
+      });
+    });
 
 final userTierProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final user = ref.watch(currentUserProvider);
@@ -183,12 +191,14 @@ class SettingsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final settingsNotifierProvider = StateNotifierProvider<SettingsNotifier, AsyncValue<void>>((ref) {
-  return SettingsNotifier();
-});
+final settingsNotifierProvider =
+    StateNotifierProvider<SettingsNotifier, AsyncValue<void>>((ref) {
+      return SettingsNotifier();
+    });
 
 /// Daily log entry operations (delete, etc.)
-class DailyLogEntriesNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
+class DailyLogEntriesNotifier
+    extends AsyncNotifier<List<Map<String, dynamic>>> {
   @override
   Future<List<Map<String, dynamic>>> build() async => [];
 
@@ -200,7 +210,8 @@ class DailyLogEntriesNotifier extends AsyncNotifier<List<Map<String, dynamic>>> 
 
 final dailyLogEntriesProvider =
     AsyncNotifierProvider<DailyLogEntriesNotifier, List<Map<String, dynamic>>>(
-        () => DailyLogEntriesNotifier());
+      () => DailyLogEntriesNotifier(),
+    );
 
 /// AI model download service
 final modelDownloadServiceProvider = Provider<ModelDownloadService>((ref) {

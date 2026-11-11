@@ -22,11 +22,11 @@ class AIIntelligence extends StatefulWidget {
 
 class _AIIntelligenceState extends State<AIIntelligence> {
   // ── State ────────────────────────────────────────────────────────────────
-  int _selectedTimeRange = 1;       // 0=week 1=month 2=season
+  int _selectedTimeRange = 1; // 0=week 1=month 2=season
   bool _isGenerating = false;
   bool _isLoading = true;
   String? _error;
-  String? _selectedCategory;        // null = all categories
+  String? _selectedCategory; // null = all categories
 
   Map<String, dynamic> _aiData = {};
 
@@ -40,10 +40,10 @@ class _AIIntelligenceState extends State<AIIntelligence> {
     if (user != null) {
       _loadInsights();
     } else {
-      // Wait for session to be restored, then load
-      Supabase.instance.client.auth.onAuthStateChange.first.then((_) {
-        if (mounted) _loadInsights();
-      });
+      // Supabase is initialized before the app is built. A missing user here
+      // is a signed-out state, not an indefinite loading state.
+      _isLoading = false;
+      _error = 'Sign in to load your wardrobe insights.';
     }
   }
 
@@ -51,7 +51,10 @@ class _AIIntelligenceState extends State<AIIntelligence> {
 
   Future<void> _loadInsights({bool forceRefresh = false}) async {
     if (!mounted) return;
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final data = await AIIntelligenceService.instance.getInsights(
@@ -59,9 +62,17 @@ class _AIIntelligenceState extends State<AIIntelligence> {
         category: _selectedCategory,
         forceRefresh: forceRefresh,
       );
-      if (mounted) setState(() { _aiData = data; _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _aiData = data;
+          _isLoading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
     }
   }
 
@@ -135,9 +146,12 @@ class _AIIntelligenceState extends State<AIIntelligence> {
     // Map the picked range to the closest time-range key
     final days = picked.end.difference(picked.start).inDays;
     int newIndex;
-    if (days <= 9)       newIndex = 0; // week
-    else if (days <= 45) newIndex = 1; // month
-    else                 newIndex = 2; // season
+    if (days <= 9)
+      newIndex = 0; // week
+    else if (days <= 45)
+      newIndex = 1; // month
+    else
+      newIndex = 2; // season
 
     setState(() => _selectedTimeRange = newIndex);
     _loadInsights();
@@ -156,8 +170,12 @@ class _AIIntelligenceState extends State<AIIntelligence> {
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Chip(
-                label: Text(AppLocalizations.of(context).getLocalizedCategory(_selectedCategory!),
-                    style: TextStyle(fontSize: 11.sp)),
+                label: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).getLocalizedCategory(_selectedCategory!),
+                  style: TextStyle(fontSize: 11.sp),
+                ),
                 onDeleted: () {
                   setState(() => _selectedCategory = null);
                   _loadInsights();
@@ -193,12 +211,22 @@ class _AIIntelligenceState extends State<AIIntelligence> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               SizedBox(height: 2.h),
-              Text(AppLocalizations.of(context).couldNotLoadInsights, style: theme.textTheme.titleMedium),
+              Text(
+                AppLocalizations.of(context).couldNotLoadInsights,
+                style: theme.textTheme.titleMedium,
+              ),
               SizedBox(height: 1.h),
-              Text(_error!, textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall,
+              ),
               SizedBox(height: 3.h),
               ElevatedButton(
                 onPressed: () => _loadInsights(forceRefresh: true),
@@ -218,51 +246,75 @@ class _AIIntelligenceState extends State<AIIntelligence> {
           // Show a slim loading bar while refreshing (data already present)
           if (_isLoading)
             LinearProgressIndicator(
-                minHeight: 2, color: theme.colorScheme.primary),
+              minHeight: 2,
+              color: theme.colorScheme.primary,
+            ),
 
           AIHeroSectionWidget(
             confidenceScore: (_aiData['confidenceScore'] as num?)?.toInt() ?? 0,
-            styleProfile:    _aiData['styleProfile']    ?? '—',
+            styleProfile: _aiData['styleProfile'] ?? '—',
           ),
           SizedBox(height: 2.h),
           _buildTimeRangeSelector(theme),
           SizedBox(height: 3.h),
 
-          _buildSectionHeader(AppLocalizations.of(context).styleTrendsAnalysis, theme),
+          _buildSectionHeader(
+            AppLocalizations.of(context).styleTrendsAnalysis,
+            theme,
+          ),
           StyleTrendsCardWidget(
-            dominantColors:      List<String>.from(_aiData['dominantColors']     ?? []),
+            dominantColors: List<String>.from(_aiData['dominantColors'] ?? []),
             colorPercentages: (_aiData['colorPercentages'] as List? ?? [])
                 .map((e) => (e as num).toInt())
                 .toList(),
             silhouetteEvolution: List<Map<String, dynamic>>.from(
-                (_aiData['silhouetteEvolution'] ?? [])
-                    .map((e) => Map<String, dynamic>.from(e))),
-            emergingStyles:      List<String>.from(_aiData['emergingStyles']     ?? []),
+              (_aiData['silhouetteEvolution'] ?? []).map(
+                (e) => Map<String, dynamic>.from(e),
+              ),
+            ),
+            emergingStyles: List<String>.from(_aiData['emergingStyles'] ?? []),
           ),
           SizedBox(height: 3.h),
 
-          _buildSectionHeader(AppLocalizations.of(context).outfitVersatilityScores, theme),
+          _buildSectionHeader(
+            AppLocalizations.of(context).outfitVersatilityScores,
+            theme,
+          ),
           VersatilityScoresCardWidget(
             versatilityScores: List<Map<String, dynamic>>.from(
-                (_aiData['versatilityScores'] ?? [])
-                    .map((e) => Map<String, dynamic>.from(e))),
+              (_aiData['versatilityScores'] ?? []).map(
+                (e) => Map<String, dynamic>.from(e),
+              ),
+            ),
             underutilizedItems: List<Map<String, dynamic>>.from(
-                (_aiData['underutilizedItems'] ?? [])
-                    .map((e) => Map<String, dynamic>.from(e))),
+              (_aiData['underutilizedItems'] ?? []).map(
+                (e) => Map<String, dynamic>.from(e),
+              ),
+            ),
           ),
           SizedBox(height: 3.h),
 
-          _buildSectionHeader(AppLocalizations.of(context).sustainabilityImpact, theme),
+          _buildSectionHeader(
+            AppLocalizations.of(context).sustainabilityImpact,
+            theme,
+          ),
           SustainabilityImpactCardWidget(
-            metrics: Map<String, dynamic>.from(_aiData['sustainabilityMetrics'] ?? {}),
+            metrics: Map<String, dynamic>.from(
+              _aiData['sustainabilityMetrics'] ?? {},
+            ),
           ),
           SizedBox(height: 3.h),
 
-          _buildSectionHeader(AppLocalizations.of(context).personalizedRecommendations, theme),
+          _buildSectionHeader(
+            AppLocalizations.of(context).personalizedRecommendations,
+            theme,
+          ),
           RecommendationsCardWidget(
             recommendations: List<Map<String, dynamic>>.from(
-                (_aiData['recommendations'] ?? [])
-                    .map((e) => Map<String, dynamic>.from(e))),
+              (_aiData['recommendations'] ?? []).map(
+                (e) => Map<String, dynamic>.from(e),
+              ),
+            ),
           ),
           SizedBox(height: 3.h),
           _buildGenerateInsightsButton(theme),
@@ -278,9 +330,9 @@ class _AIIntelligenceState extends State<AIIntelligence> {
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
       child: Row(
         children: [
-          _buildChip(AppLocalizations.of(context).weekTimeRange,   0, theme),
+          _buildChip(AppLocalizations.of(context).weekTimeRange, 0, theme),
           SizedBox(width: 2.w),
-          _buildChip(AppLocalizations.of(context).monthTimeRange,  1, theme),
+          _buildChip(AppLocalizations.of(context).monthTimeRange, 1, theme),
           SizedBox(width: 2.w),
           _buildChip(AppLocalizations.of(context).seasonTimeRange, 2, theme),
         ],
@@ -323,9 +375,12 @@ class _AIIntelligenceState extends State<AIIntelligence> {
   Widget _buildSectionHeader(String title, ThemeData theme) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-      child: Text(title,
-          style: theme.textTheme.titleLarge
-              ?.copyWith(fontWeight: FontWeight.w600)),
+      child: Text(
+        title,
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -337,12 +392,18 @@ class _AIIntelligenceState extends State<AIIntelligence> {
         onPressed: _isGenerating ? null : _generateNewInsights,
         icon: _isGenerating
             ? SizedBox(
-                width: 20, height: 20,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: theme.colorScheme.onPrimary))
+                  strokeWidth: 2,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              )
             : const Icon(Icons.auto_awesome),
         label: Text(
-          _isGenerating ? AppLocalizations.of(context).generatingLabel : AppLocalizations.of(context).generateNewInsights,
+          _isGenerating
+              ? AppLocalizations.of(context).generatingLabel
+              : AppLocalizations.of(context).generateNewInsights,
           style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
@@ -350,7 +411,8 @@ class _AIIntelligenceState extends State<AIIntelligence> {
           foregroundColor: theme.colorScheme.onPrimary,
           padding: EdgeInsets.symmetric(vertical: 2.h),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );
@@ -364,11 +426,11 @@ class _FilterSheet extends StatelessWidget {
   final VoidCallback onCustomDateRange;
 
   static const _categories = [
-  'Tops',
-  'Bottoms',
-  'Dresses',
-  'Shoes',
-  'Accessories',
+    'Tops',
+    'Bottoms',
+    'Dresses',
+    'Shoes',
+    'Accessories',
   ];
 
   const _FilterSheet({
@@ -390,7 +452,8 @@ class _FilterSheet extends StatelessWidget {
             // Handle
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: theme.dividerColor,
@@ -410,8 +473,10 @@ class _FilterSheet extends StatelessWidget {
             // Category filter
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-              child: Text(AppLocalizations.of(context).filterByCategory,
-                  style: theme.textTheme.titleSmall),
+              child: Text(
+                AppLocalizations.of(context).filterByCategory,
+                style: theme.textTheme.titleSmall,
+              ),
             ),
             Wrap(
               spacing: 2.w,
@@ -425,7 +490,9 @@ class _FilterSheet extends StatelessWidget {
                 ),
                 ..._categories.map(
                   (cat) => FilterChip(
-                    label: Text(AppLocalizations.of(context).getLocalizedCategory(cat)),
+                    label: Text(
+                      AppLocalizations.of(context).getLocalizedCategory(cat),
+                    ),
                     selected: selectedCategory == cat,
                     onSelected: (_) => onCategorySelected(cat),
                   ),

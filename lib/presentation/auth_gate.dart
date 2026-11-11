@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers.dart';
 import './home_screen/home_screen.dart';
 import './welcome_philosophy/welcome_philosophy.dart';
 import './splash_screen/splash_screen.dart';
 import './password_reset/password_reset_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-final hasSeenOnboardingProvider = FutureProvider<bool>((ref) async {
-  final user = ref.watch(supabaseAuthProvider);
-  if (user == null) return false;
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('hasSeenOnboarding:${user.id}') ?? false;
-});
+import '../services/supabase_service.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({Key? key}) : super(key: key);
@@ -33,37 +26,62 @@ class AuthGate extends ConsumerWidget {
         }
 
         final profileAsync = ref.watch(userProfileProvider);
-        final onboardLocalAsync = ref.watch(hasSeenOnboardingProvider);
 
         return profileAsync.when(
           data: (profile) {
             final isComplete = profile?['onboarding_completed'] ?? false;
             if (isComplete) return const HomeScreen();
-
-            return onboardLocalAsync.when(
-              data: (localComplete) {
-                if (localComplete) return const HomeScreen();
-                return const WelcomePhilosophy();
-              },
-              loading: () => const _GateLoadingScreen(),
-              error: (_, __) => const WelcomePhilosophy(),
-            );
+            return const WelcomePhilosophy();
           },
           loading: () => const _GateLoadingScreen(),
-          error: (err, stack) {
-            return onboardLocalAsync.when(
-              data: (localComplete) {
-                if (localComplete) return const HomeScreen();
-                return const WelcomePhilosophy();
-              },
-              loading: () => const _GateLoadingScreen(),
-              error: (_, __) => const WelcomePhilosophy(),
-            );
-          },
+          error: (err, stack) => _ProfileLoadError(
+            onRetry: () {
+              ref.invalidate(userProfileProvider);
+            },
+          ),
         );
       },
       loading: () => const _GateLoadingScreen(),
       error: (err, stack) => const SplashScreen(),
+    );
+  }
+}
+
+class _ProfileLoadError extends StatelessWidget {
+  const _ProfileLoadError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_outlined, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Your profile could not be loaded. Check your connection and retry.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => SupabaseService.instance.client.auth.signOut(),
+                child: Text(
+                  'Sign out',
+                  style: TextStyle(color: colors.primary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

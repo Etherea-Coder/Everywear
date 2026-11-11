@@ -13,40 +13,59 @@ class WardrobeRepository {
     String? category,
     String? searchQuery,
   }) async {
+    var isOnline = true;
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
-      final isOnline =
+      isOnline =
           connectivityResult.isNotEmpty &&
           !connectivityResult.contains(ConnectivityResult.none);
-
-      if (isOnline) {
-        try {
-          final remoteItems = await _remoteService
-              .fetchWardrobeItems(category: category, searchQuery: searchQuery)
-              .timeout(const Duration(seconds: 8));
-          // Sync to local for future offline use
-          await _localService
-              .syncItems(
-                remoteItems,
-                replaceAll:
-                    category == null &&
-                    (searchQuery == null || searchQuery.isEmpty),
-              )
-              .timeout(const Duration(seconds: 3));
-          return remoteItems;
-        } catch (e) {
-          if (kDebugMode)
-            debugPrint('Remote fetch failed, falling back to local: $e');
-          return _fetchLocalAsMap(category, searchQuery);
-        }
-      } else {
-        return _fetchLocalAsMap(category, searchQuery);
-      }
-    } catch (e) {
-      if (kDebugMode) debugPrint('Complete wardrobe fetch failure: $e');
-      // Return empty list as last resort to prevent white screens
-      return [];
+    } catch (error) {
+      // A failed connectivity probe is not proof the service is offline.
+      // Attempt the remote request and fall back to the scoped cache if it fails.
+      if (kDebugMode) debugPrint('Connectivity probe failed: $error');
     }
+
+    if (isOnline) {
+      List<Map<String, dynamic>> remoteItems;
+      try {
+        remoteItems = await _remoteService
+            .fetchWardrobeItems(category: category, searchQuery: searchQuery)
+            .timeout(const Duration(seconds: 8));
+      } catch (error) {
+        if (kDebugMode) {
+          debugPrint(
+            'Remote wardrobe fetch failed, trying cached data: $error',
+          );
+        }
+        final cached = await _fetchLocalAsMap(category, searchQuery);
+        if (cached.isNotEmpty) return cached;
+        throw WardrobeUnavailableException(
+          'Your wardrobe could not be loaded. Check your connection and retry.',
+          cause: error,
+        );
+      }
+
+      try {
+        // Cache failures do not turn a successful remote read into an error.
+        await _localService
+            .syncItems(
+              remoteItems,
+              replaceAll:
+                  category == null &&
+                  (searchQuery == null || searchQuery.isEmpty),
+            )
+            .timeout(const Duration(seconds: 3));
+      } catch (error) {
+        if (kDebugMode) debugPrint('Wardrobe cache update failed: $error');
+      }
+      return remoteItems;
+    }
+
+    final cached = await _fetchLocalAsMap(category, searchQuery);
+    if (cached.isNotEmpty) return cached;
+    throw const WardrobeUnavailableException(
+      'You are offline and no saved wardrobe is available on this device.',
+    );
   }
 
   Future<List<Map<String, dynamic>>> _fetchLocalAsMap(
@@ -118,4 +137,14 @@ class WardrobeRepository {
       onDelete: onDelete,
     );
   }
+}
+
+class WardrobeUnavailableException implements Exception {
+  const WardrobeUnavailableException(this.message, {this.cause});
+
+  final String message;
+  final Object? cause;
+
+  @override
+  String toString() => message;
 }

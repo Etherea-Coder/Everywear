@@ -45,6 +45,7 @@ class WardrobeService {
     String? category,
     String? searchQuery,
   }) async {
+    if (!SupabaseService.isInitialized) return [];
     try {
       return await _retryOperation(() async {
         final userId = _client.auth.currentUser?.id;
@@ -75,10 +76,8 @@ class WardrobeService {
             .toList();
       });
     } catch (error) {
-      // Return empty list on any error (including Supabase not initialized)
-      // This prevents white screen crashes
-      if (kDebugMode) debugPrint('Wardrobe fetch error: $error');
-      return [];
+      if (kDebugMode) debugPrint('Wardrobe fetch failed: $error');
+      rethrow;
     }
   }
 

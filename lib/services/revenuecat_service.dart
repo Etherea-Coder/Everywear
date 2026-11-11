@@ -60,8 +60,16 @@ class RevenueCatService {
   static Future<void> logIn(String supabaseUserId) async {
     await initialize();
     if (!_initialized) return;
+    if (SupabaseService.instance.client.auth.currentUser?.id !=
+        supabaseUserId) {
+      return;
+    }
     try {
       await Purchases.logIn(supabaseUserId);
+      final latestUserId = SupabaseService.instance.client.auth.currentUser?.id;
+      if (latestUserId != null && latestUserId != supabaseUserId) {
+        await Purchases.logIn(latestUserId);
+      }
     } catch (e) {
       if (kDebugMode) debugPrint('RevenueCat login failed: $e');
     }
@@ -69,12 +77,15 @@ class RevenueCatService {
 
   /// Purchase/restore callers must establish identity successfully themselves;
   /// startup login is only best effort and can race with authentication.
-  static Future<bool> ensureCurrentUser() async {
+  static Future<bool> ensureCurrentUser({String? expectedUserId}) async {
     if (!isConfigured) return false;
     await initialize();
     if (!_initialized) return false;
     final userId = SupabaseService.instance.client.auth.currentUser?.id;
-    if (userId == null) return false;
+    if (userId == null ||
+        (expectedUserId != null && expectedUserId != userId)) {
+      return false;
+    }
     try {
       await Purchases.logIn(userId);
       return SupabaseService.instance.client.auth.currentUser?.id == userId &&
@@ -88,6 +99,13 @@ class RevenueCatService {
   /// Log out from RevenueCat (when user signs out)
   static Future<void> logOut() async {
     if (!_initialized) return;
+    final currentUserId = SupabaseService.instance.client.auth.currentUser?.id;
+    if (currentUserId != null) {
+      // A delayed sign-out callback must not log out a newer authenticated
+      // account from the shared RevenueCat SDK singleton.
+      await logIn(currentUserId);
+      return;
+    }
     try {
       await Purchases.logOut();
     } catch (e) {

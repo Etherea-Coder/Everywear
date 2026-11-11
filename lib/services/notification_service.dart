@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:app_settings/app_settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationService {
@@ -21,6 +21,10 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+  bool _timezoneResolved = false;
+  static const _timezoneChannel = MethodChannel(
+    'com.everywear/system_timezone',
+  );
 
   String? _preferenceKey([String? userId]) {
     final id = userId ?? Supabase.instance.client.auth.currentUser?.id;
@@ -38,6 +42,22 @@ class NotificationService {
     if (_initialized) return;
 
     tz.initializeTimeZones();
+    try {
+      final zoneName = await _timezoneChannel.invokeMethod<String>(
+        'getTimeZoneName',
+      );
+      if (zoneName == null || zoneName.isEmpty) {
+        throw StateError('The system did not provide an IANA time zone');
+      }
+      tz.setLocalLocation(tz.getLocation(zoneName));
+      _timezoneResolved = true;
+    } catch (error) {
+      // timezone.dart defaults to UTC. Do not schedule a reminder at a
+      // misleading hour if the platform has not supplied its IANA zone.
+      tz.setLocalLocation(tz.UTC);
+      _timezoneResolved = false;
+      if (kDebugMode) debugPrint('Unable to resolve device time zone: $error');
+    }
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -75,15 +95,8 @@ class NotificationService {
       // 3. If the request returned true or null (Android < 13), treat as granted.
       if (granted ?? true) return true;
 
-      // 4. The request returned false — but on some devices/versions this
-      //    happens even when the user tapped "Allow" (race condition).
-      //    Re-check the actual system state to be sure.
-      final actuallyEnabled = await android.areNotificationsEnabled();
-      if (actuallyEnabled == true) return true;
-
-      // 5. Truly denied — open device settings so the user can enable manually
-      await AppSettings.openAppSettings();
-      return false;
+      // Confirm actual system state without unexpectedly leaving the app.
+      return await android.areNotificationsEnabled() == true;
     }
 
     // ─── iOS ────────────────────────────────────────────────
@@ -114,11 +127,11 @@ class NotificationService {
     return prefs.getBool(key) ?? false;
   }
 
-  Future<void> _savePreference(bool enabled) async {
+  Future<bool> _savePreference(bool enabled) async {
     final key = _preferenceKey();
-    if (key == null) return;
+    if (key == null) return false;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, enabled);
+    return prefs.setBool(key, enabled);
   }
 
   // ─── Schedule / cancel ────────────────────────────────────────────────────
@@ -127,24 +140,24 @@ class NotificationService {
   /// Requests permission first — returns false if denied.
   Future<bool> enableMorningSuggestions() async {
     await initialize();
+    if (!_timezoneResolved) return false;
 
     final granted = await requestPermission();
     if (!granted) return false;
 
-    // Save preference first so the toggle updates even if scheduling
-    // hits an edge-case failure (e.g. exact-alarm restriction).
-    await _savePreference(true);
+    if (!await _savePreference(true)) return false;
 
     try {
       // Scheduling must not silently spend the user's interactive AI quota.
       await _scheduleDailyMorningNotification();
+      return true;
     } catch (e) {
       if (kDebugMode)
         debugPrint('⚠️ Morning notification scheduling failed: $e');
-      // Permission was granted and preference is saved — the notification
-      // will be rescheduled on next app launch via restoreIfEnabled().
+      await _savePreference(false);
+      await _plugin.cancel(_morningNotificationId);
+      return false;
     }
-    return true;
   }
 
   Future<void> disableMorningSuggestions() async {
@@ -228,6 +241,7 @@ class NotificationService {
   /// (needed after phone restart).
   Future<void> restoreIfEnabled() async {
     await initialize();
+    if (!_timezoneResolved) return;
     final enabled = await isMorningSuggestionsEnabled();
     if (enabled) {
       try {

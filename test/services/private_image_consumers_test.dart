@@ -42,12 +42,14 @@ void main() {
         String? requestedReference;
         await tester.pumpWidget(
           MaterialApp(
-            home: CustomImageWidget(
-              imageUrl: 'avatars/user-a/avatar.png',
-              storageUrlResolver: (reference) async {
-                requestedReference = reference;
-                return 'http://127.0.0.1:1/avatar?token=temporary';
-              },
+            home: Scaffold(
+              body: CustomImageWidget(
+                imageUrl: 'avatars/user-a/avatar.png',
+                storageUrlResolver: (reference) async {
+                  requestedReference = reference;
+                  return 'http://127.0.0.1:1/avatar?token=temporary';
+                },
+              ),
             ),
           ),
         );
@@ -66,10 +68,12 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: CustomImageWidget(
-            imageUrl: 'avatars/user-a/missing.png',
-            storageUrlResolver: (_) async => null,
-            errorWidget: const Text('avatar unavailable'),
+          home: Scaffold(
+            body: CustomImageWidget(
+              imageUrl: 'avatars/user-a/missing.png',
+              storageUrlResolver: (_) async => null,
+              errorWidget: const Text('avatar unavailable'),
+            ),
           ),
         ),
       );

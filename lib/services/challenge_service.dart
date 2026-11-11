@@ -57,10 +57,12 @@ class ChallengeService {
 
       return challenge;
     } catch (e) {
-      if (kDebugMode) debugPrint('ChallengeService.fetchCurrentChallenge error: $e');
+      if (kDebugMode)
+        debugPrint('ChallengeService.fetchCurrentChallenge error: $e');
       return null;
     }
   }
+
   /// Returns all challenges the user has ever joined (for history/insights).
   Future<List<Map<String, dynamic>>> fetchUserChallengeHistory() async {
     try {
@@ -69,13 +71,16 @@ class ChallengeService {
 
       final rows = await _client
           .from('user_challenges')
-          .select('*, challenges(*)')
+          // The recovered schema links progress to style_challenges. The
+          // separate legacy `challenges` relation is not this foreign key.
+          .select('*, style_challenges(*)')
           .eq('user_id', uid)
           .order('started_at', ascending: false);
 
       return List<Map<String, dynamic>>.from(rows);
     } catch (e) {
-      if (kDebugMode) debugPrint('ChallengeService.fetchUserChallengeHistory error: $e');
+      if (kDebugMode)
+        debugPrint('ChallengeService.fetchUserChallengeHistory error: $e');
       return [];
     }
   }
@@ -119,9 +124,7 @@ class ChallengeService {
       final newProgress = currentProgress + 1;
       final isComplete = newProgress >= goal;
 
-      final updatePayload = <String, dynamic>{
-        'progress': newProgress,
-      };
+      final updatePayload = <String, dynamic>{'progress': newProgress};
 
       if (isComplete) {
         updatePayload['completed_at'] = DateTime.now().toIso8601String();
@@ -142,7 +145,8 @@ class ChallengeService {
         'insight': updatePayload['insight'],
       };
     } catch (e) {
-      if (kDebugMode) debugPrint('ChallengeService.incrementProgress error: $e');
+      if (kDebugMode)
+        debugPrint('ChallengeService.incrementProgress error: $e');
       return {'progress': currentProgress, 'is_complete': false};
     }
   }
@@ -204,7 +208,8 @@ class ChallengeService {
 
       return null;
     } catch (e) {
-      if (kDebugMode) debugPrint('ChallengeService.fetchLongestUnwornItem error: $e');
+      if (kDebugMode)
+        debugPrint('ChallengeService.fetchLongestUnwornItem error: $e');
       return null;
     }
   }

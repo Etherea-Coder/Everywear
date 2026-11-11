@@ -15,6 +15,31 @@ import '../core/tier_limits.dart';
 class UserTierService {
   SupabaseClient get _supabase => SupabaseService.instance.client;
 
+  @visibleForTesting
+  static bool hasVerifiedPremiumAccess({
+    required String? tier,
+    required String? status,
+    required String? expiresAt,
+    DateTime? now,
+  }) {
+    if (tier != 'premium') return false;
+    final instant = now ?? DateTime.now().toUtc();
+    final expiry = expiresAt == null ? null : DateTime.tryParse(expiresAt);
+    if (status == 'active') return expiry == null || expiry.isAfter(instant);
+    return (status == 'grace_period' || status == 'cancelled') &&
+        expiry != null &&
+        expiry.isAfter(instant);
+  }
+
+  String _effectiveTier(Map<String, dynamic> profile) =>
+      hasVerifiedPremiumAccess(
+        tier: profile['tier'] as String?,
+        status: profile['subscription_status'] as String?,
+        expiresAt: profile['subscription_expires_at'] as String?,
+      )
+      ? 'premium'
+      : 'free';
+
   // ── ERROR TRACKING ────────────────────────────────────────
 
   /// If the most recent `canX()` check failed due to a network or
@@ -41,16 +66,20 @@ class UserTierService {
   // ── TIER ────────────────────────────────────────────────
 
   /// Returns the current user's tier ('free' or 'premium')
-  Future<String> getUserTier() async {
+  Future<String> getUserTier({String? expectedUserId}) async {
     try {
       final user = _supabase.auth.currentUser;
-      if (user == null) return 'free';
+      if (user == null ||
+          (expectedUserId != null && user.id != expectedUserId)) {
+        return 'free';
+      }
       final response = await _supabase
           .from('user_profiles')
-          .select('tier')
+          .select('tier, subscription_status, subscription_expires_at')
           .eq('id', user.id)
           .single();
-      return response['tier'] as String? ?? 'free';
+      if (_supabase.auth.currentUser?.id != user.id) return 'free';
+      return _effectiveTier(response);
     } catch (e) {
       // Safe fallback: unknown tier is treated as free.
       // This is not a limit check, so returning 'free' is correct.
@@ -76,10 +105,12 @@ class UserTierService {
     try {
       final response = await _supabase
           .from('user_profiles')
-          .select('tier, outfit_logs_count')
+          .select(
+            'tier, subscription_status, subscription_expires_at, outfit_logs_count',
+          )
           .eq('id', userId)
           .single();
-      final tier = response['tier'] as String? ?? 'free';
+      final tier = _effectiveTier(response);
       final count = response['outfit_logs_count'] as int? ?? 0;
       return count < TierLimits.outfitLogLimit(tier);
     } catch (e) {
@@ -152,11 +183,13 @@ class UserTierService {
     try {
       final response = await _supabase
           .from('user_profiles')
-          .select('tier, coaching_sessions_used, coaching_reset_at')
+          .select(
+            'tier, subscription_status, subscription_expires_at, coaching_sessions_used, coaching_reset_at',
+          )
           .eq('id', userId)
           .single();
 
-      final tier = response['tier'] as String? ?? 'free';
+      final tier = _effectiveTier(response);
       final limit = TierLimits.coachingLimit(tier);
       final used = response['coaching_sessions_used'] as int? ?? 0;
 
@@ -186,10 +219,12 @@ class UserTierService {
     try {
       final response = await _supabase
           .from('user_profiles')
-          .select('tier, coaching_sessions_used, coaching_reset_at')
+          .select(
+            'tier, subscription_status, subscription_expires_at, coaching_sessions_used, coaching_reset_at',
+          )
           .eq('id', userId)
           .single();
-      final tier = response['tier'] as String? ?? 'free';
+      final tier = _effectiveTier(response);
       final used = response['coaching_sessions_used'] as int? ?? 0;
       final limit = TierLimits.coachingLimit(tier);
       return {
@@ -227,14 +262,14 @@ class UserTierService {
       final response = await _supabase
           .from('user_profiles')
           .select(
-            'tier, daily_suggestions_used, '
+            'tier, subscription_status, subscription_expires_at, daily_suggestions_used, '
             'suggestions_reset_at, coaching_sessions_used, coaching_reset_at, '
             'outfit_logs_count',
           )
           .eq('id', userId)
           .single();
 
-      final tier = response['tier'] as String? ?? 'free';
+      final tier = _effectiveTier(response);
       final suggestionsUsed = response['daily_suggestions_used'] as int? ?? 0;
       final suggestionsLimit = TierLimits.dailySuggestionLimit(tier);
       final coachingUsed = response['coaching_sessions_used'] as int? ?? 0;

@@ -12,7 +12,6 @@ import '../../core/utils/app_localizations.dart';
 import '../../core/providers.dart';
 import '../../services/ai_suggestions_service.dart';
 import '../../services/outfit_log_service.dart';
-import '../../services/wardrobe_service.dart';
 import '../../services/weather_service.dart';
 import '../ai_suggestions/widgets/ai_suggestion_bubble_widget.dart';
 import '../../widgets/custom_icon_widget.dart';
@@ -50,7 +49,6 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
 
   final AiSuggestionsService _aiSuggestionsService = AiSuggestionsService();
   final WeatherService _weatherService = WeatherService();
-  final WardrobeService _wardrobeService = WardrobeService();
   final OutfitLogService _outfitLogService = OutfitLogService();
   String? _aiSuggestions;
   bool _isLoadingSuggestions = false;
@@ -169,7 +167,9 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppLocalizations.of(context).cameraInitError}: ${e.toString()}'),
+            content: Text(
+              '${AppLocalizations.of(context).cameraInitError}: ${e.toString()}',
+            ),
             duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: 'Retry',
@@ -221,15 +221,18 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
   Future<void> _onOutfitConfirmed(String outfitName, int rating) async {
     try {
       setState(() => _isLoading = true);
-      
+
       final weatherContext = await _weatherService.getCurrentWeather();
-      final itemIds = _selectedItems.map((item) => item['id'] as String).toList();
-      
+      final itemIds = _selectedItems
+          .map((item) => item['id'] as String)
+          .toList();
+
       final result = await _outfitLogService.createOutfitLog(
         itemIds: itemIds,
         outfitName: outfitName,
         rating: rating,
-        weather: '${weatherContext['temperature']}${weatherContext['unit']} ${weatherContext['condition']}',
+        weather:
+            '${weatherContext['temperature']}${weatherContext['unit']} ${weatherContext['condition']}',
         occasion: 'Casual', // Default for capture flow
         wornDate: DateTime.now(),
       );
@@ -242,8 +245,10 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
               content: Text(localizations.outfitLimitReached),
               action: SnackBarAction(
                 label: 'Upgrade',
-                onPressed: () => Navigator.of(context, rootNavigator: true)
-                    .pushNamed(AppRoutes.premiumUpgrade),
+                onPressed: () => Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pushNamed(AppRoutes.premiumUpgrade),
               ),
             ),
           );
@@ -256,11 +261,10 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
       }
 
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop({
-          'success': true,
-          'outfitName': outfitName,
-          'rating': rating,
-        });
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        ).pop({'success': true, 'outfitName': outfitName, 'rating': rating});
       }
     } catch (e) {
       if (mounted) {
@@ -304,18 +308,17 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
     final weatherContext = await _weatherService.getCurrentWeather();
 
     // Prepare items context (if building from wardrobe)
-    final itemsContext =
-        _selectedItems.isNotEmpty
-            ? _selectedItems
-                .map(
-                  (item) => {
-                    'name': item['name'],
-                    'category': item['category'],
-                    'brand': item['brand'],
-                  },
-                )
-                .toList()
-            : null;
+    final itemsContext = _selectedItems.isNotEmpty
+        ? _selectedItems
+              .map(
+                (item) => {
+                  'name': item['name'],
+                  'category': item['category'],
+                  'brand': item['brand'],
+                },
+              )
+              .toList()
+        : null;
 
     final result = await _aiSuggestionsService.generateSuggestions(
       imageUrl: imageUrl,
@@ -364,7 +367,9 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
               size: 24,
             ),
             onPressed: _handleBack,
-            tooltip: _currentStep == 0 ? localizations.cancel : localizations.back,
+            tooltip: _currentStep == 0
+                ? localizations.cancel
+                : localizations.back,
           ),
           title: Text(
             _currentStep == 0

@@ -20,18 +20,18 @@ void main() {
   group('AIIntelligence Widget', () {
     Widget createTestWidget() {
       return Sizer(
-          builder: (context, orientation, screenType) {
-            return MaterialApp(
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: const AIIntelligence(),
-            );
-          },
+        builder: (context, orientation, screenType) {
+          return MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AIIntelligence(),
+          );
+        },
       );
     }
 

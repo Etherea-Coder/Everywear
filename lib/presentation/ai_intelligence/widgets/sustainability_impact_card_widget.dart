@@ -9,10 +9,8 @@ import '../../../core/app_export.dart';
 class SustainabilityImpactCardWidget extends StatefulWidget {
   final Map<String, dynamic> metrics;
 
-  const SustainabilityImpactCardWidget({
-    Key? key,
-    required this.metrics,
-  }) : super(key: key);
+  const SustainabilityImpactCardWidget({Key? key, required this.metrics})
+    : super(key: key);
 
   @override
   State<SustainabilityImpactCardWidget> createState() =>
@@ -56,11 +54,7 @@ class _SustainabilityImpactCardWidgetState
                 color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.0),
               ),
-              child: Icon(
-                Icons.eco_outlined,
-                color: Colors.green,
-                size: 24,
-              ),
+              child: Icon(Icons.eco_outlined, color: Colors.green, size: 24),
             ),
             SizedBox(width: 3.w),
             Expanded(
@@ -94,12 +88,15 @@ class _SustainabilityImpactCardWidgetState
   }
 
   List<Widget> _buildExpandedContent(ThemeData theme) {
-    final avgCostPerWear    = (widget.metrics['avgCostPerWear']               as num?)?.toDouble() ?? 0.0;
-    final costTrend         = (widget.metrics['costTrend']                    as num?)?.toDouble() ?? 0.0;
-    final purchaseFrequency = (widget.metrics['purchaseFrequency']            as num?)?.toDouble() ?? 0.0;
-    final carbonImpact      = (widget.metrics['carbonImpact']                 as num?)?.toInt()    ?? 0;
-    final carbonGoal        = (widget.metrics['carbonGoal']                   as num?)?.toInt()    ?? 200;
-    final goalProgress      = (widget.metrics['sustainabilityGoalProgress']   as num?)?.toInt()    ?? 0;
+    final avgCostPerWear =
+        (widget.metrics['avgCostPerWear'] as num?)?.toDouble() ?? 0.0;
+    final costTrend = (widget.metrics['costTrend'] as num?)?.toDouble() ?? 0.0;
+    final purchaseFrequency =
+        (widget.metrics['purchaseFrequency'] as num?)?.toDouble() ?? 0.0;
+    final carbonImpact = (widget.metrics['carbonImpact'] as num?)?.toInt() ?? 0;
+    final carbonGoal = (widget.metrics['carbonGoal'] as num?)?.toInt() ?? 200;
+    final goalProgress =
+        (widget.metrics['sustainabilityGoalProgress'] as num?)?.toInt() ?? 0;
 
     return [
       Divider(height: 1, color: theme.dividerColor),
@@ -111,7 +108,7 @@ class _SustainabilityImpactCardWidgetState
             Row(
               children: [
                 Expanded(
-                    child: _buildMetricCard(
+                  child: _buildMetricCard(
                     AppLocalizations.of(context).costPerWear,
                     '\$${avgCostPerWear.toStringAsFixed(2)}',
                     costTrend < 0
@@ -218,11 +215,7 @@ class _SustainabilityImpactCardWidgetState
     );
   }
 
-  Widget _buildCarbonProgress(
-    int current,
-    int goal,
-    ThemeData theme,
-  ) {
+  Widget _buildCarbonProgress(int current, int goal, ThemeData theme) {
     final percentage = (current / goal * 100).clamp(0, 100).toInt();
     final isOnTrack = current <= goal;
 
@@ -312,7 +305,9 @@ class _SustainabilityImpactCardWidgetState
               ),
               SizedBox(height: 0.5.h),
               Text(
-                AppLocalizations.of(context).sustainabilityGoalProgressMsg(progress),
+                AppLocalizations.of(
+                  context,
+                ).sustainabilityGoalProgressMsg(progress),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
@@ -321,30 +316,6 @@ class _SustainabilityImpactCardWidgetState
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMetricTile(String label, String value, Color color, ThemeData theme) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 0.5.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
-          ),
-          Text(
-            value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

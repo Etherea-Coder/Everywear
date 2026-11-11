@@ -9,6 +9,46 @@ void main() {
       service = UserTierService();
     });
 
+    test('premium access requires an active server-verified period', () {
+      final now = DateTime.utc(2026, 11, 12);
+      expect(
+        UserTierService.hasVerifiedPremiumAccess(
+          tier: 'premium',
+          status: 'active',
+          expiresAt: '2026-11-13T00:00:00Z',
+          now: now,
+        ),
+        isTrue,
+      );
+      expect(
+        UserTierService.hasVerifiedPremiumAccess(
+          tier: 'premium',
+          status: 'grace_period',
+          expiresAt: '2026-11-13T00:00:00Z',
+          now: now,
+        ),
+        isTrue,
+      );
+      expect(
+        UserTierService.hasVerifiedPremiumAccess(
+          tier: 'premium',
+          status: 'active',
+          expiresAt: '2026-11-11T00:00:00Z',
+          now: now,
+        ),
+        isFalse,
+      );
+      expect(
+        UserTierService.hasVerifiedPremiumAccess(
+          tier: 'premium',
+          status: 'inactive',
+          expiresAt: null,
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+
     test('getUserTierInfo fails closed on backend error', () async {
       final result = await service.getUserTierInfo('nonexistent-user-id');
 
@@ -30,10 +70,15 @@ void main() {
       expect(result, false);
     });
 
-    test('canRequestSuggestion fails closed when backend is unavailable', () async {
-      final result = await service.canRequestSuggestion('nonexistent-user-id');
-      expect(result, false);
-      expect(service.lastCheckError, isNotNull);
-    });
+    test(
+      'canRequestSuggestion fails closed when backend is unavailable',
+      () async {
+        final result = await service.canRequestSuggestion(
+          'nonexistent-user-id',
+        );
+        expect(result, false);
+        expect(service.lastCheckError, isNotNull);
+      },
+    );
   });
 }

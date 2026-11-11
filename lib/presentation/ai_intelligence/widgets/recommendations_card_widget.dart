@@ -60,11 +60,11 @@ class _RecommendationsCardWidgetState extends State<RecommendationsCardWidget> {
     Map<String, dynamic> recommendation,
     ThemeData theme,
   ) {
-    final type        = (recommendation['type']        as String?)  ?? 'style';
-    final title       = (recommendation['title']       as String?)  ?? 'Recommendation';
-    final description = (recommendation['description'] as String?)  ?? '';
-    final confidence  = (recommendation['confidence']  as num?)?.toInt() ?? 70;
-    final reasoning   = (recommendation['reasoning']   as String?)  ?? '';
+    final type = (recommendation['type'] as String?) ?? 'style';
+    final title = (recommendation['title'] as String?) ?? 'Recommendation';
+    final description = (recommendation['description'] as String?) ?? '';
+    final confidence = (recommendation['confidence'] as num?)?.toInt() ?? 70;
+    final reasoning = (recommendation['reasoning'] as String?) ?? '';
 
     final colors = _getTypeColors(type);
 
@@ -106,7 +106,9 @@ class _RecommendationsCardWidgetState extends State<RecommendationsCardWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context).getLocalizedRecommendationType(type),
+                      AppLocalizations.of(
+                        context,
+                      ).getLocalizedRecommendationType(type),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors['text']!.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w600,
@@ -237,19 +239,6 @@ class _RecommendationsCardWidgetState extends State<RecommendationsCardWidget> {
         return Icons.style_outlined;
       default:
         return Icons.info_outline;
-    }
-  }
-
-  String _getTypeLabel(String type) {
-    switch (type) {
-      case 'gap':
-        return 'WARDROBE GAP';
-      case 'seasonal':
-        return 'SEASONAL ADDITION';
-      case 'style':
-        return 'STYLE EVOLUTION';
-      default:
-        return 'RECOMMENDATION';
     }
   }
 }

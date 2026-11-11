@@ -190,6 +190,8 @@ class StorageService {
       supabaseUrl ?? SupabaseService.cleanSupabaseUrl,
     );
     if (configured == null ||
+        !configured.hasScheme ||
+        configured.host.isEmpty ||
         uri.userInfo.isNotEmpty ||
         uri.scheme != 'https' ||
         uri.origin != configured.origin)
