@@ -24,10 +24,11 @@ class UserTierService {
   }) {
     if (tier != 'premium') return false;
     final instant = now ?? DateTime.now().toUtc();
-    final expiry = expiresAt == null ? null : DateTime.tryParse(expiresAt);
-    if (status == 'active') return expiry == null || expiry.isAfter(instant);
+    if (expiresAt == null) return status == 'active';
+    final expiry = DateTime.tryParse(expiresAt);
+    if (expiry == null) return false;
+    if (status == 'active') return expiry.isAfter(instant);
     return (status == 'grace_period' || status == 'cancelled') &&
-        expiry != null &&
         expiry.isAfter(instant);
   }
 

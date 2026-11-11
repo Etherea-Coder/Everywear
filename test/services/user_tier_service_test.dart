@@ -47,6 +47,24 @@ void main() {
         ),
         isFalse,
       );
+      expect(
+        UserTierService.hasVerifiedPremiumAccess(
+          tier: 'premium',
+          status: 'active',
+          expiresAt: 'not-a-timestamp',
+          now: now,
+        ),
+        isFalse,
+      );
+      expect(
+        UserTierService.hasVerifiedPremiumAccess(
+          tier: 'premium',
+          status: 'active',
+          expiresAt: null,
+          now: now,
+        ),
+        isTrue,
+      );
     });
 
     test('getUserTierInfo fails closed on backend error', () async {
