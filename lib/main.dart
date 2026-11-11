@@ -18,7 +18,6 @@ import './services/analytics_service.dart';
 import './widgets/custom_error_widget.dart';
 import './presentation/auth_gate.dart';
 import 'core/app_export.dart';
-import './ads/ad_service.dart';
 
 void main() async {
   // Ensure widgets are initialized
@@ -45,9 +44,6 @@ void main() async {
 
   // Initial service bootstrapper - Critical services first
   await _initializeEssentialServices();
-
-  // ✅ NEW: Initialize Ad Service
-  await AdService.instance.initialize(testMode: !kReleaseMode);
 
   // Run the app after critical services are ready
   runApp(const ProviderScope(child: MyApp()));

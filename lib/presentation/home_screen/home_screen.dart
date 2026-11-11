@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../daily_log/daily_log.dart';
 import '../wardrobe_management/wardrobe_management.dart';
@@ -8,21 +6,17 @@ import '../smart_suggestions/smart_suggestions.dart';
 import '../purchase_tracking/purchase_tracking.dart';
 import '../settings_profile/profile_screen.dart';
 import '../../widgets/custom_bottom_bar.dart';
-import '../../layout/ad_layout.dart';
-import '../../providers/ad_providers.dart';
 
 /// Home Screen - Main navigation hub for the Everywear app
 ///
 /// Uses IndexedStack for preserving state across tabs.
-/// Includes AdLayout wrapper for banner ad space.
-///
 /// Navigation structure (5 tabs):
 /// - Index 0: Today (Daily Log)
 /// - Index 1: Wardrobe (Wardrobe Management)
 /// - Index 2: Style (Smart Suggestions)
 /// - Index 3: Purchases (Purchase Tracking)
 /// - Index 4: Profile (Settings & Insights)
-class HomeScreen extends ConsumerStatefulWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   static void goToTab(BuildContext context, int index) {
@@ -30,20 +24,20 @@ class HomeScreen extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   /// Screens for each tab - Insights moved to Profile screen
   /// for better organization and to reduce nav bar clutter
   final List<Widget> _screens = [
-    const DailyLog(),           // Index 0: Today
+    const DailyLog(), // Index 0: Today
     const WardrobeManagement(), // Index 1: Wardrobe
-    const SmartSuggestions(),   // Index 2: Style
-    const PurchaseTracking(),   // Index 3: Purchases
-    const ProfileScreen(),      // Index 4: Profile (includes Insights link)
+    const SmartSuggestions(), // Index 2: Style
+    const PurchaseTracking(), // Index 3: Purchases
+    const ProfileScreen(), // Index 4: Profile (includes Insights link)
   ];
 
   /// Track navigation as actions for interstitial ads
@@ -57,19 +51,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get premium status from provider
-    final isPremium = ref.watch(isPremiumProvider);
-
     return Scaffold(
-      // AdLayout wraps the body to add banner space at top
-      body: AdLayout(
-        isPremium: isPremium,
-        showDebugBackground: kDebugMode, // Only show in debug mode
-        child: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        ),
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: CustomBottomBar(
         currentIndex: _currentIndex,
         onTap: _onTabChanged,
