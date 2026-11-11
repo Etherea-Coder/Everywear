@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './paginated_outfit_link_cleanup.dart';
+import './storage_service.dart';
 import './supabase_service.dart';
 
 /// Handles full account data reset.
@@ -15,6 +17,10 @@ class ResetService {
     if (userId == null) {
       return ResetResult.failure('User not authenticated');
     }
+
+    // Invalidate private image bytes before any remote deletes can partially
+    // succeed. A failed reset can then reload remaining objects if retried.
+    await StorageService.clearImageCacheForUser(userId);
 
     // Order matters: delete children before parents to respect FK constraints.
     // outfit_items references outfit_logs → delete outfit_items first.
@@ -64,16 +70,23 @@ class ResetService {
 
   /// outfit_items has no user_id — delete via outfit_id references.
   Future<void> _deleteViaJoin(String userId) async {
-    // Fetch the user's outfit log IDs first
-    final logs = await _client
-        .from('outfit_logs')
-        .select('id')
-        .eq('user_id', userId);
-
-    if (logs.isEmpty) return;
-
-    final ids = (logs as List).map((r) => r['id'] as String).toList();
-    await _client.from('outfit_items').delete().inFilter('outfit_id', ids);
+    await deleteOutfitLinksInPages(
+      loadLogIds: (offset, limit) async {
+        final logs = await _client
+            .from('outfit_logs')
+            .select('id')
+            .eq('user_id', userId)
+            .order('id', ascending: true)
+            .range(offset, offset + limit - 1);
+        return logs.map((row) => row['id'] as String).toList(growable: false);
+      },
+      deleteLinks: (outfitIds) async {
+        await _client
+            .from('outfit_items')
+            .delete()
+            .inFilter('outfit_id', outfitIds);
+      },
+    );
   }
 
   Future<void> _clearStorageBucket(String bucket, String userId) async {

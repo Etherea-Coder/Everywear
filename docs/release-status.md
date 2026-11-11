@@ -90,6 +90,11 @@ unverified. This is not yet a Play release candidate.
 - Account deletion checks outfit-log query errors and pages all outfit IDs in
   bounded batches before deleting their junction rows; the previous single-page
   query could miss links on large accounts.
+- The in-app full reset now uses stable outfit-log pagination and bounded
+  junction-delete batches as well. It evicts owner-scoped private image caches
+  before remote reset steps can partially succeed. Added focused unit tests for
+  multi-page cleanup, bounded batches, and listing failure propagation; these
+  tests passed locally without a Supabase connection.
 - `20261111090000_reconstruct_and_secure_backend.sql` was revised against
   recovered metadata: protected profile fields/counters, bilateral outfit/item
   ownership, atomic quotas, pinned/restricted helper functions, preserved
@@ -122,6 +127,7 @@ unverified. This is not yet a Play release candidate.
 | Hosted operations | Read-only only. No migrations/history repair, settings, buckets/policies, records, functions or provider configuration changed |
 | SQL parser | Project-local `pglast` parsed the outer PostgreSQL statements in the migration, review cutover and pgTAP fixture. This does not validate PL/pgSQL function bodies, schema compatibility or runtime behavior |
 | SQL/database | No local Supabase, Docker or clean database chain was available/run; pgTAP fixture is prepared but unexecuted |
+| Reset cleanup source | Targeted Dart formatting and `git diff --check` passed. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/paginated_outfit_link_cleanup_test.dart` — **3 passed**; the test uses a pure callback helper and did not connect to Supabase |
 | Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim and completing independent code work/tests, one release build succeeded in 237.6 seconds with one Gradle worker and a 2 GiB heap. It produced `build/app/outputs/bundle/release/app-release.aab` (76,514,565 bytes). `unzip -tq` passed; `jarsigner -verify` reported `jar is unsigned`. SHA-256: `c257964750ac8cea02b579b1b944a47a76b6ccd4977e1170c290659b0f911feb`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
 | Device | No emulator/device used |
 | Formatting/diff | Targeted Dart formatting, `deno fmt --check` on three changed functions, `git diff --check` and `git diff --cached --check` passed |
@@ -131,8 +137,10 @@ Dart changes; the targeted image routing/private consumer/app-import selection
 passed 12/12. Targeted Dart formatting and `git diff --check` passed. The app
 import smoke test compiles the app entry point and transitive screens. The
 release bundle built and passed archive integrity inspection, but is unsigned
-and has no provider configuration. A project-local `pglast` parse accepted all
-30 outer SQL statements in the new Storage fixture; this is syntax parsing only
+and has no provider configuration. The new paginated reset cleanup helper test
+passed 3/3 in a single-worker run and did not connect to a backend. A
+project-local `pglast` parse accepted all 30 outer SQL statements in the new
+Storage fixture; this is syntax parsing only
 and does not execute policies or prove isolation. Read-only metadata queries
 confirmed public buckets and broad Storage table grants. No analyzer rerun or
 device check was made.
@@ -150,8 +158,9 @@ device check was made.
   schema, then run `storage_security.test.sql` after the reviewed cutover. Add a
   two-session concurrent quota proof; the current quota fixture only proves
   sequential calls in one session.
-- Retry Android release AAB after the release-only plugin shim is reviewed.
-  It remains unsigned without the private upload key. Device/network behavior,
+- The locally built AAB has been rechecked: SHA-256 and archive integrity still
+  match the recorded artifact, and it remains unsigned without the private
+  upload key. Device/network behavior,
   timezone/permission behavior, accessibility and export runtime checks remain
   pending.
 - No purchase, restore, RevenueCat webhook, production deployment, Play tester
@@ -230,6 +239,8 @@ device check was made.
   or provider credentials were available, so this release does not show ads.
 - [x] Serialize RevenueCat customer operations, centralize sign-out cleanup,
   paginate account deletion, and protect private image cache state.
+- [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
+  the Supabase-backed reset flow remains unverified without a disposable DB.
 
 **Exact next step:** start an explicitly disposable local Supabase database
 when the no-Docker restriction is lifted and run the migration chain, then run
