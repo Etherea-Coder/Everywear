@@ -27,6 +27,7 @@ void main() {
       for (final url in [
         '$projectUrl/storage/v1/object/public/wardrobe-images/user-1/item.jpg',
         '$projectUrl/storage/v1/object/sign/avatars/user-1/avatar.png?token=old',
+        '$projectUrl/storage/v1/object/authenticated/avatars/user-1/avatar.png',
         '$projectUrl/storage/v1/object/wardrobe-images/user-1/item.jpg',
       ]) {
         expect(

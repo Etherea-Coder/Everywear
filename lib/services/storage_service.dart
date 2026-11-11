@@ -238,7 +238,10 @@ class StorageService {
       return null;
     }
     final route = segments[3];
-    final bucketIndex = route == 'public' || route == 'sign' ? 4 : 3;
+    final bucketIndex =
+        route == 'public' || route == 'sign' || route == 'authenticated'
+        ? 4
+        : 3;
     if (bucketIndex >= segments.length) return null;
     final bucket = segments[bucketIndex];
     if (!const ['wardrobe-images', 'avatars'].contains(bucket) ||
@@ -307,7 +310,7 @@ class StorageService {
         final resolved = _resolvedUrlsByUser.remove(userId) ?? const {};
         for (final reference in {...references, ...resolved.keys}) {
           final url = resolved[reference] ?? reference;
-          await CachedNetworkImage.evictFromCache(url, cacheKey: reference);
+          await _evictCachedImage(url, reference);
         }
         await preferences.remove(key);
       } catch (error) {
@@ -325,10 +328,7 @@ class StorageService {
     final stableReference = '${parsed.$1}/${parsed.$2}';
     final url = _resolvedUrlsByUser[ownerId]?.remove(stableReference);
     try {
-      await CachedNetworkImage.evictFromCache(
-        url ?? stableReference,
-        cacheKey: stableReference,
-      );
+      await _evictCachedImage(url ?? stableReference, stableReference);
       final preferences = await SharedPreferences.getInstance();
       final key = _referencesPreferenceKey(ownerId);
       final references = preferences.getStringList(key) ?? <String>[];
@@ -342,6 +342,11 @@ class StorageService {
       if (kDebugMode) debugPrint('Unable to evict private image cache entry');
     }
   });
+
+  static Future<void> _evictCachedImage(String url, String cacheKey) async {
+    await CachedNetworkImage.evictFromCache(url, cacheKey: cacheKey);
+    await CachedNetworkImageProvider(url, cacheKey: cacheKey).evict();
+  }
 }
 
 enum ImageReferenceRoute { storage, network, localFile, asset }
