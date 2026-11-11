@@ -17,6 +17,7 @@ Not yet a release candidate. A substantial source recovery checkpoint exists on 
 - Account deletion now validates every deletion, removes user Storage objects, deletes the profile with the correct key, and only reports success after auth deletion. Reset also removes uploads and resets onboarding/profile data.
 - Scoped Hive wardrobe cache, onboarding preferences, AI cache, and notification state by authenticated user; full remote wardrobe sync reconciles remote deletions; logout/reset/deletion clears only account-owned state while retaining global locale/theme/reporting consent.
 - Sentry `beforeSend` and manual captures now honor the stored reporting opt-out.
+- Image routing now distinguishes stable `wardrobe-images/{user}/...` and `avatars/{user}/...` references, recognized Storage object URLs on the exact configured Supabase origin, ordinary external HTTP(S) URLs, assets, and local files. Wardrobe reads retain `image_ref` and resolve authorized display URLs at read time; new wardrobe uploads return stable object references instead of public URLs.
 
 ## 2. Checks actually performed
 
@@ -41,6 +42,7 @@ Before the code-only restriction and computer freeze:
 - Dependency re-resolution after any later dependency edit.
 - Local Supabase/Docker migration reset and anonymous/user-A/user-B/concurrency fixtures.
 - Edge Function type-check/deploy and real RevenueCat tester purchase/restore/webhook evidence.
+- Focused image reference routing regression tests are prepared but have not been executed.
 
 ## 4. Remaining provider setup and blockers
 
@@ -57,6 +59,8 @@ Before the code-only restriction and computer freeze:
 
 Latest source checkpoint: purchase/restore explicitly establishes the current Supabase UUID in RevenueCat and rejects account changes during the store operation. Plan selection requires the exact offered billing period; uncalculated savings claims were removed. Webhook event deduplication, ordering, and profile changes now use one service-role-only database transaction (`apply_subscription_event`); absent entitlement IDs fail closed. Targeted Dart formatting and whitespace checks passed; execution remains deferred.
 
-Remaining source review: equal-timestamp billing events and verification/webhook races require reconciliation against a canonical RevenueCat subscriber snapshot; account-state cleanup and in-flight cache writes require further race review. The proposal does not yet constitute proven billing correctness.
+**Image routing checkpoint (2026-11-11):** Classification uses structured URI parsing and exact Supabase origin plus Storage path checks. External and lookalike URLs stay on ordinary network-image handling; stable references and recognized project Storage URLs use the signed-URL resolver. Focused routing tests were added; targeted formatting and whitespace checks passed, but tests were not run.
 
-Obtain a schema-only/read-only inventory of the recovered Supabase project and reconcile the proposed migration line-by-line. In parallel code work, replace persisted public image URLs with user-owned Storage object paths and an authenticated/signed URL presentation layer; do not change hosted bucket visibility until that compatibility work is verified.
+Private rollout remains blocked on recovered schema and bucket-policy reconciliation. Existing public URLs/objects must be inventoried and migrated to stable references, avatar/export consumers must be converted, and private read/upload/delete policies must be reviewed before changing bucket visibility. Source changes do not make existing hosted images private. Preserve public compatibility until this rollout is complete.
+
+Other release blockers remain: reconcile the proposed migration with the recovered hosted schema, provide provider configuration and signing inputs, obtain privacy/deletion URLs and store materials, and perform the deferred validation and real tester purchase checks. Billing race correctness also remains unproven pending canonical RevenueCat snapshot reconciliation and execution of focused tests.

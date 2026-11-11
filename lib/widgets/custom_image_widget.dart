@@ -3,22 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../core/app_export.dart';
+import '../services/storage_service.dart';
 
 extension ImageTypeExtension on String {
   ImageType get imageType {
-    if (startsWith('http') || startsWith('https')) {
-      return ImageType.network;
-    } else if (endsWith('.svg')) {
-      return ImageType.svg;
-    } else if (startsWith('file://')) {
-      return ImageType.file;
-    } else {
-      return ImageType.png;
+    switch (StorageService.classifyImageReference(this)) {
+      case ImageReferenceRoute.storage:
+        return ImageType.storage;
+      case ImageReferenceRoute.network:
+        return ImageType.network;
+      case ImageReferenceRoute.localFile:
+        return ImageType.file;
+      case ImageReferenceRoute.asset:
+        return endsWith('.svg') ? ImageType.svg : ImageType.png;
     }
   }
 }
 
-enum ImageType { svg, png, network, file, unknown }
+enum ImageType { svg, png, network, file, storage, unknown }
 
 // ignore_for_file: must_be_immutable
 class CustomImageWidget extends StatelessWidget {
@@ -138,29 +140,20 @@ class CustomImageWidget extends StatelessWidget {
             semanticLabel: semanticLabel,
           );
         case ImageType.network:
-          return CachedNetworkImage(
-            height: height,
-            width: width,
-            fit: fit,
-            imageUrl: imageUrl!,
-            color: color,
-            placeholder: (context, url) => Container(
-              height: 30,
-              width: 30,
-              child: LinearProgressIndicator(
-                color: Colors.grey.shade200,
-                backgroundColor: Colors.grey.shade100,
-              ),
-            ),
-            errorWidget: (context, url, error) =>
-                errorWidget ??
-                Image.asset(
-                  placeHolder,
-                  height: height,
-                  width: width,
-                  fit: fit ?? BoxFit.cover,
-                  semanticLabel: semanticLabel,
-                ),
+          final image = imageUrl!;
+          return _networkImage(image);
+        case ImageType.storage:
+          return FutureBuilder<String?>(
+            future: StorageService().resolveImageUrl(imageUrl!),
+            builder: (context, snapshot) => snapshot.data == null
+                ? (errorWidget ??
+                      Image.asset(
+                        placeHolder,
+                        height: height,
+                        width: width,
+                        fit: fit ?? BoxFit.cover,
+                      ))
+                : _networkImage(snapshot.data!),
           );
         case ImageType.png:
         default:
@@ -174,6 +167,31 @@ class CustomImageWidget extends StatelessWidget {
           );
       }
     }
-    return SizedBox();
+    return const SizedBox.shrink();
   }
+
+  Widget _networkImage(String url) => CachedNetworkImage(
+    height: height,
+    width: width,
+    fit: fit,
+    imageUrl: url,
+    color: color,
+    placeholder: (context, url) => Container(
+      height: 30,
+      width: 30,
+      child: LinearProgressIndicator(
+        color: Colors.grey.shade200,
+        backgroundColor: Colors.grey.shade100,
+      ),
+    ),
+    errorWidget: (context, url, error) =>
+        errorWidget ??
+        Image.asset(
+          placeHolder,
+          height: height,
+          width: width,
+          fit: fit ?? BoxFit.cover,
+          semanticLabel: semanticLabel,
+        ),
+  );
 }

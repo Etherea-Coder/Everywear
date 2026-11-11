@@ -3,12 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 import './supabase_service.dart';
+import './storage_service.dart';
 
 /// Service layer for wardrobe management with real-time synchronization
 /// Provides CRUD operations and real-time subscription capabilities
 class WardrobeService {
   SupabaseClient get _client => SupabaseService.instance.client;
-  
+
   /// Retry mechanism with exponential backoff
   Future<T> _retryOperation<T>(
     Future<T> Function() operation, {
@@ -26,13 +27,16 @@ class WardrobeService {
         if (attempts >= maxRetries) {
           rethrow;
         }
-        
-        if (kDebugMode) debugPrint('Operation failed, retrying in ${delay.inSeconds}s... (attempt $attempts/$maxRetries)');
+
+        if (kDebugMode)
+          debugPrint(
+            'Operation failed, retrying in ${delay.inSeconds}s... (attempt $attempts/$maxRetries)',
+          );
         await Future.delayed(delay);
         delay *= 2; // Exponential backoff
       }
     }
-    
+
     throw Exception('Max retries reached');
   }
 
@@ -48,7 +52,7 @@ class WardrobeService {
           // User not authenticated - return empty list instead of crashing
           return [];
         }
-        
+
         var query = _client
             .from('wardrobe_items')
             .select('*, image_url')
@@ -65,7 +69,19 @@ class WardrobeService {
         }
 
         final response = await query.order('created_at', ascending: false);
-        return List<Map<String, dynamic>>.from(response);
+        final storage = StorageService();
+        final rows = List<Map<String, dynamic>>.from(response);
+        return await Future.wait(
+          rows.map(
+            (row) async => {
+              ...row,
+              'image_url': row['image_url'] == null
+                  ? null
+                  : await storage.resolveImageUrl(row['image_url'].toString()),
+              'image_ref': row['image_url'],
+            },
+          ),
+        );
       });
     } catch (error) {
       // Return empty list on any error (including Supabase not initialized)
@@ -298,8 +314,6 @@ class WardrobeService {
     'favorite_items': 0,
     'category_counts': <String, int>{},
   };
-
-
 
   /// Fetches outfit history for the authenticated user
   Future<List<Map<String, dynamic>>> fetchOutfitHistory({
