@@ -6,6 +6,12 @@ This document is derived from application code and Edge Functions. It is a livin
 
 The original Supabase project has been recovered. The forward migration in this branch is a reconciliation proposal, not an approved hosted migration. It must be compared with the recovered schema, policies, buckets, publications, functions, and existing data before any deployment.
 
+## Recovered project facts (read-only, 2026-11-11)
+
+The linked production project `qxsdwwdrxoyxmnapuqqv` was inspected using the Docker-free Supabase CLI read-only query path as `supabase_read_only_user` on PostgreSQL 17.6. The exact tables, policies, function/trigger inventory, bucket settings, grants, relationships, and deployed-function defects are recorded in [recovered-supabase-reconciliation.md](recovered-supabase-reconciliation.md). In brief: all 16 public app tables enable RLS but none forces it; the current profile policy/grants permit self-editing all protected columns; the self-upgrade SECURITY DEFINER RPC is present and callable; outfit links check outfit ownership only; counter helpers are callable; the Realtime publication has no tables; and both Storage buckets are public. These are production risks, not locally verified fixes.
+
+The current reconstruction migration does not match the recovered schema and is explicitly not deployable. The `supabase_migrations.schema_migrations` relation was absent in the read-only lookup; migration history was not modified.
+
 ## Trust boundaries
 
 - The Flutter client receives only the Supabase URL, publishable/anon key, RevenueCat public Android SDK key, and the configured paid entitlement identifier.

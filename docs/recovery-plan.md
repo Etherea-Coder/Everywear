@@ -20,10 +20,10 @@ Last updated: 2026-11-11
    - Track `pubspec.lock`; add the Flutter SDK `integration_test` dependency.
    - Resolve the duplicate Gradle DSL configuration without changing the active package identity (`com.stylewise.app`) until Play and RevenueCat registrations are confirmed.
    - Stale test sources and the generated Android registrant issue were repaired; reruns are deferred by the code-only recovery pass.
-2. **Complete, secure Supabase backend** — implementation proposed; recovered-backend reconciliation required
+2. **Complete, secure Supabase backend** — implementation proposed; read-only reconciliation completed 2026-11-11, safe additive migration/revalidation still pending
    - Inventory the app's tables, RPCs, Storage, Realtime and Edge Function contract.
    - Add forward-only migrations and local security fixtures.
-   - Do not deploy `20261111090000_reconstruct_and_secure_backend.sql` blindly. Compare it read-only with the recovered original project, then split/adjust it into forward-only changes that preserve hosted data and Storage.
+   - Do not deploy `20261111090000_reconstruct_and_secure_backend.sql`: read-only comparison confirmed incompatible existing `subscription_transactions`, `style_challenges`, `learning_modules`, and `feedback` shapes, plus a non-idempotent revoke for a missing function. Reconcile against `docs/recovered-supabase-reconciliation.md` and prepare forward-only deltas that preserve hosted data/objects.
 3. **Functional application flows** — in progress
    - Authentication callbacks and onboarding.
    - User-scoped cache/state and correct offline/outage behavior.
@@ -38,7 +38,7 @@ Last updated: 2026-11-11
 
 ## External inputs (only when dependent work reaches them)
 
-- Read-only access or a schema-only dump from the recovered original Supabase project. The project must not be reset or replaced.
+- Recovered Supabase access is available for read-only metadata/source inspection. Do not reset, replace, or mutate the production project; use a schema-only clone/local harness for validation.
 - Recovered project URL and publishable/anon key for the app build; service role and function secrets must stay server-side.
 - RevenueCat public Android SDK key, exact paid entitlement identifier, and webhook authorization secret.
 - Confirmation of the registered Android application ID in Play Console and RevenueCat.

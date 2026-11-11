@@ -36,8 +36,8 @@ Before the code-only restriction and computer freeze:
 | Analyzer (earlier checkpoint) | Reached 284 warnings/info with no reported analyzer errors before the latest code edits |
 | Tests (earlier checkpoint) | Reached three stale AI widget assertions; those tests were edited afterward but not rerun |
 | Android release build (earlier attempt) | Reached Java compilation, then failed because a generated registrant included test-only `integration_test`; the generated file was removed but no build was rerun |
-| Current lightweight checks | Targeted Dart formatting, `git diff --check`, and source search for direct image-network consumers; no project-wide validation |
-| Hosted backend | No CLI or authenticated environment is available in this shell; no hosted read/write operation was attempted |
+| Current lightweight checks | Targeted Dart formatting, `git diff --check`, source search for direct image-network consumers, and read-only CLI metadata/source inspection; no project-wide validation |
+| Hosted backend | Verified project `qxsdwwdrxoyxmnapuqqv`; Docker-free CLI read-only query succeeded as `supabase_read_only_user`. Catalog/metadata and deployed-function source inventory only; no customer rows, Storage object contents, or hosted writes. Findings in `docs/recovered-supabase-reconciliation.md`. |
 
 ## 3. Builds/tests deferred
 
@@ -50,16 +50,29 @@ Before the code-only restriction and computer freeze:
 
 ## 4. Remaining provider setup and blockers
 
-- The original Supabase project is recovered, but this checkout lacks authenticated read-only access or a schema dump. `20261111090000_reconstruct_and_secure_backend.sql` must not be deployed until reconciled against that project.
+- The recovered production project is accessible read-only. Confirmed live risks include broad `user_profiles` self-update rights, the callable self-upgrade RPC, outfit-item ownership that checks only the outfit, public executable counter functions, unpinned SECURITY DEFINER search paths, empty Realtime publication, public buckets, and missing remote quota enforcement. No production changes were made. `20261111090000_reconstruct_and_secure_backend.sql` does not match recovered columns/table types and must not be deployed.
 - Supply the recovered project URL and public anon/publishable key through build configuration. Keep service role, Gemini key, RevenueCat secret API key, and webhook secret server-side.
 - Supply the RevenueCat public Android SDK key and exact entitlement identifier as Dart defines; configure the same entitlement, Android package, products/offerings, Play service credentials, and webhook secrets in the dashboards.
 - Confirm `com.stylewise.app` is the registered Play/RevenueCat application ID.
 - Private upload keystore/passwords remain absent. They must be supplied outside Git before a signed AAB can exist.
-- Private Storage rollout still needs recovered-schema/bucket-policy reconciliation. Owner-scoped authenticated read, insert, replacement/update, and delete rules must be reviewed for `wardrobe-images` and `avatars`; existing public object URLs/records require an inventory and compatibility migration before changing bucket visibility. Review whether the profile `avatar_url` mirror is required by recovered consumers before planning hosted record changes. Source changes do not make hosted images private.
+- Private Storage rollout still needs reviewed owner-scoped authenticated read, insert, replacement/update, and delete policies for `wardrobe-images` and `avatars`; both recovered buckets are public and public-object cache invalidation is not confirmed. Existing URL/object references need a compatibility inventory/conversion. Follow the privacy-preserving rollout and rollback in `docs/recovered-supabase-reconciliation.md`. Owner-scoped authenticated read, insert, replacement/update, and delete rules must be reviewed for `wardrobe-images` and `avatars`; existing public object URLs/records require an inventory and compatibility migration before changing bucket visibility. Review whether the profile `avatar_url` mirror is required by recovered consumers before planning hosted record changes. Source changes do not make hosted images private.
 - Device timezone identification remains unresolved; the current scheduler initializes timezone data but cannot reliably select the device IANA zone without an additional platform timezone source.
 - Privacy policy URL, account-deletion URL, store listing assets/declarations, Play eligibility, and real tester evidence remain external release inputs.
 
 ## 5. Exact next step
+
+### Resumable finish-v1 checklist
+
+- [x] Preserve branch, generated platform changes and previous commits; inspect resources/instructions.
+- [x] Save `docs/finish-v1-goal.md`; establish the CLI and authenticated production read-only query route.
+- [x] Inventory recovered columns, constraints/indexes, RLS/policies, effective grants, privileged functions/triggers, Storage, Realtime, and active deployed functions/source.
+- [ ] Replace the incompatible reconstruction proposal with a forward-only migration matching the recovered schema; add isolated regression fixtures without connecting them to production.
+- [ ] Continue local auth/onboarding, offline/error, reminders/timezone, billing, accessibility and privacy/deletion gap closure.
+- [ ] Run safe focused tests, TypeScript checks, Dart analysis and selected suite sequentially; record each result.
+- [ ] Attempt single-worker Android packaging after cheaper validation; signed bundle remains conditional on private signing inputs.
+- [ ] Update setup/CI/release material and commit remaining coherent changes.
+
+Deployed production function source is preserved only in the ignored inspection directory and was not copied over local source. The deployed auth/billing/deletion differences are detailed in the reconciliation document; local fixes are not deployed.
 
 Latest source checkpoint: purchase/restore explicitly establishes the current Supabase UUID in RevenueCat and rejects account changes during the store operation. Plan selection requires the exact offered billing period; uncalculated savings claims were removed. Webhook event deduplication, ordering, and profile changes now use one service-role-only database transaction (`apply_subscription_event`); absent entitlement IDs fail closed. Targeted Dart formatting and whitespace checks passed; execution remains deferred.
 
