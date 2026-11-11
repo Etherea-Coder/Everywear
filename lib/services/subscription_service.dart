@@ -64,39 +64,39 @@ class SubscriptionService {
     _storeOperationInProgress = true;
     try {
       final userId = SupabaseService.instance.client.auth.currentUser?.id;
-      if (userId == null ||
-          !await RevenueCatService.ensureCurrentUser(expectedUserId: userId)) {
+      if (userId == null) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.unavailable,
           'Sign in again before purchasing.',
         );
       }
-      final result = await Purchases.purchasePackage(package);
-      if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.verificationFailed,
-          'Your account changed during the purchase. Sign in and restore purchases.',
-        );
-      }
-      if (await Purchases.appUserID != userId) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.verificationFailed,
-          'Your store account changed during the purchase. Restore after signing in again.',
-        );
-      }
-      if (!_hasPaidEntitlement(result.customerInfo)) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.noEntitlement,
-          'The store purchase did not activate the required entitlement.',
-        );
-      }
-      if (!await _verifyWithBackend(userId)) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.verificationFailed,
-          'The purchase could not be verified with Everywear.',
-        );
-      }
-      return const SubscriptionActionResult(SubscriptionActionStatus.success);
+      final result = await RevenueCatService.runForCurrentUser(userId, () async {
+        final purchase = await Purchases.purchasePackage(package);
+        if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
+          return const SubscriptionActionResult(
+            SubscriptionActionStatus.verificationFailed,
+            'Your account changed during the purchase. Sign in and restore purchases.',
+          );
+        }
+        if (!_hasPaidEntitlement(purchase.customerInfo)) {
+          return const SubscriptionActionResult(
+            SubscriptionActionStatus.noEntitlement,
+            'The store purchase did not activate the required entitlement.',
+          );
+        }
+        if (!await _verifyWithBackend(userId)) {
+          return const SubscriptionActionResult(
+            SubscriptionActionStatus.verificationFailed,
+            'The purchase could not be verified with Everywear.',
+          );
+        }
+        return const SubscriptionActionResult(SubscriptionActionStatus.success);
+      });
+      return result ??
+          const SubscriptionActionResult(
+            SubscriptionActionStatus.verificationFailed,
+            'Your account changed during the purchase. Sign in and restore purchases.',
+          );
     } on PlatformException catch (error) {
       final code = PurchasesErrorHelper.getErrorCode(error);
       if (code == PurchasesErrorCode.purchaseCancelledError) {
@@ -137,39 +137,44 @@ class SubscriptionService {
     _storeOperationInProgress = true;
     try {
       final userId = SupabaseService.instance.client.auth.currentUser?.id;
-      if (userId == null ||
-          !await RevenueCatService.ensureCurrentUser(expectedUserId: userId)) {
+      if (userId == null) {
         return const SubscriptionActionResult(
           SubscriptionActionStatus.unavailable,
           'Sign in again before restoring purchases.',
         );
       }
-      final result = await Purchases.restorePurchases();
-      if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.verificationFailed,
-          'Your account changed during restore. Please try again.',
-        );
-      }
-      if (await Purchases.appUserID != userId) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.verificationFailed,
-          'Your store account changed during restore. Please sign in again.',
-        );
-      }
-      if (!_hasPaidEntitlement(result)) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.noEntitlement,
-          'No active subscription was found for the required entitlement.',
-        );
-      }
-      if (!await _verifyWithBackend(userId)) {
-        return const SubscriptionActionResult(
-          SubscriptionActionStatus.verificationFailed,
-          'The restored purchase could not be verified with Everywear.',
-        );
-      }
-      return const SubscriptionActionResult(SubscriptionActionStatus.success);
+      final result = await RevenueCatService.runForCurrentUser(
+        userId,
+        () async {
+          final restored = await Purchases.restorePurchases();
+          if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
+            return const SubscriptionActionResult(
+              SubscriptionActionStatus.verificationFailed,
+              'Your account changed during restore. Please try again.',
+            );
+          }
+          if (!_hasPaidEntitlement(restored)) {
+            return const SubscriptionActionResult(
+              SubscriptionActionStatus.noEntitlement,
+              'No active subscription was found for the required entitlement.',
+            );
+          }
+          if (!await _verifyWithBackend(userId)) {
+            return const SubscriptionActionResult(
+              SubscriptionActionStatus.verificationFailed,
+              'The restored purchase could not be verified with Everywear.',
+            );
+          }
+          return const SubscriptionActionResult(
+            SubscriptionActionStatus.success,
+          );
+        },
+      );
+      return result ??
+          const SubscriptionActionResult(
+            SubscriptionActionStatus.verificationFailed,
+            'Your account changed during restore. Please try again.',
+          );
     } catch (e) {
       if (kDebugMode) debugPrint('Restore purchases failed: $e');
       return const SubscriptionActionResult(

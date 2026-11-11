@@ -89,21 +89,24 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _listenToAuthChanges() {
     if (!SupabaseService.isInitialized) {
-      if (kDebugMode) debugPrint('⚠️ SplashScreen: Supabase not initialized, skipping auth listener');
+      if (kDebugMode)
+        debugPrint(
+          '⚠️ SplashScreen: Supabase not initialized, skipping auth listener',
+        );
       return;
     }
-    
+
     _authSubscription = SupabaseService.instance.client.auth.onAuthStateChange
         .listen((data) {
-      if (!mounted) return;
-      // Only react to explicit sign-in — ignore tokenRefreshed, initialSession, etc.
-      if (data.event == AuthChangeEvent.signedIn && data.session != null) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.home,
-          (route) => false,
-        );
-      }
-    });
+          if (!mounted) return;
+          // Only react to explicit sign-in — ignore tokenRefreshed, initialSession, etc.
+          if (data.event == AuthChangeEvent.signedIn && data.session != null) {
+            unawaited(RevenueCatService.logIn(data.session!.user.id));
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+          }
+        });
   }
 
   @override
@@ -476,9 +479,7 @@ class _SplashScreenState extends State<SplashScreen>
         ),
         SizedBox(height: 1.h),
         Text(
-          _isSignUp
-              ? l10n.signupSubtitle
-              : l10n.signinSubtitle,
+          _isSignUp ? l10n.signupSubtitle : l10n.signinSubtitle,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
             fontSize: 13.sp,
@@ -570,8 +571,8 @@ class _SplashScreenState extends State<SplashScreen>
     }
 
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-       _showErrorSnackBar('Please enter a valid email address');
-       return;
+      _showErrorSnackBar('Please enter a valid email address');
+      return;
     }
 
     setState(() => _isLoading = true);
@@ -634,9 +635,7 @@ class _SplashScreenState extends State<SplashScreen>
         }),
         child: RichText(
           text: TextSpan(
-            text: _isSignUp
-                ? l10n.alreadyHaveAccount
-                : l10n.dontHaveAccount,
+            text: _isSignUp ? l10n.alreadyHaveAccount : l10n.dontHaveAccount,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
               fontSize: 13.sp,
@@ -692,9 +691,11 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _handleEmailAuth() async {
     final l10n = AppLocalizations.of(context);
-    
+
     if (!SupabaseService.isInitialized) {
-      _showErrorSnackBar('Supabase is not initialized. Please check your credentials and connection.');
+      _showErrorSnackBar(
+        'Supabase is not initialized. Please check your credentials and connection.',
+      );
       return;
     }
 
@@ -714,10 +715,6 @@ class _SplashScreenState extends State<SplashScreen>
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-        final user = SupabaseService.instance.client.auth.currentUser;
-        if (user != null) {
-          await RevenueCatService.logIn(user.id);
-        }
       }
     } on AuthException catch (e) {
       if (mounted) _showErrorSnackBar(e.message);

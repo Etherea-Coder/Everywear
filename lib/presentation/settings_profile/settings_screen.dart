@@ -19,8 +19,7 @@ import '../../services/export_service.dart';
 import '../../services/supabase_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/analytics_service.dart';
-import '../../services/revenuecat_service.dart';
-import '../../services/account_state_service.dart';
+import '../../services/auth_session_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -444,12 +443,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         throw Exception(response.data?['error'] ?? 'Delete failed');
       }
 
-      // Sign out locally after server-side deletion
-      final userId = SupabaseService.instance.client.auth.currentUser?.id;
-      if (userId != null) await AccountStateService.clearForUser(userId);
-      await RevenueCatService.logOut();
-      await AnalyticsService.instance.resetUser();
-      await SupabaseService.instance.client.auth.signOut();
+      // Sign out locally after server-side deletion.
+      await AuthSessionService.signOutCurrentUser();
 
       if (mounted) {
         Navigator.of(
@@ -538,11 +533,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         cancelText: localizations.cancel,
         isDestructive: false,
         onConfirm: () async {
-          final userId = Supabase.instance.client.auth.currentUser?.id;
-          if (userId != null) await AccountStateService.clearForUser(userId);
-          await RevenueCatService.logOut();
-          await AnalyticsService.instance.resetUser();
-          await Supabase.instance.client.auth.signOut();
+          await AuthSessionService.signOutCurrentUser();
           if (outerContext.mounted) {
             Navigator.of(
               outerContext,

@@ -6,7 +6,7 @@ import './welcome_philosophy/welcome_philosophy.dart';
 import './splash_screen/splash_screen.dart';
 import './password_reset/password_reset_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/supabase_service.dart';
+import '../services/auth_session_service.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({Key? key}) : super(key: key);
@@ -72,7 +72,9 @@ class _ProfileLoadError extends StatelessWidget {
               FilledButton(onPressed: onRetry, child: const Text('Retry')),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => SupabaseService.instance.client.auth.signOut(),
+                onPressed: () async {
+                  await AuthSessionService.signOutCurrentUser();
+                },
                 child: Text(
                   'Sign out',
                   style: TextStyle(color: colors.primary),
