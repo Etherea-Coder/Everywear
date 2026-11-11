@@ -50,6 +50,10 @@ unverified. This is not yet a Play release candidate.
 - `192a8f2275a043ef11b7b78e8197b3d5e6c9015a` — records 49 passing current
   Flutter tests, clean targeted analysis, and the rebuilt final-source unsigned
   AAB with archive/hash verification.
+- `9f1a54a9d669a5c8114ebf99f4dc547c980b434f` — records the prior verification
+  checkpoint and preserves the full resumable goal checklist.
+- `9c4ade3e88f1d19d5e0c6009b2874052f16be52f` — reconciles the recovery plan
+  with current test, analyzer, database, and AAB evidence.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
