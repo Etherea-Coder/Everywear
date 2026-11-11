@@ -37,6 +37,9 @@ unverified. This is not yet a Play release candidate.
   stable owner-scoped references and clears it during account cleanup.
 - `d70bb6d6984c436239043757c4ef66b0df155054` — recognizes authenticated
   Supabase Storage URLs and evicts private image bytes from both cache layers.
+- `c8cff417c982015871e0f70fb9d35753c255f081` — adds disposable-local Storage
+  isolation coverage for anonymous access, private bucket state, both account
+  owners, uploads, and deletion; records fresh read-only production metadata.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -128,7 +131,11 @@ Dart changes; the targeted image routing/private consumer/app-import selection
 passed 12/12. Targeted Dart formatting and `git diff --check` passed. The app
 import smoke test compiles the app entry point and transitive screens. The
 release bundle built and passed archive integrity inspection, but is unsigned
-and has no provider configuration. No analyzer rerun or device check was made.
+and has no provider configuration. A project-local `pglast` parse accepted all
+30 outer SQL statements in the new Storage fixture; this is syntax parsing only
+and does not execute policies or prove isolation. Read-only metadata queries
+confirmed public buckets and broad Storage table grants. No analyzer rerun or
+device check was made.
 
 ## 3. Deferred or incomplete verification
 
