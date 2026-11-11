@@ -21,9 +21,31 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } },
+    )
+    const { data: { user }, error: authError } = await userClient.auth.getUser()
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    }
+
     const { imageBase64 } = await req.json()
-    if (!imageBase64) {
+    if (typeof imageBase64 !== 'string' || imageBase64.length === 0) {
       return new Response(JSON.stringify({ error: 'Missing imageBase64' }), { status: 400 })
+    }
+    if (imageBase64.length > 10_000_000) {
+      return new Response(JSON.stringify({ error: 'Image is too large' }), { status: 413 })
+    }
+
+    const { data: allowed, error: quotaError } = await userClient.rpc(
+      'consume_ai_quota',
+      { quota_kind: 'suggestion' },
+    )
+    if (quotaError) throw new Error(`Quota check failed: ${quotaError.message}`)
+    if (allowed !== true) {
+      return new Response(JSON.stringify({ error: 'AI quota reached' }), { status: 429 })
     }
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')

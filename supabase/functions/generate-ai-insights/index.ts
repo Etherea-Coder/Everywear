@@ -44,6 +44,13 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
+    const { data: allowed, error: quotaError } = await supabase
+      .rpc('consume_ai_quota', { quota_kind: 'suggestion' })
+    if (quotaError) throw new Error('Unable to verify AI quota')
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'AI quota reached' }), { status: 429, headers: CORS })
+    }
+
     const { timeRange = 'month', category = null } = await req.json()
 
     // ── Date window ───────────────────────────────────────────────────────

@@ -32,6 +32,13 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
+    const { data: allowed, error: quotaError } = await supabaseClient
+      .rpc('consume_ai_quota', { quota_kind: 'coach' })
+    if (quotaError) throw new Error('Unable to verify coaching quota')
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'Coaching quota reached' }), { status: 429 })
+    }
+
     const { userName, localHour, mode, userProfile, insights, wardrobeSummary, recentOutfits, occasionPatterns, itemRatings, silhouetteEvolution, question, event } = await req.json()
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')

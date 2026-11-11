@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
@@ -14,6 +16,26 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } },
+    )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    }
+    const { data: allowed, error: quotaError } = await supabase
+      .rpc('consume_ai_quota', { quota_kind: 'suggestion' })
+    if (quotaError) throw new Error('Unable to verify AI quota')
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'AI quota reached' }), { status: 429 })
+    }
+
     const {
       userName,
       localHour,

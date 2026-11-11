@@ -61,7 +61,7 @@ serve(async (req) => {
     }
 
     const { data: canRequest, error: limitError } = await supabaseClient
-      .rpc('can_request_suggestion', { user_uuid: user.id })
+      .rpc('consume_ai_quota', { quota_kind: 'suggestion' })
 
     if (limitError) {
       console.error('Error checking suggestion limit:', limitError)
@@ -188,11 +188,6 @@ Be encouraging and constructive. Keep each suggestion to 1-2 sentences.${profile
     const suggestions = geminiData.choices?.[0]?.message?.content || ''
 
     if (!suggestions) throw new Error('No suggestions received from Gemini')
-
-    const { error: incrementError } = await supabaseClient
-      .rpc('increment_suggestions_count', { user_uuid: user.id })
-
-    if (incrementError) console.error('Error incrementing suggestions count:', incrementError)
 
     return new Response(
       JSON.stringify({ success: true, suggestions: suggestions.trim(), language }),

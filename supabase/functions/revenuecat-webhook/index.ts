@@ -1,106 +1,81 @@
-// @ts-nocheck
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-interface RevenueCatEvent {
+type RevenueCatEvent = {
+  id: string
   type: string
   app_user_id: string
-  product_id?: string
-  expiration_at_ms?: number
-  store?: string
+  entitlement_ids?: string[]
+  event_timestamp_ms?: number
+  expiration_at_ms?: number | null
+  grace_period_expiration_at_ms?: number | null
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   try {
-    // Verify the request is from RevenueCat
-    const authHeader = req.headers.get('Authorization')
-    const webhookSecret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET')
-    
-    if (!webhookSecret || authHeader !== `Bearer ${webhookSecret}`) {
+    const secret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET')
+    if (!secret || req.headers.get('Authorization') !== `Bearer ${secret}`) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    const body = await req.json() as { event?: RevenueCatEvent }
+    const event = body.event
+    if (!event?.id || !event.type || !event.app_user_id ||
+        !Number.isFinite(event.event_timestamp_ms)) {
+      return Response.json({ error: 'Invalid RevenueCat event envelope' }, { status: 400 })
+    }
+
+    const entitlementId = Deno.env.get('REVENUECAT_ENTITLEMENT_ID')
+    if (!entitlementId) throw new Error('REVENUECAT_ENTITLEMENT_ID not configured')
+
+    const admin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
+    const eventAt = new Date(event.event_timestamp_ms!).toISOString()
+    const accessUntil = Math.max(event.expiration_at_ms ?? 0,
+      event.grace_period_expiration_at_ms ?? 0)
+    const expiresAt = accessUntil > 0 ? new Date(accessUntil).toISOString() : null
 
-    // RevenueCat sends the event directly in the request body
-    const event: RevenueCatEvent = await req.json()
-    const { type, app_user_id, product_id, expiration_at_ms, store } = event
-
-    // Map RevenueCat event types to subscription status
-    const activeEvents = [
-      'INITIAL_PURCHASE',
-      'RENEWAL',
-      'PRODUCT_CHANGE',
-      'REACTIVATION',
-      'NON_RENEWING_PURCHASE',
-    ]
-
-    const inactiveEvents = [
-      'EXPIRATION',
-      'CANCELLATION',
-      'BILLING_ISSUE',
-    ]
-
-    let tier: string | null = null
-
-    if (activeEvents.includes(type)) {
-      tier = 'premium'
-    } else if (inactiveEvents.includes(type)) {
-      tier = 'free'
-    } else {
-      // Ignore other event types (e.g. TEST, TRANSFER)
-      return new Response(JSON.stringify({ received: true, type: type }), { status: 200 })
+    // Ignore events for other entitlements when RevenueCat supplies the list.
+    if (!event.entitlement_ids?.includes(entitlementId)) {
+      return Response.json({ received: true, irrelevant: true })
     }
 
-    const expiresAt = expiration_at_ms
-      ? new Date(expiration_at_ms).toISOString()
-      : null
-
-    // Update user_profiles — app_user_id is the Supabase user ID
-    // (only works if you call Purchases.logIn(user.id) in your app)
-    const { error: profileError } = await supabase
-      .from('user_profiles')
-      .update({
-        tier,
-        subscription_expires_at: expiresAt,
-        revenue_cat_id: app_user_id,
-      })
-      .eq('id', app_user_id)
-
-    if (profileError) {
-      console.error('Profile update error:', profileError)
-      // Continue even if profile doesn't exist (user might not have completed onboarding)
+    let tier = 'premium'
+    let status = 'active'
+    if (event.type === 'EXPIRATION') {
+      tier = 'free'; status = 'expired'
+    } else if (event.type === 'CANCELLATION') {
+      // Cancellation disables renewal but access remains through expiration.
+      const stillActive = event.expiration_at_ms != null && event.expiration_at_ms > Date.now()
+      tier = stillActive ? 'premium' : 'free'; status = stillActive ? 'cancelled' : 'expired'
+    } else if (event.type === 'BILLING_ISSUE') {
+      const graceUntil = event.grace_period_expiration_at_ms ?? 0
+      tier = graceUntil > Date.now() ? 'premium' : 'free'
+      status = graceUntil > Date.now() ? 'grace_period' : 'expired'
+    } else if (!['INITIAL_PURCHASE','RENEWAL','PRODUCT_CHANGE','REACTIVATION','NON_RENEWING_PURCHASE'].includes(event.type)) {
+      return Response.json({ received: true, ignored: true })
     }
 
-    // Store transaction record if we have a product_id
-    if (product_id) {
-      const { error: transactionError } = await supabase
-        .from('subscription_transactions')
-        .upsert({
-          user_id: app_user_id,
-          product_id,
-          event_type: type,
-          store: store || 'unknown',
-          expires_at: expiresAt,
-          created_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,product_id,event_type' })
-
-      if (transactionError) {
-        console.error('Transaction upsert error:', transactionError)
-      }
+    if (tier === 'premium' && accessUntil <= Date.now()) {
+      tier = 'free'; status = 'expired'
     }
+    const { data: outcome, error: updateError } = await admin.rpc('apply_subscription_event', {
+      input_event_id: event.id,
+      input_user_id: event.app_user_id,
+      input_type: event.type,
+      input_event_at: eventAt,
+      input_expires_at: expiresAt,
+      input_entitlement: entitlementId,
+      input_payload: body,
+      input_tier: tier,
+      input_status: status,
+    })
+    if (updateError) throw updateError
 
-    return new Response(JSON.stringify({ received: true }), { status: 200 })
-
+    return Response.json({ received: true, outcome })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error('RevenueCat webhook error:', errorMessage)
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 400 },
-    )
+    console.error('RevenueCat webhook error', error)
+    return Response.json({ error: 'Webhook processing failed' }, { status: 500 })
   }
 })

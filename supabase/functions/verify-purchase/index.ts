@@ -36,31 +36,24 @@ serve(async (req) => {
       })
     }
 
-    // Get the RevenueCat customer ID from request body
-    const body = await req.json()
-    const revenueCatUserId = body.revenue_cat_user_id as string | null
+    const revenueCatUserId = user.id
+    const entitlementId = Deno.env.get('REVENUECAT_ENTITLEMENT_ID')
+    const secretKey = Deno.env.get('REVENUECAT_SECRET_KEY')
+    if (!entitlementId || !secretKey) throw new Error('RevenueCat is not configured')
 
-    if (!revenueCatUserId) {
-      return new Response(JSON.stringify({ error: 'Missing revenue_cat_user_id' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Verify with RevenueCat REST API (v2)
+    // Verify with the RevenueCat v1 subscriber endpoint.
     const rcResponse = await fetch(
-      `https://api.revenuecat.com/v2/subscribers/${revenueCatUserId}`,
+      `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(revenueCatUserId)}`,
       {
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('REVENUECAT_SECRET_KEY')!}`,
+          'Authorization': `Bearer ${secretKey}`,
           'Content-Type': 'application/json',
         },
       }
     )
 
     if (!rcResponse.ok) {
-      const errorText = await rcResponse.text()
-      return new Response(JSON.stringify({ error: 'RevenueCat verification failed', details: errorText }), {
+      return new Response(JSON.stringify({ error: 'RevenueCat verification failed' }), {
         status: 402,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -68,16 +61,16 @@ serve(async (req) => {
 
     const rcData = await rcResponse.json()
 
-    // Check if user has an active entitlement (v2 API structure)
+    // RevenueCat v1 subscriber response. Require the exact configured
+    // entitlement; missing/unknown data always fails closed.
     const entitlements = rcData?.subscriber?.entitlements ?? {}
-    const entitlement = Object.values(entitlements)[0] as {
-      is_period_type?: string
+    const entitlement = entitlements[entitlementId] as {
       expires_date?: string | null
+      grace_period_expires_date?: string | null
     } | undefined
-    const isPremium = entitlement?.is_period_type !== 'trial' && 
-                      (entitlement?.expires_date === null || 
-                       entitlement?.expires_date === undefined ||
-                       new Date(entitlement?.expires_date) > new Date())
+    const expiry = entitlement?.grace_period_expires_date ?? entitlement?.expires_date
+    const isPremium = entitlement !== undefined &&
+      (expiry === null || (typeof expiry === 'string' && new Date(expiry) > new Date()))
 
     if (!isPremium) {
       return new Response(JSON.stringify({ error: 'No active entitlement found' }), {
@@ -108,7 +101,12 @@ serve(async (req) => {
 
     const { error: updateError } = await adminClient
       .from('user_profiles')
-      .update({ tier: 'premium' })
+      .update({
+        tier: 'premium',
+        subscription_status: entitlement?.grace_period_expires_date ? 'grace_period' : 'active',
+        subscription_expires_at: expiry ?? null,
+        revenuecat_customer_id: user.id,
+      })
       .eq('id', user.id)
 
     if (updateError) {

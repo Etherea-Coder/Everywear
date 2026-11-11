@@ -34,64 +34,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    const { data: allowed, error: quotaError } = await userClient.rpc(
+      "consume_ai_quota",
+      { quota_kind: "suggestion" },
     );
-
-    const today = new Date().toISOString().split("T")[0];
-
-    const { data: profile, error: fetchError } = await adminClient
-      .from("user_profiles")
-      .select("tier, daily_suggestions_used, suggestions_reset_at")
-      .eq("id", user.id)
-      .single();
-
-    if (fetchError || !profile) {
-      return new Response(JSON.stringify({ error: "Profile not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const tier = (profile.tier as string) || "free";
-    const used = (profile.daily_suggestions_used as number) || 0;
-    const resetAt = profile.suggestions_reset_at as string | null;
-
-    const dailyLimit = tier === "premium" ? 999999 : tier === "essential" ? 10 : 3;
-
-    if (resetAt !== today) {
-      await adminClient
-        .from("user_profiles")
-        .update({
-          daily_suggestions_used: 1,
-          suggestions_reset_at: today,
-        })
-        .eq("id", user.id);
-
-      return new Response(
-        JSON.stringify({ allowed: true, daily_suggestions_used: 1, daily_limit: dailyLimit }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (used >= dailyLimit) {
-      return new Response(
-        JSON.stringify({ allowed: false, daily_suggestions_used: used, daily_limit: dailyLimit }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    await adminClient.rpc("increment_daily_suggestions", { user_id_input: user.id });
+    if (quotaError) throw quotaError;
 
     return new Response(
-      JSON.stringify({ allowed: true, daily_suggestions_used: used + 1, daily_limit: dailyLimit }),
+      JSON.stringify({ allowed: allowed === true }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
