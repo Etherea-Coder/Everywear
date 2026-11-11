@@ -137,7 +137,7 @@ unverified. This is not yet a Play release candidate.
 | Reset cleanup source | Targeted Dart formatting and `git diff --check` passed. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/paginated_outfit_link_cleanup_test.dart` — **3 passed**; the test uses a pure callback helper and did not connect to Supabase |
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
 | Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim and completing independent code work/tests, one release build succeeded in 237.6 seconds with one Gradle worker and a 2 GiB heap. It produced `build/app/outputs/bundle/release/app-release.aab` (76,514,565 bytes). `unzip -tq` passed; `jarsigner -verify` reported `jar is unsigned`. SHA-256: `c257964750ac8cea02b579b1b944a47a76b6ccd4977e1170c290659b0f911feb`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
-| Device | No emulator/device used |
+| Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting, `deno fmt --check` on three changed functions, `git diff --check` and `git diff --cached --check` passed |
 
 Latest verification: the full serial Flutter suite passed 42/42 after current
@@ -208,6 +208,9 @@ device check was made.
   verification. No successful purchase is claimed.
 - No private upload keystore or `android/key.properties` was found. A signed AAB
   cannot be produced without valid private upload-signing inputs.
+- Physical-device verification needs Android Platform Tools (`adb`) and a
+  connected Android device. Neither was available in this environment; no
+  emulator was started.
 - Store privacy/deletion URLs, listing artwork/screenshots, required Play
   declarations and eligibility are still owner-provided release inputs.
 - The recovered `create-subscription-payment` Stripe Edge Function is still
