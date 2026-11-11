@@ -21,7 +21,7 @@ This document records the authorized finish scope for branch `recovery/android-v
 - [x] Implement image refresh/export, timezone-aware reminders, system text scaling, offline/error handling, and remove the unused payment placeholder; document remaining provider/release inputs.
 - [ ] Full Flutter suite passed 36 tests sequentially. Analyzer returned 0 errors/9 warnings/281 info; reported warnings were edited without rechecking. Deno checks passed seven functions; the final `generate-ai-insights` fallback and `ai-suggestions` remain unchecked after the two-attempt limit.
 - [ ] Two Android AAB attempts failed on the generated test-only integration plugin reference. A release-only no-op shim was added and independently compiled with Java; no bundle retry after the two-attempt limit. No signing, emulator, or live-purchase claim is made.
-- [ ] Commit the documentation/CI checkpoint; source checkpoints are committed as `395255b` and `5ba8204`.
+- [x] Commit the documentation/CI checkpoint. Source checkpoints: `395255b`, `5ba8204`; docs/CI checkpoint: `fe0a5c5`.
 
 ## Current known boundaries
 

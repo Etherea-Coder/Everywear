@@ -18,7 +18,8 @@ Play eligibility are not verified. This is not yet a Play release candidate.
 - `5ba8204203c24e98e50e57188ed5d13d614e89db` — expiry-aware entitlement
   decisions, client/offline and notification fixes, release-only shim, removal
   of obsolete placeholder screens/services, and focused tests.
-- Documentation/CI checkpoint is being committed separately.
+- `fe0a5c5fc0b3463a8014a869f74927b6aaf71bef` — setup/release documentation,
+  reconciliation updates, resumable goal status, and sequential Flutter/Deno CI.
 
 ## 1. Completed local code changes
 
