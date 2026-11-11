@@ -61,6 +61,22 @@ class StorageService {
     return '$bucket/$objectPath';
   }
 
+  /// Returns a stable wardrobe object reference only when the reference is
+  /// owned by [ownerId]. External/provider URLs and other users' objects are
+  /// deliberately excluded from deletion paths.
+  static String? ownedWardrobeImageReference(
+    String? value, {
+    required String ownerId,
+    String? supabaseUrl,
+  }) {
+    if (value == null || ownerId.isEmpty) return null;
+    final reference = stableStorageReference(value, supabaseUrl: supabaseUrl);
+    if (reference == null || !isStorageReference(reference)) return null;
+    final path = reference.substring('wardrobe-images/'.length);
+    if (path.split('/').first != ownerId) return null;
+    return reference;
+  }
+
   /// Uploads and returns the stable owner scoped object path for persistence.
   Future<String?> uploadWardrobeImage(String localPath) async {
     return _uploadImage(localPath, bucket: _bucket);

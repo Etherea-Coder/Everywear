@@ -209,6 +209,8 @@ class WardrobeService {
     bool? isFavorite,
   }) async {
     try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) throw Exception('User not authenticated');
       final updateData = <String, dynamic>{};
       if (name != null) updateData['name'] = name;
       if (category != null) updateData['category'] = category;
@@ -230,12 +232,29 @@ class WardrobeService {
       if (notes != null) updateData['notes'] = notes;
       if (isFavorite != null) updateData['is_favorite'] = isFavorite;
 
+      String? previousImage;
+      if (updateData.containsKey('image_url')) {
+        final existing = await _client
+            .from('wardrobe_items')
+            .select('image_url')
+            .eq('id', itemId)
+            .eq('user_id', userId)
+            .maybeSingle();
+        previousImage = existing?['image_url'] as String?;
+      }
+
       final response = await _client
           .from('wardrobe_items')
           .update(updateData)
           .eq('id', itemId)
+          .eq('user_id', userId)
           .select()
           .single();
+
+      final newImage = response['image_url'] as String?;
+      if (previousImage != newImage && _client.auth.currentUser?.id == userId) {
+        await _deleteOwnedWardrobeImage(previousImage, userId);
+      }
 
       return response;
     } catch (error) {
@@ -246,7 +265,26 @@ class WardrobeService {
   /// Deletes a wardrobe item
   Future<void> deleteWardrobeItem(String itemId) async {
     try {
-      await _client.from('wardrobe_items').delete().eq('id', itemId);
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) throw Exception('User not authenticated');
+      final existing = await _client
+          .from('wardrobe_items')
+          .select('image_url')
+          .eq('id', itemId)
+          .eq('user_id', userId)
+          .maybeSingle();
+      final deleted = await _client
+          .from('wardrobe_items')
+          .delete()
+          .eq('id', itemId)
+          .eq('user_id', userId)
+          .select('id');
+      if (deleted.isNotEmpty && _client.auth.currentUser?.id == userId) {
+        await _deleteOwnedWardrobeImage(
+          existing?['image_url'] as String?,
+          userId,
+        );
+      }
     } catch (error) {
       throw Exception('Failed to delete wardrobe item: $error');
     }
@@ -255,9 +293,48 @@ class WardrobeService {
   /// Deletes multiple wardrobe items
   Future<void> deleteMultipleItems(List<String> itemIds) async {
     try {
-      await _client.from('wardrobe_items').delete().inFilter('id', itemIds);
+      if (itemIds.isEmpty) return;
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) throw Exception('User not authenticated');
+      final existing = await _client
+          .from('wardrobe_items')
+          .select('id, image_url')
+          .eq('user_id', userId)
+          .inFilter('id', itemIds);
+      final deleted = await _client
+          .from('wardrobe_items')
+          .delete()
+          .eq('user_id', userId)
+          .inFilter('id', itemIds)
+          .select('id');
+      if (deleted.isNotEmpty && _client.auth.currentUser?.id == userId) {
+        final deletedIds = deleted.map((row) => row['id']).toSet();
+        for (final row in existing) {
+          if (deletedIds.contains(row['id'])) {
+            await _deleteOwnedWardrobeImage(
+              row['image_url'] as String?,
+              userId,
+            );
+          }
+        }
+      }
     } catch (error) {
       throw Exception('Failed to delete wardrobe items: $error');
+    }
+  }
+
+  Future<void> _deleteOwnedWardrobeImage(String? value, String ownerId) async {
+    final reference = StorageService.ownedWardrobeImageReference(
+      value,
+      ownerId: ownerId,
+    );
+    if (reference == null) return;
+    final deleted = await StorageService().deleteImageReference(
+      reference,
+      expectedBucket: 'wardrobe-images',
+    );
+    if (!deleted && kDebugMode) {
+      debugPrint('Wardrobe image cleanup failed after row change');
     }
   }
 

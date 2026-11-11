@@ -118,14 +118,17 @@ class _AddClothingItemState extends State<AddClothingItem> {
       }
 
       // Auto-populate item name if empty and AI is confident
-      final confidence = (analysisResult['confidence'] as num?)?.toDouble() ?? 0.0;
+      final confidence =
+          (analysisResult['confidence'] as num?)?.toDouble() ?? 0.0;
       if (_itemNameController.text.trim().isEmpty && confidence > 0.6) {
         final color = analysisResult['color'] as String? ?? '';
         final material = analysisResult['material'] as String? ?? '';
         final category = analysisResult['category'] as String? ?? '';
-        final parts = [color, material, category]
-            .where((s) => s.isNotEmpty && s.toLowerCase() != 'unknown')
-            .toList();
+        final parts = [
+          color,
+          material,
+          category,
+        ].where((s) => s.isNotEmpty && s.toLowerCase() != 'unknown').toList();
         if (parts.isNotEmpty) {
           _itemNameController.text = parts.join(' ');
         }
@@ -160,11 +163,13 @@ class _AddClothingItemState extends State<AddClothingItem> {
     if (!_isFormValid()) return;
 
     final l10n = localizations;
+    String? newlyUploadedImage;
+    var itemPersisted = false;
     setState(() => _isSaving = true);
 
     try {
       final theme = Theme.of(context);
-      
+
       final price = _priceController.text.trim().isNotEmpty
           ? double.tryParse(_priceController.text.trim())
           : null;
@@ -176,7 +181,8 @@ class _AddClothingItemState extends State<AddClothingItem> {
         final route = StorageService.classifyImageReference(currentImage);
         if (route == ImageReferenceRoute.storage) {
           imageUrl =
-              StorageService.stableStorageReference(currentImage) ?? currentImage;
+              StorageService.stableStorageReference(currentImage) ??
+              currentImage;
         } else if (route == ImageReferenceRoute.network) {
           imageUrl = currentImage;
         } else {
@@ -184,6 +190,10 @@ class _AddClothingItemState extends State<AddClothingItem> {
               ? Uri.parse(currentImage).toFilePath()
               : currentImage;
           imageUrl = await _storageService.uploadWardrobeImage(localPath);
+          if (imageUrl == null) {
+            throw StateError('The wardrobe image could not be uploaded.');
+          }
+          newlyUploadedImage = imageUrl;
         }
       }
 
@@ -196,14 +206,18 @@ class _AddClothingItemState extends State<AddClothingItem> {
           itemId: _existingItemId!,
           name: _itemNameController.text.trim(),
           category: _selectedCategory!,
-          brand: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
+          brand: _brandController.text.trim().isNotEmpty
+              ? _brandController.text.trim()
+              : null,
           imageUrl: imageUrl,
-          semanticLabel: _aiAnalysisData != null 
+          semanticLabel: _aiAnalysisData != null
               ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
               : null,
           purchasePrice: price,
           purchaseDate: _purchaseDate,
-          notes: _storeController.text.trim().isNotEmpty ? _storeController.text.trim() : null,
+          notes: _storeController.text.trim().isNotEmpty
+              ? _storeController.text.trim()
+              : null,
         );
       } else {
         // Create new item
@@ -212,7 +226,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
           category: _selectedCategory!, // We validated it's not null
           brand: _brandController.text.trim(),
           imageUrl: imageUrl,
-          semanticLabel: _aiAnalysisData != null 
+          semanticLabel: _aiAnalysisData != null
               ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
               : null,
           purchasePrice: price,
@@ -220,6 +234,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
           notes: _storeController.text.trim(), // Reusing store as notes for now
         );
       }
+      itemPersisted = true;
 
       // Also add to purchases table if price is provided and it's a new item
       if (!isEditing && price != null && price > 0) {
@@ -227,7 +242,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
           name: _itemNameController.text.trim(),
           price: price,
           purchaseDate: _purchaseDate ?? DateTime.now(),
-          brand: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
+          brand: _brandController.text.trim().isNotEmpty
+              ? _brandController.text.trim()
+              : null,
           category: _selectedCategory,
           imageUrl: imageUrl,
           wardrobeItemId: savedItem['id']?.toString(),
@@ -237,9 +254,11 @@ class _AddClothingItemState extends State<AddClothingItem> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditing 
-                ? '${_itemNameController.text} ${l10n.itemUpdatedSuccess}'
-                : '${_itemNameController.text} ${l10n.itemAddedToWardrobe}'),
+            content: Text(
+              isEditing
+                  ? '${_itemNameController.text} ${l10n.itemUpdatedSuccess}'
+                  : '${_itemNameController.text} ${l10n.itemAddedToWardrobe}',
+            ),
             backgroundColor: theme.colorScheme.primary,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
@@ -250,6 +269,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
         Navigator.of(context, rootNavigator: true).pop(savedItem);
       }
     } catch (e) {
+      if (!itemPersisted && newlyUploadedImage != null) {
+        await _storageService.deleteWardrobeImage(newlyUploadedImage);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -274,9 +296,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('${l10n.discard} ${l10n.changes}?'),
-        content: Text(
-          l10n.unsavedChanges,
-        ),
+        content: Text(l10n.unsavedChanges),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

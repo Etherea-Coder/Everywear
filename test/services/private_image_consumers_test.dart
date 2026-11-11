@@ -82,6 +82,53 @@ void main() {
     });
   });
 
+  group('wardrobe image cleanup ownership', () {
+    test('allows only the current owner wardrobe object reference', () {
+      expect(
+        StorageService.ownedWardrobeImageReference(
+          'wardrobe-images/user-a/item.png',
+          ownerId: 'user-a',
+        ),
+        'wardrobe-images/user-a/item.png',
+      );
+      expect(
+        StorageService.ownedWardrobeImageReference(
+          'wardrobe-images/user-b/item.png',
+          ownerId: 'user-a',
+        ),
+        isNull,
+      );
+      expect(
+        StorageService.ownedWardrobeImageReference(
+          'https://images.example/item.png',
+          ownerId: 'user-a',
+        ),
+        isNull,
+      );
+      expect(
+        StorageService.ownedWardrobeImageReference(
+          'avatars/user-a/avatar.png',
+          ownerId: 'user-a',
+        ),
+        isNull,
+      );
+    });
+
+    test(
+      'recognizes an owned legacy project URL without retaining its token',
+      () {
+        expect(
+          StorageService.ownedWardrobeImageReference(
+            'https://qxsdwwdrxoyxmnapuqqv.supabase.co/storage/v1/object/public/wardrobe-images/user-a/item.png?token=expired',
+            ownerId: 'user-a',
+            supabaseUrl: 'https://qxsdwwdrxoyxmnapuqqv.supabase.co',
+          ),
+          'wardrobe-images/user-a/item.png',
+        );
+      },
+    );
+  });
+
   test(
     'exports resolve stable and legacy references in memory and skip misses',
     () async {
