@@ -1,4 +1,6 @@
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './ai_image_payload.dart';
 import './supabase_service.dart';
 import './style_service.dart';
 
@@ -8,7 +10,7 @@ class AiSuggestionsService {
   /// Generates AI styling suggestions for an outfit image
   ///
   /// Parameters:
-  /// - [imageUrl]: URL of the outfit image to analyze
+  /// - [imageFile]: image selected or captured by this device
   /// - [language]: Language code for suggestions ('EN', 'FR', or 'ES')
   ///
   /// Returns a map containing:
@@ -16,7 +18,7 @@ class AiSuggestionsService {
   /// - 'suggestions': string with AI-generated styling tips
   /// - 'error': error message if operation failed
   Future<Map<String, dynamic>> generateSuggestions({
-    required String imageUrl,
+    required XFile imageFile,
     required String language,
     Map<String, dynamic>? weatherContext,
     List<Map<String, dynamic>>? itemHistory,
@@ -25,6 +27,28 @@ class AiSuggestionsService {
       final user = _supabase.auth.currentUser;
       if (user == null) {
         return {'success': false, 'error': 'User not authenticated'};
+      }
+
+      if (await imageFile.length() > maxAiSourceImageBytes) {
+        return {
+          'success': false,
+          'error': 'Image is too large for AI suggestions',
+        };
+      }
+
+      final compressedImage = await FlutterImageCompress.compressWithList(
+        await imageFile.readAsBytes(),
+        minWidth: 1280,
+        minHeight: 1280,
+        quality: 75,
+        format: CompressFormat.jpeg,
+      );
+      final imageBase64 = encodeAiImageBase64(compressedImage);
+      if (imageBase64 == null) {
+        return {
+          'success': false,
+          'error': 'Image is too large or unavailable for AI suggestions',
+        };
       }
 
       final userName = _getUserFirstName(user);
@@ -48,7 +72,7 @@ class AiSuggestionsService {
       final response = await _supabase.functions.invoke(
         'ai-suggestions',
         body: {
-          'imageUrl': imageUrl,
+          'imageBase64': imageBase64,
           'language': language,
           'userName': userName,
           'userProfile': profile,
@@ -70,7 +94,7 @@ class AiSuggestionsService {
     } catch (e) {
       return {
         'success': false,
-        'error': 'Failed to connect to AI service: ${e.toString()}',
+        'error': 'Failed to prepare or generate AI suggestions',
       };
     }
   }

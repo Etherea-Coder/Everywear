@@ -298,7 +298,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
     }
   }
 
-  Future<void> _getAiSuggestions(String imageUrl) async {
+  Future<void> _getAiSuggestions(XFile imageFile) async {
     setState(() {
       _isLoadingSuggestions = true;
       _aiSuggestions = null;
@@ -321,7 +321,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
         : null;
 
     final result = await _aiSuggestionsService.generateSuggestions(
-      imageUrl: imageUrl,
+      imageFile: imageFile,
       language: ref.read(localeProvider).languageCode.toUpperCase(),
       weatherContext: weatherContext,
       itemHistory: itemsContext,
@@ -450,7 +450,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
                 bottom: 18.h,
                 right: 4.w,
                 child: FloatingActionButton.extended(
-                  onPressed: () => _getAiSuggestions(_capturedImage!.path),
+                  onPressed: () => _getAiSuggestions(_capturedImage!),
                   backgroundColor: Color(0xFF6366F1),
                   icon: Icon(Icons.auto_awesome, color: Colors.white),
                   label: Text(

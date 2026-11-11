@@ -1,20 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { validateAiSuggestionRequest } from './request_validation.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-
-interface RequestBody {
-  imageUrl: string
-  language: 'EN' | 'FR' | 'ES'
-  userName?: string
-  userProfile?: {
-    styleProfile?: string
-    preferredColors?: string
-    styleGoals?: string
-    styleIntention?: string
-  }
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -28,15 +17,6 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, language, userName, userProfile }: RequestBody = await req.json()
-
-    if (!imageUrl || !language) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: imageUrl and language' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
     const authHeader = req.headers.get('authorization')
     if (!authHeader) {
       return new Response(
@@ -58,6 +38,28 @@ serve(async (req) => {
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       )
     }
+
+    let requestBody: unknown
+    try {
+      requestBody = await req.json()
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const validated = validateAiSuggestionRequest(requestBody)
+    if (!validated.ok) {
+      return new Response(
+        JSON.stringify({ error: validated.error }),
+        { status: validated.status, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+    const { imageBase64, language, userName, userProfile } = validated.value
+
+    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
+    if (!openRouterApiKey) throw new Error('OPENROUTER_API_KEY not configured')
 
     const { data: canRequest, error: limitError } = await supabaseClient
       .rpc('consume_ai_quota', { quota_kind: 'suggestion' })
@@ -102,24 +104,6 @@ serve(async (req) => {
           styleIntention: quiz.style_intention,
         }
       }
-    }
-
-    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
-    if (!openRouterApiKey) throw new Error('OPENROUTER_API_KEY not configured')
-
-    let base64Image: string
-    try {
-      const imageResponse = await fetch(imageUrl)
-      const imageBlob = await imageResponse.blob()
-      const arrayBuffer = await imageBlob.arrayBuffer()
-      const bytes = new Uint8Array(arrayBuffer)
-      base64Image = btoa(String.fromCharCode(...bytes))
-    } catch (error) {
-      console.error('Error fetching/converting image:', error)
-      return new Response(
-        JSON.stringify({ success: false, error: 'Failed to process image' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      )
     }
 
     // Build personalized name line
@@ -167,7 +151,7 @@ Be encouraging and constructive. Keep each suggestion to 1-2 sentences.${profile
               { type: 'text', text: languageInstructions[language] },
               {
                 type: 'image_url',
-                image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+                image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
               },
             ],
           },
@@ -195,9 +179,8 @@ Be encouraging and constructive. Keep each suggestion to 1-2 sentences.${profile
 
   } catch (error) {
     console.error('AI Suggestions Error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate suggestions'
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: 'Failed to generate suggestions' }),
       { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     )
   }
