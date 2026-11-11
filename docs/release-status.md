@@ -61,7 +61,9 @@ unverified. This is not yet a Play release candidate.
 - System text scaling is preserved. Sentry event and transaction reporting
   respect the opt-out. Android/iOS now supply IANA timezone identifiers;
   reminder scheduling stays disabled if a valid device timezone is unavailable
-  and no longer opens Settings unexpectedly.
+  and no longer opens Settings unexpectedly. Next 08:00 occurrences are
+  calculated by local calendar date so daylight-saving transitions do not shift
+  the reminder hour.
 - Removed the unused AdMob placeholder path: there was no ad SDK, production
   unit IDs were fake literals, and the home screen reserved blank banner space.
   No ads are claimed/configured for this release.
@@ -131,6 +133,7 @@ unverified. This is not yet a Play release candidate.
 | SQL parser | Project-local `pglast` parsed the outer PostgreSQL statements in the migration, review cutover and pgTAP fixture. This does not validate PL/pgSQL function bodies, schema compatibility or runtime behavior |
 | SQL/database | No local Supabase, Docker or clean database chain was available/run; pgTAP fixture is prepared but unexecuted |
 | Reset cleanup source | Targeted Dart formatting and `git diff --check` passed. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/paginated_outfit_link_cleanup_test.dart` — **3 passed**; the test uses a pure callback helper and did not connect to Supabase |
+| Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
 | Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim and completing independent code work/tests, one release build succeeded in 237.6 seconds with one Gradle worker and a 2 GiB heap. It produced `build/app/outputs/bundle/release/app-release.aab` (76,514,565 bytes). `unzip -tq` passed; `jarsigner -verify` reported `jar is unsigned`. SHA-256: `c257964750ac8cea02b579b1b944a47a76b6ccd4977e1170c290659b0f911feb`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
 | Device | No emulator/device used |
 | Formatting/diff | Targeted Dart formatting, `deno fmt --check` on three changed functions, `git diff --check` and `git diff --cached --check` passed |
@@ -140,8 +143,9 @@ Dart changes; the targeted image routing/private consumer/app-import selection
 passed 12/12. Targeted Dart formatting and `git diff --check` passed. The app
 import smoke test compiles the app entry point and transitive screens. The
 release bundle built and passed archive integrity inspection, but is unsigned
-and has no provider configuration. The new paginated reset cleanup helper test
-passed 3/3 in a single-worker run and did not connect to a backend. A
+and has no provider configuration. The paginated reset helper test passed 3/3,
+the local-time notification test passed 4/4 after correcting test setup, and
+the app import smoke test passed 1/1. None connected to a backend. A
 project-local `pglast` parse accepted all 30 outer SQL statements in the new
 Storage fixture; this is syntax parsing only
 and does not execute policies or prove isolation. Read-only metadata queries

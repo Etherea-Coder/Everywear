@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './local_notification_schedule.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -188,18 +189,8 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    // Schedule for 08:00 today, or tomorrow if already past 08:00
     final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      8, // 05:00
-    );
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
+    final scheduledDate = nextDailyLocalTime(location: tz.local, now: now);
 
     final user = Supabase.instance.client.auth.currentUser;
     final fullName =
