@@ -19,7 +19,7 @@ Last updated: 2026-11-12
    - Pin Flutter 3.35.7 (Dart 3.9-compatible) in `.fvmrc`.
    - Track `pubspec.lock`; add the Flutter SDK `integration_test` dependency.
    - Resolve the duplicate Gradle DSL configuration without changing the active package identity (`com.stylewise.app`) until Play and RevenueCat registrations are confirmed.
-   - Stale test sources were repaired; the current sequential suite passed 49 tests. Targeted analysis of changed reset/notification code and tests reports no issues. The project-wide analyzer previously reported 0 errors, 9 warnings and 281 info; the warning sites were edited but that command was not rerun. Two bundle attempts failed on the generated dev-only integration plugin reference; after adding the release-only no-op shim, the final source built an unsigned AAB and passed archive integrity inspection. It lacks public provider values and upload signing, and was not installed or run.
+   - Stale test sources were repaired; the current sequential suite passed 52 tests. Targeted analysis of changed reset, notification, and AI payload/client code reports no issues. The project-wide analyzer previously reported 0 errors, 9 warnings and 281 info; the warning sites were edited but that command was not rerun. Two bundle attempts failed on the generated dev-only integration plugin reference; after adding the release-only no-op shim, the final source built an unsigned AAB and passed archive integrity inspection. It lacks public provider values and upload signing, and was not installed or run.
 2. **Complete, secure Supabase backend** — schema proposal reconciled to read-only production metadata; execution/security proof pending
    - Inventory the app's tables, RPCs, Storage, Realtime and Edge Function contract.
    - Add forward-only migrations and local security fixtures.
@@ -28,13 +28,13 @@ Last updated: 2026-11-12
    - Authentication callbacks and onboarding.
    - User-scoped cache/state and correct offline/outage behavior.
    - Wardrobe, outfits, spending, insights, learning/challenges and export/deletion.
-   - Account deletion/reset now removes Storage objects, checks failures, and paginates outfit-link cleanup; persistent wardrobe, onboarding, AI, and notification state is user-scoped. Reset pagination and DST-safe reminder scheduling have focused passing tests.
+   - Account deletion/reset now removes Storage objects, checks failures, and paginates outfit-link cleanup; persistent wardrobe, onboarding, AI, and notification state is user-scoped. Outfit suggestions now send compressed local-image bytes instead of an inaccessible device path; the Edge Function validates payloads and no longer fetches arbitrary caller URLs. Reset pagination, image payload, and DST-safe reminder behavior have focused passing tests. The app/function image contract requires a coordinated future deploy.
 4. **RevenueCat repair** — code complete; provider setup and live verification pending
    - Fail closed until a public Android SDK key and exact entitlement ID are supplied.
    - Bind purchases to the Supabase UUID and harden server verification/webhooks.
 5. **Android release candidate** — unsigned local AAB available; signed/provider-configured release and runtime validation pending
    - Accessibility, notifications/timezone, reporting opt-out and signing configuration.
-   - Current AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,519,721 bytes, SHA-256 `35a75eb4e7a38af6f1803e6fd9646dd1b496c7f0f8f018067a6a127462db9b81`; archive integrity passed. It is unsigned until private upload-signing inputs are supplied.
+   - Current AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,521,359 bytes, SHA-256 `90fec50c6a4432dc661ccb58f03237abc225161bb047c4de370dd561a30b1f9d`; archive integrity passed. It is unsigned until private upload-signing inputs are supplied.
 
 ## External inputs (only when dependent work reaches them)
 
