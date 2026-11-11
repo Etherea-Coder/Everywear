@@ -20,6 +20,12 @@ Play eligibility are not verified. This is not yet a Play release candidate.
   of obsolete placeholder screens/services, and focused tests.
 - `fe0a5c5fc0b3463a8014a869f74927b6aaf71bef` — setup/release documentation,
   reconciliation updates, resumable goal status, and sequential Flutter/Deno CI.
+- `ae02ee0359ef46f8e344fdd27579ee14f345e415` — recorded the recovery checkpoint
+  IDs in the release status.
+- `ed2f491f071ee823f5e87823b1893a91614dbf7c` — subscription expiry parsing
+  now fails closed for malformed server values, with focused unit cases.
+- `1f9261f7035488e388b2f29b814c70591fbd1d5e` — removes replaced/deleted
+  owner-scoped wardrobe image objects and cleans new uploads after failed saves.
 
 ## 1. Completed local code changes
 
@@ -41,8 +47,11 @@ Play eligibility are not verified. This is not yet a Play release candidate.
   existing database columns, resolves authorized URLs at display time, refreshes
   a failed signed URL, preserves external/provider URLs and provides unavailable
   placeholders. Avatar replacement/removal, account isolation, wardrobe
-  consumers and PDF embedding are covered by focused tests. CSV omits image
-  URLs; unavailable images do not fail an export.
+  consumers and PDF embedding are covered by focused tests. Wardrobe replacement
+  and deletion remove prior owned Storage objects after the row change; failed
+  initial saves clean up newly uploaded objects. Cleanup is best effort because
+  Postgres row changes and Storage deletion are separate operations. CSV omits
+  image URLs; unavailable images do not fail an export.
 - RevenueCat UI stays unavailable without the Android SDK key and exact
   entitlement. Purchase/restore are single-flight, bind to the authenticated
   Supabase UUID, reject account changes, require store entitlement and backend
@@ -75,7 +84,7 @@ Play eligibility are not verified. This is not yet a Play release candidate.
 | Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 8.4 GiB available, 398 GiB free at start; Linux/macOS generated changes preserved |
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; installed ignored project-local Deno 2.9.6; Supabase CLI 3.1.0 |
 | Dependency resolution | `flutter pub get` completed; lockfile updated for the direct image test dependency |
-| Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **36 passed**, no failures |
+| Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **38 passed**, no failures (latest run includes wardrobe cleanup ownership cases) |
 | Flutter analyzer | `.tooling/flutter/bin/flutter analyze --no-pub` — 0 errors, 9 warnings, 281 info; exit 1. All 9 reported warning sites were cleaned up afterward; no analyzer rerun was made |
 | Deno formatting | `deno fmt` passed on `check-and-request-suggestion`, `revenuecat-webhook`, and `verify-purchase` |
 | Deno type checks | Passed: `check-and-request-suggestion`, `delete-account`, `today-suggestion`, `style-coach`, `analyze-clothing`, `revenuecat-webhook`, `verify-purchase`. `generate-ai-insights` exposed nullable query results; changed to explicit empty-list fallback, but was not rechecked. `ai-suggestions` was not reached. Two check attempts were used; further type-checking is deferred |
@@ -87,11 +96,15 @@ Play eligibility are not verified. This is not yet a Play release candidate.
 | Device | No emulator/device used |
 | Formatting/diff | Targeted Dart formatting, `deno fmt --check` on three changed functions, `git diff --check` and `git diff --cached --check` passed |
 
+Latest focused wardrobe cleanup change: targeted `dart format` on the touched
+image/service/UI test files passed; full sequential Flutter suite passed 38/38;
+`git diff --check` passed. No analyzer or package build was repeated.
+
 ## 3. Deferred or incomplete verification
 
-- Flutter tests passed after final Dart cleanup and expiry tests: 36/36. Analyzer result is not
-  green; do not treat formatting as analysis. The nine reported warnings were
-  removed but not rechecked.
+- Flutter tests passed after final image cleanup and expiry changes: 38/38.
+  Analyzer result is not green; do not treat formatting as analysis. The nine
+  reported warnings were removed but not rechecked.
 - Deno check has two failed attempts: first found `today-suggestion` unknown
   catch typing (fixed with generic client error), second found nullable data in
   `generate-ai-insights` (fixed with `?? []`). Do not claim those final fixes
@@ -166,8 +179,12 @@ Play eligibility are not verified. This is not yet a Play release candidate.
   fixtures; production stays read-only.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
+- [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
+  external/avatar/other-account objects, and remove a newly uploaded file when
+  the initial wardrobe save fails.
 
-**Exact next step:** on the next authorized validation pass, run Deno checks for
-`generate-ai-insights` and `ai-suggestions`, then make one conservative Android
-bundle attempt with the release-only shim. Do not report a bundle or signing
-until it exists and is inspected.
+**Exact next step:** request a fresh validation pass before retrying the
+resource-limited Deno check or Android packaging. The current pass used its two
+allowed Deno-check attempts and two bundle attempts; neither final Deno source
+verification nor packaging can be claimed. No artifact currently exists. A
+signed artifact also requires a private upload keystore and passwords.
