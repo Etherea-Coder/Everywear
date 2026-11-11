@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './ai_intelligence_service.dart';
 import './local_database_service.dart';
 import './notification_service.dart';
+import './storage_service.dart';
 
 /// Clears data that belongs to one authenticated account without touching
 /// device-wide choices such as locale, theme, or crash-reporting consent.
@@ -12,6 +13,7 @@ class AccountStateService {
 
   static Future<void> clearForUser(String userId) async {
     AIIntelligenceService.instance.clearCache();
+    await StorageService.clearImageCacheForUser(userId);
     await NotificationService.instance.clearUserState(userId);
 
     try {

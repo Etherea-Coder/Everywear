@@ -36,6 +36,20 @@ void main() {
       );
     });
 
+    test('Storage cache keys are stable and external URLs stay unchanged', () {
+      expect(
+        StorageService.imageCacheKey(
+          'https://qxsdwwdrxoyxmnapuqqv.supabase.co/storage/v1/object/sign/wardrobe-images/user-a/item.png?token=temporary',
+          supabaseUrl: 'https://qxsdwwdrxoyxmnapuqqv.supabase.co',
+        ),
+        'wardrobe-images/user-a/item.png',
+      );
+      expect(
+        StorageService.imageCacheKey('https://images.example/item.png'),
+        'https://images.example/item.png',
+      );
+    });
+
     testWidgets(
       'avatar display resolves a private reference before networking',
       (tester) async {
@@ -60,6 +74,7 @@ void main() {
           find.byType(CachedNetworkImage),
         );
         expect(networkImage.imageUrl, contains('127.0.0.1:1'));
+        expect(networkImage.cacheKey, 'avatars/user-a/avatar.png');
       },
     );
 

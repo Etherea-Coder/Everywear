@@ -2,7 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './serial_operation_queue.dart';
 import './supabase_service.dart';
 
 class StorageService {
@@ -13,6 +16,9 @@ class StorageService {
       : null;
 
   static const _signedUrlLifetime = Duration(hours: 1);
+  static const _cachedReferencesPreference = 'cached_storage_image_refs';
+  static final Map<String, Map<String, String>> _resolvedUrlsByUser = {};
+  static final SerialOperationQueue _imageCacheQueue = SerialOperationQueue();
 
   /// Describes how an image reference must be routed by presentation code.
   /// This pure classifier is also used by tests without initializing Supabase.
@@ -46,6 +52,14 @@ class StorageService {
     if (parsed == null) return null;
     return '${parsed.$1}/${parsed.$2}';
   }
+
+  /// Stable owner-scoped cache key for Storage images; external URL behavior
+  /// keeps the original URL key.
+  static String imageCacheKey(String reference, {String? supabaseUrl}) =>
+      stableStorageReference(reference, supabaseUrl: supabaseUrl) ?? reference;
+
+  static String _referencesPreferenceKey(String userId) =>
+      '$userId:$_cachedReferencesPreference';
 
   static String? stableReferenceFor({
     required String bucket,
@@ -148,6 +162,10 @@ class StorageService {
           .from(parsed.$1)
           .createSignedUrl(parsed.$2, _signedUrlLifetime.inSeconds);
       if (_client.auth.currentUser?.id != userId) return null;
+      final stableReference = '${parsed.$1}/${parsed.$2}';
+      _resolvedUrlsByUser.putIfAbsent(userId, () => {})[stableReference] =
+          signedUrl;
+      await _rememberImageReference(userId, stableReference);
       return signedUrl;
     } catch (error) {
       if (kDebugMode) debugPrint('Image URL resolution failed: $error');
@@ -250,6 +268,10 @@ class StorageService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null || parsed.$2.split('/').first != userId) return false;
       final filePath = parsed.$2;
+      await evictImageCacheForReference(
+        '${parsed.$1}/$filePath',
+        ownerId: userId,
+      );
       await _client.storage.from(parsed.$1).remove([filePath]);
       return true;
     } catch (e) {
@@ -257,6 +279,69 @@ class StorageService {
       return false;
     }
   }
+
+  static Future<void> _rememberImageReference(
+    String userId,
+    String reference,
+  ) => _imageCacheQueue.run(() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final key = _referencesPreferenceKey(userId);
+      final references = preferences.getStringList(key) ?? <String>[];
+      if (references.contains(reference)) return;
+      await preferences.setStringList(key, [...references, reference]);
+    } catch (error) {
+      if (kDebugMode) debugPrint('Unable to persist image cache reference');
+    }
+  });
+
+  /// Removes an owner's private image bytes from disk and memory cache without
+  /// persisting the signed URL used to fetch them.
+  static Future<void> clearImageCacheForUser(String userId) {
+    if (userId.isEmpty) return Future<void>.value();
+    return _imageCacheQueue.run(() async {
+      try {
+        final preferences = await SharedPreferences.getInstance();
+        final key = _referencesPreferenceKey(userId);
+        final references = preferences.getStringList(key) ?? <String>[];
+        final resolved = _resolvedUrlsByUser.remove(userId) ?? const {};
+        for (final reference in {...references, ...resolved.keys}) {
+          final url = resolved[reference] ?? reference;
+          await CachedNetworkImage.evictFromCache(url, cacheKey: reference);
+        }
+        await preferences.remove(key);
+      } catch (error) {
+        if (kDebugMode) debugPrint('Unable to clear private image cache');
+      }
+    });
+  }
+
+  static Future<void> evictImageCacheForReference(
+    String reference, {
+    required String ownerId,
+  }) => _imageCacheQueue.run(() async {
+    final parsed = _parseStorageReference(reference);
+    if (parsed == null || parsed.$2.split('/').first != ownerId) return;
+    final stableReference = '${parsed.$1}/${parsed.$2}';
+    final url = _resolvedUrlsByUser[ownerId]?.remove(stableReference);
+    try {
+      await CachedNetworkImage.evictFromCache(
+        url ?? stableReference,
+        cacheKey: stableReference,
+      );
+      final preferences = await SharedPreferences.getInstance();
+      final key = _referencesPreferenceKey(ownerId);
+      final references = preferences.getStringList(key) ?? <String>[];
+      references.remove(stableReference);
+      if (references.isEmpty) {
+        await preferences.remove(key);
+      } else {
+        await preferences.setStringList(key, references);
+      }
+    } catch (error) {
+      if (kDebugMode) debugPrint('Unable to evict private image cache entry');
+    }
+  });
 }
 
 enum ImageReferenceRoute { storage, network, localFile, asset }

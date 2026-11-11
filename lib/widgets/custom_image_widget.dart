@@ -292,6 +292,7 @@ class _StorageImageViewState extends State<_StorageImageView> {
     if (url == null) return _fallback();
     return CachedNetworkImage(
       imageUrl: url,
+      cacheKey: StorageService.imageCacheKey(widget.reference),
       height: widget.height,
       width: widget.width,
       fit: widget.fit,
