@@ -78,6 +78,7 @@ class WardrobeRepository {
             'category': item.category,
             'brand': item.brand,
             'image_url': item.imageUrl,
+            'image_ref': item.imageUrl,
             'semantic_label': item.semanticLabel,
             'purchase_price': item.purchasePrice,
             'wear_count': item.wearCount,

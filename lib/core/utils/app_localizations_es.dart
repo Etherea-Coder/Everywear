@@ -927,6 +927,7 @@ const Map<String, String> appLocalizationsEs = {
   'profile_picture_semantic': 'Foto de perfil',
   'tap_photo_to_update': 'Toca la foto para actualizarla',
   'change_photo_label': 'Cambiar Foto',
+  'remove_photo_label': 'Eliminar foto',
   'your_name_hint': 'Tu nombre',
   'please_enter_name': 'Por favor, introduce tu nombre',
   'please_enter_valid_name': 'Por favor, introduce un nombre válido',

@@ -8,6 +8,7 @@ import './supabase_service.dart';
 import './wardrobe_service.dart';
 import './purchase_service.dart';
 import './outfit_log_service.dart';
+import './storage_service.dart';
 
 class ProfileService {
   SupabaseClient get _client => SupabaseService.instance.client;
@@ -47,95 +48,100 @@ class ProfileService {
 
   // ── PROFILE PHOTO ────────────────────────────────────────
   Future<String?> uploadProfilePhoto(String filePath) async {
+    final userId = _client.auth.currentUser?.id;
+    final oldReference = _client.auth.currentUser?.userMetadata?['avatar_url']
+        ?.toString();
+    if (userId == null) return null;
     try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) {
-        if (kDebugMode) debugPrint('❌ Upload photo error: No user logged in');
+      final reference = await StorageService().uploadAvatarImage(filePath);
+      if (reference == null) return null;
+      if (_client.auth.currentUser?.id != userId) {
+        await StorageService().deleteImageReference(
+          reference,
+          expectedBucket: 'avatars',
+        );
         return null;
       }
 
-      final file = File(filePath);
-      if (!await file.exists()) {
-        if (kDebugMode)
-          debugPrint('❌ Upload photo error: File does not exist at $filePath');
-        return null;
+      try {
+        await _client.auth.updateUser(
+          UserAttributes(data: {'avatar_url': reference}),
+        );
+      } catch (_) {
+        await StorageService().deleteImageReference(
+          reference,
+          expectedBucket: 'avatars',
+        );
+        rethrow;
       }
+      if (_client.auth.currentUser?.id != userId) return null;
 
-      // Get file extension
-      final ext = filePath.split('.').last.toLowerCase();
-
-      // Determine content type
-      String contentType;
-      switch (ext) {
-        case 'jpg':
-        case 'jpeg':
-          contentType = 'image/jpeg';
-          break;
-        case 'png':
-          contentType = 'image/png';
-          break;
-        case 'webp':
-          contentType = 'image/webp';
-          break;
-        case 'gif':
-          contentType = 'image/gif';
-          break;
-        default:
-          contentType = 'image/jpeg';
-      }
-
-      // IMPORTANT: Path format must be userId/avatar.ext
-      // This matches the RLS policy: (storage.foldername(name))[1] = userId
-      final storagePath = '$userId/avatar.$ext';
-
-      if (kDebugMode)
-        debugPrint('📤 Uploading to avatars bucket: $storagePath');
-      if (kDebugMode) debugPrint('📤 Content type: $contentType');
-
-      // Upload to avatars bucket
-      await _client.storage
-          .from('avatars')
-          .upload(
-            storagePath,
-            file,
-            fileOptions: FileOptions(upsert: true, contentType: contentType),
-          );
-
-      // Get public URL
-      final publicUrl = _client.storage
-          .from('avatars')
-          .getPublicUrl(storagePath);
-
-      if (kDebugMode) debugPrint('✅ Upload successful! URL: $publicUrl');
-
-      // Save to user metadata
-      await _client.auth.updateUser(
-        UserAttributes(data: {'avatar_url': publicUrl}),
-      );
-
-      // Also save to user_profiles table
+      var profileMirrorSaved = false;
       try {
         await _client
             .from('user_profiles')
             .update({
-              'avatar_url': publicUrl,
+              'avatar_url': reference,
               'updated_at': DateTime.now().toIso8601String(),
             })
             .eq('id', userId);
-        if (kDebugMode) debugPrint('✅ Updated user_profiles table');
+        profileMirrorSaved = true;
       } catch (e) {
-        // Non-fatal: table might not exist or have different columns
-        if (kDebugMode)
-          debugPrint('⚠️ Could not update user_profiles table: $e');
+        if (kDebugMode) debugPrint('Profile avatar metadata update failed: $e');
       }
 
-      return publicUrl;
+      if (_client.auth.currentUser?.id != userId) return null;
+
+      if (profileMirrorSaved &&
+          oldReference != null &&
+          oldReference != reference) {
+        await StorageService().deleteImageReference(
+          oldReference,
+          expectedBucket: 'avatars',
+        );
+      }
+      return reference;
     } on StorageException catch (e) {
       if (kDebugMode) debugPrint('❌ Storage error: ${e.message}');
       return null;
     } catch (e) {
       if (kDebugMode) debugPrint('❌ Upload photo error: $e');
       return null;
+    }
+  }
+
+  Future<bool> deleteProfilePhoto() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return false;
+    final userId = user.id;
+    final oldReference = user.userMetadata?['avatar_url']?.toString();
+    try {
+      await _client.auth.updateUser(UserAttributes(data: {'avatar_url': null}));
+      if (_client.auth.currentUser?.id != userId) return false;
+      var profileMirrorCleared = false;
+      try {
+        await _client
+            .from('user_profiles')
+            .update({
+              'avatar_url': null,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', userId);
+        profileMirrorCleared = true;
+      } catch (error) {
+        if (kDebugMode) debugPrint('Profile avatar clear failed: $error');
+      }
+      if (_client.auth.currentUser?.id != userId) return false;
+      if (profileMirrorCleared && oldReference != null) {
+        await StorageService().deleteImageReference(
+          oldReference,
+          expectedBucket: 'avatars',
+        );
+      }
+      return true;
+    } catch (error) {
+      if (kDebugMode) debugPrint('Profile photo deletion failed: $error');
+      return false;
     }
   }
 

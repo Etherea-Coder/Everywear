@@ -396,10 +396,10 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: kIsWeb
-                ? Image.network(
-                    widget.photos[index],
+                ? CustomImageWidget(
+                    imageUrl: widget.photos[index],
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Center(
+                    errorWidget: Center(
                       child: CustomIconWidget(
                         iconName: 'broken_image',
                         color: theme.colorScheme.error,

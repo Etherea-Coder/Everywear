@@ -323,6 +323,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
           ),
+          if (_avatarUrl.isNotEmpty) ...[
+            SizedBox(height: 0.5.h),
+            TextButton.icon(
+              onPressed: _isSaving ? null : _removeProfilePhoto,
+              icon: const Icon(Icons.delete_outline),
+              label: Text(AppLocalizations.of(context).removePhotoLabel),
+            ),
+          ],
         ],
       ),
     );
@@ -472,6 +480,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).errorPrefix(e.toString())),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _removeProfilePhoto() async {
+    setState(() => _isSaving = true);
+    try {
+      final removed = await _profileService.deleteProfilePhoto();
+      if (!mounted) return;
+      if (removed) {
+        setState(() => _avatarUrl = '');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).photoUploadErrorMsg),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

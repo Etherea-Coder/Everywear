@@ -63,7 +63,9 @@ class LocalDatabaseService {
         ..name = item['name']
         ..category = item['category']
         ..brand = item['brand']
-        ..imageUrl = item['image_url']
+        // Persist the stable object reference, never the short lived signed URL
+        // prepared for the current screen.
+        ..imageUrl = item['image_ref'] ?? item['image_url']
         ..semanticLabel = item['semantic_label']
         ..purchasePrice = (item['purchase_price'] as num?)?.toDouble()
         ..wearCount = (item['wear_count'] as num?)?.toInt() ?? 0

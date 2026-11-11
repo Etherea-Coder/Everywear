@@ -219,13 +219,12 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: imageUrl != null && imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
+                  ? CustomImageWidget(
+                      imageUrl: imageUrl,
                       width: 18.w,
                       height: 18.w,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          _imagePlaceholder(theme, 18.w),
+                      errorWidget: _imagePlaceholder(theme, 18.w),
                     )
                   : _imagePlaceholder(theme, 18.w),
             ),
@@ -348,13 +347,12 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
               if (imageUrl != null && imageUrl.isNotEmpty) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    imageUrl,
+                  child: CustomImageWidget(
+                    imageUrl: imageUrl,
                     height: 35.h,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        _imagePlaceholder(theme, 35.h),
+                    errorWidget: _imagePlaceholder(theme, 35.h),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -409,12 +407,13 @@ class _OutfitHistoryScreenState extends State<OutfitHistoryScreen> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: imgUrl != null && imgUrl.isNotEmpty
-                              ? Image.network(imgUrl,
+                              ? CustomImageWidget(
+                                  imageUrl: imgUrl,
                                   width: 10.w,
                                   height: 10.w,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      _imagePlaceholder(theme, 10.w))
+                                  errorWidget: _imagePlaceholder(theme, 10.w),
+                                )
                               : _imagePlaceholder(theme, 10.w),
                         ),
                         SizedBox(width: 3.w),

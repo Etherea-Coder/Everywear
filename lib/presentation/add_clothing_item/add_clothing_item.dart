@@ -73,7 +73,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
             _priceController.text = args['purchase_price'].toString();
           }
           if (args['image_url'] != null) {
-            _capturedPhotos = [args['image_url'] as String];
+            _capturedPhotos = [
+              (args['image_ref'] ?? args['image_url']) as String,
+            ];
           }
           if (args['notes'] != null) {
             _storeController.text = args['notes'] as String;
@@ -169,11 +171,20 @@ class _AddClothingItemState extends State<AddClothingItem> {
 
       // Upload image to Supabase Storage first (only if new photo captured)
       String? imageUrl;
-      if (_capturedPhotos.isNotEmpty && !_capturedPhotos.first.startsWith('http')) {
-        imageUrl = await _storageService.uploadWardrobeImage(_capturedPhotos.first);
-      } else if (_capturedPhotos.isNotEmpty) {
-        // Keep existing image URL
-        imageUrl = _capturedPhotos.first;
+      if (_capturedPhotos.isNotEmpty) {
+        final currentImage = _capturedPhotos.first;
+        final route = StorageService.classifyImageReference(currentImage);
+        if (route == ImageReferenceRoute.storage) {
+          imageUrl =
+              StorageService.stableStorageReference(currentImage) ?? currentImage;
+        } else if (route == ImageReferenceRoute.network) {
+          imageUrl = currentImage;
+        } else {
+          final localPath = route == ImageReferenceRoute.localFile
+              ? Uri.parse(currentImage).toFilePath()
+              : currentImage;
+          imageUrl = await _storageService.uploadWardrobeImage(localPath);
+        }
       }
 
       Map<String, dynamic> savedItem;

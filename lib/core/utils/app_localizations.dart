@@ -938,6 +938,7 @@ class AppLocalizations {
   String get profilePictureSemantic => translate('profile_picture_semantic');
   String get tapPhotoToUpdate => translate('tap_photo_to_update');
   String get changePhotoLabel => translate('change_photo_label');
+  String get removePhotoLabel => translate('remove_photo_label');
   String get yourNameHint => translate('your_name_hint');
   String get pleaseEnterName => translate('please_enter_name');
   String get pleaseEnterValidName => translate('please_enter_valid_name');

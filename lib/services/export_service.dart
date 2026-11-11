@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,6 +9,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/utils/app_localizations.dart';
+import 'image_export_resolver.dart';
+import 'storage_service.dart';
 
 class ExportService {
   static final ExportService instance = ExportService._();
@@ -64,7 +67,7 @@ class ExportService {
     final results = await Future.wait([
       _client
           .from('wardrobe_items')
-          .select('name, category, semantic_label, brand, purchase_price, notes')
+          .select('name, category, semantic_label, brand, purchase_price, notes, image_url')
           .eq('user_id', userId)
           .order('category'),
       _client
@@ -85,8 +88,25 @@ class ExportService {
           .limit(1),
     ]);
 
+    final wardrobe = (results[0] as List).cast<Map<String, dynamic>>();
+    final imageReferences = <String?>[
+      ...wardrobe.map((item) => item['image_url'] as String?),
+      _client.auth.currentUser?.userMetadata?['avatar_url'] as String?,
+    ];
+    final images = await ImageExportResolver.resolve(
+      imageReferences,
+      load: StorageService().downloadImageBytes,
+    );
+    if (_client.auth.currentUser?.id != userId) {
+      throw Exception('Account changed during export');
+    }
+
     return {
-      'wardrobe': (results[0] as List).cast<Map<String, dynamic>>(),
+      'wardrobe': wardrobe,
+      'wardrobeImageBytes': images.take(wardrobe.length).toList(),
+      'avatarImageBytes': images.length > wardrobe.length
+          ? images.last
+          : null,
       'outfits': (results[1] as List).cast<Map<String, dynamic>>(),
       'events': (results[2] as List).cast<Map<String, dynamic>>(),
       'quiz': (results[3] as List).cast<Map<String, dynamic>>(),
@@ -186,6 +206,9 @@ class ExportService {
     final outfits = data['outfits'] as List<Map<String, dynamic>>;
     final events = data['events'] as List<Map<String, dynamic>>;
     final quiz = data['quiz'] as List<Map<String, dynamic>>;
+    final wardrobeImageBytes =
+        (data['wardrobeImageBytes'] as List<Uint8List?>?) ?? const [];
+    final avatarImageBytes = data['avatarImageBytes'] as Uint8List?;
 
     final titleStyle = pw.TextStyle(
       fontSize: 22,
@@ -214,6 +237,10 @@ class ExportService {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text('Everywear', style: titleStyle),
+            if (avatarImageBytes != null) ...[
+              pw.SizedBox(height: 8),
+              pw.Image(pw.MemoryImage(avatarImageBytes), height: 64, width: 64),
+            ],
             pw.Text(l10n.pdfWardrobeReport, style: pw.TextStyle(fontSize: 16, color: PdfColor.fromHex('#555555'))),
             pw.SizedBox(height: 4),
             pw.Text(
@@ -317,6 +344,28 @@ class ExportService {
               oddRowDecoration: pw.BoxDecoration(
                   color: PdfColor.fromHex('#F9FBF9')),
             ),
+            ...wardrobe.asMap().entries
+                .where((entry) =>
+                    entry.key < wardrobeImageBytes.length &&
+                    wardrobeImageBytes[entry.key] != null)
+                .map(
+                  (entry) => pw.Container(
+                    margin: const pw.EdgeInsets.only(top: 8),
+                    child: pw.Row(
+                      children: [
+                        pw.Image(
+                          pw.MemoryImage(wardrobeImageBytes[entry.key]!),
+                          width: 48,
+                          height: 48,
+                        ),
+                        pw.SizedBox(width: 8),
+                        pw.Expanded(
+                          child: pw.Text(entry.value['name']?.toString() ?? ''),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
           ],
         ),
       );

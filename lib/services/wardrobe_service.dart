@@ -69,19 +69,10 @@ class WardrobeService {
         }
 
         final response = await query.order('created_at', ascending: false);
-        final storage = StorageService();
         final rows = List<Map<String, dynamic>>.from(response);
-        return await Future.wait(
-          rows.map(
-            (row) async => {
-              ...row,
-              'image_url': row['image_url'] == null
-                  ? null
-                  : await storage.resolveImageUrl(row['image_url'].toString()),
-              'image_ref': row['image_url'],
-            },
-          ),
-        );
+        return rows
+            .map((row) => {...row, 'image_ref': row['image_url']})
+            .toList();
       });
     } catch (error) {
       // Return empty list on any error (including Supabase not initialized)
@@ -185,7 +176,9 @@ class WardrobeService {
             'name': name,
             'category': category,
             'brand': brand,
-            'image_url': imageUrl,
+            'image_url': imageUrl == null
+                ? null
+                : StorageService.stableStorageReference(imageUrl) ?? imageUrl,
             'semantic_label': semanticLabel,
             'purchase_price': purchasePrice,
             'purchase_date': purchaseDate?.toIso8601String(),
@@ -221,7 +214,10 @@ class WardrobeService {
       if (name != null) updateData['name'] = name;
       if (category != null) updateData['category'] = category;
       if (brand != null) updateData['brand'] = brand;
-      if (imageUrl != null) updateData['image_url'] = imageUrl;
+      if (imageUrl != null) {
+        updateData['image_url'] =
+            StorageService.stableStorageReference(imageUrl) ?? imageUrl;
+      }
       if (semanticLabel != null) updateData['semantic_label'] = semanticLabel;
       if (wearCount != null) updateData['wear_count'] = wearCount;
       if (lastWorn != null) {

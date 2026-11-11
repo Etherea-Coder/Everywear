@@ -1092,10 +1092,10 @@ class _DailyLogState extends State<DailyLog> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(isAnchor ? 22 : 16),
         child: imageUrl.isNotEmpty
-            ? Image.network(
-                imageUrl,
+            ? CustomImageWidget(
+                imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
+                errorWidget:
                     _buildSuggestionFallbackIcon(theme, isAnchor: isAnchor),
               )
             : _buildSuggestionFallbackIcon(theme, isAnchor: isAnchor),
@@ -1328,11 +1328,10 @@ class _DailyLogState extends State<DailyLog> {
                           borderRadius: BorderRadius.circular(12),
                           child: (item['imageUrl'] as String? ?? '')
                                   .isNotEmpty
-                              ? Image.network(
-                                  item['imageUrl'] as String,
+                              ? CustomImageWidget(
+                                  imageUrl: item['imageUrl'] as String,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      const Icon(Icons.checkroom),
+                                  errorWidget: const Icon(Icons.checkroom),
                                 )
                               : const Icon(Icons.checkroom),
                         ),

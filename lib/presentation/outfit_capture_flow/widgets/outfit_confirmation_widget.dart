@@ -167,8 +167,8 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: kIsWeb
-            ? Image.network(
-                widget.capturedImage!.path,
+            ? CustomImageWidget(
+                imageUrl: widget.capturedImage!.path,
                 height: 50.h,
                 width: double.infinity,
                 fit: BoxFit.cover,

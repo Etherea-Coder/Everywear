@@ -39,6 +39,7 @@ class CustomImageWidget extends StatelessWidget {
     this.placeHolder = 'assets/images/no-image.jpg',
     this.errorWidget,
     this.semanticLabel,
+    this.storageUrlResolver,
   });
 
   ///[imageUrl] is required parameter for showing image
@@ -70,6 +71,9 @@ class CustomImageWidget extends StatelessWidget {
 
   /// Semantic label for the image to improve accessibility
   final String? semanticLabel;
+
+  /// Injectable for deterministic display tests; production uses StorageService.
+  final Future<String?> Function(String reference)? storageUrlResolver;
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +136,7 @@ class CustomImageWidget extends StatelessWidget {
           );
         case ImageType.file:
           return Image.file(
-            File(imageUrl!),
+            File(Uri.parse(imageUrl!).toFilePath()),
             height: height,
             width: width,
             fit: fit ?? BoxFit.cover,
@@ -144,7 +148,10 @@ class CustomImageWidget extends StatelessWidget {
           return _networkImage(image);
         case ImageType.storage:
           return FutureBuilder<String?>(
-            future: StorageService().resolveImageUrl(imageUrl!),
+            key: ValueKey('${StorageService.currentUserId}:$imageUrl'),
+            future: (storageUrlResolver ?? StorageService().resolveImageUrl)(
+              imageUrl!,
+            ),
             builder: (context, snapshot) => snapshot.data == null
                 ? (errorWidget ??
                       Image.asset(
