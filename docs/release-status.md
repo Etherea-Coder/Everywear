@@ -45,6 +45,8 @@ unverified. This is not yet a Play release candidate.
   cleanup, and adds three passing pure helper tests.
 - `2d7d9f3f928311bcdbe2b0e1d93db1bb63e6d9a0` — schedules the next reminder by
   IANA-zone calendar date across DST and adds four passing time-boundary tests.
+- `84d2923504c82d616f82329167ffc8120d9a9bd6` — records the unavailable
+  `adb`/physical-device verification prerequisite.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -126,8 +128,9 @@ unverified. This is not yet a Play release candidate.
 | Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 8.4 GiB available, 398 GiB free at start; Linux/macOS generated changes preserved |
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; installed ignored project-local Deno 2.9.6; Supabase CLI 3.1.0 |
 | Dependency resolution | `flutter pub get` completed; lockfile updated for the direct image test dependency |
-| Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **42 passed**, no failures after the final ad, billing/session, and image-cache/parser changes. |
+| Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **49 passed**, no failures after the reset pagination and DST-safe notification changes. |
 | Flutter analyzer | `.tooling/flutter/bin/flutter analyze --no-pub` — 0 errors, 9 warnings, 281 info; exit 1. All 9 reported warning sites were cleaned up afterward; no analyzer rerun was made |
+| Targeted Dart analysis | `.tooling/flutter/bin/dart analyze` on the changed reset, notification, helper, and focused test files — initially reported four infos in `notification_service.dart`; after cleanup, rerun exited 0 with **No issues found!** |
 | Deno formatting | `deno fmt --check` passed on the updated `delete-account` source; earlier formatting passed on `check-and-request-suggestion`, `revenuecat-webhook`, and `verify-purchase` |
 | Deno type checks | Earlier checks passed `check-and-request-suggestion`, `delete-account`, `today-suggestion`, `style-coach`, `analyze-clothing`, `revenuecat-webhook`, and `verify-purchase`. The deletion function was later changed to check and paginate outfit-link cleanup and has not been rechecked. `generate-ai-insights` exposed nullable query results and was patched with `?? []`; it was not rechecked. `ai-suggestions` was not reached. Two check attempts were used; further type-checking is deferred |
 | Read-only recovered schema | Production identity reverified. Read-only metadata query confirmed `revenue_cat_id text`, `suggestions_reset_at date`, nullable integer counters and nullable timestamptz expiry. Follow-up Storage metadata query confirmed `storage.objects.owner uuid`, `owner_id text`, nullable `bucket_id`/`name`, `metadata jsonb`, and `id` defaulting to `gen_random_uuid()`. The two image buckets remain public with no MIME/size restrictions; `anon` and `authenticated` have table CRUD grants on `storage.objects`, so row isolation depends on RLS and public bucket visibility currently permits public reads. Read-only policy catalog confirms two public SELECT policies (one `PUBLIC`, one `anon`) plus authenticated owner policies; no customer rows, Storage contents or secrets queried |
@@ -136,18 +139,22 @@ unverified. This is not yet a Play release candidate.
 | SQL/database | No local Supabase, Docker or clean database chain was available/run; pgTAP fixture is prepared but unexecuted |
 | Reset cleanup source | Targeted Dart formatting and `git diff --check` passed. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/paginated_outfit_link_cleanup_test.dart` — **3 passed**; the test uses a pure callback helper and did not connect to Supabase |
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
-| Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim and completing independent code work/tests, one release build succeeded in 237.6 seconds with one Gradle worker and a 2 GiB heap. It produced `build/app/outputs/bundle/release/app-release.aab` (76,514,565 bytes). `unzip -tq` passed; `jarsigner -verify` reported `jar is unsigned`. SHA-256: `c257964750ac8cea02b579b1b944a47a76b6ccd4977e1170c290659b0f911feb`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
+| Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the final source built successfully in 83.9 seconds with one Gradle worker and a 2 GiB heap. The current `build/app/outputs/bundle/release/app-release.aab` is 76,519,721 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `35a75eb4e7a38af6f1803e6fd9646dd1b496c7f0f8f018067a6a127462db9b81`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting, `deno fmt --check` on three changed functions, `git diff --check` and `git diff --cached --check` passed |
 
-Latest verification: the full serial Flutter suite passed 42/42 after current
+Latest verification: the full serial Flutter suite passed 49/49 after current
 Dart changes; the targeted image routing/private consumer/app-import selection
-passed 12/12. Targeted Dart formatting and `git diff --check` passed. The app
+passed 12/12. The reset helper passed 3/3, local reminder scheduling passed
+4/4, and the app import smoke test passed 1/1. Targeted Dart formatting and
+`git diff --check` passed. The app
 import smoke test compiles the app entry point and transitive screens. The
 release bundle built and passed archive integrity inspection, but is unsigned
-and has no provider configuration. The paginated reset helper test passed 3/3,
-the local-time notification test passed 4/4 after correcting test setup, and
-the app import smoke test passed 1/1. None connected to a backend. A
+and has no provider configuration. The latest final-source bundle was rebuilt
+and archive-checked; it remains unsigned. Targeted analysis of changed files
+reported no issues. The paginated reset helper test passed 3/3, the local-time
+notification test passed 4/4 after correcting test setup, and the app import
+smoke test passed 1/1. None connected to a backend. A
 project-local `pglast` parse accepted all 30 outer SQL statements in the new
 Storage fixture; this is syntax parsing only
 and does not execute policies or prove isolation. Read-only metadata queries
@@ -156,7 +163,7 @@ device check was made.
 
 ## 3. Deferred or incomplete verification
 
-- The full Flutter suite passed 42/42 after the final local Dart changes.
+- The full Flutter suite passed 49/49 after the final local Dart changes.
   Analyzer result is not green; do not treat formatting as analysis. The nine
   reported warnings were removed but not rechecked.
 - Deno check has two failed attempts: first found `today-suggestion` unknown
@@ -228,7 +235,7 @@ device check was made.
   cutover SQL without hosted changes.
 - [x] Implement client auth/offline, timezone, reporting, image and billing
   race changes; prepare regression coverage.
-- [x] Run the full Flutter suite sequentially: 42 passed after the final Dart changes; the affected image/app-import selection separately passed 12/12.
+- [x] Run the full Flutter suite sequentially: 49 passed after reset and reminder changes; the affected image/app-import selection separately passed 12/12.
 - [x] Prepare local pgTAP fixture for protected tier, profile/outfit ownership
   and single-session AI quota behavior.
 - [x] Add a separate local-only Storage pgTAP fixture for anonymous denial,
@@ -237,9 +244,10 @@ device check was made.
   disposable test database and remains unexecuted.
 - [ ] Finish Deno verification after the two-attempt deferral; resolve any
   remaining type errors without `@ts-nocheck`.
-- [x] Targeted Dart/Deno formatting and `git diff --check` passed. Full suite: 42/42; final focused image/app import tests: 12/12.
-- [x] Build the release AAB after the shim and cheaper checks passed; archive
-  integrity passed. It is unsigned and has no Supabase/RevenueCat build values.
+- [x] Targeted Dart formatting and `git diff --check` passed. Full suite: 49/49; reset helper: 3/3; notification scheduling: 4/4; app import: 1/1; image/app import selection: 12/12.
+- [x] Build the release AAB after the shim and cheaper checks passed; the
+  current final-source bundle passed archive integrity and is unsigned with no
+  Supabase/RevenueCat build values.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -153,8 +152,9 @@ class NotificationService {
       await _scheduleDailyMorningNotification();
       return true;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('⚠️ Morning notification scheduling failed: $e');
+      }
       await _savePreference(false);
       await _plugin.cancel(_morningNotificationId);
       return false;
@@ -224,8 +224,9 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
     );
 
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint('✅ Morning notification scheduled for 08:00 daily');
+    }
   }
 
   /// Call on app launch to reschedule if preference is on
@@ -238,8 +239,9 @@ class NotificationService {
       try {
         await _scheduleDailyMorningNotification();
       } catch (e) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('⚠️ Restore morning notification failed: $e');
+        }
       }
     }
   }
