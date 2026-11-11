@@ -1,131 +1,171 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+const json = (body: Record<string, unknown>, status: number) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    // Verify the caller is authenticated
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const authorization = req.headers.get("Authorization");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!authorization || !supabaseUrl || !anonKey) {
+      return json({ error: "Unauthorized" }, 401);
     }
 
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
-    )
+    // Bind every subsequent operation to the server-validated Supabase user.
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authorization } },
+    });
+    const { data: { user }, error: authError } = await userClient.auth
+      .getUser();
+    if (authError || !user) return json({ error: "Unauthorized" }, 401);
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const entitlementId = Deno.env.get("REVENUECAT_ENTITLEMENT_ID");
+    const secretKey = Deno.env.get("REVENUECAT_SECRET_KEY");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!entitlementId || !secretKey || !serviceRoleKey) {
+      return json({ error: "Purchase verification is not configured" }, 503);
     }
 
-    const revenueCatUserId = user.id
-    const entitlementId = Deno.env.get('REVENUECAT_ENTITLEMENT_ID')
-    const secretKey = Deno.env.get('REVENUECAT_SECRET_KEY')
-    if (!entitlementId || !secretKey) throw new Error('RevenueCat is not configured')
-
-    // Verify with the RevenueCat v1 subscriber endpoint.
+    // Use the RevenueCat v1 subscriber endpoint and its matching response
+    // shape consistently. The customer identifier always comes from auth.getUser.
     const rcResponse = await fetch(
-      `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(revenueCatUserId)}`,
+      `https://api.revenuecat.com/v1/subscribers/${
+        encodeURIComponent(user.id)
+      }`,
       {
         headers: {
-          'Authorization': `Bearer ${secretKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secretKey}`,
+          "Content-Type": "application/json",
         },
-      }
-    )
-
+      },
+    );
     if (!rcResponse.ok) {
-      return new Response(JSON.stringify({ error: 'RevenueCat verification failed' }), {
-        status: 402,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      // Avoid returning provider response bodies or secret-bearing diagnostics.
+      return json({ error: "RevenueCat verification failed" }, 502);
     }
 
-    const rcData = await rcResponse.json()
-
-    // RevenueCat v1 subscriber response. Require the exact configured
-    // entitlement; missing/unknown data always fails closed.
-    const entitlements = rcData?.subscriber?.entitlements ?? {}
-    const entitlement = entitlements[entitlementId] as {
-      expires_date?: string | null
-      grace_period_expires_date?: string | null
-    } | undefined
-    const expiry = entitlement?.grace_period_expires_date ?? entitlement?.expires_date
-    const isPremium = entitlement !== undefined &&
-      (expiry === null || (typeof expiry === 'string' && new Date(expiry) > new Date()))
-
-    if (!isPremium) {
-      return new Response(JSON.stringify({ error: 'No active entitlement found' }), {
-        status: 402,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const rcData = await rcResponse.json();
+    const entitlement = rcData?.subscriber?.entitlements?.[entitlementId] as {
+      expires_date?: string | null;
+      grace_period_expires_date?: string | null;
+      purchase_date?: string | null;
+    } | undefined;
+    if (!entitlement) {
+      return json({ error: "Required entitlement is not active" }, 402);
     }
 
-    // Only now write to DB — purchase is verified
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
-
-    // First check if user profile exists
-    const { data: existingProfile } = await adminClient
-      .from('user_profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!existingProfile) {
-      return new Response(JSON.stringify({ error: 'User profile not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const now = Date.now();
+    const regularExpiryMs = entitlement.expires_date == null
+      ? null
+      : Date.parse(entitlement.expires_date);
+    const purchaseMs = entitlement.purchase_date == null
+      ? Number.NaN
+      : Date.parse(entitlement.purchase_date);
+    const graceMs = entitlement.grace_period_expires_date == null
+      ? null
+      : Date.parse(entitlement.grace_period_expires_date);
+    const isInGrace = graceMs != null && Number.isFinite(graceMs) &&
+      graceMs > now &&
+      (regularExpiryMs == null || !Number.isFinite(regularExpiryMs) ||
+        regularExpiryMs <= now);
+    const activeExpiries = [regularExpiryMs, graceMs]
+      .filter((value): value is number =>
+        value != null && Number.isFinite(value)
+      );
+    const expiryMs = activeExpiries.length === 0
+      ? null
+      : Math.max(...activeExpiries);
+    const isActive = expiryMs === null || expiryMs > now;
+    if (!isActive || !Number.isFinite(purchaseMs)) {
+      return json({ error: "Required entitlement is not active" }, 402);
     }
 
-    const { error: updateError } = await adminClient
-      .from('user_profiles')
-      .update({
-        tier: 'premium',
-        subscription_status: entitlement?.grace_period_expires_date ? 'grace_period' : 'active',
-        subscription_expires_at: expiry ?? null,
-        revenuecat_customer_id: user.id,
-      })
-      .eq('id', user.id)
+    const expiresAt = expiryMs == null
+      ? null
+      : new Date(expiryMs).toISOString();
+    const eventAt = new Date(purchaseMs).toISOString();
+    const status = isInGrace ? "grace_period" : "active";
+    const fingerprint =
+      `${user.id}:${entitlementId}:${entitlement.purchase_date}:${
+        expiresAt ?? "never"
+      }`;
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(fingerprint),
+    );
+    const eventId = `verified:${
+      Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0"))
+        .join("")
+    }`;
 
-    if (updateError) {
-      return new Response(JSON.stringify({ error: 'Failed to update user tier', details: updateError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const admin = createClient(supabaseUrl, serviceRoleKey);
+    const { data: outcome, error: applyError } = await admin.rpc(
+      "apply_subscription_event",
+      {
+        input_event_id: eventId,
+        input_user_id: user.id,
+        input_type: "VERIFIED_SNAPSHOT",
+        input_event_at: eventAt,
+        input_expires_at: expiresAt,
+        input_entitlement: entitlementId,
+        input_payload: {
+          source: "revenuecat_v1_snapshot",
+          expires_date: entitlement.expires_date ?? null,
+          grace_period_expires_date: entitlement.grace_period_expires_date ??
+            null,
+        },
+        input_tier: "premium",
+        input_status: status,
+      },
+    );
+    if (applyError) {
+      console.error(
+        "Could not persist verified subscription state",
+        applyError.message,
+      );
+      return json({ error: "Purchase verification could not be saved" }, 500);
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    if (outcome === "applied") return json({ success: true }, 200);
 
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    // A newer webhook may have won the row lock. Confirm the persisted
+    // authoritative state before reporting success for a duplicate/stale read.
+    const { data: profile, error: profileError } = await admin
+      .from("user_profiles")
+      .select("tier,subscription_status,subscription_expires_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    const profileExpiry = profile?.subscription_expires_at == null
+      ? null
+      : Date.parse(profile.subscription_expires_at);
+    const persistedStatus = profile?.subscription_status;
+    const persistedActive = !profileError && profile?.tier === "premium" &&
+      (persistedStatus === "active" &&
+          (profileExpiry == null ||
+            (Number.isFinite(profileExpiry) && profileExpiry > now)) ||
+        ["grace_period", "cancelled"].includes(persistedStatus) &&
+          profileExpiry != null &&
+          Number.isFinite(profileExpiry) && profileExpiry > now);
+    return persistedActive
+      ? json({ success: true }, 200)
+      : json({ error: "Required entitlement is not active" }, 402);
+  } catch (error) {
+    console.error("Purchase verification failed", error);
+    return json({ error: "Purchase verification failed" }, 500);
   }
-})
+});

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
@@ -94,7 +93,7 @@ Respond with ONLY the JSON, no other text.`
   } catch (error) {
     console.error('analyze-clothing error:', error)
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: 'Clothing analysis failed.' }),
       { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     )
   }

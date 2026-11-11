@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const GEMINI_MODEL   = 'gemini-2.5-flash-lite'
@@ -68,16 +67,18 @@ Deno.serve(async (req) => {
 
     if (category) wardrobeQ = wardrobeQ.eq('category', category)
 
-    const { data: items = [], error: itemsErr } = await wardrobeQ
+    const { data: itemRows, error: itemsErr } = await wardrobeQ
     if (itemsErr) throw new Error(`wardrobe_items: ${itemsErr.message}`)
+    const items = itemRows ?? []
 
     // ── Fetch outfit logs (used for silhouette evolution only) ────────────
     // outfit_items uses `item_id`, NOT `wardrobe_item_id`
-    const { data: logs = [], error: logsErr } = await supabase
+    const { data: logRows, error: logsErr } = await supabase
       .from('outfit_logs')
       .select('id, worn_date, occasion, rating, outfit_items(item_id)')
       .gte('worn_date', start.toISOString())
     if (logsErr) throw new Error(`outfit_logs: ${logsErr.message}`)
+    const logs = logRows ?? []
 
     // ── Compute per-item average ratings from outfit logs ─────────────────
     const itemRatingAccum: Record<string, number[]> = {}
@@ -324,10 +325,10 @@ Return exactly this structure:
       headers: { ...CORS, 'Content-Type': 'application/json' },
     })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('generate-ai-insights error:', error)
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: 'Insight generation failed.' }),
       { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } }
     )
   }

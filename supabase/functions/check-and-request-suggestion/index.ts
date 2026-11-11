@@ -1,9 +1,9 @@
-// @ts-nocheck
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -23,10 +23,11 @@ Deno.serve(async (req) => {
     const userClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    const { data: { user }, error: userError } = await userClient.auth
+      .getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -34,9 +35,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    // UX preflight only. The model-calling Edge Function consumes atomically
+    // after its own authentication check; preflight must never spend quota.
     const { data: allowed, error: quotaError } = await userClient.rpc(
-      "consume_ai_quota",
-      { quota_kind: "suggestion" },
+      "can_request_suggestion",
     );
     if (quotaError) throw quotaError;
 
@@ -45,7 +47,7 @@ Deno.serve(async (req) => {
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "Unknown error";

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
@@ -237,7 +236,7 @@ Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "pr
   } catch (error) {
     console.error('style-coach error:', error)
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: 'Style coach request failed.' }),
       { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     )
   }
