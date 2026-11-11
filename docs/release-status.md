@@ -40,6 +40,9 @@ unverified. This is not yet a Play release candidate.
 - `c8cff417c982015871e0f70fb9d35753c255f081` — adds disposable-local Storage
   isolation coverage for anonymous access, private bucket state, both account
   owners, uploads, and deletion; records fresh read-only production metadata.
+- `281efa2a5c49f1a7dcc9d5e646e42bebefe0eb66` — pages in-app full-reset outfit
+  links, bounds delete batches, clears private image cache before partial remote
+  cleanup, and adds three passing pure helper tests.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
