@@ -62,6 +62,8 @@ unverified. This is not yet a Play release candidate.
   image-flow checkpoint and deferred production rollout.
 - `1a088cf12a5c120037cafd97a57c5aa08381ec75` — records the latest project-wide
   analyzer result and its unresolved diagnostics.
+- `b9f4ddc3ca64ce0977b28746d4ac75d929080cc3` — localizes the password-recovery
+  action and adds a three-locale regression test.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -77,6 +79,8 @@ unverified. This is not yet a Play release candidate.
   of silently becoming empty data. Onboarding reports success only after the
   authenticated profile write succeeds. Signed-out AI suggestions render a
   retry state.
+- The splash-screen password recovery action now uses the existing translated
+  string in English, French, and Spanish rather than hard-coded English.
 - System text scaling is preserved. Sentry event and transaction reporting
   respect the opt-out. Android/iOS now supply IANA timezone identifiers;
   reminder scheduling stays disabled if a valid device timezone is unavailable
@@ -160,31 +164,33 @@ unverified. This is not yet a Play release candidate.
 | SQL/database | No local Supabase, Docker or clean database chain was available/run; pgTAP fixture is prepared but unexecuted |
 | Reset cleanup source | Targeted Dart formatting and `git diff --check` passed. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/paginated_outfit_link_cleanup_test.dart` — **3 passed**; the test uses a pure callback helper and did not connect to Supabase |
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
-| Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the final source built successfully in 87.4 seconds with one Gradle worker and a 2 GiB heap. The current `build/app/outputs/bundle/release/app-release.aab` is 76,521,359 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `90fec50c6a4432dc661ccb58f03237abc225161bb047c4de370dd561a30b1f9d`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
+| Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the current source built successfully in 86.7 seconds with one Gradle worker and a 2 GiB heap. `build/app/outputs/bundle/release/app-release.aab` is 76,521,004 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `846ecb268be353a012d63eaa2d90cf63ad6f477c105ca71276f36ee5dac1af04`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
 
-Latest verification: the full serial Flutter suite passed 52/52 after the AI
-local-image request change; the targeted image routing/private consumer/app-
   import selection passed 12/12. Reset cleanup passed 3/3, reminder scheduling
-4/4, AI payload encoding 3/3, Deno request validation 5/5, and app import smoke
-1/1. Targeted Dart analysis of changed reset, notification, AI payload/client,
-helper, and focused test files reported no issues. Targeted Dart/Deno formatting
-  and `git diff --check` passed. The project-wide analyzer rerun still exits 1
-  and reported 273 diagnostics in truncated output; no clean-analysis claim is
-  made. The current AAB was rebuilt from that source and
-archive-checked; it remains unsigned and has no provider configuration. These
-tests did not connect to a backend or call AI providers. A project-local
-`pglast` parse accepted all 30 outer SQL statements in the Storage fixture;
-this does not execute policies or prove isolation. Read-only metadata queries
-confirmed public buckets and broad Storage table grants. The project-wide
-analyzer was not rerun, and no device check was possible because `adb` is absent.
+Latest verification: the full serial Flutter suite passed 52/52 after the AI
+local-image request change, and the separate password-recovery localization
+test passed 1/1. The targeted image routing/private consumer/app-import
+selection passed 12/12. Reset cleanup passed 3/3, reminder scheduling 4/4, AI
+payload encoding 3/3, Deno request validation 5/5, and app import smoke 1/1.
+Targeted analysis of the changed splash screen/test and changed reset,
+notification, AI payload/client, helper, and focused test files reported no
+issues. Targeted formatting and `git diff --check` passed. Project-wide
+analysis exited 1 with 273 diagnostics in truncated output. The current AAB was
+rebuilt from the localized source and archive-checked; it remains unsigned and
+has no provider configuration. Tests did not connect to a backend or call AI
+providers. A project-local `pglast` parse accepted all 30 outer SQL statements
+in the Storage fixture; this does not execute policies or prove isolation.
+Read-only metadata queries confirmed public buckets and broad Storage table
+grants. No device check was possible because `adb` is absent.
 
 ## 3. Deferred or incomplete verification
 
 - The full Flutter suite passed 52/52 after the final local Dart changes.
-  Analyzer result is not green; do not treat formatting as analysis. The nine
-  reported warnings were removed but not rechecked.
+  The separate localization test passed 1/1. Analyzer result is not green; do
+  not treat formatting as analysis. Its latest project-wide run exited 1 with
+  273 diagnostics in truncated output.
 - Deno check has two failed attempts: first found `today-suggestion` unknown
   catch typing (fixed with generic client error), second found nullable data in
   `generate-ai-insights` (fixed with `?? []`). Do not claim those final fixes
@@ -198,7 +204,7 @@ analyzer was not rerun, and no device check was possible because `adb` is absent
   schema, then run `storage_security.test.sql` after the reviewed cutover. Add a
   two-session concurrent quota proof; the current quota fixture only proves
   sequential calls in one session.
-- The locally built AAB has been rechecked: SHA-256 `90fec50c6a4432dc661ccb58f03237abc225161bb047c4de370dd561a30b1f9d` and archive integrity match the recorded artifact, and it remains unsigned without the private
+- The locally built AAB has been rechecked: SHA-256 `846ecb268be353a012d63eaa2d90cf63ad6f477c105ca71276f36ee5dac1af04` and archive integrity match the recorded artifact, and it remains unsigned without the private
   upload key. Device/network behavior,
   timezone/permission behavior, accessibility and export runtime checks remain
   pending.
@@ -262,6 +268,8 @@ analyzer was not rerun, and no device check was possible because `adb` is absent
   remove server-side fetches of caller URLs; authenticate before quota use,
   return generic client errors, and prepare pure Dart and Deno tests. Committed
   as `6ca5700`.
+- [x] Use the existing localized password-recovery label in the splash screen;
+  the focused three-locale regression test passed 1/1. Committed as `b9f4ddc`.
 - [x] Run the full Flutter suite sequentially: 52 passed after the AI image
   request change; the affected image/app-import selection passed 12/12.
 - [x] Prepare local pgTAP fixture for protected tier, profile/outfit ownership
@@ -280,9 +288,9 @@ analyzer was not rerun, and no device check was possible because `adb` is absent
   52/52; reset helper: 3/3; notification scheduling: 4/4; AI payload: 3/3;
   Deno request validation: 5/5; app import: 1/1; image/app import selection:
   12/12.
-- [x] Build the release AAB after the shim and cheaper checks passed; the
-  current final-source bundle passed archive integrity and is unsigned with no
-  Supabase/RevenueCat build values.
+- [x] Rebuild the release AAB after the localized Dart change; the current
+  final-source bundle passed archive integrity and is unsigned with no
+  Supabase/RevenueCat build values. SHA-256 is recorded above.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
