@@ -53,8 +53,10 @@ the Android release output is unsigned and cannot be uploaded to Play.
 Flutter 3.35.7 generates the dev-only integration-test plugin into the main
 Android registrant, while its Gradle loader excludes that plugin from release
 dependencies. A release source-set no-op shim bridges the generated reference
-without bundling Android test libraries. The shim compiles against the pinned
-Flutter embedding, but a complete bundle build with it has not been verified.
+without bundling Android test libraries. A release AAB built successfully with
+the shim and passed ZIP archive integrity inspection. The artifact is unsigned,
+contains no Supabase/RevenueCat public build values, and has not been installed
+or run on a device.
 
 ## Recovered Supabase and private images
 
