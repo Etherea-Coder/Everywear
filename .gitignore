@@ -12,7 +12,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-pubspec.lock
+.tooling/
 
 # IntelliJ related
 *.iml

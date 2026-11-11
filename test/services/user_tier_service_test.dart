@@ -9,19 +9,15 @@ void main() {
       service = UserTierService();
     });
 
-    test('canAddItem returns true when Supabase unavailable (fail open)', () async {
-      final result = await service.canAddItem('nonexistent-user-id');
-      expect(result, true);
-    });
-
-    test('getUserTierInfo returns default free tier on error', () async {
+    test('getUserTierInfo fails closed on backend error', () async {
       final result = await service.getUserTierInfo('nonexistent-user-id');
 
       expect(result['tier'], 'free');
-      expect(result['items_limit'], 30);
-      expect(result['suggestions_limit'], 10);
-      expect(result['items_remaining'], 30);
-      expect(result['suggestions_remaining'], 10);
+      expect(result['suggestions_limit'], 1);
+      expect(result['suggestions_remaining'], 0);
+      expect(result['coaching_remaining'], 0);
+      expect(result['outfit_logs_remaining'], 0);
+      expect(result['error'], true);
     });
 
     test('isPremium returns false when not authenticated', () async {
@@ -34,9 +30,10 @@ void main() {
       expect(result, false);
     });
 
-    test('canRequestSuggestion returns true when Supabase unavailable (fail open)', () async {
+    test('canRequestSuggestion fails closed when backend is unavailable', () async {
       final result = await service.canRequestSuggestion('nonexistent-user-id');
-      expect(result, true);
+      expect(result, false);
+      expect(service.lastCheckError, isNotNull);
     });
   });
 }

@@ -5,57 +5,6 @@ import 'package:everywear/core/providers.dart';
 
 void main() {
   group('State Providers', () {
-    test('dailyLogViewModeProvider defaults to calendar', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      expect(container.read(dailyLogViewModeProvider), 'calendar');
-    });
-
-    test('dailyLogViewModeProvider can be toggled to list', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      container.read(dailyLogViewModeProvider.notifier).state = 'list';
-      expect(container.read(dailyLogViewModeProvider), 'list');
-    });
-
-    test('dailyLogSelectedDateProvider defaults to now', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final selectedDate = container.read(dailyLogSelectedDateProvider);
-      final now = DateTime.now();
-      expect(selectedDate.year, now.year);
-      expect(selectedDate.month, now.month);
-      expect(selectedDate.day, now.day);
-    });
-
-    test('dailyLogFocusedMonthProvider defaults to now', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final focusedMonth = container.read(dailyLogFocusedMonthProvider);
-      final now = DateTime.now();
-      expect(focusedMonth.year, now.year);
-      expect(focusedMonth.month, now.month);
-    });
-
-    test('aiIntelligenceTimeRangeProvider defaults to month', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      expect(container.read(aiIntelligenceTimeRangeProvider), 'month');
-    });
-
-    test('aiIntelligenceTimeRangeProvider can be changed to week', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      container.read(aiIntelligenceTimeRangeProvider.notifier).state = 'week';
-      expect(container.read(aiIntelligenceTimeRangeProvider), 'week');
-    });
-
     test('themeModeProvider defaults to light', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);

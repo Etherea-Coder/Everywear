@@ -41,7 +41,7 @@ dependencies:
   flutter_image_compress: ^2.3.0
   sentry_flutter: ^9.20.0
   url_launcher: ^6.3.2
-  share_plus: ^13.1.0
+  share_plus: ^12.0.2
   purchases_flutter: ^10.1.0
   purchases_ui_flutter: ^10.1.0
   pdf: ^3.11.0
@@ -52,10 +52,21 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   hive_generator: ^2.0.1
   build_runner: ^2.4.9
   flutter_launcher_icons: ^0.14.3
+
+# image 4.11.0 still calls ZLibDecoder.decodeLazy, which archive 4.0.9
+# removed. Keep dependency resolution reproducible until image updates.
+dependency_overrides:
+  # image 4.11.0 was selected transitively but calls an archive API that is
+  # absent from its declared archive release. This older compatible pair is
+  # used by Flutter 3.35/Dart 3.9 and is covered by the image tests.
+  image: 4.5.4
+  archive: 3.6.1
 
 flutter:
   uses-material-design: true

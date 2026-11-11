@@ -5,6 +5,13 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
+def hasUploadSigning = keystorePropertiesFile.exists()
+if (hasUploadSigning) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "com.stylewise.app"
     compileSdk = 36
@@ -23,7 +30,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // Preserve this identity until Play Console and RevenueCat registrations
+        // are confirmed. Changing it would create a different Android app.
         applicationId = "com.stylewise.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -34,13 +42,26 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        if (hasUploadSigning) {
+            upload {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             shrinkResources false
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            if (hasUploadSigning) {
+                signingConfig signingConfigs.upload
+            } else {
+                logger.warn("Release signing disabled: android/key.properties is absent")
+            }
         }
     }
 }

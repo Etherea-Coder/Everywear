@@ -9,12 +9,12 @@ void main() {
       expect(result, isA<List>());
     });
 
-    test('getWardrobeStatistics throws when not authenticated', () async {
+    test('getWardrobeStatistics returns an empty offline-safe result', () async {
       final service = WardrobeService();
-      expect(
-        () => service.getWardrobeStatistics(),
-        throwsA(isA<Exception>()),
-      );
+      final result = await service.getWardrobeStatistics();
+      expect(result['total_items'], 0);
+      expect(result['favorite_items'], 0);
+      expect(result['category_counts'], isEmpty);
     });
   });
 }

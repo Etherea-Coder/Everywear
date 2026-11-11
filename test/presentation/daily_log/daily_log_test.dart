@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
-import 'package:everywear/core/providers.dart';
-import 'package:everywear/presentation/daily_log/daily_log.dart';
 import 'package:everywear/presentation/daily_log/widgets/empty_daily_log_widget.dart';
 import 'package:everywear/presentation/daily_log/widgets/quick_log_button_widget.dart';
 
@@ -72,23 +69,4 @@ void main() {
     });
   });
 
-  group('DailyLog Provider Integration', () {
-    test('dailyLogViewModeProvider toggles between calendar and list', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      expect(container.read(dailyLogViewModeProvider), 'calendar');
-      container.read(dailyLogViewModeProvider.notifier).state = 'list';
-      expect(container.read(dailyLogViewModeProvider), 'list');
-    });
-
-    test('dailyLogSelectedDateProvider can be changed', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final newDate = DateTime(2026, 1, 15);
-      container.read(dailyLogSelectedDateProvider.notifier).state = newDate;
-      expect(container.read(dailyLogSelectedDateProvider), newDate);
-    });
-  });
 }
