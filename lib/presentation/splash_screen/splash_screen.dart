@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../services/supabase_service.dart';
 import '../../services/revenuecat_service.dart';
@@ -10,13 +9,12 @@ import 'package:sizer/sizer.dart';
 
 import 'dart:async';
 import '../../core/app_export.dart';
-import '../../core/utils/app_localizations.dart';
 
 /// Splash Screen with Authentication - Branded login experience
 /// Displays app logo with authentication options (Google & Email)
 /// Provides seamless sign-in/sign-up flow with elegant design
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -89,10 +87,11 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _listenToAuthChanges() {
     if (!SupabaseService.isInitialized) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
           '⚠️ SplashScreen: Supabase not initialized, skipping auth listener',
         );
+      }
       return;
     }
 
@@ -553,7 +552,7 @@ class _SplashScreenState extends State<SplashScreen>
       child: TextButton(
         onPressed: _isLoading ? null : _handleForgotPassword,
         child: Text(
-          'Forgot password?', // TODO: Add to AppLocalizations
+          l10n.forgotPassword,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
             decoration: TextDecoration.underline,
