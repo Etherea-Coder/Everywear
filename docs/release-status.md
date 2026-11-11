@@ -43,6 +43,8 @@ unverified. This is not yet a Play release candidate.
 - `281efa2a5c49f1a7dcc9d5e646e42bebefe0eb66` — pages in-app full-reset outfit
   links, bounds delete batches, clears private image cache before partial remote
   cleanup, and adds three passing pure helper tests.
+- `2d7d9f3f928311bcdbe2b0e1d93db1bb63e6d9a0` — schedules the next reminder by
+  IANA-zone calendar date across DST and adds four passing time-boundary tests.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
