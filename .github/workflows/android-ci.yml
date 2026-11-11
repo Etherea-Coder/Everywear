@@ -1,0 +1,44 @@
+name: Android client checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'recovery/**'
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-pub
+      - run: flutter test --concurrency=1
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: '2.9.6'
+      - name: Type-check protected functions
+        run: |
+          deno check \
+            supabase/functions/ai-suggestions/index.ts \
+            supabase/functions/analyze-clothing/index.ts \
+            supabase/functions/check-and-request-suggestion/index.ts \
+            supabase/functions/delete-account/index.ts \
+            supabase/functions/generate-ai-insights/index.ts \
+            supabase/functions/revenuecat-webhook/index.ts \
+            supabase/functions/style-coach/index.ts \
+            supabase/functions/today-suggestion/index.ts \
+            supabase/functions/verify-purchase/index.ts

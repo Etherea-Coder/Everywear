@@ -1,6 +1,6 @@
 # Backend contract
 
-Last updated: 2026-11-11
+Last updated: 2026-11-12
 
 This document is derived from application code and Edge Functions. It is a living contract; it does not treat the incomplete historical migrations as authoritative.
 
@@ -10,7 +10,7 @@ The original Supabase project has been recovered. The forward migration in this 
 
 The linked production project `qxsdwwdrxoyxmnapuqqv` was inspected using the Docker-free Supabase CLI read-only query path as `supabase_read_only_user` on PostgreSQL 17.6. The exact tables, policies, function/trigger inventory, bucket settings, grants, relationships, and deployed-function defects are recorded in [recovered-supabase-reconciliation.md](recovered-supabase-reconciliation.md). In brief: all 16 public app tables enable RLS but none forces it; the current profile policy/grants permit self-editing all protected columns; the self-upgrade SECURITY DEFINER RPC is present and callable; outfit links check outfit ownership only; counter helpers are callable; the Realtime publication has no tables; and both Storage buckets are public. These are production risks, not locally verified fixes.
 
-The current reconstruction migration does not match the recovered schema and is explicitly not deployable. The `supabase_migrations.schema_migrations` relation was absent in the read-only lookup; migration history was not modified.
+The local forward migration has been reconciled to the recovered column names and types where metadata was available, but it remains an unexecuted review proposal. In particular it reuses the recovered `revenue_cat_id text` field and `suggestions_reset_at date`, and adds only missing subscription state/event fields and app relations. The `supabase_migrations.schema_migrations` relation was absent in the read-only lookup; migration history was not modified. Do not use `db push` or repair history against production.
 
 ## Trust boundaries
 

@@ -11,17 +11,17 @@ This document records the authorized finish scope for branch `recovery/android-v
 - Inspect resources first. Run expensive checks sequentially with single-worker/conservative memory settings. After two failures of one expensive check, or observed resource pressure, defer it and continue independent work. Never kill unrelated processes or change system settings.
 - Stage explicit paths, checkpoint coherent changes locally, and keep this document and `docs/release-status.md` resumable.
 
-## Completion checklist
+## Completion checklist (updated 2026-11-12)
 
-- [ ] Establish current checkout, repository instructions, resources, and reproducible toolchain state.
-- [ ] Reconcile the recovered Supabase schema read-only: relations/columns/types, constraints, indexes, FKs, RLS, grants, triggers, counters, privileged function definitions, Storage buckets/policies, Realtime, and deployed Edge Function source. Compare deployed code separately; do not replace local source.
-- [ ] Prepare minimal forward-only schema/security changes and an ordered private-image rollout with conversion, owner restrictions, policy replacement, verification, and privacy-preserving rollback. Do not apply to production.
-- [ ] Close and test local backend security/functionality gaps: protected entitlement/counters, ownership on both sides of joins, atomic quotas, per-function delegated identity validation, account deletion including Storage, account-scoped state, reporting opt-out, auth/onboarding persistence, and safe outage/error behavior.
-- [ ] Complete RevenueCat code review/fixes for authenticated UUID binding, exact entitlement, fail-closed server verification, webhook parsing/order/idempotency/grace, concurrent purchase/restore and account changes, localized prices, and honest unconfigured/error states. Document provider setup and real Play tester steps without making purchases.
-- [ ] Complete documented v1 local gaps: image refresh/export, reminders/timezones/permissions, large text, offline and error states, and obsolete placeholders; document unresolved product decisions.
-- [ ] Run focused tests sequentially, fix failures, then run the project analyzer and appropriate suite as resources allow. Check Dart and TypeScript with compatible tools. Do not weaken checks/security to pass.
-- [ ] Attempt Android packaging only after cheaper checks. Produce signed AAB only with valid existing private signing input; otherwise produce a clearly labeled local artifact if feasible. No emulator or live-purchase claims without execution.
-- [ ] Update CI/setup/deployment instructions, release status, and this checklist. Commit coherent changes with explicit file paths.
+- [x] Establish current checkout, repository instructions, resources, and reproducible toolchain state.
+- [x] Reconcile the recovered Supabase schema read-only: relations/columns/types, constraints, indexes, FKs, RLS, grants, triggers, counters, privileged function definitions, Storage buckets/policies, Realtime, and deployed Edge Function source. Compare deployed code separately; do not replace local source.
+- [x] Prepare a forward-only schema/security proposal and ordered private-image rollout with stable-reference conversion, owner restrictions, policy replacement, verification, and privacy-preserving rollback. Validate migration and fixtures on non-production before deployment.
+- [x] Implement local backend security/functionality changes for protected fields/counters, bilateral outfit-item ownership, atomic quotas, per-function identity validation, account deletion including Storage, account-scoped state, reporting opt-out, onboarding persistence, safe outage/error behavior, and expiry-aware premium decisions. Database isolation proof remains pending.
+- [x] Implement RevenueCat code changes for UUID binding, exact entitlement, fail-closed verification, webhook ordering/idempotency/grace, purchase/restore/account races, localized prices and honest unconfigured/error states. Provider setup and Play tester steps are documented; no purchases were made.
+- [x] Implement image refresh/export, timezone-aware reminders, system text scaling, offline/error handling, and remove the unused payment placeholder; document remaining provider/release inputs.
+- [ ] Full Flutter suite passed 36 tests sequentially. Analyzer returned 0 errors/9 warnings/281 info; reported warnings were edited without rechecking. Deno checks passed seven functions; the final `generate-ai-insights` fallback and `ai-suggestions` remain unchecked after the two-attempt limit.
+- [ ] Two Android AAB attempts failed on the generated test-only integration plugin reference. A release-only no-op shim was added and independently compiled with Java; no bundle retry after the two-attempt limit. No signing, emulator, or live-purchase claim is made.
+- [ ] Commit the documentation/CI checkpoint; source checkpoints are committed as `395255b` and `5ba8204`.
 
 ## Current known boundaries
 

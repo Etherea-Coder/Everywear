@@ -1,6 +1,6 @@
 # Android v1 recovery plan
 
-Last updated: 2026-11-11
+Last updated: 2026-11-12
 
 ## Baseline
 
@@ -15,15 +15,15 @@ Last updated: 2026-11-11
 
 ## Milestones
 
-1. **Reproducible Flutter/Android build** — code complete, validation deferred
+1. **Reproducible Flutter/Android build** — toolchain pinned, tests passed, analyzer attempted; bundle still blocked
    - Pin Flutter 3.35.7 (Dart 3.9-compatible) in `.fvmrc`.
    - Track `pubspec.lock`; add the Flutter SDK `integration_test` dependency.
    - Resolve the duplicate Gradle DSL configuration without changing the active package identity (`com.stylewise.app`) until Play and RevenueCat registrations are confirmed.
-   - Stale test sources and the generated Android registrant issue were repaired; reruns are deferred by the code-only recovery pass.
-2. **Complete, secure Supabase backend** — implementation proposed; read-only reconciliation completed 2026-11-11, safe additive migration/revalidation still pending
+   - Stale test sources were repaired; current sequential suite passed 36 tests. Analyzer reported no errors but warned; reported warnings were corrected afterward without a repeat analyzer run. Two bundle attempts failed on the generated dev-only integration plugin reference; its release-only no-op shim compiled independently, but a retry remains deferred.
+2. **Complete, secure Supabase backend** — local proposal reconciled to available metadata; execution/security proof pending
    - Inventory the app's tables, RPCs, Storage, Realtime and Edge Function contract.
    - Add forward-only migrations and local security fixtures.
-   - Do not deploy `20261111090000_reconstruct_and_secure_backend.sql`: read-only comparison confirmed incompatible existing `subscription_transactions`, `style_challenges`, `learning_modules`, and `feedback` shapes, plus a non-idempotent revoke for a missing function. Reconcile against `docs/recovered-supabase-reconciliation.md` and prepare forward-only deltas that preserve hosted data/objects.
+   - Do not deploy `20261111090000_reconstruct_and_secure_backend.sql` yet: it is a local proposal revised against the recovered schema but still needs clean-chain SQL validation, fixture proofs and human review. Do not mutate the production project or its absent migration history.
 3. **Functional application flows** — in progress
    - Authentication callbacks and onboarding.
    - User-scoped cache/state and correct offline/outage behavior.
@@ -43,4 +43,4 @@ Last updated: 2026-11-11
 - RevenueCat public Android SDK key, exact paid entitlement identifier, and webhook authorization secret.
 - Confirmation of the registered Android application ID in Play Console and RevenueCat.
 - Private Android upload keystore and its passwords supplied outside Git.
-- Docker installation/daemon access for a clean local Supabase stack.
+- A non-production PostgreSQL/Supabase environment for clean-chain migration and identity/quota/Storage proofs. Docker is intentionally not started during this pass.
