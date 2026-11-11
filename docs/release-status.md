@@ -152,7 +152,7 @@ unverified. This is not yet a Play release candidate.
 | Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 8.4 GiB available, 398 GiB free at start; Linux/macOS generated changes preserved |
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; installed ignored project-local Deno 2.9.6; Supabase CLI 3.1.0 |
 | Dependency resolution | `flutter pub get` completed; lockfile updated for the direct image test dependency |
-| Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **52 passed**, no failures after the AI local-image request change. |
+| Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **53 passed**, including the password-recovery localization test. |
 | Flutter analyzer | Previous run: 0 errors, 9 warnings, 281 info; the warning sites were edited. Rerun after those edits completed in 5.3 seconds and exited 1 with 273 diagnostics (full output was truncated by the command tool, so the final severity breakdown is not retained). Do not claim project-wide analysis is clean; targeted analysis of changed Dart files previously reported no issues |
 | Targeted Dart analysis | `.tooling/flutter/bin/dart analyze` on the changed reset, notification, helper, and focused test files — initially reported four infos in `notification_service.dart`; after cleanup, rerun exited 0 with **No issues found!** |
 | Deno formatting | `deno fmt --check` passed on the updated `delete-account` source; earlier formatting passed on `check-and-request-suggestion`, `revenuecat-webhook`, and `verify-purchase` |
@@ -169,9 +169,8 @@ unverified. This is not yet a Play release candidate.
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
 
   import selection passed 12/12. Reset cleanup passed 3/3, reminder scheduling
-Latest verification: the full serial Flutter suite passed 52/52 after the AI
-local-image request change, and the separate password-recovery localization
-test passed 1/1. The targeted image routing/private consumer/app-import
+Latest verification: the full serial Flutter suite passed 53/53 after the
+password-recovery localization change. The targeted image routing/private consumer/app-import
 selection passed 12/12. Reset cleanup passed 3/3, reminder scheduling 4/4, AI
 payload encoding 3/3, Deno request validation 5/5, and app import smoke 1/1.
 Targeted analysis of the changed splash screen/test and changed reset,
@@ -187,8 +186,8 @@ grants. No device check was possible because `adb` is absent.
 
 ## 3. Deferred or incomplete verification
 
-- The full Flutter suite passed 52/52 after the final local Dart changes.
-  The separate localization test passed 1/1. Analyzer result is not green; do
+- The full Flutter suite passed 53/53 after the final local Dart changes.
+  The localization test passed 1/1 within that run. Analyzer result is not green; do
   not treat formatting as analysis. Its latest project-wide run exited 1 with
   273 diagnostics in truncated output.
 - Deno check has two failed attempts: first found `today-suggestion` unknown
@@ -270,8 +269,9 @@ grants. No device check was possible because `adb` is absent.
   as `6ca5700`.
 - [x] Use the existing localized password-recovery label in the splash screen;
   the focused three-locale regression test passed 1/1. Committed as `b9f4ddc`.
-- [x] Run the full Flutter suite sequentially: 52 passed after the AI image
-  request change; the affected image/app-import selection passed 12/12.
+- [x] Run the full Flutter suite sequentially: 53 passed after the password-
+  recovery localization change; the affected image/app-import selection passed
+  12/12.
 - [x] Prepare local pgTAP fixture for protected tier, profile/outfit ownership
   and single-session AI quota behavior.
 - [x] Add a separate local-only Storage pgTAP fixture for anonymous denial,
@@ -285,7 +285,7 @@ grants. No device check was possible because `adb` is absent.
   because the captured output was truncated; targeted changed-file analysis
   had passed, but project-wide analysis is not green.
 - [x] Targeted Dart/Deno formatting and `git diff --check` passed. Full suite:
-  52/52; reset helper: 3/3; notification scheduling: 4/4; AI payload: 3/3;
+  53/53; reset helper: 3/3; notification scheduling: 4/4; AI payload: 3/3;
   Deno request validation: 5/5; app import: 1/1; image/app import selection:
   12/12.
 - [x] Rebuild the release AAB after the localized Dart change; the current
