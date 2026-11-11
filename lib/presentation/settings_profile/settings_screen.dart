@@ -20,6 +20,7 @@ import '../../services/supabase_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/analytics_service.dart';
 import '../../services/revenuecat_service.dart';
+import '../../services/account_state_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -59,8 +60,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadPreferences() async {
     await NotificationService.instance.initialize();
-    final notifications =
-        await NotificationService.instance.isMorningSuggestionsEnabled();
+    final notifications = await NotificationService.instance
+        .isMorningSuggestionsEnabled();
     final analytics = await AnalyticsService.instance.isAnalyticsEnabled();
     if (mounted) {
       setState(() {
@@ -115,19 +116,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: _morningAISuggestions,
                   onChanged: (value) async {
                     if (value) {
-                      final granted =
-                          await NotificationService.instance.enableMorningSuggestions();
+                      final granted = await NotificationService.instance
+                          .enableMorningSuggestions();
                       if (!granted && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                              'Please enable notifications in your device settings.'),
+                              'Please enable notifications in your device settings.',
+                            ),
                           ),
                         );
                         return;
                       }
                     } else {
-                      await NotificationService.instance.disableMorningSuggestions();
+                      await NotificationService.instance
+                          .disableMorningSuggestions();
                     }
                     if (mounted) setState(() => _morningAISuggestions = value);
                   },
@@ -227,8 +230,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.description_outlined,
                   title: localizations.termsOfService,
                   subtitle: localizations.viewTermsOfService,
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.terms),
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.terms),
                 ),
               ],
             ),
@@ -264,8 +266,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ── Version ──────────────────────────────────────────────────
             Text(
               'Version 1.0.1',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.hintColor),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
             ),
             SizedBox(height: 3.h),
           ],
@@ -279,8 +282,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildSection({
     required String title,
     required List<Widget> children,
-  }) =>
-      SettingsSectionWidget(title: title, children: children);
+  }) => SettingsSectionWidget(title: title, children: children);
 
   Widget _buildNavTile({
     required IconData icon,
@@ -288,14 +290,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required String subtitle,
     Color? titleColor,
     VoidCallback? onTap,
-  }) =>
-      SettingsTileWidget(
-        icon: icon,
-        title: title,
-        subtitle: subtitle,
-        titleColor: titleColor,
-        onTap: onTap,
-      );
+  }) => SettingsTileWidget(
+    icon: icon,
+    title: title,
+    subtitle: subtitle,
+    titleColor: titleColor,
+    onTap: onTap,
+  );
 
   Widget _buildSwitchTile({
     required IconData icon,
@@ -303,28 +304,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required String subtitle,
     required bool value,
     required Function(bool) onChanged,
-  }) =>
-      SettingsTileWidget(
-        icon: icon,
-        title: title,
-        subtitle: subtitle,
-        onTap: () => onChanged(!value),
-        trailing: Switch(
-          value: value,
-          onChanged: onChanged,
-          activeThumbColor: Theme.of(context).colorScheme.primary,
-        ),
-      );
+  }) => SettingsTileWidget(
+    icon: icon,
+    title: title,
+    subtitle: subtitle,
+    onTap: () => onChanged(!value),
+    trailing: Switch(
+      value: value,
+      onChanged: onChanged,
+      activeThumbColor: Theme.of(context).colorScheme.primary,
+    ),
+  );
 
   // ─── Theme ────────────────────────────────────────────────────────────────
 
   String _getThemeLabel(String theme, AppLocalizations localizations) {
     switch (theme) {
-      case 'light': return localizations.lightMode;
-      case 'dark':  return localizations.darkMode;
+      case 'light':
+        return localizations.lightMode;
+      case 'dark':
+        return localizations.darkMode;
       case 'system':
-      case 'auto':  return localizations.autoSystem;
-      default:      return localizations.lightMode;
+      case 'auto':
+        return localizations.autoSystem;
+      default:
+        return localizations.lightMode;
     }
   }
 
@@ -332,8 +336,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => ThemeSelectorDialog(
-        currentTheme:
-            ref.watch(themeModeProvider).toString().split('.').last,
+        currentTheme: ref.watch(themeModeProvider).toString().split('.').last,
         onThemeSelected: _applyThemeMode,
       ),
     );
@@ -343,8 +346,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final mode = themeMode == 'dark'
         ? ThemeMode.dark
         : themeMode == 'auto'
-            ? ThemeMode.system
-            : ThemeMode.light;
+        ? ThemeMode.system
+        : ThemeMode.light;
     await ref.read(settingsNotifierProvider.notifier).updateTheme(mode);
     if (mounted) MyApp.of(context)?.updateThemeMode(themeMode);
   }
@@ -374,20 +377,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(localizations.selectLanguage,
-                      style: TextStyle(
-                          fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                  Text(
+                    localizations.selectLanguage,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   SizedBox(height: 2.h),
                   ...languages.map((lang) {
                     final code = lang['code']!;
                     final isSelected =
                         ref.watch(localeProvider).languageCode == code;
                     return ListTile(
-                      leading: Text(LocaleManager.getLanguageFlag(code),
-                          style: TextStyle(fontSize: 24.sp)),
+                      leading: Text(
+                        LocaleManager.getLanguageFlag(code),
+                        style: TextStyle(fontSize: 24.sp),
+                      ),
                       title: Text(lang['name']!),
-                      trailing:
-                          isSelected ? const Icon(Icons.check_circle) : null,
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle)
+                          : null,
                       onTap: () {
                         final newLocale = Locale(code);
                         ref
@@ -435,20 +445,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
 
       // Sign out locally after server-side deletion
+      final userId = SupabaseService.instance.client.auth.currentUser?.id;
+      if (userId != null) await AccountStateService.clearForUser(userId);
       await RevenueCatService.logOut();
       await AnalyticsService.instance.resetUser();
       await SupabaseService.instance.client.auth.signOut();
 
       if (mounted) {
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/splash-screen', (route) => false);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context).error}: $e'),
-          ),
+          SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
         );
       }
     }
@@ -473,9 +484,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(localizations.exportDataFormat,
-                    style: TextStyle(
-                        fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                Text(
+                  localizations.exportDataFormat,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 SizedBox(height: 2.h),
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf),
@@ -523,12 +538,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         cancelText: localizations.cancel,
         isDestructive: false,
         onConfirm: () async {
+          final userId = Supabase.instance.client.auth.currentUser?.id;
+          if (userId != null) await AccountStateService.clearForUser(userId);
           await RevenueCatService.logOut();
           await AnalyticsService.instance.resetUser();
           await Supabase.instance.client.auth.signOut();
           if (outerContext.mounted) {
-            Navigator.of(outerContext)
-                .pushNamedAndRemoveUntil('/splash-screen', (route) => false);
+            Navigator.of(
+              outerContext,
+            ).pushNamedAndRemoveUntil('/splash-screen', (route) => false);
           }
         },
       ),

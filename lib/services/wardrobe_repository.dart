@@ -15,19 +15,28 @@ class WardrobeRepository {
   }) async {
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
-      final isOnline = connectivityResult.isNotEmpty && !connectivityResult.contains(ConnectivityResult.none);
+      final isOnline =
+          connectivityResult.isNotEmpty &&
+          !connectivityResult.contains(ConnectivityResult.none);
 
       if (isOnline) {
         try {
-          final remoteItems = await _remoteService.fetchWardrobeItems(
-            category: category,
-            searchQuery: searchQuery,
-          ).timeout(const Duration(seconds: 8));
+          final remoteItems = await _remoteService
+              .fetchWardrobeItems(category: category, searchQuery: searchQuery)
+              .timeout(const Duration(seconds: 8));
           // Sync to local for future offline use
-          await _localService.syncItems(remoteItems).timeout(const Duration(seconds: 3));
+          await _localService
+              .syncItems(
+                remoteItems,
+                replaceAll:
+                    category == null &&
+                    (searchQuery == null || searchQuery.isEmpty),
+              )
+              .timeout(const Duration(seconds: 3));
           return remoteItems;
         } catch (e) {
-          if (kDebugMode) debugPrint('Remote fetch failed, falling back to local: $e');
+          if (kDebugMode)
+            debugPrint('Remote fetch failed, falling back to local: $e');
           return _fetchLocalAsMap(category, searchQuery);
         }
       } else {
@@ -40,34 +49,44 @@ class WardrobeRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchLocalAsMap(String? category, String? searchQuery) async {
+  Future<List<Map<String, dynamic>>> _fetchLocalAsMap(
+    String? category,
+    String? searchQuery,
+  ) async {
     final localItems = await _localService.getLocalItems();
-    
+
     var filtered = localItems;
     if (category != null && category != 'All') {
       filtered = filtered.where((item) => item.category == category).toList();
     }
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final query = searchQuery.toLowerCase();
-      filtered = filtered.where((item) => 
-        (item.name?.toLowerCase().contains(query) ?? false) || 
-        (item.brand?.toLowerCase().contains(query) ?? false)
-      ).toList();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item.name?.toLowerCase().contains(query) ?? false) ||
+                (item.brand?.toLowerCase().contains(query) ?? false),
+          )
+          .toList();
     }
 
-    return filtered.map((item) => {
-      'id': item.remoteId ?? item.id.toString(),
-      'name': item.name,
-      'category': item.category,
-      'brand': item.brand,
-      'image_url': item.imageUrl,
-      'semantic_label': item.semanticLabel,
-      'purchase_price': item.purchasePrice,
-      'wear_count': item.wearCount,
-      'last_worn': item.lastWorn?.toIso8601String(),
-      'is_favorite': item.isFavorite,
-      'created_at': item.createdAt?.toIso8601String(),
-    }).toList();
+    return filtered
+        .map(
+          (item) => {
+            'id': item.remoteId ?? item.id.toString(),
+            'name': item.name,
+            'category': item.category,
+            'brand': item.brand,
+            'image_url': item.imageUrl,
+            'semantic_label': item.semanticLabel,
+            'purchase_price': item.purchasePrice,
+            'wear_count': item.wearCount,
+            'last_worn': item.lastWorn?.toIso8601String(),
+            'is_favorite': item.isFavorite,
+            'created_at': item.createdAt?.toIso8601String(),
+          },
+        )
+        .toList();
   }
 
   /// Adds a new item, updating both remote and local
@@ -75,7 +94,7 @@ class WardrobeRepository {
     final response = await _remoteService.createItem(itemData);
     if (response['success'] == true) {
       final newItem = response['item'] as Map<String, dynamic>;
-      await _localService.syncItems([newItem]);
+      await _localService.syncItems([newItem], replaceAll: false);
     }
     return response;
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sizer/sizer.dart';
@@ -30,7 +31,11 @@ void main() async {
   ErrorWidget.builder = (FlutterErrorDetails details) {
     if (!_hasShownError) {
       _hasShownError = true;
-      Sentry.captureException(details.exception, stackTrace: details.stack);
+      if (AnalyticsService.instance.reportingEnabled) {
+        unawaited(
+          Sentry.captureException(details.exception, stackTrace: details.stack),
+        );
+      }
       Future.delayed(const Duration(seconds: 5), () => _hasShownError = false);
       return CustomErrorWidget(errorDetails: details);
     }
@@ -59,10 +64,13 @@ void main() async {
 Future<void> _initializeEssentialServices() async {
   // Sentry tracking first
   try {
+    await AnalyticsService.instance.isAnalyticsEnabled();
     await SentryFlutter.init((options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
       options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
       options.debug = kDebugMode;
+      options.beforeSend = (event, hint) =>
+          AnalyticsService.instance.reportingEnabled ? event : null;
     });
   } catch (e) {
     if (kDebugMode) debugPrint('⚠️ Sentry failed to init: $e');

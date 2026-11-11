@@ -13,14 +13,14 @@ import './widgets/sustainability_goals_step.dart';
 import './widgets/wardrobe_upload_step.dart';
 import '../../core/utils/app_localizations.dart';
 
-
 /// Personalization Setup Screen - Final onboarding screen
 /// Multi-step wizard collecting user preferences through progressive disclosure
 class PersonalizationSetup extends ConsumerStatefulWidget {
   const PersonalizationSetup({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<PersonalizationSetup> createState() => _PersonalizationSetupState();
+  ConsumerState<PersonalizationSetup> createState() =>
+      _PersonalizationSetupState();
 }
 
 class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
@@ -117,41 +117,53 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
     setState(() => _isCompleting = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('selectedStyles', _selectedStyles);
-      await prefs.setString('workEnvironment', _workEnvironment ?? '');
-      await prefs.setString('socialFrequency', _socialFrequency ?? '');
-      await prefs.setString('climate', _climate ?? '');
-      await prefs.setDouble('purchaseFrequency', _purchaseFrequency);
-      await prefs.setDouble('budgetConsciousness', _budgetConsciousness);
-      await prefs.setDouble('environmentalImpact', _environmentalImpact);
-      await prefs.setBool('hasSeenOnboarding', true);
-
       final client = SupabaseService.instance.client;
       final userId = client.auth.currentUser?.id;
-      if (userId != null) {
-        try {
-          await client.from('user_profiles').upsert({
-            'id': userId,
-            'style_preferences': _selectedStyles,
-            'work_environment': _workEnvironment,
-            'social_frequency': _socialFrequency,
-            'climate': _climate,
-            'purchase_frequency': _purchaseFrequency,
-            'budget_consciousness': _budgetConsciousness,
-            'environmental_impact': _environmentalImpact,
-            'onboarding_completed': true,
-          });
-        } catch (supabaseError) {
-          debugPrint('Supabase save failed, continuing with local prefs: $supabaseError');
-        }
+      if (userId == null) throw StateError('User is not authenticated');
+      final prefix = '$userId:';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('${prefix}selectedStyles', _selectedStyles);
+      await prefs.setString('${prefix}workEnvironment', _workEnvironment ?? '');
+      await prefs.setString('${prefix}socialFrequency', _socialFrequency ?? '');
+      await prefs.setString('${prefix}climate', _climate ?? '');
+      await prefs.setDouble('${prefix}purchaseFrequency', _purchaseFrequency);
+      await prefs.setDouble(
+        '${prefix}budgetConsciousness',
+        _budgetConsciousness,
+      );
+      await prefs.setDouble(
+        '${prefix}environmentalImpact',
+        _environmentalImpact,
+      );
+      await prefs.setBool('hasSeenOnboarding:$userId', true);
+
+      try {
+        await client
+            .from('user_profiles')
+            .update({
+              'style_preferences': _selectedStyles,
+              'work_environment': _workEnvironment,
+              'social_frequency': _socialFrequency,
+              'climate': _climate,
+              'purchase_frequency': _purchaseFrequency,
+              'budget_consciousness': _budgetConsciousness,
+              'environmental_impact': _environmentalImpact,
+              'onboarding_completed': true,
+            })
+            .eq('id', userId);
+      } catch (supabaseError) {
+        debugPrint(
+          'Supabase save failed, continuing with local prefs: $supabaseError',
+        );
       }
 
       ref.invalidate(userProfileProvider);
 
       if (mounted) {
-        Navigator.of(context, rootNavigator: true)
-            .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
       }
     } catch (e) {
       if (mounted) {
@@ -262,7 +274,9 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
           ),
           SizedBox(height: 1.h),
           Text(
-            AppLocalizations.of(context).getStepCountLabel(_currentStep + 1, _totalSteps),
+            AppLocalizations.of(
+              context,
+            ).getStepCountLabel(_currentStep + 1, _totalSteps),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(153),
             ),

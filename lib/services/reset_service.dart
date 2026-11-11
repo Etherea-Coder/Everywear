@@ -19,16 +19,29 @@ class ResetService {
     // Order matters: delete children before parents to respect FK constraints.
     // outfit_items references outfit_logs → delete outfit_items first.
     final steps = [
-      _ResetStep('outfit_items',   () => _deleteViaJoin(userId)),
-      _ResetStep('outfit_logs',    () => _delete('outfit_logs', userId)),
+      _ResetStep('outfit_items', () => _deleteViaJoin(userId)),
+      _ResetStep('outfit_logs', () => _delete('outfit_logs', userId)),
       _ResetStep('wardrobe_items', () => _delete('wardrobe_items', userId)),
-      _ResetStep('purchases',      () => _delete('purchases', userId)),
-      _ResetStep('wishlist',       () => _delete('wishlist', userId)),
-      _ResetStep('user_challenges',() => _delete('user_challenges', userId)),
-      _ResetStep('style_events',   () => _delete('style_events', userId)),
-      _ResetStep('style_quiz_results', () => _delete('style_quiz_results', userId)),
-      _ResetStep('user_budget',    () => _delete('user_budget', userId)),
-      _ResetStep('user_module_progress', () => _delete('user_module_progress', userId)),
+      _ResetStep('purchases', () => _delete('purchases', userId)),
+      _ResetStep('wishlist', () => _delete('wishlist', userId)),
+      _ResetStep('user_challenges', () => _delete('user_challenges', userId)),
+      _ResetStep('style_events', () => _delete('style_events', userId)),
+      _ResetStep(
+        'style_quiz_results',
+        () => _delete('style_quiz_results', userId),
+      ),
+      _ResetStep('user_budget', () => _delete('user_budget', userId)),
+      _ResetStep(
+        'user_module_progress',
+        () => _delete('user_module_progress', userId),
+      ),
+      _ResetStep('feedback', () => _delete('feedback', userId)),
+      _ResetStep(
+        'wardrobe-images',
+        () => _clearStorageBucket('wardrobe-images', userId),
+      ),
+      _ResetStep('avatars', () => _clearStorageBucket('avatars', userId)),
+      _ResetStep('user_profiles', () => _resetProfile(userId)),
     ];
 
     for (final step in steps) {
@@ -61,6 +74,57 @@ class ResetService {
 
     final ids = (logs as List).map((r) => r['id'] as String).toList();
     await _client.from('outfit_items').delete().inFilter('outfit_id', ids);
+  }
+
+  Future<void> _clearStorageBucket(String bucket, String userId) async {
+    final paths = <String>[];
+
+    Future<void> collect(String folder) async {
+      var offset = 0;
+      while (true) {
+        final entries = await _client.storage
+            .from(bucket)
+            .list(
+              path: folder,
+              searchOptions: SearchOptions(limit: 100, offset: offset),
+            );
+        if (entries.isEmpty) break;
+        for (final entry in entries) {
+          final path = '$folder/${entry.name}';
+          if (entry.id == null && entry.metadata == null) {
+            await collect(path);
+          } else {
+            paths.add(path);
+          }
+        }
+        if (entries.length < 100) break;
+        offset += entries.length;
+      }
+    }
+
+    await collect(userId);
+    for (var index = 0; index < paths.length; index += 100) {
+      final end = index + 100 < paths.length ? index + 100 : paths.length;
+      await _client.storage.from(bucket).remove(paths.sublist(index, end));
+    }
+  }
+
+  Future<void> _resetProfile(String userId) async {
+    await _client
+        .from('user_profiles')
+        .update({
+          'avatar_url': null,
+          'onboarding_completed': false,
+          'style_preferences': <String>[],
+          'work_environment': null,
+          'social_frequency': null,
+          'climate': null,
+          'purchase_frequency': 3.0,
+          'budget_consciousness': 3.0,
+          'environmental_impact': 3.0,
+        })
+        .eq('id', userId);
+    await _client.auth.updateUser(UserAttributes(data: {'avatar_url': null}));
   }
 }
 

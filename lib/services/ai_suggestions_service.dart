@@ -1,11 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
-import '../services/user_tier_service.dart';
 import './style_service.dart';
 
 class AiSuggestionsService {
   SupabaseClient get _supabase => SupabaseService.instance.client;
-  final UserTierService _tierService = UserTierService();
 
   /// Generates AI styling suggestions for an outfit image
   ///
@@ -30,7 +28,7 @@ class AiSuggestionsService {
       }
 
       final userName = _getUserFirstName(user);
-      
+
       // Fetch quiz result to inject style profile if available
       Map<String, dynamic>? profile;
       try {
@@ -45,21 +43,6 @@ class AiSuggestionsService {
         }
       } catch (e) {
         // Ignore failure, we'll just not send profile data
-      }
-
-      // Check suggestion limit before making API call
-      final canRequest = await _tierService.canRequestSuggestion(user.id);
-      if (!canRequest) {
-        final tierInfo = await _tierService.getUserTierInfo(user.id);
-        final tier = tierInfo['tier'] as String;
-        final limit = tierInfo['suggestions_limit'] as int;
-
-        return {
-          'success': false,
-          'error':
-              'Monthly suggestion limit reached. You have used all $limit suggestions for your $tier tier. '
-              'Upgrade to premium for more suggestions.',
-        };
       }
 
       final response = await _supabase.functions.invoke(
@@ -94,8 +77,9 @@ class AiSuggestionsService {
 
   String? _getUserFirstName(User? user) {
     if (user == null) return null;
-    final fullName = user.userMetadata?['full_name'] as String? ?? 
-                     user.userMetadata?['name'] as String?;
+    final fullName =
+        user.userMetadata?['full_name'] as String? ??
+        user.userMetadata?['name'] as String?;
     if (fullName == null || fullName.trim().isEmpty) return null;
     return fullName.trim().split(' ').first;
   }

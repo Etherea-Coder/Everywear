@@ -1,15 +1,21 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/foundation.dart';
 import '../models/local_wardrobe_item.dart';
+import './supabase_service.dart';
 
 class LocalDatabaseService {
-  static const String _boxName = 'wardrobe_items';
+  static const String _boxPrefix = 'wardrobe_items';
   Box<LocalWardrobeItem>? _box;
+  String? _activeUserId;
   bool _isInitialized = false;
 
   Future<void> init() async {
-    if (_isInitialized) return;
-    
+    final userId = SupabaseService.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('Local wardrobe cache requires an authenticated user.');
+    }
+    if (_isInitialized && _activeUserId == userId) return;
+
     try {
       // Try to init Hive, may already be initialized from main.dart
       try {
@@ -20,11 +26,13 @@ class LocalDatabaseService {
       if (!Hive.isAdapterRegistered(0)) {
         Hive.registerAdapter(LocalWardrobeItemAdapter());
       }
-      _box = await Hive.openBox<LocalWardrobeItem>(_boxName);
+      _box = await Hive.openBox<LocalWardrobeItem>('${_boxPrefix}_$userId');
+      _activeUserId = userId;
       _isInitialized = true;
       if (kDebugMode) debugPrint('✅ LocalDatabaseService initialized');
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ Failed to initialize LocalDatabaseService: $e');
+      if (kDebugMode)
+        debugPrint('❌ Failed to initialize LocalDatabaseService: $e');
       _isInitialized = false;
     }
   }
@@ -32,17 +40,22 @@ class LocalDatabaseService {
   // Ensure box is initialized before use
   Box<LocalWardrobeItem> get box {
     if (!_isInitialized || _box == null) {
-      throw StateError('LocalDatabaseService not initialized. Call init() first.');
+      throw StateError(
+        'LocalDatabaseService not initialized. Call init() first.',
+      );
     }
     return _box!;
   }
 
   /// Syncs remote items to local database
-  Future<void> syncItems(List<Map<String, dynamic>> remoteItems) async {
+  Future<void> syncItems(
+    List<Map<String, dynamic>> remoteItems, {
+    bool replaceAll = true,
+  }) async {
     await init();
-    
+
     final localItems = <String, LocalWardrobeItem>{};
-    
+
     for (var item in remoteItems) {
       final localItem = LocalWardrobeItem()
         ..id = item['id']?.toString() ?? ''
@@ -54,13 +67,18 @@ class LocalDatabaseService {
         ..semanticLabel = item['semantic_label']
         ..purchasePrice = (item['purchase_price'] as num?)?.toDouble()
         ..wearCount = (item['wear_count'] as num?)?.toInt() ?? 0
-        ..lastWorn = item['last_worn'] != null ? DateTime.parse(item['last_worn']) : null
+        ..lastWorn = item['last_worn'] != null
+            ? DateTime.parse(item['last_worn'])
+            : null
         ..isFavorite = item['is_favorite'] ?? false
-        ..createdAt = item['created_at'] != null ? DateTime.parse(item['created_at']) : null;
-      
+        ..createdAt = item['created_at'] != null
+            ? DateTime.parse(item['created_at'])
+            : null;
+
       localItems[localItem.id] = localItem;
     }
 
+    if (replaceAll) await box.clear();
     await box.putAll(localItems);
   }
 
@@ -102,6 +120,13 @@ class LocalDatabaseService {
     if (_isInitialized) {
       await box.close();
       _isInitialized = false;
+      _activeUserId = null;
     }
+  }
+
+  /// Removes only the authenticated user's cached wardrobe data.
+  Future<void> clearCurrentUser() async {
+    await init();
+    await box.clear();
   }
 }

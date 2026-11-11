@@ -12,7 +12,7 @@ import './widgets/faq_item_widget.dart';
 import './widgets/feature_comparison_widget.dart';
 import './widgets/hero_section_widget.dart';
 import './widgets/pricing_card_widget.dart';
-import './widgets/testimonial_widget.dart';
+import '../../services/revenuecat_service.dart';
 
 class PremiumUpgrade extends ConsumerStatefulWidget {
   const PremiumUpgrade({Key? key}) : super(key: key);
@@ -24,32 +24,38 @@ class PremiumUpgrade extends ConsumerStatefulWidget {
 class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
   String _selectedPlan = 'yearly';
   final _subscriptionService = SubscriptionService();
+  Offerings? _offerings;
+  bool _storeReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOfferings();
+  }
+
+  Future<void> _loadOfferings() async {
+    final offerings = await _subscriptionService.getOfferings();
+    if (!mounted) return;
+    setState(() {
+      _offerings = offerings;
+      _storeReady =
+          RevenueCatService.isConfigured && offerings?.current != null;
+    });
+  }
+
+  Package? _package(PackageType type) {
+    final packages =
+        _offerings?.current?.availablePackages ?? const <Package>[];
+    for (final package in packages) {
+      if (package.packageType == type) return package;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-
-    final List<Map<String, dynamic>> _testimonials = [
-      {
-        'name': 'Sarah Chen',
-        'image': 'assets/images/testimonials/sarah_chen.png',
-        'text': l10n.testimonialSarahText,
-        'rating': 5,
-      },
-      {
-        'name': 'Marcus Johnson',
-        'image': 'assets/images/testimonials/marcus_johnson.png',
-        'text': l10n.testimonialMarcusText,
-        'rating': 5,
-      },
-      {
-        'name': 'Emma Rodriguez',
-        'image': 'assets/images/testimonials/emma_rodriguez.png',
-        'text': l10n.testimonialEmmaText,
-        'rating': 5,
-      },
-    ];
 
     final List<Map<String, dynamic>> _faqs = [
       {
@@ -120,7 +126,9 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
 
             PricingCardWidget(
               planName: l10n.monthly,
-              price: '€7.49',
+              price:
+                  _package(PackageType.monthly)?.storeProduct.priceString ??
+                  '—',
               period: l10n.perMonth,
               features: [
                 l10n.moreAiOutfitSuggestions,
@@ -132,15 +140,16 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
               isSelected: _selectedPlan == 'monthly',
               onSelect: () => setState(() => _selectedPlan = 'monthly'),
               onUpgrade: _handleUpgrade,
+              enabled: _storeReady && _package(PackageType.monthly) != null,
             ),
 
             SizedBox(height: 2.h),
 
             PricingCardWidget(
               planName: l10n.yearly,
-              price: '€69.90',
+              price:
+                  _package(PackageType.annual)?.storeProduct.priceString ?? '—',
               period: l10n.perYear,
-              savings: l10n.savePercent,
               features: [
                 l10n.everythingInMonthly,
                 l10n.betterYearlyValue,
@@ -149,47 +158,14 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
                 l10n.bestPlanRegularUsers,
               ],
               isSelected: _selectedPlan == 'yearly',
-              isBestValue: true,
               onSelect: () => setState(() => _selectedPlan = 'yearly'),
               onUpgrade: _handleUpgrade,
+              enabled: _storeReady && _package(PackageType.annual) != null,
             ),
 
             SizedBox(height: 3.h),
 
             _buildStoreInfoCard(theme, l10n),
-
-            SizedBox(height: 4.h),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
-              child: Text(
-                l10n.whatUsersSay,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ),
-
-            SizedBox(height: 2.h),
-
-            SizedBox(
-              height: 20.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                itemCount: _testimonials.length,
-                itemBuilder: (context, index) {
-                  return TestimonialWidget(
-                    name: _testimonials[index]['name'],
-                    image: _testimonials[index]['image'],
-                    text: _testimonials[index]['text'],
-                    rating: _testimonials[index]['rating'],
-                  );
-                },
-              ),
-            ),
 
             SizedBox(height: 4.h),
 
@@ -345,40 +321,29 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
       return;
     }
     try {
-      final offerings = await _subscriptionService.getOfferings();
+      final offerings = _offerings;
       if (offerings == null || offerings.current == null) {
         _showErrorDialog(l10n.noOfferingsAvailable);
         return;
       }
-      final packages = offerings.current!.availablePackages;
-      Package? selectedPackage;
-      if (_selectedPlan == 'yearly') {
-        selectedPackage = packages.firstWhere(
-          (p) => p.packageType == PackageType.annual,
-          orElse: () => packages.first,
-        );
-      } else {
-        selectedPackage = packages.firstWhere(
-          (p) => p.packageType == PackageType.monthly,
-          orElse: () => packages.first,
-        );
+      final selectedPackage = _package(
+        _selectedPlan == 'yearly' ? PackageType.annual : PackageType.monthly,
+      );
+      if (selectedPackage == null) {
+        _showErrorDialog(l10n.noOfferingsAvailable);
+        return;
       }
-      final success = await _subscriptionService.purchase(selectedPackage);
-      if (success && mounted) {
-        final user = ref.read(supabaseAuthProvider);
-        if (user != null) {
-          await ref.read(userTierServiceProvider).upgradeToPremium(user.id);
-        }
+      final result = await _subscriptionService.purchase(selectedPackage);
+      if (result.isSuccess && mounted) {
         ref.invalidate(userTierProvider);
         ref.invalidate(userProfileProvider);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.welcomeToSignature)));
         Navigator.pop(context);
-      }
-    } on PurchasesErrorCode catch (e) {
-      if (e != PurchasesErrorCode.purchaseCancelledError) {
-        _showErrorDialog('${l10n.purchaseFailed}: ${e.name}');
+      } else if (mounted &&
+          result.status != SubscriptionActionStatus.cancelled) {
+        _showErrorDialog(result.message ?? l10n.purchaseFailed);
       }
     } catch (e) {
       _showErrorDialog(e.toString());
@@ -388,13 +353,9 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
   Future<void> _handleRestorePurchases() async {
     final l10n = AppLocalizations.of(context);
     try {
-      final hasAccess = await _subscriptionService.restorePurchases();
+      final result = await _subscriptionService.restorePurchases();
       if (!mounted) return;
-      if (hasAccess) {
-        final user = ref.read(supabaseAuthProvider);
-        if (user != null) {
-          await ref.read(userTierServiceProvider).upgradeToPremium(user.id);
-        }
+      if (result.isSuccess) {
         ref.invalidate(userTierProvider);
         ref.invalidate(userProfileProvider);
         ScaffoldMessenger.of(
@@ -402,7 +363,7 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
         ).showSnackBar(SnackBar(content: Text(l10n.purchasesRestoredSuccess)));
         Navigator.pop(context);
       } else {
-        _showErrorDialog(l10n.noActiveSubscriptionRestore);
+        _showErrorDialog(result.message ?? l10n.noActiveSubscriptionRestore);
       }
     } catch (e) {
       _showErrorDialog('${l10n.restoreFailed}: ${e.toString()}');

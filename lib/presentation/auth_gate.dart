@@ -9,8 +9,10 @@ import './password_reset/password_reset_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final hasSeenOnboardingProvider = FutureProvider<bool>((ref) async {
+  final user = ref.watch(supabaseAuthProvider);
+  if (user == null) return false;
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('hasSeenOnboarding') ?? false;
+  return prefs.getBool('hasSeenOnboarding:${user.id}') ?? false;
 });
 
 class AuthGate extends ConsumerWidget {

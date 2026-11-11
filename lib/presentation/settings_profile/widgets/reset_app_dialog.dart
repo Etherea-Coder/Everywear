@@ -1,12 +1,12 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
 
 import '../../../services/reset_service.dart';
+import '../../../services/account_state_service.dart';
+import '../../../services/supabase_service.dart';
 import '../../../routes/app_routes.dart';
 
 /// Shows a two-step confirmation dialog before wiping all user data.
@@ -23,11 +23,16 @@ class ResetAppDialog {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded,
-                color: Theme.of(ctx).colorScheme.error, size: 26),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Theme.of(ctx).colorScheme.error,
+              size: 26,
+            ),
             SizedBox(width: 2.w),
-            Text(loc.translate('reset_title'),
-                style: Theme.of(ctx).textTheme.titleLarge),
+            Text(
+              loc.translate('reset_title'),
+              style: Theme.of(ctx).textTheme.titleLarge,
+            ),
           ],
         ),
         content: Column(
@@ -53,16 +58,18 @@ class ResetAppDialog {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline,
-                      size: 16,
-                      color: Theme.of(ctx).colorScheme.error),
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Theme.of(ctx).colorScheme.error,
+                  ),
                   SizedBox(width: 2.w),
                   Expanded(
                     child: Text(
                       loc.translate('reset_keeps_account'),
                       style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(ctx).colorScheme.error,
-                          ),
+                        color: Theme.of(ctx).colorScheme.error,
+                      ),
                     ),
                   ),
                 ],
@@ -81,7 +88,8 @@ class ResetAppDialog {
               backgroundColor: Theme.of(ctx).colorScheme.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text(loc.translate('reset_continue_btn')),
           ),
@@ -98,8 +106,9 @@ class ResetAppDialog {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Text(loc.translate('reset_confirm_title')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -120,7 +129,9 @@ class ResetAppDialog {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   contentPadding: EdgeInsets.symmetric(
-                      horizontal: 4.w, vertical: 1.5.h),
+                    horizontal: 4.w,
+                    vertical: 1.5.h,
+                  ),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -139,7 +150,8 @@ class ResetAppDialog {
                 backgroundColor: Theme.of(ctx).colorScheme.error,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: Text(loc.translate('reset_confirm_btn')),
             ),
@@ -159,8 +171,9 @@ class ResetAppDialog {
       builder: (ctx) => PopScope(
         canPop: false,
         child: AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Padding(
             padding: EdgeInsets.symmetric(vertical: 2.h),
             child: Row(
@@ -177,14 +190,9 @@ class ResetAppDialog {
 
     final result = await ResetService().resetAllUserData();
 
-    // Clear local preferences
     if (result.success) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-      } catch (e) {
-        if (kDebugMode) debugPrint('Prefs clear error: $e');
-      }
+      final userId = SupabaseService.instance.client.auth.currentUser?.id;
+      if (userId != null) await AccountStateService.clearForUser(userId);
     }
 
     if (!context.mounted) return;
@@ -192,16 +200,16 @@ class ResetAppDialog {
 
     if (result.success) {
       // Navigate to splash/onboarding and clear the stack
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.splash,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.splash, (route) => false);
     } else {
       // Show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              '${loc.translate('reset_error')}: ${result.errorMessage}'),
+            '${loc.translate('reset_error')}: ${result.errorMessage}',
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
           duration: const Duration(seconds: 4),
         ),
@@ -212,11 +220,11 @@ class ResetAppDialog {
   static Widget _buildDeleteList(BuildContext ctx, AppLocalizations loc) {
     final items = [
       (Icons.checkroom_outlined, loc.translate('reset_item_wardrobe')),
-      (Icons.today_outlined,     loc.translate('reset_item_logs')),
+      (Icons.today_outlined, loc.translate('reset_item_logs')),
       (Icons.shopping_bag_outlined, loc.translate('reset_item_purchases')),
-      (Icons.flag_outlined,      loc.translate('reset_item_challenges')),
-      (Icons.quiz_outlined,      loc.translate('reset_item_quiz')),
-      (Icons.event_outlined,     loc.translate('reset_item_events')),
+      (Icons.flag_outlined, loc.translate('reset_item_challenges')),
+      (Icons.quiz_outlined, loc.translate('reset_item_quiz')),
+      (Icons.event_outlined, loc.translate('reset_item_events')),
     ];
 
     return Column(
@@ -227,15 +235,17 @@ class ResetAppDialog {
               padding: EdgeInsets.only(bottom: 0.8.h),
               child: Row(
                 children: [
-                  Icon(item.$1,
-                      size: 16,
-                      color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+                  Icon(
+                    item.$1,
+                    size: 16,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
                   SizedBox(width: 2.w),
                   Text(
                     item.$2,
                     style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

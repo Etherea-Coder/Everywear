@@ -104,8 +104,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
               floating: true,
               backgroundColor: theme.scaffoldBackgroundColor,
               elevation: 0,
-              title: Text(localizations.styleTitle,
-                  style: theme.textTheme.headlineMedium),
+              title: Text(
+                localizations.styleTitle,
+                style: theme.textTheme.headlineMedium,
+              ),
               actions: [
                 IconButton(
                   icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
@@ -124,24 +126,36 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                   delegate: SliverChildListDelegate([
                     _buildQuizSection(theme),
                     SizedBox(height: 3.h),
-                    _buildSectionHeader(theme, localizations.styleCoach,
-                        Icons.psychology_alt),
+                    _buildSectionHeader(
+                      theme,
+                      localizations.styleCoach,
+                      Icons.psychology_alt,
+                    ),
                     SizedBox(height: 1.h),
                     _buildCoachSection(theme),
                     SizedBox(height: 3.h),
-                    _buildSectionHeader(theme, localizations.events,
-                        Icons.event,
-                        onAdd: _showAddEventDialog),
+                    _buildSectionHeader(
+                      theme,
+                      localizations.events,
+                      Icons.event,
+                      onAdd: _showAddEventDialog,
+                    ),
                     SizedBox(height: 1.h),
                     _buildEventsSection(theme),
                     SizedBox(height: 3.h),
                     _buildSectionHeader(
-                        theme, localizations.challenges, Icons.flag),
+                      theme,
+                      localizations.challenges,
+                      Icons.flag,
+                    ),
                     SizedBox(height: 1.h),
                     ChallengesCard(isPremium: _isPremium),
                     SizedBox(height: 3.h),
                     _buildSectionHeader(
-                        theme, localizations.insights, Icons.insights),
+                      theme,
+                      localizations.insights,
+                      Icons.insights,
+                    ),
                     SizedBox(height: 1.h),
                     _buildInsightsSection(theme),
                     SizedBox(height: 15.h),
@@ -237,10 +251,19 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 Row(
                   children: [
                     _buildChip(
-                        theme, _getEventIcon(eventType) + ' ' + localizations.getLocalizedEventType(eventType)),
+                      theme,
+                      _getEventIcon(eventType) +
+                          ' ' +
+                          localizations.getLocalizedEventType(eventType),
+                    ),
                     SizedBox(width: 2.w),
                     if (event['dress_code'] != null)
-                      _buildChip(theme, localizations.getLocalizedDressCode(event['dress_code'] as String?)),
+                      _buildChip(
+                        theme,
+                        localizations.getLocalizedDressCode(
+                          event['dress_code'] as String?,
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -253,8 +276,8 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 daysLeft == 0
                     ? '${localizations.today}!'
                     : daysLeft == 1
-                        ? localizations.tomorrow
-                        : localizations.inDaysLeft(daysLeft),
+                    ? localizations.tomorrow
+                    : localizations.inDaysLeft(daysLeft),
                 style: TextStyle(
                   fontSize: 11.sp,
                   color: daysLeft <= 3
@@ -295,13 +318,20 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
   String _getEventIcon(String type) {
     switch (type.toLowerCase()) {
-      case 'wedding': return '💍';
-      case 'dinner':  return '🍽';
-      case 'work':    return '💼';
-      case 'party':   return '🎉';
-      case 'travel':  return '✈️';
-      case 'sport':   return '⚽';
-      default:        return '📅';
+      case 'wedding':
+        return '💍';
+      case 'dinner':
+        return '🍽';
+      case 'work':
+        return '💼';
+      case 'party':
+        return '🎉';
+      case 'travel':
+        return '✈️';
+      case 'sport':
+        return '⚽';
+      default:
+        return '📅';
     }
   }
 
@@ -360,7 +390,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       SizedBox(height: 0.4.h),
                       Text(
                         hasResult
-                            ? localizations.getLocalizedStyleProfile(_quizResult!['style_profile'] as String? ?? '')
+                            ? localizations.getLocalizedStyleProfile(
+                                _quizResult!['style_profile'] as String? ?? '',
+                              )
                             : localizations.takeQuizToPersonalise,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -430,8 +462,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     width: 12.w,
                     height: 12.w,
                     decoration: BoxDecoration(
-                      color:
-                          theme.colorScheme.secondary.withValues(alpha: 0.10),
+                      color: theme.colorScheme.secondary.withValues(
+                        alpha: 0.10,
+                      ),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
@@ -454,7 +487,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                         SizedBox(height: 0.3.h),
                         Text(
                           _quizResult != null
-                              ? localizations.getLocalizedStyleProfile(_quizResult!['style_profile'] as String? ?? '')
+                              ? localizations.getLocalizedStyleProfile(
+                                  _quizResult!['style_profile'] as String? ??
+                                      '',
+                                )
                               : localizations.completeQuizForCoaching,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
@@ -488,8 +524,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       _coachTip.isNotEmpty
                           ? _coachTip
                           : localizations.coachIsPreparingTip,
-                      style:
-                          theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                     ),
               SizedBox(height: 2.h),
               SizedBox(
@@ -528,8 +563,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 icon: Icons.event_available,
                 title: localizations.eventCoaching,
                 subtitle: nextEvent != null
-                    ? localizations.suggestionsFor(
-                        nextEvent['title'] as String)
+                    ? localizations.suggestionsFor(nextEvent['title'] as String)
                     : localizations.addEventToUnlock,
                 onTap: nextEvent != null
                     ? () => _showEventCoachDialog(nextEvent)
@@ -593,46 +627,32 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   void _showCoachPromptSheet() async {
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final user = _styleService.client.auth.currentUser;
-    if (user == null) return;
-
-    final canUse = await _tierService.canUseCoach(user.id);
-    if (!canUse) {
-      if (!mounted) return;
-      UpgradePromptWidget.show(
-        context,
-        title: localizations.coachLimitReached,
-        message: _isPremium
-            ? localizations.premiumCoachLimitMsg
-            : localizations.freeCoachLimitMsg,
-      );
-      return;
-    }
+    if (_styleService.client.auth.currentUser == null) return;
 
     final topics = [
       {
         'label': localizations.topicOutfitIdeas,
-        'question': localizations.qOutfitIdeas
+        'question': localizations.qOutfitIdeas,
       },
       {
         'label': localizations.topicShoppingAdvice,
-        'question': localizations.qShoppingAdvice
+        'question': localizations.qShoppingAdvice,
       },
       {
         'label': localizations.topicMyWardrobe,
-        'question': localizations.qMyWardrobe
+        'question': localizations.qMyWardrobe,
       },
       {
         'label': localizations.topicForAnEvent,
-        'question': localizations.qForAnEvent
+        'question': localizations.qForAnEvent,
       },
       {
         'label': localizations.topicMoreVariety,
-        'question': localizations.qMoreVariety
+        'question': localizations.qMoreVariety,
       },
       {
         'label': localizations.topicStyleUpgrade,
-        'question': localizations.qStyleUpgrade
+        'question': localizations.qStyleUpgrade,
       },
     ];
 
@@ -643,8 +663,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -680,7 +701,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       ),
                       Container(
                         padding: EdgeInsets.symmetric(
-                            horizontal: 3.w, vertical: 0.5.h),
+                          horizontal: 3.w,
+                          vertical: 0.5.h,
+                        ),
                         decoration: BoxDecoration(
                           color: (_coachingQuota['remaining'] as int) > 0
                               ? Colors.green.shade50
@@ -768,13 +791,15 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     spacing: 2.w,
                     runSpacing: 1.h,
                     children: topics
-                        .map((topic) => ActionChip(
-                              label: Text(topic['label']!),
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _askCoachQuestion(topic['question']!);
-                              },
-                            ))
+                        .map(
+                          (topic) => ActionChip(
+                            label: Text(topic['label']!),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _askCoachQuestion(topic['question']!);
+                            },
+                          ),
+                        )
                         .toList(),
                   ),
                   SizedBox(height: 2.h),
@@ -804,15 +829,15 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             isLoading = false;
             _styleService
                 .fetchEventCoaching(
-              event: event,
-              insights: _insights,
-              quizResult: _quizResult,
-            )
+                  event: event,
+                  insights: _insights,
+                  quizResult: _quizResult,
+                )
                 .then((data) {
-              if (context.mounted) {
-                setDialogState(() => coachData = data);
-              }
-            });
+                  if (context.mounted) {
+                    setDialogState(() => coachData = data);
+                  }
+                });
           }
 
           return AlertDialog(
@@ -824,9 +849,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 Text(
                   '$dateStr · ${localizations.getLocalizedEventType(eventType)}${dressCode != null ? " · ${localizations.getLocalizedDressCode(dressCode)}" : ""}',
                   style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.normal),
+                    fontSize: 13,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.normal,
+                  ),
                 ),
               ],
             ),
@@ -838,63 +864,70 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       child: Center(child: CircularProgressIndicator()),
                     )
                   : coachData.containsKey('error')
-                      ? Text(coachData['error'] as String)
-                      : SingleChildScrollView(
-                          child: Builder(
-                            builder: (ctx) {
-                              final dlgTheme = Theme.of(ctx);
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (coachData['intro'] != null) ...[
-                                    Text(coachData['intro'] as String),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  if (coachData['outfit_1'] != null)
-                                    _buildOutfitSuggestion(dlgTheme, '1',
-                                        coachData['outfit_1'] as String),
-                                  if (coachData['outfit_2'] != null)
-                                    _buildOutfitSuggestion(dlgTheme, '2',
-                                        coachData['outfit_2'] as String),
-                                  if (coachData['outfit_3'] != null)
-                                    _buildOutfitSuggestion(dlgTheme, '3',
-                                        coachData['outfit_3'] as String),
-                                  if (coachData['prep_tip'] != null) ...[
-                                    const SizedBox(height: 12),
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.amber.shade50,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
+                  ? Text(coachData['error'] as String)
+                  : SingleChildScrollView(
+                      child: Builder(
+                        builder: (ctx) {
+                          final dlgTheme = Theme.of(ctx);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (coachData['intro'] != null) ...[
+                                Text(coachData['intro'] as String),
+                                const SizedBox(height: 12),
+                              ],
+                              if (coachData['outfit_1'] != null)
+                                _buildOutfitSuggestion(
+                                  dlgTheme,
+                                  '1',
+                                  coachData['outfit_1'] as String,
+                                ),
+                              if (coachData['outfit_2'] != null)
+                                _buildOutfitSuggestion(
+                                  dlgTheme,
+                                  '2',
+                                  coachData['outfit_2'] as String,
+                                ),
+                              if (coachData['outfit_3'] != null)
+                                _buildOutfitSuggestion(
+                                  dlgTheme,
+                                  '3',
+                                  coachData['outfit_3'] as String,
+                                ),
+                              if (coachData['prep_tip'] != null) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        '💡 ',
+                                        style: TextStyle(fontSize: 14),
                                       ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text('💡 ',
-                                              style:
-                                                  TextStyle(fontSize: 14)),
-                                          Expanded(
-                                            child: Text(
-                                              coachData['prep_tip']
-                                                  as String,
-                                              style: const TextStyle(
-                                                  fontSize: 13),
-                                            ),
-                                          ),
-                                        ],
+                                      Expanded(
+                                        child: Text(
+                                          coachData['prep_tip'] as String,
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                  if (coachData['tip'] != null)
-                                    Text(coachData['tip'] as String),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              if (coachData['tip'] != null)
+                                Text(coachData['tip'] as String),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
             ),
             actions: [
               TextButton(
@@ -908,8 +941,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     );
   }
 
-  Widget _buildOutfitSuggestion(
-      ThemeData theme, String number, String text) {
+  Widget _buildOutfitSuggestion(ThemeData theme, String number, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -935,8 +967,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(text,
-                style: const TextStyle(fontSize: 13, height: 1.4)),
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13, height: 1.4),
+            ),
           ),
         ],
       ),
@@ -944,14 +978,6 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   void _askCoachQuestion(String question) async {
-    final user = _styleService.client.auth.currentUser;
-
-    if (user != null) {
-      await _tierService.incrementCoachingCount(user.id);
-      final quota = await _tierService.getCoachingQuota(user.id);
-      if (mounted) setState(() => _coachingQuota = quota);
-    }
-
     bool isLoading = true;
     Map<String, dynamic> result = {};
 
@@ -965,15 +991,15 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             isLoading = false;
             _styleService
                 .askCoach(
-              question: question,
-              insights: _insights,
-              quizResult: _quizResult,
-            )
+                  question: question,
+                  insights: _insights,
+                  quizResult: _quizResult,
+                )
                 .then((data) {
-              if (context.mounted) {
-                setDialogState(() => result = data);
-              }
-            });
+                  if (context.mounted) {
+                    setDialogState(() => result = data);
+                  }
+                });
           }
 
           return AlertDialog(
@@ -1014,25 +1040,27 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.secondary
-                                    .withValues(alpha: 0.08),
+                                color: theme.colorScheme.secondary.withValues(
+                                  alpha: 0.08,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: theme.colorScheme.secondary
-                                      .withValues(alpha: 0.14),
+                                  color: theme.colorScheme.secondary.withValues(
+                                    alpha: 0.14,
+                                  ),
                                 ),
                               ),
                               child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('👣 ',
-                                      style: TextStyle(fontSize: 14)),
+                                  const Text(
+                                    '👣 ',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
                                   Expanded(
                                     child: Text(
                                       result['next_step'] as String,
-                                      style:
-                                          const TextStyle(fontSize: 13),
+                                      style: const TextStyle(fontSize: 13),
                                     ),
                                   ),
                                 ],
@@ -1098,7 +1126,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 theme,
                 icon: '🏆',
                 label: localizations.topCategoryLabel,
-                value: localizations.getLocalizedCategoryManagement(_insights['topCategory'] as String? ?? ''),
+                value: localizations.getLocalizedCategoryManagement(
+                  _insights['topCategory'] as String? ?? '',
+                ),
               ),
             ),
             SizedBox(width: 3.w),
@@ -1107,7 +1137,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 theme,
                 icon: '🎯',
                 label: localizations.topOccasionLabel,
-                value: localizations.getLocalizedOccasion(_insights['topOccasion'] as String?),
+                value: localizations.getLocalizedOccasion(
+                  _insights['topOccasion'] as String?,
+                ),
               ),
             ),
           ],
@@ -1160,8 +1192,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   }
 
   // ── HELPERS ─────────────────────────────────────────────
-  Widget _buildSectionHeader(ThemeData theme, String title, IconData icon,
-      {VoidCallback? onAdd}) {
+  Widget _buildSectionHeader(
+    ThemeData theme,
+    String title,
+    IconData icon, {
+    VoidCallback? onAdd,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1186,8 +1222,11 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child:
-                  Icon(Icons.add, color: theme.colorScheme.primary, size: 20),
+              child: Icon(
+                Icons.add,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
             ),
           ),
       ],
@@ -1203,10 +1242,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 10.sp,
-          color: theme.colorScheme.primary,
-        ),
+        style: TextStyle(fontSize: 10.sp, color: theme.colorScheme.primary),
       ),
     );
   }
@@ -1248,10 +1284,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
           ),
           if (actionLabel != null && onAction != null) ...[
             SizedBox(height: 2.h),
-            ElevatedButton(
-              onPressed: onAction,
-              child: Text(actionLabel),
-            ),
+            ElevatedButton(onPressed: onAction, child: Text(actionLabel)),
           ],
         ],
       ),
@@ -1260,23 +1293,35 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
 
   // ── ACTIONS ─────────────────────────────────────────────
   void _showEditEventSheet(Map<String, dynamic> event) {
-    final titleController =
-        TextEditingController(text: event['title'] as String? ?? '');
-    final notesController =
-        TextEditingController(text: event['notes'] as String? ?? '');
+    final titleController = TextEditingController(
+      text: event['title'] as String? ?? '',
+    );
+    final notesController = TextEditingController(
+      text: event['notes'] as String? ?? '',
+    );
 
     DateTime selectedDate =
         DateTime.tryParse(event['event_date'] as String? ?? '') ??
-            DateTime.now().add(const Duration(days: 7));
+        DateTime.now().add(const Duration(days: 7));
 
     String selectedType = event['event_type'] as String? ?? 'Dinner';
     String? dressCode = event['dress_code'] as String?;
 
     final eventTypes = [
-      'Wedding', 'Dinner', 'Work', 'Party', 'Travel', 'Sport', 'Other'
+      'Wedding',
+      'Dinner',
+      'Work',
+      'Party',
+      'Travel',
+      'Sport',
+      'Other',
     ];
     final dressCodes = [
-      'Casual', 'Smart Casual', 'Formal', 'Black Tie', 'Sporty'
+      'Casual',
+      'Smart Casual',
+      'Formal',
+      'Black Tie',
+      'Sporty',
     ];
     final localizations = AppLocalizations.of(context);
 
@@ -1312,9 +1357,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 ),
                 Text(
                   localizations.editEvent,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 2.h),
                 // Title
@@ -1332,10 +1377,10 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     final picked = await showDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      firstDate: DateTime.now()
-                          .subtract(const Duration(days: 365)),
-                      lastDate:
-                          DateTime.now().add(const Duration(days: 730)),
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 365),
+                      ),
+                      lastDate: DateTime.now().add(const Duration(days: 730)),
                     );
                     if (picked != null) {
                       setSheetState(() => selectedDate = picked);
@@ -1364,11 +1409,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     prefixIcon: const Icon(Icons.category),
                   ),
                   items: eventTypes
-                      .map((t) =>
-                          DropdownMenuItem(value: t, child: Text(localizations.getLocalizedEventType(t))))
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(localizations.getLocalizedEventType(t)),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (v) =>
-                      setSheetState(() => selectedType = v!),
+                  onChanged: (v) => setSheetState(() => selectedType = v!),
                 ),
                 SizedBox(height: 2.h),
                 // Dress code
@@ -1383,8 +1431,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       value: null,
                       child: Text(localizations.noDressCode),
                     ),
-                    ...dressCodes.map((d) =>
-                        DropdownMenuItem(value: d, child: Text(localizations.getLocalizedDressCode(d)))),
+                    ...dressCodes.map(
+                      (d) => DropdownMenuItem(
+                        value: d,
+                        child: Text(localizations.getLocalizedDressCode(d)),
+                      ),
+                    ),
                   ],
                   onChanged: (v) => setSheetState(() => dressCode = v),
                 ),
@@ -1442,10 +1494,20 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     String? dressCode;
 
     final eventTypes = [
-      'Wedding', 'Dinner', 'Work', 'Party', 'Travel', 'Sport', 'Other'
+      'Wedding',
+      'Dinner',
+      'Work',
+      'Party',
+      'Travel',
+      'Sport',
+      'Other',
     ];
     final dressCodes = [
-      'Casual', 'Smart Casual', 'Formal', 'Black Tie', 'Sporty'
+      'Casual',
+      'Smart Casual',
+      'Formal',
+      'Black Tie',
+      'Sporty',
     ];
 
     final localizations = AppLocalizations.of(context);
@@ -1482,9 +1544,9 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 ),
                 Text(
                   localizations.addEvent,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 2.h),
                 TextField(
@@ -1502,8 +1564,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       context: context,
                       initialDate: selectedDate,
                       firstDate: DateTime.now(),
-                      lastDate:
-                          DateTime.now().add(const Duration(days: 365)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (picked != null) {
                       setSheetState(() => selectedDate = picked);
@@ -1514,12 +1575,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       decoration: InputDecoration(
                         labelText: localizations.dateLabel,
                         prefixIcon: const Icon(Icons.calendar_today),
-                        hintText:
-                            DateFormat('MMM dd, yyyy').format(selectedDate),
+                        hintText: DateFormat(
+                          'MMM dd, yyyy',
+                        ).format(selectedDate),
                       ),
                       controller: TextEditingController(
-                        text:
-                            DateFormat('MMM dd, yyyy').format(selectedDate),
+                        text: DateFormat('MMM dd, yyyy').format(selectedDate),
                       ),
                     ),
                   ),
@@ -1532,11 +1593,14 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     prefixIcon: const Icon(Icons.category),
                   ),
                   items: eventTypes
-                      .map((t) =>
-                          DropdownMenuItem(value: t, child: Text(localizations.getLocalizedEventType(t))))
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(localizations.getLocalizedEventType(t)),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (v) =>
-                      setSheetState(() => selectedType = v!),
+                  onChanged: (v) => setSheetState(() => selectedType = v!),
                 ),
                 SizedBox(height: 2.h),
                 DropdownButtonFormField<String>(
@@ -1546,8 +1610,12 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     prefixIcon: const Icon(Icons.checkroom),
                   ),
                   items: dressCodes
-                      .map((d) =>
-                          DropdownMenuItem(value: d, child: Text(localizations.getLocalizedDressCode(d))))
+                      .map(
+                        (d) => DropdownMenuItem(
+                          value: d,
+                          child: Text(localizations.getLocalizedDressCode(d)),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setSheetState(() => dressCode = v),
                 ),
@@ -1691,24 +1759,27 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: (q['options'] as List<String>)
-                  .map((option) => ListTile(
-                        title: Text(option),
-                        leading: Radio<String>(
-                          value: option,
-                          groupValue: answers[q['question']],
-                          onChanged: (v) => setDialogState(() =>
-                              answers[q['question'] as String] = v!),
+                  .map(
+                    (option) => ListTile(
+                      title: Text(option),
+                      leading: Radio<String>(
+                        value: option,
+                        groupValue: answers[q['question']],
+                        onChanged: (v) => setDialogState(
+                          () => answers[q['question'] as String] = v!,
                         ),
-                        onTap: () => setDialogState(() =>
-                            answers[q['question'] as String] = option),
-                      ))
+                      ),
+                      onTap: () => setDialogState(
+                        () => answers[q['question'] as String] = option,
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
             actions: [
               if (currentQuestion > 0)
                 TextButton(
-                  onPressed: () =>
-                      setDialogState(() => currentQuestion--),
+                  onPressed: () => setDialogState(() => currentQuestion--),
                   child: Text(localizations.back),
                 ),
               ElevatedButton(
@@ -1717,24 +1788,21 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                     : () async {
                         if (currentQuestion < questions.length - 1) {
                           setDialogState(() => currentQuestion++);
-                        } else if (currentQuestion ==
-                            questions.length - 1) {
+                        } else if (currentQuestion == questions.length - 1) {
                           setDialogState(() => currentQuestion++);
                         } else {
                           Navigator.pop(context);
-                          final profile =
-                              _determineStyleProfile(answers);
+                          final profile = _determineStyleProfile(answers);
                           await _styleService.saveQuizResult(
                             styleProfile: profile,
                             preferredColors: [
-                              answers[questions[1]['question']] ?? ''
+                              answers[questions[1]['question']] ?? '',
                             ],
                             styleGoals: [
-                              answers[questions[2]['question']] ?? ''
+                              answers[questions[2]['question']] ?? '',
                             ],
                             answers: answers,
-                            styleIntention:
-                                intentionController.text.trim(),
+                            styleIntention: intentionController.text.trim(),
                           );
                           _loadData();
                         }
@@ -1757,30 +1825,54 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
     final style = answers.values.join(' ').toLowerCase();
 
     final polishedSignals = [
-      loc.qFeelPolished, loc.qMattersElegance,
-      'polished', 'timeless', 'elegance', 'élégance', 'elegancia',
-      'soigné', 'intemporel',
+      loc.qFeelPolished,
+      loc.qMattersElegance,
+      'polished',
+      'timeless',
+      'elegance',
+      'élégance',
+      'elegancia',
+      'soigné',
+      'intemporel',
     ].map((s) => s.toLowerCase());
 
     final boldSignals = [
-      loc.qFeelCreative, loc.qColorsBold,
-      'creative', 'expressive', 'bold', 'créatif', 'expressif',
-      'creativo', 'expresivo', 'vives',
+      loc.qFeelCreative,
+      loc.qColorsBold,
+      'creative',
+      'expressive',
+      'bold',
+      'créatif',
+      'expressif',
+      'creativo',
+      'expresivo',
+      'vives',
     ].map((s) => s.toLowerCase());
 
     final activeSignals = [
       loc.qFeelPractical,
-      'sporty', 'practical', 'sportif', 'pratique', 'deportivo', 'práctico',
+      'sporty',
+      'practical',
+      'sportif',
+      'pratique',
+      'deportivo',
+      'práctico',
     ].map((s) => s.toLowerCase());
 
     final minimalistSignals = [
-      loc.qMattersVersatility, loc.qStyleAdventurousWorks,
+      loc.qMattersVersatility,
+      loc.qStyleAdventurousWorks,
       loc.qStyleAdventurousSmall,
-      'versatility', 'polyvalence', 'versatilidad',
-      'small changes', 'petits changements', 'cambios pequeños',
+      'versatility',
+      'polyvalence',
+      'versatilidad',
+      'small changes',
+      'petits changements',
+      'cambios pequeños',
     ].map((s) => s.toLowerCase());
 
-    if (polishedSignals.any((s) => style.contains(s))) return 'Classic Elegance';
+    if (polishedSignals.any((s) => style.contains(s)))
+      return 'Classic Elegance';
     if (boldSignals.any((s) => style.contains(s))) return 'Bold & Trendy';
     if (activeSignals.any((s) => style.contains(s))) return 'Active & Sporty';
     if (minimalistSignals.any((s) => style.contains(s))) return 'Minimalist';

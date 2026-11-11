@@ -90,16 +90,11 @@ class UserTierService {
     }
   }
 
-  /// Increments the outfit log count after a successful log
+  /// Retained for source compatibility. The database trigger maintains this
+  /// counter after a successful outfit-log insert or delete.
+  @Deprecated('Counter is maintained by the outfit_logs database trigger')
   Future<void> incrementOutfitLogCount(String userId) async {
-    try {
-      await _supabase.rpc(
-        'increment_outfit_log_count',
-        params: {'user_id_input': userId},
-      );
-    } catch (e) {
-      if (kDebugMode) debugPrint('incrementOutfitLogCount failed: $e');
-    }
+    return;
   }
 
   /// Returns how many outfit logs are stored for this user
@@ -165,27 +160,6 @@ class UserTierService {
       final limit = TierLimits.coachingLimit(tier);
       final used = response['coaching_sessions_used'] as int? ?? 0;
 
-      // Determine reset window
-      final resetAt = response['coaching_reset_at'] != null
-          ? DateTime.parse(response['coaching_reset_at'] as String)
-          : DateTime.now();
-
-      final now = DateTime.now();
-      final shouldReset = tier == 'premium'
-          ? now.month != resetAt.month || now.year != resetAt.year
-          : now.difference(resetAt).inDays >= 7;
-
-      if (shouldReset) {
-        await _supabase
-            .from('user_profiles')
-            .update({
-              'coaching_sessions_used': 0,
-              'coaching_reset_at': now.toIso8601String(),
-            })
-            .eq('id', userId);
-        return true;
-      }
-
       return used < limit;
     } catch (e) {
       if (kDebugMode) debugPrint('canUseCoach check failed: $e');
@@ -197,32 +171,11 @@ class UserTierService {
     }
   }
 
-  /// Increments coaching session count
+  /// Retained for source compatibility. Quota is consumed atomically by the
+  /// authenticated style-coach Edge Function, never by the client.
+  @Deprecated('Quota is enforced by the style-coach Edge Function')
   Future<void> incrementCoachingCount(String userId) async {
-    try {
-      await _supabase.rpc(
-        'increment_coaching_sessions',
-        params: {'user_id_input': userId},
-      );
-    } catch (e) {
-      // RPC failed — fall back to safe read-then-write
-      try {
-        final response = await _supabase
-            .from('user_profiles')
-            .select('coaching_sessions_used')
-            .eq('id', userId)
-            .single();
-        final current = response['coaching_sessions_used'] as int? ?? 0;
-        await _supabase
-            .from('user_profiles')
-            .update({'coaching_sessions_used': current + 1})
-            .eq('id', userId);
-      } catch (e2) {
-        if (kDebugMode) {
-          debugPrint('incrementCoachingCount fallback failed: $e2');
-        }
-      }
-    }
+    return;
   }
 
   /// Returns remaining coaching sessions for display in UI.
@@ -282,14 +235,11 @@ class UserTierService {
           .single();
 
       final tier = response['tier'] as String? ?? 'free';
-      final suggestionsUsed =
-          response['daily_suggestions_used'] as int? ?? 0;
+      final suggestionsUsed = response['daily_suggestions_used'] as int? ?? 0;
       final suggestionsLimit = TierLimits.dailySuggestionLimit(tier);
-      final coachingUsed =
-          response['coaching_sessions_used'] as int? ?? 0;
+      final coachingUsed = response['coaching_sessions_used'] as int? ?? 0;
       final coachingLimit = TierLimits.coachingLimit(tier);
-      final outfitLogsCount =
-          response['outfit_logs_count'] as int? ?? 0;
+      final outfitLogsCount = response['outfit_logs_count'] as int? ?? 0;
       final outfitLogsLimit = TierLimits.outfitLogLimit(tier);
 
       return {
@@ -297,21 +247,20 @@ class UserTierService {
         'isPremium': tier == 'premium',
         'daily_suggestions_used': suggestionsUsed,
         'suggestions_limit': suggestionsLimit,
-        'suggestions_remaining':
-            (suggestionsLimit - suggestionsUsed).clamp(
+        'suggestions_remaining': (suggestionsLimit - suggestionsUsed).clamp(
           0,
           suggestionsLimit,
         ),
         'coaching_used': coachingUsed,
         'coaching_limit': coachingLimit,
-        'coaching_remaining':
-            (coachingLimit - coachingUsed).clamp(0, coachingLimit),
-        'coaching_period':
-            tier == 'premium' ? 'this month' : 'this week',
+        'coaching_remaining': (coachingLimit - coachingUsed).clamp(
+          0,
+          coachingLimit,
+        ),
+        'coaching_period': tier == 'premium' ? 'this month' : 'this week',
         'outfit_logs_count': outfitLogsCount,
         'outfit_logs_limit': outfitLogsLimit,
-        'outfit_logs_remaining':
-            (outfitLogsLimit - outfitLogsCount).clamp(
+        'outfit_logs_remaining': (outfitLogsLimit - outfitLogsCount).clamp(
           0,
           outfitLogsLimit,
         ),
@@ -342,12 +291,9 @@ class UserTierService {
   Future<bool> upgradeToPremium(String userId) async {
     try {
       final user = _supabase.auth.currentUser;
-      if (user == null) return false;
+      if (user == null || user.id != userId) return false;
 
-      final response = await _supabase.functions.invoke(
-        'verify-purchase',
-        body: {'revenue_cat_user_id': userId},
-      );
+      final response = await _supabase.functions.invoke('verify-purchase');
 
       if (response.status != 200) {
         final error = response.data?['error'] ?? 'Verification failed';

@@ -7,18 +7,23 @@ class AnalyticsService {
   AnalyticsService._();
 
   static const String _prefKey = 'analytics_opt_in';
+  bool _reportingEnabled = true;
+
+  bool get reportingEnabled => _reportingEnabled;
 
   // ─── Preference ───────────────────────────────────────────────────────────
 
   Future<bool> isAnalyticsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     // Default to true (opted in) if never set
-    return prefs.getBool(_prefKey) ?? true;
+    _reportingEnabled = prefs.getBool(_prefKey) ?? true;
+    return _reportingEnabled;
   }
 
   Future<void> setAnalyticsEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefKey, enabled);
+    _reportingEnabled = enabled;
 
     if (enabled) {
       _enableSentry();
@@ -41,14 +46,19 @@ class AnalyticsService {
     Sentry.configureScope((scope) {
       scope.setTag('analytics_opted_in', 'false');
     });
-    if (kDebugMode) debugPrint('✅ Analytics disabled — Sentry reporting suppressed');
+    if (kDebugMode)
+      debugPrint('✅ Analytics disabled — Sentry reporting suppressed');
   }
 
   /// Call this once on app start, after Sentry is initialized,
   /// to apply the saved preference.
   Future<void> applyStoredPreference() async {
     final enabled = await isAnalyticsEnabled();
-    if (!enabled) _disableSentry();
+    if (enabled) {
+      _enableSentry();
+    } else {
+      _disableSentry();
+    }
   }
 
   /// Use this guard before any manual Sentry capture call.

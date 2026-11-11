@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './supabase_service.dart';
-import './user_tier_service.dart';
 
 /// Service for managing outfit logs with Supabase
 class OutfitLogService {
@@ -9,15 +8,25 @@ class OutfitLogService {
 
   /// Fetch outfit logs for a specific date
   Future<List<Map<String, dynamic>>> fetchOutfitLogsForDate(
-      DateTime date) async {
+    DateTime date,
+  ) async {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return [];
 
-      final startOfDay =
-          DateTime(date.year, date.month, date.day).toIso8601String();
-      final endOfDay =
-          DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+      final startOfDay = DateTime(
+        date.year,
+        date.month,
+        date.day,
+      ).toIso8601String();
+      final endOfDay = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        23,
+        59,
+        59,
+      ).toIso8601String();
 
       final logs = await _client
           .from('outfit_logs')
@@ -48,10 +57,19 @@ class OutfitLogService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return [];
 
-      final startOfMonth =
-          DateTime(month.year, month.month, 1).toIso8601String();
-      final endOfMonth =
-          DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
+      final startOfMonth = DateTime(
+        month.year,
+        month.month,
+        1,
+      ).toIso8601String();
+      final endOfMonth = DateTime(
+        month.year,
+        month.month + 1,
+        0,
+        23,
+        59,
+        59,
+      ).toIso8601String();
 
       final logs = await _client
           .from('outfit_logs')
@@ -77,12 +95,26 @@ class OutfitLogService {
   Future<Map<String, dynamic>> fetchMonthlyStats(DateTime month) async {
     try {
       final userId = _client.auth.currentUser?.id;
-      if (userId == null) return {'totalOutfits': 0, 'uniqueItems': 0, 'favoriteOccasion': 'None'};
+      if (userId == null)
+        return {
+          'totalOutfits': 0,
+          'uniqueItems': 0,
+          'favoriteOccasion': 'None',
+        };
 
-      final startOfMonth =
-          DateTime(month.year, month.month, 1).toIso8601String();
-      final endOfMonth =
-          DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
+      final startOfMonth = DateTime(
+        month.year,
+        month.month,
+        1,
+      ).toIso8601String();
+      final endOfMonth = DateTime(
+        month.year,
+        month.month + 1,
+        0,
+        23,
+        59,
+        59,
+      ).toIso8601String();
 
       final logs = await _client
           .from('outfit_logs')
@@ -115,8 +147,8 @@ class OutfitLogService {
       final favoriteOccasion = occasionCount.isEmpty
           ? 'None'
           : occasionCount.entries
-              .reduce((a, b) => a.value > b.value ? a : b)
-              .key;
+                .reduce((a, b) => a.value > b.value ? a : b)
+                .key;
 
       return {
         'totalOutfits': totalOutfits,
@@ -143,14 +175,6 @@ class OutfitLogService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return null;
 
-      // ── TIER CHECK ───────────────────────────────────────
-      final tierService = UserTierService();
-      final canLog = await tierService.canLogOutfit(userId);
-      if (!canLog) {
-        // Return a special sentinel value the UI can check
-        return 'LIMIT_REACHED';
-      }
-
       // Insert outfit log
       final log = await _client
           .from('outfit_logs')
@@ -170,17 +194,22 @@ class OutfitLogService {
 
       // Insert outfit items
       if (itemIds.isNotEmpty) {
-        await _client.from('outfit_items').insert(
-          itemIds
-              .map((itemId) => {'outfit_id': outfitId, 'item_id': itemId})
-              .toList(),
-        );
+        await _client
+            .from('outfit_items')
+            .insert(
+              itemIds
+                  .map((itemId) => {'outfit_id': outfitId, 'item_id': itemId})
+                  .toList(),
+            );
       }
 
-      // ── INCREMENT COUNT ──────────────────────────────────
-      await tierService.incrementOutfitLogCount(userId);
-
       return outfitId;
+    } on PostgrestException catch (e) {
+      if (e.message.contains('outfit log limit reached')) {
+        return 'LIMIT_REACHED';
+      }
+      if (kDebugMode) debugPrint('Error creating outfit log: $e');
+      return null;
     } catch (e) {
       if (kDebugMode) debugPrint('Error creating outfit log: $e');
       return null;
@@ -196,14 +225,13 @@ class OutfitLogService {
     required String occasion,
     String? notes,
     String? outfitName,
-  }) =>
-      createOutfitLog(
-        occasion: occasion,
-        itemIds: itemIds,
-        wornDate: wornDate,
-        notes: notes,
-        outfitName: outfitName,
-      );
+  }) => createOutfitLog(
+    occasion: occasion,
+    itemIds: itemIds,
+    wornDate: wornDate,
+    notes: notes,
+    outfitName: outfitName,
+  );
 
   /// Log the currently displayed outfit suggestion by name only, when the AI
   /// suggested items that are not yet in the user's wardrobe. Stores the item
@@ -226,7 +254,7 @@ class OutfitLogService {
 
     return createOutfitLog(
       occasion: occasion,
-      itemIds: const [],       // no wardrobe links — items aren't in wardrobe yet
+      itemIds: const [], // no wardrobe links — items aren't in wardrobe yet
       wornDate: wornDate,
       notes: combinedNotes.isNotEmpty ? combinedNotes : null,
       outfitName: outfitName,
@@ -243,7 +271,9 @@ class OutfitLogService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return [];
 
-      final since = DateTime.now().subtract(Duration(days: days)).toIso8601String();
+      final since = DateTime.now()
+          .subtract(Duration(days: days))
+          .toIso8601String();
 
       final logs = await _client
           .from('outfit_logs')
@@ -264,7 +294,10 @@ class OutfitLogService {
         final items = (log['outfit_items'] as List? ?? [])
             .map((oi) => oi['wardrobe_items'] as Map<String, dynamic>?)
             .where((w) => w != null)
-            .map((w) => '${w!['name']} (${w['category'] ?? 'unknown'}${w['color'] != null ? ', ${w['color']}' : ''})')
+            .map(
+              (w) =>
+                  '${w!['name']} (${w['category'] ?? 'unknown'}${w['color'] != null ? ', ${w['color']}' : ''})',
+            )
             .toList();
 
         return {
@@ -280,6 +313,7 @@ class OutfitLogService {
       return [];
     }
   }
+
   /// Computes the average outfit rating for each wardrobe item.
   /// Joins outfit_logs (which have ratings) with outfit_items to attribute
   /// ratings to individual wardrobe items. Returns a map keyed by item_id.
@@ -333,6 +367,7 @@ class OutfitLogService {
       return {};
     }
   }
+
   /// Computes the silhouette evolution (fitted vs relaxed trend) over the
   /// last 3 months. Mirrors the logic in generate-ai-insights but runs
   /// client-side so it can be passed to style-coach prompts.
@@ -361,16 +396,40 @@ class OutfitLogService {
       if (logsList.isEmpty) return {};
 
       const fittedKeywords = [
-        'fitted', 'slim', 'skinny', 'tailored', 'formal',
-        'structured', 'blazer', 'pencil',
+        'fitted',
+        'slim',
+        'skinny',
+        'tailored',
+        'formal',
+        'structured',
+        'blazer',
+        'pencil',
       ];
       const relaxedKeywords = [
-        'oversized', 'loose', 'relaxed', 'wide', 'baggy',
-        'flowy', 'jogger', 'sweat', 'hoodie', 'casual',
+        'oversized',
+        'loose',
+        'relaxed',
+        'wide',
+        'baggy',
+        'flowy',
+        'jogger',
+        'sweat',
+        'hoodie',
+        'casual',
       ];
       const monthLabels = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
 
       final evolution = <Map<String, dynamic>>[];
@@ -384,7 +443,8 @@ class OutfitLogService {
           final wornDate = DateTime.tryParse(log['worn_date'] ?? '');
           if (wornDate == null ||
               wornDate.month != monthDate.month ||
-              wornDate.year != monthDate.year) continue;
+              wornDate.year != monthDate.year)
+            continue;
 
           final items = log['outfit_items'] as List? ?? [];
           for (final oi in items) {
@@ -420,10 +480,7 @@ class OutfitLogService {
         }
       }
 
-      return {
-        'months': evolution,
-        'trend': trend,
-      };
+      return {'months': evolution, 'trend': trend};
     } catch (e) {
       if (kDebugMode) debugPrint('Error fetching silhouette evolution: $e');
       return {};
@@ -437,7 +494,9 @@ class OutfitLogService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return {};
 
-      final since = DateTime.now().subtract(Duration(days: days)).toIso8601String();
+      final since = DateTime.now()
+          .subtract(Duration(days: days))
+          .toIso8601String();
 
       final logs = await _client
           .from('outfit_logs')
@@ -458,7 +517,9 @@ class OutfitLogService {
         overallCounts[occasion] = (overallCounts[occasion] ?? 0) + 1;
 
         if (date != null) {
-          final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+          final isWeekend =
+              date.weekday == DateTime.saturday ||
+              date.weekday == DateTime.sunday;
           if (isWeekend) {
             weekendCounts[occasion] = (weekendCounts[occasion] ?? 0) + 1;
           } else {
@@ -495,10 +556,7 @@ class OutfitLogService {
       if (outfitName != null) updates['outfit_name'] = outfitName;
 
       if (updates.isNotEmpty) {
-        await _client
-            .from('outfit_logs')
-            .update(updates)
-            .eq('id', outfitId);
+        await _client.from('outfit_logs').update(updates).eq('id', outfitId);
       }
 
       return true;

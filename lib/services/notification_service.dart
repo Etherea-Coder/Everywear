@@ -6,10 +6,6 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:app_settings/app_settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import './today_suggestion_service.dart';
-import './style_service.dart';
-import './weather_service.dart';
-
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -17,13 +13,24 @@ class NotificationService {
 
   static const String _prefKey = 'morning_suggestions_enabled';
   static const String _teaserKey = 'notification_teaser';
-  static const String _defaultBody = 'Open Everywear to see your personalised outfit suggestion.';
+  static const String _defaultBody =
+      'Open Everywear to see your personalised outfit suggestion.';
   static const int _morningNotificationId = 1001;
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+
+  String? _preferenceKey([String? userId]) {
+    final id = userId ?? Supabase.instance.client.auth.currentUser?.id;
+    return id == null ? null : '$id:$_prefKey';
+  }
+
+  String? _userTeaserKey([String? userId]) {
+    final id = userId ?? Supabase.instance.client.auth.currentUser?.id;
+    return id == null ? null : '$id:$_teaserKey';
+  }
 
   // ─── Initialization ───────────────────────────────────────────────────────
 
@@ -32,8 +39,9 @@ class NotificationService {
 
     tz.initializeTimeZones();
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -41,10 +49,7 @@ class NotificationService {
     );
 
     await _plugin.initialize(
-      const InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      ),
+      const InitializationSettings(android: androidSettings, iOS: iosSettings),
     );
 
     _initialized = true;
@@ -54,9 +59,11 @@ class NotificationService {
 
   Future<bool> requestPermission() async {
     // ─── Android ───────────────────────────────────────────
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
     if (android != null) {
       // 1. Check if already enabled
       final alreadyGranted = await android.areNotificationsEnabled();
@@ -80,8 +87,10 @@ class NotificationService {
     }
 
     // ─── iOS ────────────────────────────────────────────────
-    final ios = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       final granted = await ios.requestPermissions(
         alert: true,
@@ -99,13 +108,17 @@ class NotificationService {
   // ─── Preference persistence ───────────────────────────────────────────────
 
   Future<bool> isMorningSuggestionsEnabled() async {
+    final key = _preferenceKey();
+    if (key == null) return false;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_prefKey) ?? false;
+    return prefs.getBool(key) ?? false;
   }
 
   Future<void> _savePreference(bool enabled) async {
+    final key = _preferenceKey();
+    if (key == null) return;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_prefKey, enabled);
+    await prefs.setBool(key, enabled);
   }
 
   // ─── Schedule / cancel ────────────────────────────────────────────────────
@@ -123,10 +136,11 @@ class NotificationService {
     await _savePreference(true);
 
     try {
-      final teaser = await _preGenerateTeaser();
-      await _scheduleDailyMorningNotification(teaser: teaser);
+      // Scheduling must not silently spend the user's interactive AI quota.
+      await _scheduleDailyMorningNotification();
     } catch (e) {
-      if (kDebugMode) debugPrint('⚠️ Morning notification scheduling failed: $e');
+      if (kDebugMode)
+        debugPrint('⚠️ Morning notification scheduling failed: $e');
       // Permission was granted and preference is saved — the notification
       // will be rescheduled on next app launch via restoreIfEnabled().
     }
@@ -175,21 +189,23 @@ class NotificationService {
     }
 
     final user = Supabase.instance.client.auth.currentUser;
-    final fullName = user?.userMetadata?['full_name'] as String? ?? 
-                     user?.userMetadata?['name'] as String?;
-    final firstName = (fullName != null && fullName.trim().isNotEmpty) 
-        ? fullName.trim().split(' ').first 
+    final fullName =
+        user?.userMetadata?['full_name'] as String? ??
+        user?.userMetadata?['name'] as String?;
+    final firstName = (fullName != null && fullName.trim().isNotEmpty)
+        ? fullName.trim().split(' ').first
         : null;
 
-    final title = firstName != null 
-        ? '✨ $firstName, your style idea is ready!' 
+    final title = firstName != null
+        ? '✨ $firstName, your style idea is ready!'
         : '✨ Your style idea for today';
 
     // Use pre-generated teaser, cached teaser, or fallback
     String body = teaser ?? _defaultBody;
     if (teaser == null) {
       final prefs = await SharedPreferences.getInstance();
-      body = prefs.getString(_teaserKey) ?? _defaultBody;
+      final key = _userTeaserKey();
+      body = key == null ? _defaultBody : prefs.getString(key) ?? _defaultBody;
     }
 
     await _plugin.zonedSchedule(
@@ -204,7 +220,8 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
     );
 
-    if (kDebugMode) debugPrint('✅ Morning notification scheduled for 08:00 daily');
+    if (kDebugMode)
+      debugPrint('✅ Morning notification scheduled for 08:00 daily');
   }
 
   /// Call on app launch to reschedule if preference is on
@@ -214,62 +231,21 @@ class NotificationService {
     final enabled = await isMorningSuggestionsEnabled();
     if (enabled) {
       try {
-        // Pre-generate teaser in background, don't block scheduling
-        final teaser = await _preGenerateTeaser();
-        await _scheduleDailyMorningNotification(teaser: teaser);
+        await _scheduleDailyMorningNotification();
       } catch (e) {
-        if (kDebugMode) debugPrint('⚠️ Restore morning notification failed: $e');
+        if (kDebugMode)
+          debugPrint('⚠️ Restore morning notification failed: $e');
       }
     }
   }
 
-  /// Pre-generates a personalised teaser by calling the today-suggestion AI.
-  /// Caches the result in SharedPreferences for the next notification.
-  Future<String?> _preGenerateTeaser() async {
-    try {
-      final weatherService = WeatherService();
-      final styleService = StyleService();
-      final todaySuggestionService = TodaySuggestionService();
-
-      // Fetch data concurrently — fail gracefully if any call errors
-      final results = await Future.wait([
-        weatherService.getCurrentWeather().catchError((_) => <String, dynamic>{}),
-        styleService.fetchQuizResult().catchError((_) => null),
-        styleService.fetchUpcomingEvents().catchError((_) => <Map<String, dynamic>>[]),
-      ]).timeout(const Duration(seconds: 8), onTimeout: () => [{}, null, []]);
-
-      final weather = results[0] as Map<String, dynamic>;
-      final quizResult = results[1] as Map<String, dynamic>?;
-      final events = results[2] as List<Map<String, dynamic>>;
-      final nextEvent = events.isNotEmpty ? events.first : null;
-
-      final suggestion = await todaySuggestionService.fetchTodaySuggestion(
-        weather: weather,
-        quizResult: quizResult,
-        nextEvent: nextEvent,
-      );
-
-      if (suggestion != null) {
-        final description = suggestion['description'] as String? ?? '';
-        final stylingNote = suggestion['styling_note'] as String? ?? '';
-        // Prefer the description, append styling note if short
-        String teaser = description;
-        if (teaser.isEmpty && stylingNote.isNotEmpty) {
-          teaser = stylingNote;
-        } else if (teaser.length < 60 && stylingNote.isNotEmpty) {
-          teaser = '$teaser $stylingNote';
-        }
-
-        if (teaser.isNotEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_teaserKey, teaser);
-          if (kDebugMode) debugPrint('✅ Notification teaser cached: $teaser');
-          return teaser;
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) debugPrint('⚠️ Teaser pre-generation failed: $e');
-    }
-    return null;
+  Future<void> clearUserState(String userId) async {
+    await initialize();
+    await _plugin.cancel(_morningNotificationId);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_preferenceKey(userId)!);
+    await prefs.remove(_userTeaserKey(userId)!);
+    await prefs.remove(_prefKey);
+    await prefs.remove(_teaserKey);
   }
 }

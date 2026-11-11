@@ -11,6 +11,7 @@ class PricingCardWidget extends StatelessWidget {
   final bool isBestValue;
   final VoidCallback onSelect;
   final VoidCallback onUpgrade;
+  final bool enabled;
 
   const PricingCardWidget({
     Key? key,
@@ -23,6 +24,7 @@ class PricingCardWidget extends StatelessWidget {
     this.isBestValue = false,
     required this.onSelect,
     required this.onUpgrade,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -30,7 +32,7 @@ class PricingCardWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     return GestureDetector(
-      onTap: onSelect,
+      onTap: enabled ? onSelect : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         margin: EdgeInsets.symmetric(horizontal: 4.w),
@@ -90,7 +92,9 @@ class PricingCardWidget extends StatelessWidget {
                                 vertical: 0.45.h,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.secondary.withValues(alpha: 0.14),
+                                color: theme.colorScheme.secondary.withValues(
+                                  alpha: 0.14,
+                                ),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -214,7 +218,7 @@ class PricingCardWidget extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isSelected ? onUpgrade : onSelect,
+                onPressed: enabled ? (isSelected ? onUpgrade : onSelect) : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isSelected
                       ? theme.colorScheme.primary
@@ -235,7 +239,9 @@ class PricingCardWidget extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  isSelected ? 'Continue' : 'Choose plan',
+                  enabled
+                      ? (isSelected ? 'Continue' : 'Choose plan')
+                      : 'Unavailable',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: isSelected

@@ -35,13 +35,9 @@ class ProfileService {
   }
 
   // ── CHANGE PASSWORD ──────────────────────────────────────
-  Future<String?> changePassword({
-    required String newPassword,
-  }) async {
+  Future<String?> changePassword({required String newPassword}) async {
     try {
-      await _client.auth.updateUser(
-        UserAttributes(password: newPassword),
-      );
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
       return null; // null = success
     } catch (e) {
       if (kDebugMode) debugPrint('Change password error: $e');
@@ -60,13 +56,14 @@ class ProfileService {
 
       final file = File(filePath);
       if (!await file.exists()) {
-        if (kDebugMode) debugPrint('❌ Upload photo error: File does not exist at $filePath');
+        if (kDebugMode)
+          debugPrint('❌ Upload photo error: File does not exist at $filePath');
         return null;
       }
 
       // Get file extension
       final ext = filePath.split('.').last.toLowerCase();
-      
+
       // Determine content type
       String contentType;
       switch (ext) {
@@ -91,18 +88,18 @@ class ProfileService {
       // This matches the RLS policy: (storage.foldername(name))[1] = userId
       final storagePath = '$userId/avatar.$ext';
 
-      if (kDebugMode) debugPrint('📤 Uploading to avatars bucket: $storagePath');
+      if (kDebugMode)
+        debugPrint('📤 Uploading to avatars bucket: $storagePath');
       if (kDebugMode) debugPrint('📤 Content type: $contentType');
 
       // Upload to avatars bucket
-      await _client.storage.from('avatars').upload(
-        storagePath,
-        file,
-        fileOptions: FileOptions(
-          upsert: true,
-          contentType: contentType,
-        ),
-      );
+      await _client.storage
+          .from('avatars')
+          .upload(
+            storagePath,
+            file,
+            fileOptions: FileOptions(upsert: true, contentType: contentType),
+          );
 
       // Get public URL
       final publicUrl = _client.storage
@@ -118,15 +115,18 @@ class ProfileService {
 
       // Also save to user_profiles table
       try {
-        await _client.from('user_profiles').upsert({
-          'id': userId,
-          'avatar_url': publicUrl,
-          'updated_at': DateTime.now().toIso8601String(),
-        });
+        await _client
+            .from('user_profiles')
+            .update({
+              'avatar_url': publicUrl,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', userId);
         if (kDebugMode) debugPrint('✅ Updated user_profiles table');
       } catch (e) {
         // Non-fatal: table might not exist or have different columns
-        if (kDebugMode) debugPrint('⚠️ Could not update user_profiles table: $e');
+        if (kDebugMode)
+          debugPrint('⚠️ Could not update user_profiles table: $e');
       }
 
       return publicUrl;
@@ -161,39 +161,45 @@ class ProfileService {
       buffer.writeln('WARDROBE ITEMS');
       buffer.writeln('Name,Category,Brand,Color,Purchase Price,Times Worn');
       for (final item in wardrobe) {
-        buffer.writeln([
-          _csvField(item['name']),
-          _csvField(item['category']),
-          _csvField(item['brand']),
-          _csvField(item['color']),
-          _csvField(item['purchase_price']?.toString()),
-          _csvField(item['times_worn']?.toString()),
-        ].join(','));
+        buffer.writeln(
+          [
+            _csvField(item['name']),
+            _csvField(item['category']),
+            _csvField(item['brand']),
+            _csvField(item['color']),
+            _csvField(item['purchase_price']?.toString()),
+            _csvField(item['times_worn']?.toString()),
+          ].join(','),
+        );
       }
 
       buffer.writeln('');
       buffer.writeln('PURCHASES');
       buffer.writeln('Name,Brand,Category,Price,Date');
       for (final p in purchases) {
-        buffer.writeln([
-          _csvField(p['name']),
-          _csvField(p['brand']),
-          _csvField(p['category']),
-          _csvField(p['price']?.toString()),
-          _csvField(p['purchase_date']),
-        ].join(','));
+        buffer.writeln(
+          [
+            _csvField(p['name']),
+            _csvField(p['brand']),
+            _csvField(p['category']),
+            _csvField(p['price']?.toString()),
+            _csvField(p['purchase_date']),
+          ].join(','),
+        );
       }
 
       buffer.writeln('');
       buffer.writeln('OUTFIT LOGS');
       buffer.writeln('Date,Occasion,Rating,Notes');
       for (final o in outfits) {
-        buffer.writeln([
-          _csvField(o['worn_date']),
-          _csvField(o['occasion']),
-          _csvField(o['rating']?.toString()),
-          _csvField(o['notes']),
-        ].join(','));
+        buffer.writeln(
+          [
+            _csvField(o['worn_date']),
+            _csvField(o['occasion']),
+            _csvField(o['rating']?.toString()),
+            _csvField(o['notes']),
+          ].join(','),
+        );
       }
 
       // Write to temp file
