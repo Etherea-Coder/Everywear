@@ -17,7 +17,10 @@ Not yet a release candidate. A substantial source recovery checkpoint exists on 
 - Account deletion now validates every deletion, removes user Storage objects, deletes the profile with the correct key, and only reports success after auth deletion. Reset also removes uploads and resets onboarding/profile data.
 - Scoped Hive wardrobe cache, onboarding preferences, AI cache, and notification state by authenticated user; full remote wardrobe sync reconciles remote deletions; logout/reset/deletion clears only account-owned state while retaining global locale/theme/reporting consent.
 - Sentry `beforeSend` and manual captures now honor the stored reporting opt-out.
-- Image routing now distinguishes stable `wardrobe-images/{user}/...` and `avatars/{user}/...` references, recognized Storage object URLs on the exact configured Supabase origin, ordinary external HTTP(S) URLs, assets, and local files. Wardrobe reads retain `image_ref` and resolve authorized display URLs at read time; new wardrobe uploads return stable object references instead of public URLs.
+- Image routing now distinguishes stable `wardrobe-images/{user}/...` and `avatars/{user}/...` references, recognized Storage object URLs on the exact configured Supabase origin, ordinary external HTTP(S) URLs, assets, and local files. Wardrobe reads retain stable `image_ref` values; the shared display widget resolves authorized URLs only when displaying an image. New wardrobe uploads return stable object references instead of public URLs.
+- Profile photo uploads use unique owner-scoped avatar object paths, persist stable references in auth metadata and the profile row, preserve provider URLs for display, and remove replaced/deleted owned objects. Wardrobe/profile display uses the shared resolver with an unavailable-image fallback keyed to the current account.
+- Wardrobe cards, daily-log thumbnails/suggestions, outfit-history images, web photo previews, and captured outfit web images use `CustomImageWidget` instead of direct network image loading. Legacy project Storage URLs are canonicalized before wardrobe persistence, and Hive stores `image_ref` rather than a resolved URL.
+- PDF exports resolve wardrobe/avatar references at export time and embed available image bytes. CSV exports omit image references entirely; missing/unavailable image downloads do not fail the export.
 
 ## 2. Checks actually performed
 
@@ -33,7 +36,7 @@ Before the code-only restriction and computer freeze:
 | Analyzer (earlier checkpoint) | Reached 284 warnings/info with no reported analyzer errors before the latest code edits |
 | Tests (earlier checkpoint) | Reached three stale AI widget assertions; those tests were edited afterward but not rerun |
 | Android release build (earlier attempt) | Reached Java compilation, then failed because a generated registrant included test-only `integration_test`; the generated file was removed but no build was rerun |
-| Current lightweight checks | Targeted Dart formatting and `git diff --check` only; no project-wide validation |
+| Current lightweight checks | Targeted Dart formatting, `git diff --check`, and source search for direct image-network consumers; no project-wide validation |
 | Hosted backend | No CLI or authenticated environment is available in this shell; no hosted read/write operation was attempted |
 
 ## 3. Builds/tests deferred
@@ -43,6 +46,7 @@ Before the code-only restriction and computer freeze:
 - Local Supabase/Docker migration reset and anonymous/user-A/user-B/concurrency fixtures.
 - Edge Function type-check/deploy and real RevenueCat tester purchase/restore/webhook evidence.
 - Focused image reference routing regression tests are prepared but have not been executed.
+- Focused avatar persistence/display and export image resolution tests are prepared but have not been executed.
 
 ## 4. Remaining provider setup and blockers
 
@@ -51,7 +55,7 @@ Before the code-only restriction and computer freeze:
 - Supply the RevenueCat public Android SDK key and exact entitlement identifier as Dart defines; configure the same entitlement, Android package, products/offerings, Play service credentials, and webhook secrets in the dashboards.
 - Confirm `com.stylewise.app` is the registered Play/RevenueCat application ID.
 - Private upload keystore/passwords remain absent. They must be supplied outside Git before a signed AAB can exist.
-- Private Storage delivery still needs a client contract (stored object path plus authenticated/signed URL) before any recovered public bucket is made private.
+- Private Storage rollout still needs recovered-schema/bucket-policy reconciliation. Owner-scoped authenticated read, insert, replacement/update, and delete rules must be reviewed for `wardrobe-images` and `avatars`; existing public object URLs/records require an inventory and compatibility migration before changing bucket visibility. Review whether the profile `avatar_url` mirror is required by recovered consumers before planning hosted record changes. Source changes do not make hosted images private.
 - Device timezone identification remains unresolved; the current scheduler initializes timezone data but cannot reliably select the device IANA zone without an additional platform timezone source.
 - Privacy policy URL, account-deletion URL, store listing assets/declarations, Play eligibility, and real tester evidence remain external release inputs.
 
@@ -61,6 +65,8 @@ Latest source checkpoint: purchase/restore explicitly establishes the current Su
 
 **Image routing checkpoint (2026-11-11):** Classification uses structured URI parsing and exact Supabase origin plus Storage path checks. External and lookalike URLs stay on ordinary network-image handling; stable references and recognized project Storage URLs use the signed-URL resolver. Focused routing tests were added; targeted formatting and whitespace checks passed, but tests were not run.
 
-Private rollout remains blocked on recovered schema and bucket-policy reconciliation. Existing public URLs/objects must be inventoried and migrated to stable references, avatar/export consumers must be converted, and private read/upload/delete policies must be reviewed before changing bucket visibility. Source changes do not make existing hosted images private. Preserve public compatibility until this rollout is complete.
+**Private image consumer checkpoint (2026-11-11, code commit `b8794b8168c9a279751a823d613fc504e45029a1`):** Avatar replacement/removal, direct network-image consumer routing, stable Hive/database references, and PDF image embedding were implemented locally. Focused tests were prepared only. Targeted formatting and `git diff --check` passed; tests were not run and no runtime verification was performed. Remaining client limitation: CSV intentionally omits image URLs/bytes; unavailable or unauthorized images are omitted from PDF while the rest of the export continues. The profile row avatar mirror remains best-effort if the recovered schema rejects the update; auth metadata is the current display source.
+
+Next image step: reconcile the recovered Storage bucket policies and avatar columns read-only, review an owner-scoped policy/record rollout, then run the deferred focused tests and device checks before any hosted change. Until policy and existing-object migration are verified, preserve hosted bucket visibility and current public-image compatibility.
 
 Other release blockers remain: reconcile the proposed migration with the recovered hosted schema, provide provider configuration and signing inputs, obtain privacy/deletion URLs and store materials, and perform the deferred validation and real tester purchase checks. Billing race correctness also remains unproven pending canonical RevenueCat snapshot reconciliation and execution of focused tests.
