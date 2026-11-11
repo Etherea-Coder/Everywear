@@ -141,7 +141,7 @@ unverified. This is not yet a Play release candidate.
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; installed ignored project-local Deno 2.9.6; Supabase CLI 3.1.0 |
 | Dependency resolution | `flutter pub get` completed; lockfile updated for the direct image test dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **52 passed**, no failures after the AI local-image request change. |
-| Flutter analyzer | `.tooling/flutter/bin/flutter analyze --no-pub` — 0 errors, 9 warnings, 281 info; exit 1. All 9 reported warning sites were cleaned up afterward; no analyzer rerun was made |
+| Flutter analyzer | Previous run: 0 errors, 9 warnings, 281 info; the warning sites were edited. Rerun after those edits completed in 5.3 seconds and exited 1 with 273 diagnostics (full output was truncated by the command tool, so the final severity breakdown is not retained). Do not claim project-wide analysis is clean; targeted analysis of changed Dart files previously reported no issues |
 | Targeted Dart analysis | `.tooling/flutter/bin/dart analyze` on the changed reset, notification, helper, and focused test files — initially reported four infos in `notification_service.dart`; after cleanup, rerun exited 0 with **No issues found!** |
 | Deno formatting | `deno fmt --check` passed on the updated `delete-account` source; earlier formatting passed on `check-and-request-suggestion`, `revenuecat-webhook`, and `verify-purchase` |
 | Deno type checks | Earlier checks passed `check-and-request-suggestion`, `delete-account`, `today-suggestion`, `style-coach`, `analyze-clothing`, `revenuecat-webhook`, and `verify-purchase`. The deletion function was later changed to check and paginate outfit-link cleanup and has not been rechecked. `generate-ai-insights` exposed nullable query results and was patched with `?? []`; it was not rechecked. `ai-suggestions` was not reached. Two check attempts were used; further type-checking is deferred |
@@ -158,11 +158,13 @@ unverified. This is not yet a Play release candidate.
 
 Latest verification: the full serial Flutter suite passed 52/52 after the AI
 local-image request change; the targeted image routing/private consumer/app-
-import selection passed 12/12. Reset cleanup passed 3/3, reminder scheduling
+  import selection passed 12/12. Reset cleanup passed 3/3, reminder scheduling
 4/4, AI payload encoding 3/3, Deno request validation 5/5, and app import smoke
 1/1. Targeted Dart analysis of changed reset, notification, AI payload/client,
 helper, and focused test files reported no issues. Targeted Dart/Deno formatting
-and `git diff --check` passed. The current AAB was rebuilt from that source and
+  and `git diff --check` passed. The project-wide analyzer rerun still exits 1
+  and reported 273 diagnostics in truncated output; no clean-analysis claim is
+  made. The current AAB was rebuilt from that source and
 archive-checked; it remains unsigned and has no provider configuration. These
 tests did not connect to a backend or call AI providers. A project-local
 `pglast` parse accepted all 30 outer SQL statements in the Storage fixture;
@@ -262,6 +264,10 @@ analyzer was not rerun, and no device check was possible because `adb` is absent
   disposable test database and remains unexecuted.
 - [ ] Finish Deno verification after the two-attempt deferral; resolve any
   remaining type errors without `@ts-nocheck`.
+- [x] Rerun project-wide Flutter analysis after the earlier warning cleanup;
+  it exited 1 with 273 diagnostics. Full severity breakdown is unavailable
+  because the captured output was truncated; targeted changed-file analysis
+  had passed, but project-wide analysis is not green.
 - [x] Targeted Dart/Deno formatting and `git diff --check` passed. Full suite:
   52/52; reset helper: 3/3; notification scheduling: 4/4; AI payload: 3/3;
   Deno request validation: 5/5; app import: 1/1; image/app import selection:
