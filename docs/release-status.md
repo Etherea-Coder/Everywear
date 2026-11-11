@@ -96,8 +96,11 @@ unverified. This is not yet a Play release candidate.
   private rollback. No hosted storage configuration or record was changed.
 - Added `supabase/tests/database_security.test.sql`, a local-only pgTAP fixture
   for profile separation/protected tier, bilateral outfit-item ownership and
-  quota behavior. It is not run and covers neither concurrent sessions nor
-  Storage objects yet.
+  quota behavior. Added `supabase/tests/storage_security.test.sql`, a separate
+  disposable-local pgTAP fixture for private bucket visibility and anonymous,
+  user A, and user B read/upload/delete isolation after applying the review-only
+  private-image cutover. Neither SQL fixture has been executed. Concurrent
+  quota behavior still needs a two-session local database proof.
 - Added pinned tool/setup guidance and CI for Flutter tests/analyzer and Deno
   checks. CI has not run.
 
@@ -112,7 +115,7 @@ unverified. This is not yet a Play release candidate.
 | Flutter analyzer | `.tooling/flutter/bin/flutter analyze --no-pub` — 0 errors, 9 warnings, 281 info; exit 1. All 9 reported warning sites were cleaned up afterward; no analyzer rerun was made |
 | Deno formatting | `deno fmt --check` passed on the updated `delete-account` source; earlier formatting passed on `check-and-request-suggestion`, `revenuecat-webhook`, and `verify-purchase` |
 | Deno type checks | Earlier checks passed `check-and-request-suggestion`, `delete-account`, `today-suggestion`, `style-coach`, `analyze-clothing`, `revenuecat-webhook`, and `verify-purchase`. The deletion function was later changed to check and paginate outfit-link cleanup and has not been rechecked. `generate-ai-insights` exposed nullable query results and was patched with `?? []`; it was not rechecked. `ai-suggestions` was not reached. Two check attempts were used; further type-checking is deferred |
-| Read-only recovered schema | Production identity reverified. Read-only metadata query confirmed `revenue_cat_id text`, `suggestions_reset_at date`, nullable integer counters and nullable timestamptz expiry. No customer rows, Storage contents or secrets queried |
+| Read-only recovered schema | Production identity reverified. Read-only metadata query confirmed `revenue_cat_id text`, `suggestions_reset_at date`, nullable integer counters and nullable timestamptz expiry. Follow-up Storage metadata query confirmed `storage.objects.owner uuid`, `owner_id text`, nullable `bucket_id`/`name`, `metadata jsonb`, and `id` defaulting to `gen_random_uuid()`. The two image buckets remain public with no MIME/size restrictions; `anon` and `authenticated` have table CRUD grants on `storage.objects`, so row isolation depends on RLS and public bucket visibility currently permits public reads. Read-only policy catalog confirms two public SELECT policies (one `PUBLIC`, one `anon`) plus authenticated owner policies; no customer rows, Storage contents or secrets queried |
 | Hosted operations | Read-only only. No migrations/history repair, settings, buckets/policies, records, functions or provider configuration changed |
 | SQL parser | Project-local `pglast` parsed the outer PostgreSQL statements in the migration, review cutover and pgTAP fixture. This does not validate PL/pgSQL function bodies, schema compatibility or runtime behavior |
 | SQL/database | No local Supabase, Docker or clean database chain was available/run; pgTAP fixture is prepared but unexecuted |
@@ -137,8 +140,9 @@ and has no provider configuration. No analyzer rerun or device check was made.
   `generate-ai-insights` (fixed with `?? []`). Do not claim those final fixes
   verified. `ai-suggestions` type check and full CI remain pending.
 - Run the new pgTAP fixture and migration chain against a clean non-production
-  schema; extend it with anonymous/user-A/user-B Storage and concurrent quota
-  proofs.
+  schema, then run `storage_security.test.sql` after the reviewed cutover. Add a
+  two-session concurrent quota proof; the current quota fixture only proves
+  sequential calls in one session.
 - Retry Android release AAB after the release-only plugin shim is reviewed.
   It remains unsigned without the private upload key. Device/network behavior,
   timezone/permission behavior, accessibility and export runtime checks remain
@@ -199,6 +203,10 @@ and has no provider configuration. No analyzer rerun or device check was made.
 - [x] Run the full Flutter suite sequentially: 42 passed after the final Dart changes; the affected image/app-import selection separately passed 12/12.
 - [x] Prepare local pgTAP fixture for protected tier, profile/outfit ownership
   and single-session AI quota behavior.
+- [x] Add a separate local-only Storage pgTAP fixture for anonymous denial,
+  private bucket state, and user A/user B read/upload/delete owner isolation;
+  the fixture assumes private cutover policies are installed only in the
+  disposable test database and remains unexecuted.
 - [ ] Finish Deno verification after the two-attempt deferral; resolve any
   remaining type errors without `@ts-nocheck`.
 - [x] Targeted Dart/Deno formatting and `git diff --check` passed. Full suite: 42/42; final focused image/app import tests: 12/12.
@@ -216,8 +224,10 @@ and has no provider configuration. No analyzer rerun or device check was made.
 - [x] Serialize RevenueCat customer operations, centralize sign-out cleanup,
   paginate account deletion, and protect private image cache state.
 
-**Exact next step:** obtain access to a disposable non-production database for
-migration/RLS/Storage/concurrency proofs. Before any signed or interactive
+**Exact next step:** start an explicitly disposable local Supabase database
+when the no-Docker restriction is lifted and run the migration chain, then run
+the Storage fixture after the review cutover plus a two-session concurrent
+quota proof. Before any signed or interactive
 Android release validation, supply public app configuration and private upload
 signing inputs through the private build environment, complete RevenueCat/Play
 dashboard setup, and run the AAB on a physical device/internal tester track.
