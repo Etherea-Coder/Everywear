@@ -5,9 +5,9 @@ Last updated: 2026-11-12
 ## Current classification
 
 Recovery is in progress on `recovery/android-v1`. Flutter tests and partial Deno
-checks passed locally. A fresh analyzer run found no errors but returned a
-warning exit; its reported warnings were then corrected. One unsigned AAB now
-packages successfully, but it is not installable/uploadable as a signed Play
+checks passed locally. A fresh project-wide analyzer run exited 1 with 273
+diagnostics in truncated output; project-wide analysis is not green. One
+unsigned AAB packages successfully, but it is not uploadable as a signed Play
 release and has not been run on a device. Clean-database validation,
 private-image runtime behavior, provider setup, and Play eligibility remain
 unverified. This is not yet a Play release candidate.
@@ -54,6 +54,14 @@ unverified. This is not yet a Play release candidate.
   checkpoint and preserves the full resumable goal checklist.
 - `9c4ade3e88f1d19d5e0c6009b2874052f16be52f` — reconciles the recovery plan
   with current test, analyzer, database, and AAB evidence.
+- `6ca57003c881ddc15aa3c2a9ad19dc8ce2e1d1c0` — replaces the local-path and
+  caller-URL outfit AI flow with bounded compressed image bytes, authenticated
+  validation, and focused Dart/Deno tests; errors returned to clients are
+  generic.
+- `7abb46d841e0210cc11cc319b75736c76ae88cf3` — records the coordinated AI
+  image-flow checkpoint and deferred production rollout.
+- `1a088cf12a5c120037cafd97a57c5aa08381ec75` — records the latest project-wide
+  analyzer result and its unresolved diagnostics.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
