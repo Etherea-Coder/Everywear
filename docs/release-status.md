@@ -47,6 +47,9 @@ unverified. This is not yet a Play release candidate.
   IANA-zone calendar date across DST and adds four passing time-boundary tests.
 - `84d2923504c82d616f82329167ffc8120d9a9bd6` — records the unavailable
   `adb`/physical-device verification prerequisite.
+- `192a8f2275a043ef11b7b78e8197b3d5e6c9015a` — records 49 passing current
+  Flutter tests, clean targeted analysis, and the rebuilt final-source unsigned
+  AAB with archive/hash verification.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
