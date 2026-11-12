@@ -123,6 +123,8 @@ unverified. This is not yet a Play release candidate.
   wardrobe or consuming quota.
 - `aa756517c50d5f1dff100c053179bd19a1416f24` — adds full Edge Function lint
   as a CI gate before protected-function type-checking; the workflow has not run.
+- `28a3bfd3f288010d167bd259e6408ccebaaf6a80` — rejects `anchor` as a slot on
+  supporting daily-suggestion items; only the separate anchor field can use it.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -477,8 +479,9 @@ grants. No device check was possible because `adb` is absent.
   fields. Four pure regression cases pass without network access.
 - [x] Validate daily-suggestion item IDs against the authenticated user's
   database-backed wardrobe, canonicalize image data from those rows, omit image
-  references from Gemini prompts, and bound response fields. Four pure cases
-  pass; the RLS query still needs disposable-database integration validation.
+  references from Gemini prompts, bound response fields, and restrict support
+  item slots separately from the anchor slot. The focused four pure cases pass;
+  the RLS query still needs disposable-database integration validation.
 - [x] Validate analyze-clothing image inputs and Gemini output; reject malformed
   or oversized input before quota use, verify provider configuration before
   quota use, and return bounded contract fields with generic errors. Four pure
