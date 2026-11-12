@@ -43,7 +43,11 @@ the provider request itself times out after 20 seconds. Counters are reserved
 before making a provider request and are never refunded. Thus provider errors,
 invalid responses, timeouts, and interrupted requests count, since provider
 billing may already have occurred. There are no application retries or model
-fallbacks. Repeating an operation with the same user-scoped UUID is rejected;
+fallbacks. The OpenRouter request also sets `allow_fallbacks: false` and a
+maximum accepted per-token price, but OpenRouter's general routing docs mention
+retrying failed provider attempts. Its precise retry/billing behavior for these
+requests remains unverified; action quotas do not prove a hard invoice cap.
+Repeating an operation with the same user-scoped UUID is rejected;
 a new logical action needs a fresh UUID but remains inside all shared limits.
 The uniqueness key is user plus UUID (stricter across endpoints than
 user-plus-operation), preventing endpoint switching from replaying the same
