@@ -66,6 +66,39 @@ Uptodown release candidate.
   still owner/provider inputs. The locally changed verifier/webhook are not
   deployed. No purchase or refund evidence is claimed.
 
+## AI model and price review (2026-11-12)
+
+- Added [`ai-cost-review.md`](ai-cost-review.md), tracing client requests,
+  local Edge Functions, and the ignored read-only deployed source snapshot.
+  The four direct Google functions use Gemini Developer API model
+  `gemini-2.5-flash-lite`; the owner's remembered `gemini-2.5-flash` is not
+  what source configures. Outfit-photo suggestions use OpenRouter, send a bare
+  model ID instead of its canonical `google/...` slug, and the provider page
+  says the configured model was going away on 2026-10-20. Runtime provider
+  access, keys, and token use remain unknown; no credential values were read.
+- Official pricing pages were checked on 2026-11-12. Under explicit token-mix
+  assumptions, estimated model cost is $0.0086/month light, $0.0378 typical,
+  and $0.1195 heavy. These are modeled estimates, not observed usage or invoice
+  data. The 999/day Signature quota could cost about $31/month per account at
+  the stated typical suggestion cost and is not a useful cost ceiling; prompt
+  sizes are not consistently bounded.
+- Proposed €2.99/month and €24.99/year appear potentially viable against
+  ordinary inference costs alone, but not proven sustainable after tax, Stripe
+  fees, Supabase fixed/usage costs, support, refunds, and unknown business
+  details. The annual effective gross is €2.0825/month before deductions. The
+  review recommends finite server-enforced quotas and measured prompt/image
+  bounds before product setup; no prices, models, quotas, or behavior changed.
+- Checks actually performed: source/configuration and deployed snapshot
+  inspection; current official Gemini, OpenRouter, RevenueCat, Stripe, EU VAT,
+  and Supabase documentation review; lightweight `rg`, `sed`, and `nl` source
+  inspection. No builds, tests, analyzers, paid API calls, provider setup,
+  hosted writes, or production secret reads were performed for this audit.
+- Next external inputs: confirm the intended model/provider route and paid
+  Google/OpenRouter access, actual Stripe merchant-country fee and tax setup,
+  RevenueCat account plan, and Supabase invoice/usage. Then obtain representative
+  per-feature token/call measurements in a controlled non-production pilot
+  before finalizing subscription prices and quotas.
+
 ## Local checkpoints
 
 - `e3de01c` — prepares Uptodown hosted checkout with explicit production and
