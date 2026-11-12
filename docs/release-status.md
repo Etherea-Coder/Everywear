@@ -128,6 +128,8 @@ unverified. This is not yet a Play release candidate.
 - `4a205cf3a5d496da7302914f2d416d466a53054b` — removes the unreachable
   `/outfit-rating` demo route, fake outfit image/date, and widgets used only by
   that screen; daily-log and outfit-history rating flows remain available.
+- `505c5730dcbd4ea6dba65938e0eeb4b9fbfcbf64` — records the rating-demo
+  removal and its focused route/import checks in this status document.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -295,6 +297,7 @@ unverified. This is not yet a Play release candidate.
 | Clothing analysis input/output validation (2026-11-12) | Full Deno lint passed across **23 files**; the no-remote pure test set passed **26/26**. `deno check --no-remote` and `deno fmt --check` passed for the pure validator/test files; `git diff --check` passed. The handler was not type-checked or invoked; no provider call was made |
 | Current Edge Function CI steps (2026-11-12) | Reran the exact CI pure-test file list after the anchor-slot fix: **26 passed**. `deno lint supabase/functions` passed across **23 files**; `deno check --no-remote` and `deno fmt --check` passed on all six pure validation helpers/tests; `git diff --check` passed. No remote database/provider call was made. Protected handler type-check and CI workflow execution remain deferred |
 | Outfit rating placeholder removal (2026-11-12) | `.tooling/flutter/bin/dart analyze lib/routes/app_routes.dart` reported **No issues found**. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/app_import_smoke_test.dart` passed **1/1**, verifying app entry and transitively imported screens compile. This does not test device behavior |
+| Current-HEAD Flutter regression and CI analyzer rerun (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` passed **59/59**. `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited **0** with **245 info** diagnostics and no warning/error diagnostics. No build, device, database, provider, or purchase behavior was tested |
 | AI request/quota ordering (2026-11-12) | Full Deno lint passed across **23 files** and the no-remote tests passed **26/26** after request validation was moved ahead of quota use. `deno check --no-remote` passed for pure response helpers/tests; no network or database call was made. Edge Function handler type-check remains deferred |
 | Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
@@ -501,6 +504,9 @@ grants. No device check was possible because `adb` is absent.
 - [x] Remove the unreachable rating demo route and stale fake outfit preview;
   the existing daily-log and outfit-history rating flows remain. Targeted route
   analysis and app-import smoke test passed.
+- [x] Re-run the complete Flutter tests sequentially and the configured
+  CI-equivalent analyzer on current HEAD after removing the dead route: **59/59**
+  tests passed; analyzer exited 0 with **245 infos**, no warnings or errors.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
@@ -513,7 +519,8 @@ grants. No device check was possible because `adb` is absent.
 - [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
   the Supabase-backed reset flow remains unverified without a disposable DB.
 
-**Exact next step:** do not retry the AAB while swap remains full. After swap
+**Exact next step:** the source suite and CI-equivalent analyzer now pass on
+current HEAD. Do not retry the AAB while swap remains nearly full. After memory
 pressure clears, rebuild the unsigned AAB from current HEAD with one Gradle
 worker and a conservative heap, then verify its archive/hash; the existing
 bundle predates `e2085cb`. Separately, request an explicitly disposable
