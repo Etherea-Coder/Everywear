@@ -236,8 +236,9 @@ or errors. The configured CI severity gate was also run locally and exits 0
 with the same info backlog. Focused image and billing analysis is clean. The
 previous AAB was rebuilt from the learning-recovery source and archive-checked,
 but it predates `e2085cb` and does not represent current HEAD. It remains
-unsigned and has no provider configuration. Swap is currently full, so no
-rebuild was started. Tests did not connect to a backend or call AI
+unsigned and has no provider configuration. Swap remains near capacity
+(506/511 MiB at the latest check), so no rebuild was started. Tests did not
+connect to a backend or call AI
 providers. A project-local `pglast` parse accepted all 30 outer SQL statements
 in the Storage fixture; this does not execute policies or prove isolation.
 Read-only metadata queries confirmed public buckets and broad Storage table
