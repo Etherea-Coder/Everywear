@@ -101,9 +101,10 @@ also remain unresolved. Google Play publication is deferred.
   Android build failures and full swap pressure; no physical Android device is
   attached. No current staging APK exists.
 - Main checkout linkage is unchanged; staging operations used the detached
-  worktree and explicit ref. Staging service-role credentials are held only in
-  a mode-0600 file outside the repository and must be removed after the final
-  staging checks. No production or Clameo mutation occurred.
+  worktree and explicit ref. The synthetic test's service-role config was
+  deleted after the checks. Only a mode-0600 URL/anon-key config remains
+  outside the repository for the APK helper. No production or Clameo mutation
+  occurred.
 
 ## Checks from this continuation
 
@@ -118,8 +119,8 @@ also remain unresolved. Google Play publication is deferred.
   build, emulator, analyzer, or broader test suite.
 - The requested connected debug APK is not yet produced. The previous Android
   build attempts stopped on JDK selection and then resource exhaustion; current
-  swap is nearly full, so the build helper must wait for stable memory
-  headroom. The exact helper output path is recorded in
+  swap is fully used (511/511 MiB at the latest check), so the build helper must
+  wait for stable memory headroom. The exact helper output path is recorded in
   [`uptodown-free-beta.md`](uptodown-free-beta.md).
 
 ## Uptodown billing checkpoint (2026-11-12)
