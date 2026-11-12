@@ -36,6 +36,7 @@ jobs:
             supabase/functions/ai-suggestions/request_validation_test.ts \
             supabase/functions/generate-ai-insights/ai_response_test.ts \
             supabase/functions/style-coach/coach_response_test.ts \
+            supabase/functions/today-suggestion/suggestion_response_test.ts \
             supabase/functions/verify-purchase/entitlement_test.ts \
             supabase/functions/_shared/gemini_request_test.ts
       - name: Type-check protected functions

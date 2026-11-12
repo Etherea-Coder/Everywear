@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
+import { parseTodaySuggestion } from './suggestion_response.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 
@@ -7,8 +8,8 @@ type WardrobePromptItem = {
   id?: string
   name?: string
   category?: string
-  color?: string | null
-  times_worn?: number | null
+  semantic_label?: string | null
+  wear_count?: number | null
   last_worn?: string | null
   image_url?: string | null
   avg_rating?: number | null
@@ -29,7 +30,10 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
     }
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -38,15 +42,11 @@ Deno.serve(async (req) => {
     )
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
     }
-    const { data: allowed, error: quotaError } = await supabase
-      .rpc('consume_ai_quota', { quota_kind: 'suggestion' })
-    if (quotaError) throw new Error('Unable to verify AI quota')
-    if (!allowed) {
-      return new Response(JSON.stringify({ error: 'AI quota reached' }), { status: 429 })
-    }
-
     const {
       userName,
       localHour,
@@ -54,18 +54,57 @@ Deno.serve(async (req) => {
       weather,
       occasion,
       mood,
-      wardrobeItems,
+      wardrobeItems: requestedWardrobeItems,
       recentItems,
       nextEvent,
       occasionPatterns,
     } = await req.json()
+
+    const { data: ownedWardrobe, error: wardrobeError } = await supabase
+      .from('wardrobe_items')
+      .select('id, name, category, semantic_label, image_url, wear_count, last_worn')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    if (wardrobeError) throw new Error('Unable to load authenticated wardrobe')
+    if (!ownedWardrobe || ownedWardrobe.length === 0) {
+      return new Response(JSON.stringify({ error: 'Wardrobe is empty' }), {
+        status: 422,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+
+    // Client-supplied rating hints are accepted only for IDs returned by the
+    // authenticated wardrobe query; names and image references come from DB.
+    const ratingHints = new Map<string, { avg_rating?: number; rated_count?: number }>()
+    for (const item of (Array.isArray(requestedWardrobeItems) ? requestedWardrobeItems : []) as WardrobePromptItem[]) {
+      if (typeof item?.id === 'string') {
+        ratingHints.set(item.id, {
+          avg_rating: item.avg_rating,
+          rated_count: item.rated_count,
+        })
+      }
+    }
+    const wardrobeItems = ownedWardrobe.map((item) => ({
+      ...item,
+      ...ratingHints.get(item.id),
+    }))
+
+    const { data: allowed, error: quotaError } = await supabase
+      .rpc('consume_ai_quota', { quota_kind: 'suggestion' })
+    if (quotaError) throw new Error('Unable to verify AI quota')
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'AI quota reached' }), {
+        status: 429,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
+    }
 
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     // Build wardrobe list for prompt
     const wardrobeList = (Array.isArray(wardrobeItems) ? wardrobeItems : []).map((item: WardrobePromptItem) => {
-      let line = `- id:${item.id} | ${item.name} | ${item.category} | ${item.color ?? 'unknown color'} | worn ${item.times_worn ?? 0}x | last worn: ${item.last_worn ?? 'never'} | imageUrl: ${item.image_url ?? ''}`
+      let line = `- id:${item.id} | ${item.name} | ${item.category} | ${item.semantic_label ?? 'no visual details'} | worn ${item.wear_count ?? 0}x | last worn: ${item.last_worn ?? 'never'}`
       if (item.avg_rating) line += ` | avg outfit rating: ${item.avg_rating}/5 (${item.rated_count ?? 0} outfits)`
       return line
     }).join('\n')
@@ -148,7 +187,7 @@ Return ONLY valid JSON in this exact format, no markdown, no explanation:
     "id": "item id or empty string",
     "name": "item name",
     "category": "category",
-    "imageUrl": "image url or empty string",
+    "imageUrl": "",
     "slot": "anchor"
   },
   "items": [
@@ -156,7 +195,7 @@ Return ONLY valid JSON in this exact format, no markdown, no explanation:
       "id": "item id or empty string",
       "name": "item name",
       "category": "category",
-      "imageUrl": "image url or empty string",
+      "imageUrl": "",
       "slot": "top or bottom or shoes or accessory"
     }
   ]
@@ -175,13 +214,15 @@ Return ONLY valid JSON in this exact format, no markdown, no explanation:
 
     const geminiData = await geminiResponse.json()
     const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    const result = parseTodaySuggestion(text, wardrobeItems)
+    if (result.success !== true) {
+      return new Response(JSON.stringify(result), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      })
+    }
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in Gemini response')
-
-    const result = JSON.parse(jsonMatch[0])
-
-    return new Response(JSON.stringify({ success: true, ...result }), {
+    return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     })
 
