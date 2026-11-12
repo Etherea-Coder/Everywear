@@ -125,6 +125,9 @@ unverified. This is not yet a Play release candidate.
   as a CI gate before protected-function type-checking; the workflow has not run.
 - `28a3bfd3f288010d167bd259e6408ccebaaf6a80` — rejects `anchor` as a slot on
   supporting daily-suggestion items; only the separate anchor field can use it.
+- `4a205cf3a5d496da7302914f2d416d466a53054b` — removes the unreachable
+  `/outfit-rating` demo route, fake outfit image/date, and widgets used only by
+  that screen; daily-log and outfit-history rating flows remain available.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -151,6 +154,9 @@ unverified. This is not yet a Play release candidate.
 - Removed the unused AdMob placeholder path: there was no ad SDK, production
   unit IDs were fake literals, and the home screen reserved blank banner space.
   No ads are claimed/configured for this release.
+- Removed the unreferenced `/outfit-rating` demo screen, which displayed a
+  fixed stock outfit and stale date. Source search found no callers of its route;
+  the real inline rating flows in daily-log and outfit-history remain.
 - Private image client flow stores stable owner-scoped Storage references in
   existing database columns, resolves authorized URLs at display time, refreshes
   a failed signed URL, preserves external/provider URLs and provides unavailable
@@ -288,6 +294,7 @@ unverified. This is not yet a Play release candidate.
 | Today suggestion ownership/output validation (2026-11-12) | Full Deno lint passed across **21 files**; the no-remote pure test set passed **22/22**. `deno check --no-remote` and `deno fmt --check` passed for the four pure style/daily response helper/test files; `git diff --check` passed. The handler's authenticated Supabase query and quota ordering were not integration-tested; no Supabase or Gemini function was invoked |
 | Clothing analysis input/output validation (2026-11-12) | Full Deno lint passed across **23 files**; the no-remote pure test set passed **26/26**. `deno check --no-remote` and `deno fmt --check` passed for the pure validator/test files; `git diff --check` passed. The handler was not type-checked or invoked; no provider call was made |
 | Current Edge Function CI steps (2026-11-12) | Reran the exact CI pure-test file list after the anchor-slot fix: **26 passed**. `deno lint supabase/functions` passed across **23 files**; `deno check --no-remote` and `deno fmt --check` passed on all six pure validation helpers/tests; `git diff --check` passed. No remote database/provider call was made. Protected handler type-check and CI workflow execution remain deferred |
+| Outfit rating placeholder removal (2026-11-12) | `.tooling/flutter/bin/dart analyze lib/routes/app_routes.dart` reported **No issues found**. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/app_import_smoke_test.dart` passed **1/1**, verifying app entry and transitively imported screens compile. This does not test device behavior |
 | AI request/quota ordering (2026-11-12) | Full Deno lint passed across **23 files** and the no-remote tests passed **26/26** after request validation was moved ahead of quota use. `deno check --no-remote` passed for pure response helpers/tests; no network or database call was made. Edge Function handler type-check remains deferred |
 | Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
@@ -491,6 +498,9 @@ grants. No device check was possible because `adb` is absent.
   configuration before consuming coach quota. Today-suggestion similarly checks
   request/provider configuration and confirms the authenticated wardrobe before
   consuming its atomic quota. Runtime quota-ordering integration remains unrun.
+- [x] Remove the unreachable rating demo route and stale fake outfit preview;
+  the existing daily-log and outfit-history rating flows remain. Targeted route
+  analysis and app-import smoke test passed.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
