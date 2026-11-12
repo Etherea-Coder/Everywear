@@ -29,14 +29,16 @@ function failure(): CoachResponse {
   return { success: false, error: "No usable coach response." };
 }
 
+export function isCoachMode(value: unknown): value is CoachMode {
+  return value === "passive" || value === "active" || value === "event";
+}
+
 // Model output is untrusted: expose only bounded fields expected by each mode.
 export function parseCoachResponse(
   mode: unknown,
   rawText: unknown,
 ): CoachResponse {
-  if (mode !== "passive" && mode !== "active" && mode !== "event") {
-    return failure();
-  }
+  if (!isCoachMode(mode)) return failure();
   if (typeof rawText !== "string" || rawText.length > MAX_RESPONSE_CHARS) {
     return failure();
   }

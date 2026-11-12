@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
-import { parseCoachResponse } from './coach_response.ts'
+import { isCoachMode, parseCoachResponse } from './coach_response.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 
@@ -30,7 +30,10 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
     }
 
     const supabaseClient = createClient(
@@ -41,20 +44,44 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
     }
+
+    let requestBody
+    try {
+      requestBody = await req.json()
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+    if (
+      typeof requestBody !== 'object' || requestBody === null ||
+      Array.isArray(requestBody) || !isCoachMode(requestBody.mode)
+    ) {
+      return new Response(JSON.stringify({ error: 'Invalid coach mode' }), {
+        status: 400,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+    const { userName, localHour, mode, userProfile, insights, wardrobeSummary, recentOutfits, occasionPatterns, itemRatings, silhouetteEvolution, question, event } = requestBody
+
+    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
+    if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     const { data: allowed, error: quotaError } = await supabaseClient
       .rpc('consume_ai_quota', { quota_kind: 'coach' })
     if (quotaError) throw new Error('Unable to verify coaching quota')
     if (!allowed) {
-      return new Response(JSON.stringify({ error: 'Coaching quota reached' }), { status: 429 })
+      return new Response(JSON.stringify({ error: 'Coaching quota reached' }), {
+        status: 429,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
     }
-
-    const { userName, localHour, mode, userProfile, insights, wardrobeSummary, recentOutfits, occasionPatterns, itemRatings, silhouetteEvolution, question, event } = await req.json()
-
-    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
-    if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     const guardrails = `
 IMPORTANT:

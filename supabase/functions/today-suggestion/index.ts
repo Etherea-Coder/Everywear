@@ -47,6 +47,26 @@ Deno.serve(async (req) => {
         headers: { 'Access-Control-Allow-Origin': '*' },
       })
     }
+
+    let requestBody
+    try {
+      requestBody = await req.json()
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+    if (
+      typeof requestBody !== 'object' || requestBody === null ||
+      Array.isArray(requestBody)
+    ) {
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+
     const {
       userName,
       localHour,
@@ -58,7 +78,10 @@ Deno.serve(async (req) => {
       recentItems,
       nextEvent,
       occasionPatterns,
-    } = await req.json()
+    } = requestBody
+
+    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
+    if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     const { data: ownedWardrobe, error: wardrobeError } = await supabase
       .from('wardrobe_items')
@@ -98,9 +121,6 @@ Deno.serve(async (req) => {
         headers: { 'Access-Control-Allow-Origin': '*' },
       })
     }
-
-    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
-    if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     // Build wardrobe list for prompt
     const wardrobeList = (Array.isArray(wardrobeItems) ? wardrobeItems : []).map((item: WardrobePromptItem) => {

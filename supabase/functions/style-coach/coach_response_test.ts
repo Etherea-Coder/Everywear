@@ -1,4 +1,4 @@
-import { parseCoachResponse } from "./coach_response.ts";
+import { isCoachMode, parseCoachResponse } from "./coach_response.ts";
 
 function assertEquals(actual: unknown, expected: unknown): void {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
@@ -78,4 +78,6 @@ Deno.test("bounds fields and fails closed for malformed or incomplete output", (
   );
   assertEquals(parseCoachResponse("unknown", "text").success, false);
   assertEquals(parseCoachResponse("passive", "x".repeat(4_001)).success, false);
+  assertEquals(isCoachMode("event"), true);
+  assertEquals(isCoachMode("unexpected"), false);
 });
