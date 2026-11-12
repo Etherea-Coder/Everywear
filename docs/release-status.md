@@ -117,6 +117,9 @@ also remain unresolved. Google Play publication is deferred.
   incorrect test finders (painted banner text and Flutter's built-in debug
   banner); the test was corrected and the final run passed. This did not run a
   build, emulator, analyzer, or broader test suite.
+- A targeted analyzer pass over `lib/main.dart`, the staging banner, and its
+  test reported **5 info-level diagnostics** in existing `main.dart` lines and
+  no warnings/errors; the banner/test introduced no reported diagnostics.
 - The requested connected debug APK is not yet produced. The previous Android
   build attempts stopped on JDK selection and then resource exhaustion; current
   swap is fully used (511/511 MiB at the latest check), so the build helper must
