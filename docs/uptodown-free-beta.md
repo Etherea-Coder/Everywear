@@ -73,6 +73,16 @@ A debug APK is for controlled test devices only, not an Uptodown publication
 artifact or signing-continuity proof. The helper has not been run because a
 zero-cost staging project and config are not confirmed.
 
+A separate local-only compile was attempted with free-beta gates enabled and
+Supabase/provider defines explicitly empty. Flutter first selected Android
+Studio JBR 25.0.3 and stopped before compilation. A second attempt temporarily
+selected Java 21 and an isolated build directory, then was interrupted after
+available memory fell to about 4.4 GiB and swap filled. The temporary Flutter
+settings were restored, the build-owned Gradle daemon was stopped, and the old
+APK was preserved under ignored `build/beta-artifacts/`. No new APK was
+produced and no runtime behavior was tested. Do not retry the Android build
+until resource headroom is available.
+
 ## Android identity, version and signing
 
 - Keep Android application ID/namespace `com.stylewise.app`; do not change the

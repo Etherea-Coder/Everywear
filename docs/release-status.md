@@ -880,6 +880,17 @@ until the migration baseline and complete platform behaviors have been reviewed.
   it cannot create/link/deploy backend projects. Added draft Uptodown listing,
   release notes, and device smoke instructions in
   [`uptodown-free-beta.md`](uptodown-free-beta.md).
+- Attempted a separate unconfigured Android compile with all free-beta gates
+  on and Supabase/provider defines empty. The first invocation failed before
+  compilation because Flutter selected Android Studio JBR 25.0.3 despite
+  `JAVA_HOME` pointing to Java 21. A second invocation temporarily selected
+  JDK 21 and an isolated build directory, reached `assembleDebug`, then was
+  interrupted when available memory dropped to about 4.4 GiB and swap was full.
+  Temporary Flutter settings were restored; only the Gradle daemon started by
+  that build was stopped. No new APK was produced. The older APK was copied to
+  ignored `build/beta-artifacts/` and its SHA-256 verified unchanged. Further
+  Android builds are deferred under the resource limit; this gives no runtime
+  evidence.
 - Not built: no zero-cost staging project or staging config exists, the
   recovered production backend is unsafe and read-only, and no physical
   Android device is attached for ADB verification. The existing APK was
@@ -906,8 +917,8 @@ until the migration baseline and complete platform behaviors have been reviewed.
   errors. The build helper
   passes `bash -n`; missing-config and production-ref guards both refused
   safely. Targeted formatting reported zero changes after cleanup, and
-  `git diff --check` passed. No Android build, device test, Docker, production
-  write, deployment, or publication was performed.
+  `git diff --check` passed. No Android build completed, no device test or
+  Docker was run, and no production write, deployment, or publication occurred.
 
 ### Resumable free-beta checklist
 
