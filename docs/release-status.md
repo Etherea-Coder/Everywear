@@ -123,6 +123,10 @@ unverified. This is not yet a Play release candidate.
 - The PDF image normalizer's `image` package is now a production dependency,
   matching its runtime import. Subscription purchases use RevenueCat's current
   `PurchaseParams.package` API rather than deprecated `purchasePackage`.
+- `generate-ai-insights` uses explicit wardrobe/outfit row types and validates
+  and bounds Gemini response fields before returning them. Malformed model
+  output falls back safely without logging the response body. The affected
+  functions use the project import-map alias and native `Deno.serve`.
 - Challenge history now reads the `style_challenges` relation actually selected
   by the service (instead of the nonexistent `challenges` key), safely skips
   dangling relationships and deduplicates the featured challenge. Read errors
@@ -183,15 +187,16 @@ unverified. This is not yet a Play release candidate.
 | Check | Actual result |
 |---|---|
 | Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 6.7 GiB available, 509/511 MiB swap used, 395 GiB free; a long-lived 4 GiB Gradle daemon is resident; Linux/macOS generated changes preserved |
-| Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; Supabase CLI 3.1.0. `deno` is not available on PATH in this resumed environment; prior Deno checks remain historical results |
+| Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; Supabase CLI 3.1.0; Deno 2.9.6 exists at `.tooling/deno/node_modules/.bin/deno` but is not on PATH |
 | Dependency resolution | `flutter pub get` completed; the latest offline resolution records `image` as a direct runtime dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **59 passed**, including learning and challenge recovery coverage. |
 | Flutter analyzer | Latest `.tooling/flutter/bin/flutter analyze --no-pub` completed in 6.4 seconds and exited 1 with **249 info, 0 warnings, 0 errors**. Project-wide analysis is not green. Targeted analysis of image/export/storage/billing source and focused tests exited 0 with **No issues found** |
 | CI analyzer severity gate (2026-11-12) | `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited 0; output still reports 249 informational lints, with no warnings/errors. CI workflow now uses this gate; the remote workflow itself has not run |
 | Targeted Dart analysis | `.tooling/flutter/bin/dart analyze` on the changed reset, notification, helper, and focused test files — initially reported four infos in `notification_service.dart`; after cleanup, rerun exited 0 with **No issues found!** |
-| Deno formatting | `deno fmt --check` passed on the updated `delete-account` source; earlier formatting passed on `check-and-request-suggestion`, `revenuecat-webhook`, and `verify-purchase` |
+| Deno formatting | `.tooling/deno/node_modules/.bin/deno fmt --check supabase/functions/delete-account/index.ts` passed. A combined default-format check of `delete-account`, `generate-ai-insights` and `ai-suggestions` reports the latter two files not formatted; legacy single-quote/no-semicolon options also report formatting differences. No mass formatting churn was applied |
 | Deno type checks | Earlier checks passed `check-and-request-suggestion`, `delete-account`, `today-suggestion`, `style-coach`, `analyze-clothing`, `revenuecat-webhook`, and `verify-purchase`. The deletion function was later changed to check and paginate outfit-link cleanup and has not been rechecked. `generate-ai-insights` exposed nullable query results and was patched with `?? []`; it was not rechecked. `ai-suggestions` was not reached. Two check attempts were used; further type-checking is deferred |
 | AI request validation | Dart payload tests passed **3/3**; Deno validation tests passed **5/5** with `--no-remote`; `deno fmt --check` passed on the new pure validator and test. `ai-suggestions/index.ts` keeps the repository's existing style and remains un-typechecked after the earlier check deferral |
+| Edge Function lint/tests (2026-11-12) | Initial targeted lint found 24 explicit `any` annotations and five inline dependency imports. After replacing those patterns, project-local Deno 2.9.6 lint passed on `delete-account`, `generate-ai-insights`, `ai-suggestions` and the parser/test. Combined no-remote validation and insight-parser tests passed **9/9**. New parser/test formatting check and `delete-account` formatting check passed |
 | Read-only recovered schema | Production identity reverified. Read-only metadata query confirmed `revenue_cat_id text`, `suggestions_reset_at date`, nullable integer counters and nullable timestamptz expiry. Follow-up Storage metadata query confirmed `storage.objects.owner uuid`, `owner_id text`, nullable `bucket_id`/`name`, `metadata jsonb`, and `id` defaulting to `gen_random_uuid()`. The two image buckets remain public with no MIME/size restrictions; `anon` and `authenticated` have table CRUD grants on `storage.objects`, so row isolation depends on RLS and public bucket visibility currently permits public reads. Read-only policy catalog confirms two public SELECT policies (one `PUBLIC`, one `anon`) plus authenticated owner policies; no customer rows, Storage contents or secrets queried |
 | Hosted operations | Read-only only. No migrations/history repair, settings, buckets/policies, records, functions or provider configuration changed |
 | SQL parser | Project-local `pglast` parsed the outer PostgreSQL statements in the migration, review cutover and pgTAP fixture. This does not validate PL/pgSQL function bodies, schema compatibility or runtime behavior |
@@ -204,7 +209,7 @@ unverified. This is not yet a Play release candidate.
 | Debug APK | A local debug APK build was attempted after the AAB. It was stopped after 4m19s when swap reached 511/511 MiB; the build-owned Kotlin daemon was terminated, and no APK was produced. No unrelated processes were stopped. Retry only after resource pressure clears. |
 | Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
 | Focused billing tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/subscription_service_test.dart test/services/serial_operation_queue_test.dart` — **4 passed**. This validates local identity/verification acceptance and serialization helpers; it is not a store purchase test |
-| Deno availability (2026-11-12) | `deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts` could not start: `/bin/bash: deno: command not found`. No test was executed by this command |
+| Deno tests (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts supabase/functions/generate-ai-insights/ai_response_test.ts` — **9 passed**, no remote imports or provider calls |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
@@ -263,9 +268,11 @@ grants. No device check was possible because `adb` is absent.
   debug APK exists, and `adb` is not installed for local device validation.
 - No purchase, restore, RevenueCat webhook, production deployment, Play tester
   transaction, database migration or private bucket cutover was executed.
-- The resumed shell does not have Deno on `PATH`; the latest attempted pure
-  Deno test did not start. Deno type-checks remain deferred after the earlier
-  two attempts and must be rerun only when the compatible CLI is available.
+- Deno 2.9.6 is available at the project-local ignored path. The pure request
+  validation and bounded insight-parser tests pass 9/9, and targeted Deno lint
+  passes on the three affected functions. Final type-checking remains deferred
+  after the earlier two attempts; no type-check success is claimed for the last
+  edits to `delete-account`, `generate-ai-insights` or `ai-suggestions`.
 
 ## 4. Provider setup, risks and blockers
 
@@ -363,6 +370,9 @@ grants. No device check was possible because `adb` is absent.
 - [x] Prepare concurrent two-session quota regression harness for disposable
   loopback database; syntax checked only, execution deferred until a local
   database is permitted and available.
+- [x] Replace insight aggregation's explicit `any` types, bound untrusted Gemini
+  response fields, and add pure parser tests. Deno lint and 9 no-remote tests
+  passed; function type-check remains deferred.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
@@ -384,4 +394,4 @@ Before any signed or interactive Android release validation, supply public app
 configuration and private upload-signing inputs through the private build
 environment, complete RevenueCat/Play dashboard setup, and run the AAB on a
 physical device/internal tester track. Final Deno type checks remain deferred
-after the two-attempt limit; Deno is also absent from the current PATH.
+after the two-attempt limit; invoke Deno by its project-local ignored path.

@@ -1,10 +1,9 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
 async function deleteStoragePrefix(
-  adminClient: any,
+  adminClient: ReturnType<typeof createClient>,
   bucket: string,
   prefix: string,
 ): Promise<void> {
@@ -47,7 +46,7 @@ async function deleteStoragePrefix(
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   try {
     // Get the JWT from the request header
     const authHeader = req.headers.get("Authorization");

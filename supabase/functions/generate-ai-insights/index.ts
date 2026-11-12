@@ -1,4 +1,27 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from "@supabase/supabase-js";
+import { extractGeminiText, parseAiInsights } from "./ai_response.ts";
+
+type WardrobeItem = {
+  id: string;
+  name: string;
+  category: string | null;
+  semantic_label: string | null;
+  wear_count: number | null;
+  last_worn: string | null;
+  cost_per_wear: number | string | null;
+  purchase_price: number | string | null;
+  purchase_date: string | null;
+};
+
+type OutfitItemLink = { item_id: string | null };
+
+type OutfitLog = {
+  id: string;
+  worn_date: string;
+  occasion: string | null;
+  rating: number | null;
+  outfit_items: OutfitItemLink[] | null;
+};
 
 const GEMINI_MODEL   = 'gemini-2.5-flash-lite'
 const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
@@ -69,7 +92,7 @@ Deno.serve(async (req) => {
 
     const { data: itemRows, error: itemsErr } = await wardrobeQ
     if (itemsErr) throw new Error(`wardrobe_items: ${itemsErr.message}`)
-    const items = itemRows ?? []
+    const items: WardrobeItem[] = (itemRows ?? []) as WardrobeItem[];
 
     // ── Fetch outfit logs (used for silhouette evolution only) ────────────
     // outfit_items uses `item_id`, NOT `wardrobe_item_id`
@@ -78,13 +101,13 @@ Deno.serve(async (req) => {
       .select('id, worn_date, occasion, rating, outfit_items(item_id)')
       .gte('worn_date', start.toISOString())
     if (logsErr) throw new Error(`outfit_logs: ${logsErr.message}`)
-    const logs = logRows ?? []
+    const logs: OutfitLog[] = (logRows ?? []) as OutfitLog[];
 
     // ── Compute per-item average ratings from outfit logs ─────────────────
     const itemRatingAccum: Record<string, number[]> = {}
-    logs.forEach((log: any) => {
+    logs.forEach((log) => {
       if (log.rating == null) return
-      log.outfit_items?.forEach((oi: any) => {
+      log.outfit_items?.forEach((oi) => {
         if (!oi.item_id) return
         if (!itemRatingAccum[oi.item_id]) itemRatingAccum[oi.item_id] = []
         itemRatingAccum[oi.item_id].push(log.rating)
@@ -93,7 +116,7 @@ Deno.serve(async (req) => {
     const itemRatingAverages: Record<string, { avg: number; count: number; name?: string }> = {}
     for (const [id, ratings] of Object.entries(itemRatingAccum)) {
       const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length
-      const item = items.find((i: any) => i.id === id)
+      const item = items.find((i) => i.id === id)
       itemRatingAverages[id] = {
         avg: Math.round(avg * 10) / 10,
         count: ratings.length,
@@ -122,7 +145,7 @@ Deno.serve(async (req) => {
 
     // ── Dominant colours (from semantic_label — no color column in DB) ────
     const colourCount: Record<string, number> = {}
-    items.forEach((i: any) => {
+    items.forEach((i) => {
       const c = extractColour(i.semantic_label ?? '')
       if (c) colourCount[c] = (colourCount[c] ?? 0) + 1
     })
@@ -134,9 +157,9 @@ Deno.serve(async (req) => {
 
     // ── Versatility scores (top 4 by wear_count from DB) ─────────────────
     const versatilityScores = [...items]
-      .sort((a: any, b: any) => (b.wear_count ?? 0) - (a.wear_count ?? 0))
+      .sort((a, b) => (b.wear_count ?? 0) - (a.wear_count ?? 0))
       .slice(0, 4)
-      .map((item: any) => ({
+      .map((item) => ({
         item:         item.name,
         score:        Math.min(100, Math.round(((item.wear_count ?? 0) / 20) * 100)),
         combinations: item.wear_count ?? 0,
@@ -144,28 +167,28 @@ Deno.serve(async (req) => {
 
     // ── Underutilized items (last_worn from DB — no log joins needed) ─────
     const underutilizedItems = items
-      .map((item: any) => {
+      .map((item) => {
         const last = item.last_worn ? new Date(item.last_worn) : null
         const days = last
           ? Math.floor((now.getTime() - last.getTime()) / 86_400_000)
           : 999
         return { item: item.name, lastWorn: `${days} days ago`, suggestions: 2, _days: days }
       })
-      .filter((i: any) => i._days > 30)
-      .sort((a: any, b: any) => b._days - a._days)
+      .filter((i) => i._days > 30)
+      .sort((a, b) => b._days - a._days)
       .slice(0, 3)
-      .map(({ _days, ...rest }: any) => rest)
+      .map(({ _days, ...rest }) => rest)
 
     // ── Sustainability (cost_per_wear from DB) ────────────────────────────
     const cpwValues = items
-      .map((i: any) => i.cost_per_wear)
-      .filter((v: any) => v !== null && v !== undefined)
+      .map((i) => i.cost_per_wear)
+      .filter((v): v is number | string => v !== null)
 
     const avgCostPerWear = cpwValues.length
       ? Math.round((cpwValues.reduce((a: number, b: number) => a + Number(b), 0) / cpwValues.length) * 100) / 100
       : 0
 
-    const recentPurchases = items.filter((i: any) => {
+    const recentPurchases = items.filter((i) => {
       const d = i.purchase_date ? new Date(i.purchase_date) : null
       return d && d > start
     }).length
@@ -184,20 +207,22 @@ Deno.serve(async (req) => {
     const FITTED_KEYWORDS  = ['fitted','slim','skinny','tailored','formal','structured','blazer','pencil']
     const RELAXED_KEYWORDS = ['oversized','loose','relaxed','wide','baggy','flowy','jogger','sweat','hoodie','casual']
 
-    const itemMap = Object.fromEntries(items.map((i: any) => [i.id, i]))
+    const itemMap = new Map(
+      items.map((item): [string, WardrobeItem] => [item.id, item]),
+    );
 
     const silhouetteEvolution = [2, 1, 0].map((offset) => {
       const d = new Date(now.getFullYear(), now.getMonth() - offset, 1)
       let fitted = 0, relaxed = 0
 
       logs
-        .filter((log: any) => {
+        .filter((log) => {
           const ld = new Date(log.worn_date)
           return ld.getMonth() === d.getMonth() && ld.getFullYear() === d.getFullYear()
         })
-        .forEach((log: any) => {
-          log.outfit_items?.forEach((oi: any) => {
-            const item  = itemMap[oi.item_id]   // ✅ correct column name
+        .forEach((log) => {
+          log.outfit_items?.forEach((oi) => {
+            const item = oi.item_id ? itemMap.get(oi.item_id) : undefined;
             const label = (item?.semantic_label ?? '').toLowerCase()
             if (FITTED_KEYWORDS.some((f) => label.includes(f)))        fitted++
             else if (RELAXED_KEYWORDS.some((r) => label.includes(r)))  relaxed++
@@ -218,7 +243,7 @@ Deno.serve(async (req) => {
     const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
-    const categoryBreakdown = items.reduce((acc: any, i: any) => {
+    const categoryBreakdown = items.reduce<Record<string, number>>((acc, i) => {
       acc[i.category ?? 'other'] = (acc[i.category ?? 'other'] ?? 0) + 1
       return acc
     }, {})
@@ -238,7 +263,7 @@ WARDROBE SUMMARY:
 - Category breakdown: ${JSON.stringify(categoryBreakdown)}
 - Dominant colors: ${dominantColors.join(', ')}
 - Outfit logs in period: ${logs.length}
-- Occasions logged: ${[...new Set(logs.map((l: any) => l.occasion).filter(Boolean))].join(', ') || 'none'}
+- Occasions logged: ${[...new Set(logs.map((log) => log.occasion).filter(Boolean))].join(', ') || 'none'}
 
 USER STYLE PROFILE (from quiz):
 ${JSON.stringify(quizContext)}
@@ -295,16 +320,9 @@ Return exactly this structure:
       throw new Error(`Gemini error: ${err}`)
     }
 
-    const geminiData = await geminiResponse.json()
-    const rawText    = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
-
-    let aiInsights: any = {}
-    try {
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/)
-      if (jsonMatch) aiInsights = JSON.parse(jsonMatch[0])
-    } catch {
-      console.error('Failed to parse Gemini JSON:', rawText)
-    }
+    const geminiData: unknown = await geminiResponse.json()
+    const rawText = extractGeminiText(geminiData) ?? "{}";
+    const aiInsights = parseAiInsights(rawText);
 
     // ── Final response — matches _aiData shape in ai_intelligence.dart exactly
     const result = {

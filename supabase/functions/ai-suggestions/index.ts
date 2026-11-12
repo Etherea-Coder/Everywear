@@ -1,11 +1,10 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { validateAiSuggestionRequest } from './request_validation.ts'
+import { createClient } from "@supabase/supabase-js";
+import { validateAiSuggestionRequest } from "./request_validation.ts";
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
