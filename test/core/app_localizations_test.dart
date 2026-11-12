@@ -9,6 +9,14 @@ void main() {
         'fr': 'Mot de passe oublié?',
         'es': '¿Olvidaste tu contraseña?',
       };
+      final expectedAuthServiceUnavailable = <String, String>{
+        'en':
+            'Account services are unavailable right now. Please try again later.',
+        'fr':
+            'Les services de compte sont indisponibles. Veuillez réessayer plus tard.',
+        'es':
+            'Los servicios de cuenta no están disponibles ahora. Inténtalo de nuevo más tarde.',
+      };
       final expectedChallengeErrors = <String, String>{
         'en': 'Could not load challenges. Check your connection and try again.',
         'fr':
@@ -41,6 +49,11 @@ void main() {
         expect(
           localizations.forgotPassword,
           expectedLabels[locale.languageCode],
+          reason: 'locale ${locale.languageCode}',
+        );
+        expect(
+          localizations.authServiceUnavailable,
+          expectedAuthServiceUnavailable[locale.languageCode],
           reason: 'locale ${locale.languageCode}',
         );
         expect(

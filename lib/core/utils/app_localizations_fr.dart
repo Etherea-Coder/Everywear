@@ -25,6 +25,7 @@ const Map<String, String> appLocalizationsFr = {
   'confirm_email_msg': 'Consultez vos e-mails pour confirmer votre compte.',
   'signup_failed': 'L\'inscription a échoué.',
   'signin_failed': 'La connexion a échoué. Vérifiez vos identifiants.',
+  'auth_service_unavailable': 'Les services de compte sont indisponibles. Veuillez réessayer plus tard.',
 
   // Common UI
   'continue': 'Continuer',

@@ -69,6 +69,7 @@ class AppLocalizations {
   String get confirmEmailMsg => translate('confirm_email_msg');
   String get signupFailed => translate('signup_failed');
   String get signinFailed => translate('signin_failed');
+  String get authServiceUnavailable => translate('auth_service_unavailable');
   String get itemAddedToWardrobe => translate('item_added_to_wardrobe');
   String get itemUpdatedSuccess => translate('item_updated_success');
   String get saveError => translate('save_error');

@@ -43,7 +43,6 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _setupAnimations();
-    _initializeDisplay();
     _listenToAuthChanges();
   }
 
@@ -65,14 +64,12 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         );
 
+    _animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted && !_showAuthOptions) {
+        setState(() => _showAuthOptions = true);
+      }
+    });
     _animationController.forward();
-  }
-
-  Future<void> _initializeDisplay() async {
-    await Future.delayed(const Duration(milliseconds: 1800));
-    if (mounted) {
-      setState(() => _showAuthOptions = true);
-    }
   }
 
   @override
@@ -215,7 +212,7 @@ class _SplashScreenState extends State<SplashScreen>
       child: Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: SvgPicture.asset(
+          child: Image.asset(
             'assets/images/splash-screen.png',
             width: 90.w,
             height: 90.w,
@@ -574,6 +571,8 @@ class _SplashScreenState extends State<SplashScreen>
       return;
     }
 
+    if (!_ensureAuthServiceAvailable()) return;
+
     setState(() => _isLoading = true);
     try {
       await SupabaseService.instance.client.auth.resetPasswordForEmail(
@@ -670,6 +669,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _handleGoogleSignIn() async {
     final l10n = AppLocalizations.of(context);
+    if (!_ensureAuthServiceAvailable()) return;
+
     setState(() => _isLoading = true);
     try {
       await SupabaseService.instance.client.auth.signInWithOAuth(
@@ -690,13 +691,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _handleEmailAuth() async {
     final l10n = AppLocalizations.of(context);
-
-    if (!SupabaseService.isInitialized) {
-      _showErrorSnackBar(
-        'Supabase is not initialized. Please check your credentials and connection.',
-      );
-      return;
-    }
+    if (!_ensureAuthServiceAvailable()) return;
 
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -724,6 +719,12 @@ class _SplashScreenState extends State<SplashScreen>
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  bool _ensureAuthServiceAvailable() {
+    if (SupabaseService.isInitialized) return true;
+    _showErrorSnackBar(AppLocalizations.of(context).authServiceUnavailable);
+    return false;
   }
 
   void _showErrorSnackBar(String message) {
