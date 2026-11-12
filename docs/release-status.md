@@ -121,6 +121,8 @@ unverified. This is not yet a Play release candidate.
   and checks Gemini configuration before quota consumption; daily suggestions
   also reject malformed request bodies and check configuration before querying
   wardrobe or consuming quota.
+- `aa756517c50d5f1dff100c053179bd19a1416f24` — adds full Edge Function lint
+  as a CI gate before protected-function type-checking; the workflow has not run.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -466,6 +468,8 @@ grants. No device check was possible because `adb` is absent.
 - [x] Clear Deno lint across all 17 Edge Function files by replacing the last
   two inline Supabase imports with the existing import-map alias; full lint and
   all 14 no-remote pure tests passed after the change.
+- [x] Add full `deno lint supabase/functions` to CI. The same command passes
+  locally across the current 23 function/helper/test files; CI has not run.
 - [x] Order the CI no-remote Deno test step before protected-function type
   checks so both results remain independently visible when type-checking fails.
 - [x] Validate style-coach's model responses against the existing passive,
