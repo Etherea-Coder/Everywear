@@ -114,6 +114,9 @@ unverified. This is not yet a Play release candidate.
   canonical wardrobe through the authenticated user's RLS-protected query,
   validates generated item IDs/slots, returns database image references, and
   adds offline response-validation tests.
+- `a1a7e1e8fce9be613359afa6b99549c7d5b696d7` — validates clothing-image
+  request bodies and bounds allowed Gemini analysis fields; adds no-network
+  regression tests and includes them in CI.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -170,6 +173,11 @@ unverified. This is not yet a Play release candidate.
   Unknown IDs and invalid slots are removed; output without a real wardrobe
   anchor fails closed. Unusable model output receives HTTP 502. This remote
   database path has not been integration-tested against a disposable project.
+- `analyze-clothing` rejects malformed/oversized base64 payloads before
+  consuming the atomic suggestion quota, checks provider configuration first,
+  validates and bounds Gemini output to the expected category/color/material/
+  confidence/vibe fields, and fails with a generic 502 for unusable output.
+  Error responses include CORS headers and logs omit provider response bodies.
 - All four Gemini-backed functions now construct requests through a shared
   helper that keeps the server API key in `x-goog-api-key`, avoiding key
   exposure in request URLs and URL-oriented logs. A pure test verifies the
@@ -266,6 +274,7 @@ unverified. This is not yet a Play release candidate.
 | Edge Function lint and tests (2026-11-12) | `.tooling/deno lint supabase/functions` passed across **17 files**. `.tooling/deno test --no-remote` over request validation, insight parsing, entitlement evaluation, and Gemini request construction passed **14/14** with no provider calls. `deno fmt --check` passed for the new Gemini helper/test and `git diff --check` passed. Protected-function type-check and CI workflow execution remain deferred; no provider call was made |
 | Style coach response validation (2026-11-12) | After adding the pure mode-aware response parser and tests, full Deno lint passed across **19 files** and the no-remote pure test set passed **18/18**. Targeted `deno fmt --check` passed on the new parser/test; `git diff --check` passed. No provider/network call was made. Protected-function type-check and CI execution remain deferred |
 | Today suggestion ownership/output validation (2026-11-12) | Full Deno lint passed across **21 files**; the no-remote pure test set passed **22/22**. `deno check --no-remote` and `deno fmt --check` passed for the four pure style/daily response helper/test files; `git diff --check` passed. The handler's authenticated Supabase query and quota ordering were not integration-tested; no Supabase or Gemini function was invoked |
+| Clothing analysis input/output validation (2026-11-12) | Full Deno lint passed across **23 files**; the no-remote pure test set passed **26/26**. `deno check --no-remote` and `deno fmt --check` passed for the pure validator/test files; `git diff --check` passed. The handler was not type-checked or invoked; no provider call was made |
 | Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
@@ -457,6 +466,10 @@ grants. No device check was possible because `adb` is absent.
   database-backed wardrobe, canonicalize image data from those rows, omit image
   references from Gemini prompts, and bound response fields. Four pure cases
   pass; the RLS query still needs disposable-database integration validation.
+- [x] Validate analyze-clothing image inputs and Gemini output; reject malformed
+  or oversized input before quota use, verify provider configuration before
+  quota use, and return bounded contract fields with generic errors. Four pure
+  regression cases pass; handler type-check/runtime validation remains deferred.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
