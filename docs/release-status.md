@@ -86,6 +86,9 @@ unverified. This is not yet a Play release candidate.
 - `0a95323d748d6cc1a93499e09fa21949b6fcd117` — removes explicit `any` from
   insights aggregation, bounds untrusted Gemini output, adds pure tests, and
   verifies targeted Deno lint plus no-remote tests.
+- `5d8433cf77b03b5d352778c8dd0247bc657f30b9` — makes purchase entitlement
+  selection exact and date evaluation fail closed; four no-remote regression
+  cases cover lifetime, active, grace, expired and malformed values.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
