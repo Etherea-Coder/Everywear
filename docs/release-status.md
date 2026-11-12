@@ -195,7 +195,7 @@ unverified. This is not yet a Play release candidate.
 
 | Check | Actual result |
 |---|---|
-| Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 6.7 GiB available, 509/511 MiB swap used, 395 GiB free; a long-lived 4 GiB Gradle daemon is resident; Linux/macOS generated changes preserved |
+| Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 6.7 GiB available after stopping the build, 511/511 MiB swap used, 395 GiB free; the prior 4 GiB Gradle daemon remains; Linux/macOS generated changes preserved |
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; Supabase CLI 3.1.0; Deno 2.9.6 exists at `.tooling/deno/node_modules/.bin/deno` but is not on PATH |
 | Dependency resolution | `flutter pub get` completed; the latest offline resolution records `image` as a direct runtime dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **59 passed**, including learning and challenge recovery coverage. |
@@ -216,6 +216,7 @@ unverified. This is not yet a Play release candidate.
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
 | Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the then-current source built successfully in 64.8 seconds with one Gradle worker and a 2 GiB heap. `build/app/outputs/bundle/release/app-release.aab` is 76,532,620 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`. The artifact predates `e2085cb` and does not include its dependency/API changes. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
 | Debug APK | A local debug APK build was attempted after the AAB. It was stopped after 4m19s when swap reached 511/511 MiB; the build-owned Kotlin daemon was terminated, and no APK was produced. No unrelated processes were stopped. Retry only after resource pressure clears. |
+| Current-source AAB attempt (2026-11-12) | `.tooling/flutter/bin/flutter build appbundle --release --no-pub` ran with one Gradle worker and a 2 GiB heap. Memory PSI rose from zero to 0.18 average over 10 seconds and swap reached 511/511 MiB; the build-owned Flutter process and newly started 2 GiB Gradle daemon were stopped. No new AAB was produced. Existing artifact timestamp remains 2026-11-12 02:14:45 +0200, size 76,532,620 bytes, SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`; it predates `e2085cb`. No unrelated process was stopped |
 | Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
 | Focused billing tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/subscription_service_test.dart test/services/serial_operation_queue_test.dart` — **4 passed**. This validates local identity/verification acceptance and serialization helpers; it is not a store purchase test |
 | Deno tests (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts supabase/functions/generate-ai-insights/ai_response_test.ts supabase/functions/verify-purchase/entitlement_test.ts` — **13 passed**, no remote imports or provider calls |
@@ -241,10 +242,11 @@ analyzer invocation exits 1 with 249 informational diagnostics and no warnings
 or errors. The configured CI severity gate was also run locally and exits 0
 with the same info backlog. Focused image and billing analysis is clean. The
 previous AAB was rebuilt from the learning-recovery source and archive-checked,
-but it predates `e2085cb` and does not represent current HEAD. It remains
-unsigned and has no provider configuration. Swap remains near capacity
-(506/511 MiB at the latest check), so no rebuild was started. Tests did not
-connect to a backend or call AI
+but it predates `e2085cb` and does not represent current HEAD. A current-source
+rebuild was attempted with one worker and a 2 GiB heap, then stopped when swap
+filled and memory PSI rose. The existing artifact was unchanged. It remains
+unsigned and has no provider configuration. Tests did not connect to a backend
+or call AI
 providers. A project-local `pglast` parse accepted all 30 outer SQL statements
 in the Storage fixture; this does not execute policies or prove isolation.
 Read-only metadata queries confirmed public buckets and broad Storage table
@@ -375,7 +377,8 @@ grants. No device check was possible because `adb` is absent.
 - [x] Rebuild the release AAB after the learning recovery source change; that
   bundle passed archive integrity and is unsigned with no Supabase/RevenueCat
   build values. It predates `e2085cb`; rebuilding current HEAD remains pending
-  until swap pressure clears.
+  until swap pressure clears. A current-source attempt stopped when swap filled
+  and created no new bundle.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
 - [x] Prepare concurrent two-session quota regression harness for disposable
@@ -399,9 +402,10 @@ grants. No device check was possible because `adb` is absent.
 - [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
   the Supabase-backed reset flow remains unverified without a disposable DB.
 
-**Exact next step:** after current swap pressure clears, rebuild the unsigned
-AAB from current HEAD with a single Gradle worker and verify its archive/hash;
-the existing bundle predates `e2085cb`. Then obtain an explicitly disposable
+**Exact next step:** wait until swap pressure and memory PSI clear before a new
+build attempt; the current-source AAB build filled swap and was stopped. Then
+rebuild the unsigned AAB from current HEAD with one Gradle worker and verify its
+archive/hash; the existing bundle predates `e2085cb`. Obtain an explicitly disposable
 non-production database environment (or authorization to use a local stack)
 to apply the migration chain and run the Storage and concurrent quota fixtures.
 Before any signed or interactive Android release validation, supply public app
