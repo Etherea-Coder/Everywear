@@ -7,9 +7,11 @@ Last updated: 2026-11-12
 Recovery is in progress on `recovery/android-v1`. The current Flutter suite
 passes 59 tests; the CI analyzer gate succeeds with 245 informational
 diagnostics and no warnings or errors. Deno pure tests, lint, and all protected
-handler type checks now pass locally. The unsigned AAB was built from current
-source commit `04a57bc`; it is not uploadable as a signed Play release and has
-not been run on a device.
+handler type checks pass locally. On 2026-11-12, a Flutter CLI release AAB
+build succeeded after explicitly selecting JDK 21; Android Studio's JBR
+25.0.3 auto-selection had first caused Gradle to fail before compilation. CI
+now pins Temurin 21 and selects it for Flutter. The bundle remains unsigned
+and has not been run on a device.
 Clean-database validation,
 private-image runtime behavior, provider setup, and Play eligibility remain
 unverified. This is not yet a Play release candidate.
@@ -139,6 +141,9 @@ unverified. This is not yet a Play release candidate.
   hints with focused pure tests.
 - `917665d58df227a46abb76242a47e654cd7b4573` — records the successful
   protected-handler Deno checks and current-source AAB.
+- `2a3dedd10c46baced6757a62a794282f604ca519` — pins JDK 21 for Flutter
+  Android CI, adds unsigned release AAB compilation to the workflow, and
+  limits Gradle to one worker with a 2 GiB heap.
 - `3ff72eab433b03d43de589e971479358f3196502` — clarifies that the Flutter
   validation applies to unchanged Dart sources after the Deno-only changes.
 - `ff170eb8407367906acf96cb6e48a17e710188d9` — records the verified debug APK
@@ -305,6 +310,8 @@ unverified. This is not yet a Play release candidate.
 | Learning path | Widget tests passed **3/3** for load outage retry, failed progress persistence, and successful completion; targeted analysis of learning service/screen, badge, translations, and tests reported no issues |
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
 | Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the then-current source built successfully in 64.8 seconds with one Gradle worker and a 2 GiB heap. `build/app/outputs/bundle/release/app-release.aab` is 76,532,620 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`. The artifact predates `e2085cb` and does not include its dependency/API changes. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
+| Flutter CLI current-source AAB (2026-11-12) | First invocation selected Android Studio JBR 25.0.3 and Gradle rejected it before compilation. After `flutter config --jdk-dir=/usr/lib/jvm/java-21-openjdk`, `.tooling/flutter/bin/flutter build appbundle --release --no-pub` succeeded (76,421,114 bytes). `unzip -t` reported no archive errors; `jarsigner -verify` confirmed `jar is unsigned`. SHA-256: `20374321c8cd0834782cf57be1dabd84879253876890ad2e98f34b5ddd239ab0`. Flutter's JDK override was reset to unset after the build. The CI workflow now installs Temurin 21 and explicitly sets Flutter's JDK; CI itself has not run. This artifact has no private upload signature or provider defines and was not installed or run. |
+| Android CI change (2026-11-12) | Commit `2a3dedd` adds Temurin 21 setup and Flutter JDK selection before Android build, compiles the release AAB in CI after tests, and sets Gradle to a 2 GiB heap/1 GiB metaspace/one worker. `git diff --check` and cached diff check passed; remote Actions execution is pending. |
 | Debug APK | A local debug APK build was attempted after the AAB. It was stopped after 4m19s when swap reached 511/511 MiB; the build-owned Kotlin daemon was terminated, and no APK was produced. No unrelated processes were stopped. Retry only after resource pressure clears. |
 | Current-source AAB attempt (2026-11-12) | `.tooling/flutter/bin/flutter build appbundle --release --no-pub` ran with one Gradle worker and a 2 GiB heap. Memory PSI rose from zero to 0.18 average over 10 seconds and swap reached 511/511 MiB; the build-owned Flutter process and newly started 2 GiB Gradle daemon were stopped. No new AAB was produced. Existing artifact timestamp remains 2026-11-12 02:14:45 +0200, size 76,532,620 bytes, SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`; it predates `e2085cb`. No unrelated process was stopped |
 | Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
@@ -376,10 +383,11 @@ device.
   simultaneous free-tier suggestion and coach calls; it refuses non-loopback
   database hosts and remains unexecuted. Both calls should yield one success
   and one denial per quota kind.
-- Current source commit `04a57bc` now has a fresh unsigned AAB at
-  `build/app/outputs/bundle/release/app-release.aab`, 76,959,486 bytes, SHA-256
-  `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`;
-  ZIP integrity passed. `jarsigner` confirms it is unsigned. The private upload
+- Source through `04a57bc` has a fresh unsigned AAB at
+  `build/app/outputs/bundle/release/app-release.aab`, 76,421,114 bytes, SHA-256
+  `20374321c8cd0834782cf57be1dabd84879253876890ad2e98f34b5ddd239ab0`;
+  ZIP integrity passed after explicitly pinning Flutter to Java 21. `jarsigner`
+  confirms it is unsigned. The private upload
   key and `android/key.properties` are absent. Device/network behavior,
   timezone/permission behavior, accessibility, and export runtime checks remain
   pending; SDK `adb` is installed, but no device is attached.
