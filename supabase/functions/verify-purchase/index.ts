@@ -1,5 +1,8 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
+import {
+  evaluateVerifiedEntitlement,
+  selectExactEntitlement,
+} from "./entitlement.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +15,7 @@ const json = (body: Record<string, unknown>, status: number) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -59,50 +62,19 @@ serve(async (req) => {
       return json({ error: "RevenueCat verification failed" }, 502);
     }
 
-    const rcData = await rcResponse.json();
-    const entitlement = rcData?.subscriber?.entitlements?.[entitlementId] as {
-      expires_date?: string | null;
-      grace_period_expires_date?: string | null;
-      purchase_date?: string | null;
-    } | undefined;
-    if (!entitlement) {
-      return json({ error: "Required entitlement is not active" }, 402);
-    }
-
+    const rcData: unknown = await rcResponse.json();
+    const entitlement = selectExactEntitlement(rcData, entitlementId);
     const now = Date.now();
-    const regularExpiryMs = entitlement.expires_date == null
-      ? null
-      : Date.parse(entitlement.expires_date);
-    const purchaseMs = entitlement.purchase_date == null
-      ? Number.NaN
-      : Date.parse(entitlement.purchase_date);
-    const graceMs = entitlement.grace_period_expires_date == null
-      ? null
-      : Date.parse(entitlement.grace_period_expires_date);
-    const isInGrace = graceMs != null && Number.isFinite(graceMs) &&
-      graceMs > now &&
-      (regularExpiryMs == null || !Number.isFinite(regularExpiryMs) ||
-        regularExpiryMs <= now);
-    const activeExpiries = [regularExpiryMs, graceMs]
-      .filter((value): value is number =>
-        value != null && Number.isFinite(value)
-      );
-    const expiryMs = activeExpiries.length === 0
-      ? null
-      : Math.max(...activeExpiries);
-    const isActive = expiryMs === null || expiryMs > now;
-    if (!isActive || !Number.isFinite(purchaseMs)) {
+    const verifiedEntitlement = evaluateVerifiedEntitlement(
+      entitlement,
+      now,
+    );
+    if (!entitlement || !verifiedEntitlement) {
       return json({ error: "Required entitlement is not active" }, 402);
     }
-
-    const expiresAt = expiryMs == null
-      ? null
-      : new Date(expiryMs).toISOString();
-    const eventAt = new Date(purchaseMs).toISOString();
-    const status = isInGrace ? "grace_period" : "active";
     const fingerprint =
-      `${user.id}:${entitlementId}:${entitlement.purchase_date}:${
-        expiresAt ?? "never"
+      `${user.id}:${entitlementId}:${verifiedEntitlement.purchaseDate}:${
+        verifiedEntitlement.expiresAt ?? "never"
       }`;
     const digest = await crypto.subtle.digest(
       "SHA-256",
@@ -120,17 +92,17 @@ serve(async (req) => {
         input_event_id: eventId,
         input_user_id: user.id,
         input_type: "VERIFIED_SNAPSHOT",
-        input_event_at: eventAt,
-        input_expires_at: expiresAt,
+        input_event_at: verifiedEntitlement.eventAt,
+        input_expires_at: verifiedEntitlement.expiresAt,
         input_entitlement: entitlementId,
         input_payload: {
           source: "revenuecat_v1_snapshot",
-          expires_date: entitlement.expires_date ?? null,
-          grace_period_expires_date: entitlement.grace_period_expires_date ??
-            null,
+          expires_date: verifiedEntitlement.expiresDate,
+          grace_period_expires_date:
+            verifiedEntitlement.gracePeriodExpiresDate,
         },
         input_tier: "premium",
-        input_status: status,
+        input_status: verifiedEntitlement.status,
       },
     );
     if (applyError) {
