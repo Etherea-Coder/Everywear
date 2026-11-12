@@ -117,6 +117,10 @@ unverified. This is not yet a Play release candidate.
 - `a1a7e1e8fce9be613359afa6b99549c7d5b696d7` — validates clothing-image
   request bodies and bounds allowed Gemini analysis fields; adds no-network
   regression tests and includes them in CI.
+- `a37a4fad31c06aea5a107988ef1d810f1d1c664b` — validates coach mode/body
+  and checks Gemini configuration before quota consumption; daily suggestions
+  also reject malformed request bodies and check configuration before querying
+  wardrobe or consuming quota.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -166,6 +170,8 @@ unverified. This is not yet a Play release candidate.
   and event intro/outfit content, and returns HTTP 502 when output is malformed
   or incomplete. Existing client fields remain (`tip`, `answer`, `next_step`,
   and event outfit fields); unneeded raw model text is no longer returned.
+  Invalid JSON/unsupported modes fail before quota use, and missing Gemini
+  configuration no longer consumes the atomic coach quota.
 - `today-suggestion` loads its canonical wardrobe through the authenticated
   user's RLS-protected `wardrobe_items` query, using recovered table columns.
   It merges only rating hints tied to those database IDs, omits image paths from
@@ -173,6 +179,8 @@ unverified. This is not yet a Play release candidate.
   Unknown IDs and invalid slots are removed; output without a real wardrobe
   anchor fails closed. Unusable model output receives HTTP 502. This remote
   database path has not been integration-tested against a disposable project.
+  Invalid JSON and missing provider configuration fail before quota consumption;
+  the atomic suggestion quota is consumed only after an owned wardrobe exists.
 - `analyze-clothing` rejects malformed/oversized base64 payloads before
   consuming the atomic suggestion quota, checks provider configuration first,
   validates and bounds Gemini output to the expected category/color/material/
@@ -275,6 +283,7 @@ unverified. This is not yet a Play release candidate.
 | Style coach response validation (2026-11-12) | After adding the pure mode-aware response parser and tests, full Deno lint passed across **19 files** and the no-remote pure test set passed **18/18**. Targeted `deno fmt --check` passed on the new parser/test; `git diff --check` passed. No provider/network call was made. Protected-function type-check and CI execution remain deferred |
 | Today suggestion ownership/output validation (2026-11-12) | Full Deno lint passed across **21 files**; the no-remote pure test set passed **22/22**. `deno check --no-remote` and `deno fmt --check` passed for the four pure style/daily response helper/test files; `git diff --check` passed. The handler's authenticated Supabase query and quota ordering were not integration-tested; no Supabase or Gemini function was invoked |
 | Clothing analysis input/output validation (2026-11-12) | Full Deno lint passed across **23 files**; the no-remote pure test set passed **26/26**. `deno check --no-remote` and `deno fmt --check` passed for the pure validator/test files; `git diff --check` passed. The handler was not type-checked or invoked; no provider call was made |
+| AI request/quota ordering (2026-11-12) | Full Deno lint passed across **23 files** and the no-remote tests passed **26/26** after request validation was moved ahead of quota use. `deno check --no-remote` passed for pure response helpers/tests; no network or database call was made. Edge Function handler type-check remains deferred |
 | Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
@@ -470,6 +479,10 @@ grants. No device check was possible because `adb` is absent.
   or oversized input before quota use, verify provider configuration before
   quota use, and return bounded contract fields with generic errors. Four pure
   regression cases pass; handler type-check/runtime validation remains deferred.
+- [x] Validate style-coach modes and JSON before quota use; check Gemini
+  configuration before consuming coach quota. Today-suggestion similarly checks
+  request/provider configuration and confirms the authenticated wardrobe before
+  consuming its atomic quota. Runtime quota-ordering integration remains unrun.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
