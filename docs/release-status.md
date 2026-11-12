@@ -4,9 +4,10 @@ Last updated: 2026-11-12
 
 ## Current classification
 
-Recovery is in progress on `recovery/android-v1`. Flutter tests and partial Deno
-checks passed locally. A fresh project-wide analyzer run exited 1 with 273
-diagnostics in truncated output; project-wide analysis is not green. One
+Recovery is in progress on `recovery/android-v1`. Focused Flutter tests and
+partial earlier Deno checks passed locally. The latest project-wide Flutter
+analyzer run exited 1 with 249 informational diagnostics and no warnings or
+errors; project-wide analysis is not green. One
 unsigned AAB packages successfully, but it is not uploadable as a signed Play
 release and has not been run on a device. Clean-database validation,
 private-image runtime behavior, provider setup, and Play eligibility remain
@@ -70,6 +71,9 @@ unverified. This is not yet a Play release candidate.
 - `317e22e10e40a441b8768d0a98ec9a2630007704` — surfaces learning outages,
   replaces the “coming soon” action with explicit saved completion of the
   existing module summary, and adds failure/success widget coverage.
+- `e2085cb` — promotes the PDF image decoder to a direct runtime dependency,
+  updates the RevenueCat purchase call to the current SDK API, and records
+  focused image/billing tests plus clean targeted analysis.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -173,7 +177,7 @@ unverified. This is not yet a Play release candidate.
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; Supabase CLI 3.1.0. `deno` is not available on PATH in this resumed environment; prior Deno checks remain historical results |
 | Dependency resolution | `flutter pub get` completed; the latest offline resolution records `image` as a direct runtime dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **59 passed**, including learning and challenge recovery coverage. |
-| Flutter analyzer | Previous run: 0 errors, 9 warnings, 281 info; the warning sites were edited. Rerun after those edits completed in 5.3 seconds and exited 1 with 273 diagnostics (full output was truncated by the command tool, so the final severity breakdown is not retained). Do not claim project-wide analysis is clean; targeted analysis of changed Dart files previously reported no issues |
+| Flutter analyzer | Latest `.tooling/flutter/bin/flutter analyze --no-pub` completed in 6.4 seconds and exited 1 with **249 info, 0 warnings, 0 errors**. Project-wide analysis is not green. Targeted analysis of image/export/storage/billing source and focused tests exited 0 with **No issues found** |
 | Targeted Dart analysis | `.tooling/flutter/bin/dart analyze` on the changed reset, notification, helper, and focused test files — initially reported four infos in `notification_service.dart`; after cleanup, rerun exited 0 with **No issues found!** |
 | Deno formatting | `deno fmt --check` passed on the updated `delete-account` source; earlier formatting passed on `check-and-request-suggestion`, `revenuecat-webhook`, and `verify-purchase` |
 | Deno type checks | Earlier checks passed `check-and-request-suggestion`, `delete-account`, `today-suggestion`, `style-coach`, `analyze-clothing`, `revenuecat-webhook`, and `verify-purchase`. The deletion function was later changed to check and paginate outfit-link cleanup and has not been rechecked. `generate-ai-insights` exposed nullable query results and was patched with `?? []`; it was not rechecked. `ai-suggestions` was not reached. Two check attempts were used; further type-checking is deferred |
@@ -209,7 +213,8 @@ request validation 5/5; and app import smoke passed 1/1. Targeted analysis of
 learning service/screen/badge, challenge/localization files, splash screen/test,
 and reset, notification, AI payload/client and helper files reported no issues.
 Targeted formatting and `git diff --check` passed. Project-wide analysis exited
-1 with 273 diagnostics in truncated output. The current AAB was rebuilt from
+1 with 249 informational diagnostics and no warnings or errors. Focused image
+and billing analysis is clean. The current AAB was rebuilt from
 the learning-recovery source and archive-checked; it remains unsigned and has
 no provider configuration. Tests did not connect to a backend or call AI
 providers. A project-local `pglast` parse accepted all 30 outer SQL statements
@@ -220,9 +225,9 @@ grants. No device check was possible because `adb` is absent.
 ## 3. Deferred or incomplete verification
 
 - The full Flutter suite passed 59/59 after the final local Dart changes.
-  Analyzer result is not green; do
-  not treat formatting as analysis. Its latest project-wide run exited 1 with
-  273 diagnostics in truncated output.
+  The latest project-wide analyzer result is not green: it exited 1 with 249
+  informational diagnostics (0 warnings and 0 errors). Do not treat the clean
+  targeted analysis as a project-wide pass.
 - Deno check has two failed attempts: first found `today-suggestion` unknown
   catch typing (fixed with generic client error), second found nullable data in
   `generate-ai-insights` (fixed with `?? []`). Do not claim those final fixes
@@ -325,9 +330,8 @@ grants. No device check was possible because `adb` is absent.
 - [ ] Finish Deno verification after the two-attempt deferral; resolve any
   remaining type errors without `@ts-nocheck`.
 - [x] Rerun project-wide Flutter analysis after the earlier warning cleanup;
-  it exited 1 with 273 diagnostics. Full severity breakdown is unavailable
-  because the captured output was truncated; targeted changed-file analysis
-  had passed, but project-wide analysis is not green.
+  latest run exited 1 with 249 infos, 0 warnings and 0 errors. Targeted
+  analysis for image/export/storage/billing sources and focused tests passed.
 - [x] Targeted Dart/Deno formatting and `git diff --check` passed. Full suite:
   59/59; learning path: 3/3; challenge merge: 3/3; reset helper: 3/3;
   notification scheduling: 4/4; AI payload: 3/3;
