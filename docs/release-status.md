@@ -79,6 +79,10 @@ unverified. This is not yet a Play release candidate.
   results.
 - `36a0f22` — configures CI to keep warnings fatal while treating the current
   info-level analyzer backlog as advisory; the exact gate passed locally.
+- `43db178f01d51fbddfd89d3c7855c68ad0f37823` — clarifies that the inspected
+  unsigned AAB predates current HEAD and defers its rebuild under full swap.
+- `d8fc87b3d1baa5309531168aaaace28e23e390ad` — prepares a loopback-only,
+  two-session regression for concurrent suggestion and coach quotas.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
