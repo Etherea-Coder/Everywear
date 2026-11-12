@@ -719,14 +719,14 @@ device.
   full test suite, native build, emulator, Docker, production mutation,
   deployment, or ad traffic was run.
 
-**Next exact step:** complete final local diff review and checkpoint the quota
-fixes, tests, ad scaffolding, and readiness notes in separate commits. Before
-any backend rollout, reconcile the full recovered schema and migration history,
-then use an isolated full Supabase staging project for migration, RLS, Storage,
-Realtime, and Edge Function integration tests. Before enabling Monetag, obtain
-the account-generated supported Android/Flutter integration guide, approved
-Uptodown app/placement setup, and consent requirements; keep ads disabled until
-those are validated.
+**Next exact step:** obtain an isolated full Supabase staging project and
+reconcile the remaining recovered schema/migration-history differences before
+any backend rollout. Then validate migrations, RLS, Storage, Realtime, and
+Edge Function integration in that staging project. For Monetag, the owner must
+obtain publisher approval for the Uptodown APK, the account-generated official
+Android/Flutter SDK guide and supported artifact/version, placement IDs, and
+consent requirements; only then implement and device-test an adapter. Ads stay
+disabled until that validation is complete.
 
 During local PostgreSQL setup, an untracked ad scaffold/test directory and the
 new advertising-readiness document were accidentally removed along with
