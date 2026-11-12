@@ -7,9 +7,10 @@ Last updated: 2026-11-12
 Recovery is in progress on `recovery/android-v1`. A previous complete Flutter
 suite passed 59 tests; the later full-suite retry was interrupted under memory
 pressure. Since then, focused image/billing/notification tests passed 19/19 and
-splash/auth/localization tests passed 5/5. The project CI analyzer gate passed
-with 244 informational diagnostics before the splash change; latest targeted
-analysis of the changed splash/auth/localization code reports no issues. Deno
+splash/auth/localization tests passed 5/5. The current-source project CI
+analyzer gate passed with 244 informational diagnostics and no warnings or
+errors. Targeted analysis of the splash/auth/localization files also reports no
+issues. Deno
 pure tests, lint, and all protected handler type checks pass locally. On
 2026-11-12, a Flutter CLI release AAB
 build succeeded after explicitly selecting JDK 21; Android Studio's JBR
@@ -307,12 +308,13 @@ unverified. This is not yet a Play release candidate.
 | Dependency resolution | `flutter pub get` completed; the latest offline resolution records `image` as a direct runtime dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **59 passed**, including learning and challenge recovery coverage. |
 | Flutter analyzer | Default `.tooling/flutter/bin/flutter analyze --no-pub` exits 1 on informational diagnostics (latest earlier run: **249 info, 0 warnings, 0 errors**). The latest CI severity gate exits 0 with **244 info**, no warnings/errors. Targeted analysis of image/export/storage/billing/account cleanup and focused tests exited 0 with **No issues found** |
-| CI analyzer severity gate (2026-11-12) | `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited 0 after the account cleanup style fix; output reports 244 informational lints, with no warnings/errors. The remote workflow itself has not run |
+| CI analyzer severity gate (2026-11-12) | `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited 0 on source commit `ca800ea`; output reports 244 informational lints, with no warnings/errors. The remote workflow itself has not run |
 | Flutter test retry / resource deferral (2026-11-12) | A sequential full-suite retry began, then was interrupted after memory pressure rose: available RAM fell from 5.3 GiB to 4.3 GiB, swap remained full at 511/511 MiB, and memory PSI avg10 reached 0.65. Several tests had started, but no complete result is claimed; Flutter printed temporary-listener cleanup errors during the interrupt. After stopping the test, available RAM returned to 5.3 GiB and PSI avg10 was 0.29. The earlier complete 59/59 run remains the last full-suite result. |
 | Targeted Dart analysis | Earlier cleanup removed four infos in `notification_service.dart`. Latest `.tooling/flutter/bin/dart analyze` across image, Storage, export, subscription, serialization, notification, account cleanup and their focused tests exited 0 with **No issues found** after adding braces to account cleanup's debug guard. |
 | Focused Flutter regression tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` over private image consumers, image reference routing, subscription, serial operation queue, and local notification schedule — **19 passed**. Tests use local fakes/helpers; they made no production, billing or AI requests. |
 | Splash/auth recovery tests (2026-11-12) | The four new splash widget cases plus `app_localizations_test.dart` passed **5/5** after correcting a timer-based splash gate and scrolling test targets into view. They verify the PNG is rendered as an image and that Google sign-in, email sign-in and password recovery show the localized unavailable state when Supabase is uninitialized. No backend/provider requests were made. An initial test-fixture attempt failed because controls were off-screen and a pending delay remained; the final run passed after fixing both. |
 | Current splash/auth targeted analysis | `.tooling/flutter/bin/dart analyze` on the four localization files, splash screen and two focused tests — **No issues found** after the final change. |
+| Current-source project analyzer (2026-11-12) | CI-equivalent project analyzer gate completed on `ca800ea`, exiting 0 with **244 informational diagnostics, 0 warnings, 0 errors**. |
 | Current cached Deno checks (2026-11-12) | The exact CI pure test set passed **29/29** with `--no-remote`; lint passed over **25 files**; `deno check --cached-only --config supabase/functions/deno.json` passed all **nine protected handlers** without downloading modules. No handler was executed and no backend/provider was contacted. |
 | Deno formatting | `.tooling/deno/node_modules/.bin/deno fmt --check supabase/functions/delete-account/index.ts` passed. A combined default-format check of `delete-account`, `generate-ai-insights` and `ai-suggestions` reports the latter two files not formatted; legacy single-quote/no-semicolon options also report formatting differences. No mass formatting churn was applied |
 | Deno protected-function type check | The first current full check exposed nullable/union handling issues plus that CI did not select `supabase/functions/deno.json`. Those issues and the CI command were fixed. `.tooling/deno/node_modules/.bin/deno check --config supabase/functions/deno.json` then passed on all nine protected handlers, including `delete-account`, `generate-ai-insights`, `ai-suggestions`, and `verify-purchase` |
