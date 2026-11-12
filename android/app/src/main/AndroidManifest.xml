@@ -58,6 +58,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="io.supabase.everywear" android:host="login-callback" />
             </intent-filter>
+            <!-- RevenueCat hosted checkout success redirects back here with
+                 the App User ID in the app_user_id query parameter. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="io.supabase.everywear" android:host="billing-return" />
+            </intent-filter>
         </activity>
         <!-- Scheduled notification boot receiver -->
         <receiver

@@ -1669,6 +1669,17 @@ class AppLocalizations {
   String get frequentlyAskedQuestions => translate('frequently_asked_questions');
   String get secureStoreBilling => translate('secure_store_billing');
   String get subscriptionsHandledSecurely => translate('subscriptions_handled_securely');
+  String get hostedCheckoutTitle => translate('hosted_checkout_title');
+  String get hostedCheckoutDescription => translate('hosted_checkout_description');
+  String get hostedCheckoutUnavailable => translate('hosted_checkout_unavailable');
+  String get continueToCheckout => translate('continue_to_checkout');
+  String get hostedCheckoutOpened => translate('hosted_checkout_opened');
+  String get manageSubscription => translate('manage_subscription');
+  String get subscriptionManagementUnavailable => translate('subscription_management_unavailable');
+  String get refreshSubscriptionStatus => translate('refresh_subscription_status');
+  String get subscriptionStatusVerified => translate('subscription_status_verified');
+  String get subscriptionNotVerified => translate('subscription_not_verified');
+  String get subscriptionStatusCouldNotRefresh => translate('subscription_status_could_not_refresh');
   String get restorePurchases => translate('restore_purchases');
   String get purchasesRestoredSuccess => translate('purchases_restored_success');
   String get noActiveSubscriptionRestore => translate('no_active_subscription_restore');

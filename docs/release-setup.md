@@ -25,6 +25,9 @@ put server credentials in Dart defines.
 flutter build appbundle --release --no-pub \
   --dart-define=SUPABASE_URL=<recovered-project-url> \
   --dart-define=SUPABASE_ANON_KEY=<public-anon-key> \
+  --dart-define=APP_DISTRIBUTION=uptodown \
+  --dart-define=REVENUECAT_BILLING_ENVIRONMENT=production \
+  --dart-define=REVENUECAT_WEB_PURCHASE_LINK_PRODUCTION=https://pay.rev.cat/<production-link-token> \
   --dart-define=REVENUECAT_ANDROID_API_KEY=<public-android-sdk-key> \
   --dart-define=REVENUECAT_ENTITLEMENT_ID=<exact-paid-entitlement> \
   --dart-define=SENTRY_DSN=<optional-client-dsn>
@@ -36,6 +39,19 @@ Supabase service-role key, RevenueCat secret API key, webhook bearer secret,
 and Gemini/OpenRouter keys belong only in the Edge Function environment.
 Purchases remain unavailable in app builds without both the Android public
 SDK key and exact entitlement ID.
+
+Android release direction is Uptodown. `APP_DISTRIBUTION=uptodown`, the
+production billing environment, and the production RevenueCat Web Purchase
+Link are mandatory. The app accepts only an HTTPS `pay.rev.cat` link with a
+single token path and appends the authenticated Supabase UUID. Do not put the
+sandbox link in a release build. Non-release sandbox builds must use the
+separate `REVENUECAT_WEB_PURCHASE_LINK_SANDBOX` define and
+`REVENUECAT_BILLING_ENVIRONMENT=sandbox`; production builds reject sandbox.
+Configure RevenueCat's success redirect as
+`io.supabase.everywear://billing-return`. The callback only causes the app to
+call the server verifier; it never grants entitlement. See
+[`billing-readiness.md`](billing-readiness.md) for the catalog, webhook and
+staging setup checklist.
 
 ## Android upload signing
 
@@ -84,24 +100,29 @@ client is ready to resolve stable references.
 Required server-only values include Supabase's project URL, anon key and
 service-role key; `GOOGLE_AI_API_KEY`; `OPENROUTER_API_KEY` for
 `ai-suggestions`; and RevenueCat's `REVENUECAT_SECRET_KEY`,
-`REVENUECAT_WEBHOOK_SECRET`, and exact `REVENUECAT_ENTITLEMENT_ID`. Use the
+`REVENUECAT_WEBHOOK_SECRET`, exact `REVENUECAT_ENTITLEMENT_ID`, and
+`REVENUECAT_EXPECTED_ENVIRONMENT=production`. Use the
 provider's secret manager, never source files or client build arguments.
 Check `supabase/functions/*/index.ts` before applying any deployment. A
 deployment changes production and is outside this code-only recovery checkpoint.
 
-## RevenueCat / Play verification still required
+## RevenueCat Billing / Uptodown verification still required
 
-1. Confirm the Play application id is `com.stylewise.app` and register the same
-   Android app in RevenueCat.
-2. Configure the Play service account connection, subscription products,
-   entitlement, offering/packages and webhook endpoint/authorization secret.
-3. Add approved internal-track testers and license testers; install the app
-   from the Play testing opt-in link rather than sideloading for purchase tests.
-4. Test purchase, cancellation, restore, account switch, expiry/grace and
-   duplicate/out-of-order webhook delivery with a tester account. Confirm the
-   localized price shown in app matches Play and the backend records the exact
-   entitlement. Do not claim success until the server verification and webhook
-   outcome are confirmed.
+1. Confirm Stripe activation and use RevenueCat Billing with Stripe as the
+   payment gateway; Stripe Billing is a different integration.
+2. Configure the RevenueCat Billing products, prices/currency, offering,
+   production/sandbox links, success redirect and customer management. Set the
+   exact paid entitlement and Android public SDK key.
+3. Deploy the reviewed `verify-purchase` and RevenueCat webhook changes with
+   `REVENUECAT_EXPECTED_ENVIRONMENT=production` only after the corresponding
+   database migration is approved. Use a separate staging project/environment
+   for sandbox validation.
+4. Test purchase, browser cancellation/return, management portal, account
+   switch, expiry/grace/refund, and duplicate/out-of-order webhook delivery
+   with authorized Uptodown-distribution testers. Confirm the server records
+   the exact entitlement. No live purchase has been performed.
+
+Google Play publication and Play Billing verification are deferred.
 
 Store release also needs reviewed privacy and account-deletion URLs, listing
 artwork/screenshots, age/content/data-safety declarations, Play eligibility,

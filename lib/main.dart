@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:app_links/app_links.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sizer/sizer.dart';
@@ -13,6 +14,8 @@ import './core/utils/locale_manager.dart';
 import './core/providers.dart';
 import './services/supabase_service.dart';
 import './services/revenuecat_service.dart';
+import './services/subscription_service.dart';
+import './services/revenuecat_web_checkout.dart';
 import './services/notification_service.dart';
 import './services/analytics_service.dart';
 import './widgets/custom_error_widget.dart';
@@ -108,15 +111,140 @@ class MyApp extends ConsumerStatefulWidget {
   }
 }
 
-class _MyAppState extends ConsumerState<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.light;
   bool _isInitialized = false;
+  final AppLinks _appLinks = AppLinks();
+  StreamSubscription<Uri>? _appLinkSubscription;
+  String? _activeBillingRefreshUserId;
+  String? _queuedBillingRefreshUserId;
+  String? _lastBillingReturnUri;
+  DateTime? _lastBillingRefreshAt;
+  String? _lastBillingRefreshUserId;
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_listenForBillingReturn());
     _initializeApp();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_appLinkSubscription?.cancel());
+    super.dispose();
+  }
+
+  Future<void> _listenForBillingReturn() async {
+    try {
+      _appLinkSubscription = _appLinks.uriLinkStream.listen(
+        (uri) => unawaited(_handleBillingReturnUri(uri)),
+        onError: (Object error) {
+          if (kDebugMode) debugPrint('App link stream error: $error');
+        },
+      );
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) await _handleBillingReturnUri(initialUri);
+    } catch (error) {
+      if (kDebugMode) debugPrint('Unable to listen for app links: $error');
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !SupabaseService.isInitialized) {
+      return;
+    }
+    final currentUserId = SupabaseService.instance.client.auth.currentUser?.id;
+    final pendingUserId = RevenueCatWebCheckout.shared.takePendingUserId(
+      currentUserId,
+    );
+    if (pendingUserId != null) {
+      unawaited(_refreshSubscriptionFromBackend(pendingUserId));
+    }
+  }
+
+  Future<void> _handleBillingReturnUri(Uri uri) async {
+    if (!SupabaseService.isInitialized) return;
+    final userId = SupabaseService.instance.client.auth.currentUser?.id;
+    final linkValue = uri.toString();
+    if (userId == null ||
+        !RevenueCatWebCheckout.isBillingReturnFor(uri, userId) ||
+        (_lastBillingReturnUri == linkValue &&
+            _lastBillingRefreshAt != null &&
+            DateTime.now().difference(_lastBillingRefreshAt!) <
+                const Duration(seconds: 5))) {
+      return;
+    }
+    _lastBillingReturnUri = linkValue;
+    RevenueCatWebCheckout.shared.takePendingUserId(userId);
+    await _refreshSubscriptionFromBackend(userId);
+  }
+
+  Future<void> _refreshSubscriptionFromBackend(String expectedUserId) async {
+    if (_activeBillingRefreshUserId == expectedUserId) return;
+    if (_lastBillingRefreshUserId == expectedUserId &&
+        _lastBillingRefreshAt != null &&
+        DateTime.now().difference(_lastBillingRefreshAt!) <
+            const Duration(seconds: 5)) {
+      return;
+    }
+    if (_activeBillingRefreshUserId != null) {
+      _queuedBillingRefreshUserId = expectedUserId;
+      return;
+    }
+
+    String? userId = expectedUserId;
+    try {
+      while (userId != null) {
+        _activeBillingRefreshUserId = userId;
+        _lastBillingRefreshUserId = userId;
+        _lastBillingRefreshAt = DateTime.now();
+        var result = const SubscriptionActionResult(
+          SubscriptionActionStatus.verificationFailed,
+        );
+        try {
+          result = await SubscriptionService().verifyHostedCheckoutReturn(
+            userId,
+          );
+        } catch (error) {
+          if (kDebugMode) {
+            debugPrint('Unable to refresh subscription status: $error');
+          }
+        } finally {
+          if (mounted &&
+              SupabaseService.instance.client.auth.currentUser?.id == userId) {
+            ref.invalidate(userTierProvider);
+            ref.invalidate(userProfileProvider);
+          }
+        }
+        if (mounted &&
+            _isInitialized &&
+            SupabaseService.instance.client.auth.currentUser?.id == userId) {
+          final l10n = AppLocalizations.of(context);
+          final message = switch (result.status) {
+            SubscriptionActionStatus.success => l10n.subscriptionStatusVerified,
+            SubscriptionActionStatus.noEntitlement =>
+              l10n.subscriptionNotVerified,
+            _ => l10n.subscriptionStatusCouldNotRefresh,
+          };
+          _scaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        }
+        final nextUserId = _queuedBillingRefreshUserId;
+        _queuedBillingRefreshUserId = null;
+        userId = nextUserId == _activeBillingRefreshUserId ? null : nextUserId;
+      }
+    } finally {
+      _activeBillingRefreshUserId = null;
+      _queuedBillingRefreshUserId = null;
+    }
   }
 
   Future<void> _initializeApp() async {
@@ -185,6 +313,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     // Show plain loader until locale is ready
     if (!_isInitialized || _locale == null) {
       return MaterialApp(
+        scaffoldMessengerKey: _scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: Scaffold(
@@ -214,6 +343,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       builder: (context, orientation, screenType) {
         return MaterialApp(
           key: ValueKey(_locale!.languageCode + _themeMode.toString()),
+          scaffoldMessengerKey: _scaffoldMessengerKey,
           title: 'everywear',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,

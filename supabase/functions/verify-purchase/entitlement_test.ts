@@ -19,17 +19,53 @@ Deno.test("selects only the exact configured RevenueCat entitlement", () => {
   const response = {
     subscriber: {
       entitlements: {
-        premium: { purchase_date: "2026-01-01T00:00:00Z" },
-        other: { purchase_date: "2026-01-01T00:00:00Z" },
+        premium: {
+          product_identifier: "premium_monthly",
+          purchase_date: "2026-01-01T00:00:00Z",
+        },
+        other: {
+          product_identifier: "premium_monthly",
+          purchase_date: "2026-01-01T00:00:00Z",
+        },
       },
+      subscriptions: { premium_monthly: { is_sandbox: false } },
     },
   };
-  assertEquals(selectExactEntitlement(response, "premium"), {
-    purchase_date: "2026-01-01T00:00:00Z",
-  });
-  assertEquals(selectExactEntitlement(response, "missing"), null);
-  assertEquals(selectExactEntitlement(response, "toString"), null);
-  assertEquals(selectExactEntitlement({ subscriber: [] }, "premium"), null);
+  assertEquals(
+    selectExactEntitlement(response, "premium", "production"),
+    {
+      product_identifier: "premium_monthly",
+      purchase_date: "2026-01-01T00:00:00Z",
+    },
+  );
+  assertEquals(selectExactEntitlement(response, "premium", "sandbox"), null);
+  const sandboxResponse = structuredClone(response);
+  sandboxResponse.subscriber.subscriptions.premium_monthly.is_sandbox = true;
+  assertEquals(
+    selectExactEntitlement(sandboxResponse, "premium", "sandbox"),
+    sandboxResponse.subscriber.entitlements.premium,
+  );
+  assertEquals(selectExactEntitlement(response, "missing", "production"), null);
+  assertEquals(
+    selectExactEntitlement(response, "toString", "production"),
+    null,
+  );
+  assertEquals(
+    selectExactEntitlement({ subscriber: [] }, "premium", "production"),
+    null,
+  );
+});
+
+Deno.test("rejects RevenueCat snapshots without an explicit environment", () => {
+  const response = {
+    subscriber: {
+      entitlements: {
+        premium: { product_identifier: "premium_monthly" },
+      },
+      subscriptions: { premium_monthly: {} },
+    },
+  };
+  assertEquals(selectExactEntitlement(response, "premium", "production"), null);
 });
 
 Deno.test("accepts a current entitlement and lifetime purchase", () => {

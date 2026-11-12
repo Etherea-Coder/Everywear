@@ -20,7 +20,51 @@ now pins Temurin 21 and selects it for Flutter. The bundle remains unsigned
 and has not been run on a device.
 Clean-database validation,
 private-image runtime behavior, provider setup, and Play eligibility remain
-unverified. This is not yet a Play release candidate.
+unverified. Google Play publication is now deferred; the intended Android
+distribution is Uptodown. The earlier unsigned AAB predates the Uptodown billing
+source changes and contains no provider configuration, so it is not a tested
+Uptodown release candidate.
+
+## Uptodown billing checkpoint (2026-11-12)
+
+- Current branch source has monthly and annual plan labels, but no literal
+  price, subscription currency, RevenueCat product/package ID, entitlement ID,
+  or trial duration. Native Play prices use provider `priceString`; Uptodown
+  product options/prices are shown by RevenueCat's hosted page. The old
+  hardcoded €7.49/month and €69.90/year strings existed in `f9c562f` and were
+  removed during the later RevenueCat repair; they are not verified current
+  terms. The exact references and quota/restriction discrepancies are in
+  [`billing-readiness.md`](billing-readiness.md).
+- Added explicit distribution/environment config and strictly validated
+  `pay.rev.cat` purchase links. Release builds can use production links only;
+  non-release builds can use sandbox links only. The app appends the current
+  Supabase UUID and rejects unconfigured/unsupported billing rather than
+  falling back to a placeholder offer.
+- Registered `io.supabase.everywear://billing-return` on Android and iOS. Link
+  and browser-resume paths refresh the authenticated backend verifier and
+  invalidate account tier/profile state. Callback arrival alone never grants
+  premium. Refresh requests are serialized across account changes and duplicate
+  callbacks are bounded. Added RevenueCat SDK management-link access behind
+  exact official-host/path validation.
+- Added a server-required `REVENUECAT_EXPECTED_ENVIRONMENT`. Purchase snapshots
+  require the exact entitlement's product subscription to explicitly match
+  production/sandbox `is_sandbox`; webhooks with missing or mismatched
+  environments are ignored. Keep sandbox in an isolated staging RevenueCat and
+  Supabase environment.
+- Added focused routing, UUID, cancellation/return, no-config, management URL,
+  backend-verification, and all-language unavailable-state tests. Flutter tests
+  passed 14/14, including a rerun after checkout cleanup was hardened for an
+  account switch during browser launch; Deno environment
+  and entitlement tests passed 7/7. Targeted Deno lint passed six changed
+  files; cached Deno checks passed for the changed verifier and webhook.
+  The latest targeted Dart analysis completed with 7 informational lint
+  findings and no warnings/errors. `dart format` reported no changes to the
+  final service edit, and `git diff --check` passed. No live checkout, provider
+  API or production database operation was performed.
+- Stripe activation, RevenueCat Billing catalog/links, exact entitlement,
+  public Android SDK key and server-side expected-environment configuration are
+  still owner/provider inputs. The locally changed verifier/webhook are not
+  deployed. No purchase or refund evidence is claimed.
 
 ## Local checkpoints
 
@@ -451,11 +495,14 @@ device.
   as required by resource limits.
 - App build needs the recovered Supabase URL and public anon key. Keep service
   role, Gemini/OpenRouter, RevenueCat secret and webhook secrets server-side.
-- RevenueCat remains incomplete: supply public Android SDK key and exact paid
-  entitlement, confirm package id, configure products/offerings, Play service
-  credentials and webhook. Then perform real Play internal tester purchase,
-  cancellation, restore, expiry/grace, duplicate/out-of-order and account-switch
-  verification. No successful purchase is claimed.
+- RevenueCat Billing remains incomplete: confirm Stripe activation, supply the
+  public Android SDK key, exact paid entitlement, production Web Purchase Link,
+  offering/products/prices/terms, and server `REVENUECAT_EXPECTED_ENVIRONMENT`
+  plus webhook configuration. Review and deploy the local compatible Edge
+  Function/backend changes only after independent schema approval. Then test
+  real Uptodown-distribution purchase, browser cancellation/return, account
+  switch, expiry/grace/refund, management, and duplicate/out-of-order events in
+  an isolated staging setup. No successful purchase is claimed.
 - No private upload keystore or `android/key.properties` was found. A signed AAB
   cannot be produced without valid private upload-signing inputs.
 - Physical-device verification needs a connected Android device. SDK `adb`
@@ -583,15 +630,20 @@ device.
   paginate account deletion, and protect private image cache state.
 - [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
   the Supabase-backed reset flow remains unverified without a disposable DB.
+- [x] Prepare Uptodown hosted checkout using the authenticated Supabase UUID,
+  account-bound return handling, backend-only entitlement refresh, exact
+  RevenueCat management URL validation, explicit sandbox/production selection,
+  and localized unavailable UI. Focused checkout/localization/service tests
+  passed 14/14; targeted Dart analysis reported 7 infos and no warnings/errors.
 
-**Exact next step:** current source has a hash-verified unsigned AAB and debug
-APK. Flutter and Deno checks pass locally. The next database step is to obtain
-an explicitly disposable non-production Supabase environment for the migration
-chain and Storage/concurrent-quota fixtures; production remains read-only and
-no local stack is authorized. Before a signed or interactive
-Android release check, provide public app configuration and private
-upload-signing inputs through the private build environment, complete
-RevenueCat/Play dashboard setup, and run the AAB on
-a physical device/internal tester track. Type-checking the handlers does not
-prove runtime auth/quota behavior; those still need disposable-database and
-provider tests.
+**Exact next step:** owner confirms Stripe activation and completes the
+  RevenueCat Billing project setup, then privately supplies the production Web
+  Purchase Link, public Android SDK key, exact paid entitlement ID, and the
+  approved catalog/price/renewal terms. Configure server expected environment
+  and webhook only in an approved environment. Then prepare a configured
+  Uptodown build and perform authorized staging purchase/restore/cancel/refund
+  checks. A staging Supabase/RevenueCat environment is required to verify
+  sandbox isolation and webhook races; production remains read-only. Private
+  upload-signing inputs and a physical Android device are still required for a
+  signed artifact and runtime check. Targeted tests and source checks do not
+  prove live provider, database, or device behavior.

@@ -13,6 +13,7 @@ import './widgets/feature_comparison_widget.dart';
 import './widgets/hero_section_widget.dart';
 import './widgets/pricing_card_widget.dart';
 import '../../services/revenuecat_service.dart';
+import '../../services/revenuecat_web_checkout.dart';
 
 class PremiumUpgrade extends ConsumerStatefulWidget {
   const PremiumUpgrade({Key? key}) : super(key: key);
@@ -24,13 +25,16 @@ class PremiumUpgrade extends ConsumerStatefulWidget {
 class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
   String _selectedPlan = 'yearly';
   final _subscriptionService = SubscriptionService();
+  final _billingConfig = RevenueCatWebCheckoutConfig.fromEnvironment();
   Offerings? _offerings;
   bool _storeReady = false;
 
   @override
   void initState() {
     super.initState();
-    _loadOfferings();
+    if (_billingConfig.distribution == AppDistribution.googlePlay) {
+      _loadOfferings();
+    }
   }
 
   Future<void> _loadOfferings() async {
@@ -94,78 +98,148 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
 
             SizedBox(height: 4.h),
 
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
-              child: Text(
-                l10n.chooseYourPlan,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
+            if (_billingConfig.distribution == AppDistribution.googlePlay) ...[
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Text(
+                  l10n.chooseYourPlan,
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
 
-            SizedBox(height: 1.h),
+              SizedBox(height: 1.h),
 
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6.w),
-              child: Text(
-                l10n.upgradeMoreFeatures,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                  height: 1.4,
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6.w),
+                child: Text(
+                  l10n.upgradeMoreFeatures,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
 
-            SizedBox(height: 3.h),
+              SizedBox(height: 3.h),
 
-            PricingCardWidget(
-              planName: l10n.monthly,
-              price:
-                  _package(PackageType.monthly)?.storeProduct.priceString ??
-                  '—',
-              period: l10n.perMonth,
-              features: [
-                l10n.moreAiOutfitSuggestions,
-                l10n.moreCoachInteractions,
-                l10n.moreEventOutfitGenerations,
-                l10n.adFreeExperience,
-                l10n.accessPremiumWhileSubscribed,
-              ],
-              isSelected: _selectedPlan == 'monthly',
-              onSelect: () => setState(() => _selectedPlan = 'monthly'),
-              onUpgrade: _handleUpgrade,
-              enabled: _storeReady && _package(PackageType.monthly) != null,
-            ),
+              PricingCardWidget(
+                planName: l10n.monthly,
+                price:
+                    _package(PackageType.monthly)?.storeProduct.priceString ??
+                    '—',
+                period: l10n.perMonth,
+                features: [
+                  l10n.moreAiOutfitSuggestions,
+                  l10n.moreCoachInteractions,
+                  l10n.moreEventOutfitGenerations,
+                  l10n.adFreeExperience,
+                  l10n.accessPremiumWhileSubscribed,
+                ],
+                isSelected: _selectedPlan == 'monthly',
+                onSelect: () => setState(() => _selectedPlan = 'monthly'),
+                onUpgrade: _handleUpgrade,
+                enabled: _storeReady && _package(PackageType.monthly) != null,
+              ),
 
-            SizedBox(height: 2.h),
+              SizedBox(height: 2.h),
 
-            PricingCardWidget(
-              planName: l10n.yearly,
-              price:
-                  _package(PackageType.annual)?.storeProduct.priceString ?? '—',
-              period: l10n.perYear,
-              features: [
-                l10n.everythingInMonthly,
-                l10n.betterYearlyValue,
-                l10n.fewerRenewals,
-                l10n.fullPremiumAllYear,
-                l10n.bestPlanRegularUsers,
-              ],
-              isSelected: _selectedPlan == 'yearly',
-              onSelect: () => setState(() => _selectedPlan = 'yearly'),
-              onUpgrade: _handleUpgrade,
-              enabled: _storeReady && _package(PackageType.annual) != null,
-            ),
+              PricingCardWidget(
+                planName: l10n.yearly,
+                price:
+                    _package(PackageType.annual)?.storeProduct.priceString ??
+                    '—',
+                period: l10n.perYear,
+                features: [
+                  l10n.everythingInMonthly,
+                  l10n.betterYearlyValue,
+                  l10n.fewerRenewals,
+                  l10n.fullPremiumAllYear,
+                  l10n.bestPlanRegularUsers,
+                ],
+                isSelected: _selectedPlan == 'yearly',
+                onSelect: () => setState(() => _selectedPlan = 'yearly'),
+                onUpgrade: _handleUpgrade,
+                enabled: _storeReady && _package(PackageType.annual) != null,
+              ),
 
-            SizedBox(height: 3.h),
+              SizedBox(height: 3.h),
 
-            _buildStoreInfoCard(theme, l10n),
+              _buildStoreInfoCard(theme, l10n),
+
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 4.w),
+                padding: EdgeInsets.all(3.5.w),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.22),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.verified_user_outlined,
+                      color: theme.colorScheme.primary,
+                      size: 24.sp,
+                    ),
+                    SizedBox(width: 3.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.secureStoreBilling,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Text(
+                            l10n.subscriptionsHandledSecurely,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.72,
+                              ),
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 2.h),
+
+              Center(
+                child: TextButton(
+                  onPressed: _handleRestorePurchases,
+                  child: Text(
+                    l10n.restorePurchases,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: theme.colorScheme.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            ] else ...[
+              _buildHostedBillingCard(theme, l10n),
+            ],
 
             SizedBox(height: 4.h),
 
@@ -198,75 +272,66 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
             ),
 
             SizedBox(height: 3.h),
-
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 4.w),
-              padding: EdgeInsets.all(3.5.w),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.22),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.verified_user_outlined,
-                    color: theme.colorScheme.primary,
-                    size: 24.sp,
-                  ),
-                  SizedBox(width: 3.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.secureStoreBilling,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        SizedBox(height: 0.5.h),
-                        Text(
-                          l10n.subscriptionsHandledSecurely,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.72,
-                            ),
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 2.h),
-
-            Center(
-              child: TextButton(
-                onPressed: _handleRestorePurchases,
-                child: Text(
-                  l10n.restorePurchases,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    color: theme.colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 3.h),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHostedBillingCard(ThemeData theme, AppLocalizations l10n) {
+    final ready =
+        _billingConfig.isAvailable &&
+        RevenueCatService.isConfigured &&
+        SupabaseService.isInitialized;
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.hostedCheckoutTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 0.6.h),
+          Text(
+            ready
+                ? l10n.hostedCheckoutDescription
+                : l10n.hostedCheckoutUnavailable,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          if (ready) ...[
+            SizedBox(height: 1.6.h),
+            FilledButton(
+              onPressed: _handleHostedCheckout,
+              child: Text(l10n.continueToCheckout),
+            ),
+          ],
+          if (RevenueCatService.isConfigured &&
+              _billingConfig.distribution == AppDistribution.uptodown) ...[
+            SizedBox(height: 0.8.h),
+            TextButton(
+              onPressed: _handleManageSubscription,
+              child: Text(l10n.manageSubscription),
+            ),
+            TextButton(
+              onPressed: _handleRefreshWebSubscription,
+              child: Text(l10n.refreshSubscriptionStatus),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -348,6 +413,58 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
     } catch (e) {
       _showErrorDialog(e.toString());
     }
+  }
+
+  Future<void> _handleHostedCheckout() async {
+    final l10n = AppLocalizations.of(context);
+    final user = SupabaseService.instance.client.auth.currentUser;
+    if (user == null) {
+      _showErrorDialog(l10n.pleaseLoginContinue);
+      return;
+    }
+    final result = await _subscriptionService.startHostedCheckout();
+    if (!mounted) return;
+    if (result.status == SubscriptionActionStatus.checkoutOpened) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.hostedCheckoutOpened)));
+    } else {
+      _showErrorDialog(l10n.hostedCheckoutUnavailable);
+    }
+  }
+
+  Future<void> _handleManageSubscription() async {
+    final opened = await _subscriptionService.openSubscriptionManagement();
+    if (!mounted) return;
+    if (!opened) {
+      _showErrorDialog(
+        AppLocalizations.of(context).subscriptionManagementUnavailable,
+      );
+    }
+  }
+
+  Future<void> _handleRefreshWebSubscription() async {
+    final userId = SupabaseService.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      _showErrorDialog(AppLocalizations.of(context).pleaseLoginContinue);
+      return;
+    }
+    final result = await _subscriptionService.verifyHostedCheckoutReturn(
+      userId,
+    );
+    if (!mounted) return;
+    ref.invalidate(userTierProvider);
+    ref.invalidate(userProfileProvider);
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.isSuccess
+              ? l10n.subscriptionStatusVerified
+              : l10n.subscriptionNotVerified,
+        ),
+      ),
+    );
   }
 
   Future<void> _handleRestorePurchases() async {

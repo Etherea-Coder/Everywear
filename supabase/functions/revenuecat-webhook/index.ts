@@ -1,9 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  parseBillingEnvironment,
+  revenueCatEnvironmentMatches,
+} from "../_shared/billing_environment.ts";
 
 type RevenueCatEvent = {
   id: string;
   type: string;
   app_user_id: string;
+  environment?: string;
   entitlement_ids?: string[];
   event_timestamp_ms?: number;
   expiration_at_ms?: number | null;
@@ -43,8 +48,22 @@ Deno.serve(async (req) => {
     }
 
     const entitlementId = Deno.env.get("REVENUECAT_ENTITLEMENT_ID");
-    if (!entitlementId) {
-      throw new Error("REVENUECAT_ENTITLEMENT_ID not configured");
+    const expectedEnvironment = parseBillingEnvironment(
+      Deno.env.get("REVENUECAT_EXPECTED_ENVIRONMENT"),
+    );
+    if (!entitlementId || !expectedEnvironment) {
+      return Response.json({ error: "Billing environment is not configured" }, {
+        status: 503,
+      });
+    }
+    if (
+      !revenueCatEnvironmentMatches(event.environment, expectedEnvironment)
+    ) {
+      return Response.json({
+        received: true,
+        ignored: true,
+        reason: "billing_environment_mismatch",
+      });
     }
 
     const admin = createClient(

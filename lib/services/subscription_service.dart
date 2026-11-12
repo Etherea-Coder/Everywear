@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import './revenuecat_service.dart';
 import './supabase_service.dart';
+import './revenuecat_web_checkout.dart';
 
 enum SubscriptionActionStatus {
   success,
@@ -11,6 +12,7 @@ enum SubscriptionActionStatus {
   noEntitlement,
   verificationFailed,
   failed,
+  checkoutOpened,
 }
 
 class SubscriptionActionResult {
@@ -23,6 +25,175 @@ class SubscriptionActionResult {
 
 class SubscriptionService {
   static bool _storeOperationInProgress = false;
+  SubscriptionService({RevenueCatWebCheckout? webCheckout})
+    : _webCheckout = webCheckout ?? RevenueCatWebCheckout.shared;
+
+  final RevenueCatWebCheckout _webCheckout;
+
+  Future<SubscriptionActionResult> startHostedCheckout() async {
+    if (!SupabaseService.isInitialized || !RevenueCatService.isConfigured) {
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.unavailable,
+        'Hosted billing is not configured for this build.',
+      );
+    }
+    final userId = SupabaseService.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.unavailable,
+        'Sign in again before opening checkout.',
+      );
+    }
+    if (_storeOperationInProgress) {
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.failed,
+        'Another purchase or restore is already in progress.',
+      );
+    }
+    _storeOperationInProgress = true;
+    try {
+      final opened = await RevenueCatService.runForCurrentUser(
+        userId,
+        () => _webCheckout.openForUser(userId),
+      );
+      if (opened != true) {
+        // The browser may have opened before RevenueCat noticed an account
+        // switch. Do not let a later callback verify against a stale account.
+        _webCheckout.clearPendingCheckout();
+        return const SubscriptionActionResult(
+          SubscriptionActionStatus.unavailable,
+          'Hosted checkout is not configured or could not be opened.',
+        );
+      }
+      if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
+        _webCheckout.clearPendingCheckout();
+        return const SubscriptionActionResult(
+          SubscriptionActionStatus.verificationFailed,
+          'Your account changed while checkout was opening.',
+        );
+      }
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.checkoutOpened,
+      );
+    } catch (error) {
+      _webCheckout.clearPendingCheckout();
+      if (kDebugMode) debugPrint('Hosted checkout could not be opened: $error');
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.failed,
+        'Hosted checkout could not be opened.',
+      );
+    } finally {
+      _storeOperationInProgress = false;
+    }
+  }
+
+  /// Refreshes the subscription from the protected server verifier after the
+  /// customer returns. The callback itself is never evidence of a purchase.
+  Future<SubscriptionActionResult> verifyHostedCheckoutReturn(
+    String expectedUserId,
+  ) async {
+    if (!SupabaseService.isInitialized) {
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.verificationFailed,
+        'Subscription verification is unavailable.',
+      );
+    }
+    if (SupabaseService.instance.client.auth.currentUser?.id !=
+        expectedUserId) {
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.verificationFailed,
+        'The signed-in account changed before verification.',
+      );
+    }
+    try {
+      final response = await SupabaseService.instance.client.functions.invoke(
+        'verify-purchase',
+      );
+      if (SupabaseService.instance.client.auth.currentUser?.id !=
+          expectedUserId) {
+        return const SubscriptionActionResult(
+          SubscriptionActionStatus.verificationFailed,
+          'The signed-in account changed during verification.',
+        );
+      }
+      if (acceptsBackendVerification(
+        expectedUserId: expectedUserId,
+        currentUserId: SupabaseService.instance.client.auth.currentUser?.id,
+        responseStatus: response.status,
+        responseBody: response.data,
+      )) {
+        return const SubscriptionActionResult(SubscriptionActionStatus.success);
+      }
+      if (response.status == 402) {
+        return const SubscriptionActionResult(
+          SubscriptionActionStatus.noEntitlement,
+          'No active subscription was verified for this account.',
+        );
+      }
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.verificationFailed,
+        'Subscription status could not be verified.',
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('Hosted subscription verification failed: $error');
+      }
+      return const SubscriptionActionResult(
+        SubscriptionActionStatus.verificationFailed,
+        'Subscription status could not be verified.',
+      );
+    }
+  }
+
+  Future<Uri?> getSubscriptionManagementUri() async {
+    if (!SupabaseService.isInitialized) return null;
+    final userId = SupabaseService.instance.client.auth.currentUser?.id;
+    if (userId == null || !RevenueCatService.isConfigured) return null;
+    try {
+      final raw = await RevenueCatService.runForCurrentUser(userId, () async {
+        final customerInfo = await Purchases.getCustomerInfo();
+        return customerInfo.managementURL;
+      });
+      if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
+        return null;
+      }
+      return RevenueCatWebCheckout.validatedManagementUri(raw);
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('Unable to load subscription management URL: $error');
+      }
+      return null;
+    }
+  }
+
+  Future<bool> openSubscriptionManagement() async {
+    if (!SupabaseService.isInitialized) return false;
+    final userId = SupabaseService.instance.client.auth.currentUser?.id;
+    if (userId == null || !RevenueCatService.isConfigured) return false;
+    final opened = await RevenueCatService.runForCurrentUser(userId, () async {
+      if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
+        return false;
+      }
+      final customerInfo = await Purchases.getCustomerInfo();
+      if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
+        return false;
+      }
+      return _webCheckout.openManagementUrl(customerInfo.managementURL);
+    });
+    return opened == true;
+  }
+
+  @visibleForTesting
+  static bool acceptsBackendVerification({
+    required String expectedUserId,
+    required String? currentUserId,
+    required int responseStatus,
+    required dynamic responseBody,
+  }) =>
+      expectedUserId == currentUserId &&
+      responseStatus == 200 &&
+      responseBody is Map &&
+      responseBody['success'] == true;
 
   @visibleForTesting
   static bool acceptsVerifiedResult({

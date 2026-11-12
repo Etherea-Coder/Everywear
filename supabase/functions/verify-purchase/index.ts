@@ -38,9 +38,13 @@ Deno.serve(async (req) => {
     if (authError || !user) return json({ error: "Unauthorized" }, 401);
 
     const entitlementId = Deno.env.get("REVENUECAT_ENTITLEMENT_ID");
+    const expectedEnvironment = Deno.env.get("REVENUECAT_EXPECTED_ENVIRONMENT");
     const secretKey = Deno.env.get("REVENUECAT_SECRET_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!entitlementId || !secretKey || !serviceRoleKey) {
+    if (
+      !entitlementId || !secretKey || !serviceRoleKey ||
+      !["production", "sandbox"].includes(expectedEnvironment ?? "")
+    ) {
       return json({ error: "Purchase verification is not configured" }, 503);
     }
 
@@ -63,7 +67,11 @@ Deno.serve(async (req) => {
     }
 
     const rcData: unknown = await rcResponse.json();
-    const entitlement = selectExactEntitlement(rcData, entitlementId);
+    const entitlement = selectExactEntitlement(
+      rcData,
+      entitlementId,
+      expectedEnvironment as "production" | "sandbox",
+    );
     const now = Date.now();
     const verifiedEntitlement = evaluateVerifiedEntitlement(
       entitlement,
@@ -98,8 +106,7 @@ Deno.serve(async (req) => {
         input_payload: {
           source: "revenuecat_v1_snapshot",
           expires_date: verifiedEntitlement.expiresDate,
-          grace_period_expires_date:
-            verifiedEntitlement.gracePeriodExpiresDate,
+          grace_period_expires_date: verifiedEntitlement.gracePeriodExpiresDate,
         },
         input_tier: "premium",
         input_status: verifiedEntitlement.status,

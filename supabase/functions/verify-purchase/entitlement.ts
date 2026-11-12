@@ -16,6 +16,7 @@ function isRecord(value: unknown): value is JsonObject {
 export function selectExactEntitlement(
   response: unknown,
   entitlementId: string,
+  expectedEnvironment: "production" | "sandbox",
 ): JsonObject | null {
   if (!isRecord(response) || !isRecord(response.subscriber)) return null;
   const entitlements = response.subscriber.entitlements;
@@ -23,7 +24,23 @@ export function selectExactEntitlement(
     return null;
   }
   const entitlement = entitlements[entitlementId];
-  return isRecord(entitlement) ? entitlement : null;
+  if (!isRecord(entitlement)) return null;
+
+  // The REST v1 entitlement payload does not carry is_sandbox itself. Its
+  // product's subscription record does; require an explicit environment match
+  // so a web-link/test purchase cannot activate a production account.
+  const productIdentifier = entitlement.product_identifier;
+  const subscriptions = response.subscriber.subscriptions;
+  if (
+    typeof productIdentifier !== "string" || !isRecord(subscriptions) ||
+    !Object.hasOwn(subscriptions, productIdentifier)
+  ) return null;
+  const subscription = subscriptions[productIdentifier];
+  if (
+    !isRecord(subscription) || typeof subscription.is_sandbox !== "boolean" ||
+    subscription.is_sandbox !== (expectedEnvironment === "sandbox")
+  ) return null;
+  return entitlement;
 }
 
 function parseOptionalDate(value: unknown): number | null | undefined {

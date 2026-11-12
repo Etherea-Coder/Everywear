@@ -29,8 +29,8 @@ Last updated: 2026-11-12
    - User-scoped cache/state and correct offline/outage behavior.
    - Wardrobe, outfits, spending, insights, learning/challenges and export/deletion.
    - Account deletion/reset now removes Storage objects, checks failures, and paginates outfit-link cleanup; persistent wardrobe, onboarding, AI, and notification state is user-scoped. Outfit suggestions now send compressed local-image bytes instead of an inaccessible device path; the Edge Function validates payloads and no longer fetches arbitrary caller URLs. Reset pagination, image payload, and DST-safe reminder behavior have focused passing tests. The app/function image contract requires a coordinated future deploy.
-4. **RevenueCat repair** — code complete; provider setup and live verification pending
-   - Fail closed until a public Android SDK key and exact entitlement ID are supplied.
+4. **Uptodown RevenueCat Billing** — hosted-checkout source and sandbox isolation are implemented locally; provider setup, compatible backend deployment, and live verification remain pending
+   - Release builds require the production hosted link, public Android SDK key, exact entitlement ID and production server environment. Google Play publishing is deferred. See `billing-readiness.md` for the exact historical/current price and quota findings.
    - Bind purchases to the Supabase UUID and harden server verification/webhooks.
 5. **Android release candidate** — unsigned local AAB available; signed/provider-configured release and runtime validation pending
    - Accessibility, notifications/timezone, reporting opt-out and signing configuration.

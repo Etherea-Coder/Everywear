@@ -30,4 +30,39 @@ void main() {
       expect(accepted(body: 'success'), isFalse);
     });
   });
+
+  group('hosted subscription verification', () {
+    test(
+      'requires the same signed-in account and successful backend result',
+      () {
+        expect(
+          SubscriptionService.acceptsBackendVerification(
+            expectedUserId: 'user-a',
+            currentUserId: 'user-a',
+            responseStatus: 200,
+            responseBody: const {'success': true},
+          ),
+          isTrue,
+        );
+        expect(
+          SubscriptionService.acceptsBackendVerification(
+            expectedUserId: 'user-a',
+            currentUserId: 'user-b',
+            responseStatus: 200,
+            responseBody: const {'success': true},
+          ),
+          isFalse,
+        );
+        expect(
+          SubscriptionService.acceptsBackendVerification(
+            expectedUserId: 'user-a',
+            currentUserId: 'user-a',
+            responseStatus: 402,
+            responseBody: const {'success': false},
+          ),
+          isFalse,
+        );
+      },
+    );
+  });
 }
