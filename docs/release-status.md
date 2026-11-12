@@ -98,6 +98,9 @@ unverified. This is not yet a Play release candidate.
 - `621457a0015639682fe0959f42dac9a56bb36613` — runs the pure Deno Edge
   Function regression tests with `--no-remote` in CI; this workflow change has
   not yet run in CI.
+- `8100a292df13ff070163fb9915b534db10cffba1` — removes explicit `any` and
+  inline JSR imports from the Gemini handlers identified by targeted lint,
+  using typed prompt data and the configured Supabase import alias.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -235,7 +238,7 @@ unverified. This is not yet a Play release candidate.
 | Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
 | Focused billing tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/subscription_service_test.dart test/services/serial_operation_queue_test.dart` — **4 passed**. This validates local identity/verification acceptance and serialization helpers; it is not a store purchase test |
 | Deno tests (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts supabase/functions/generate-ai-insights/ai_response_test.ts supabase/functions/verify-purchase/entitlement_test.ts` — **13 passed**, no remote imports or provider calls |
-| Gemini credential transport (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/_shared/gemini_request_test.ts` — **1 passed**, with no network call. Targeted lint and `deno fmt --check` passed for the shared helper/test. Lint over the four full function files reported 8 existing violations (inline JSR imports and `any` usage); none are in the changed request construction. `git diff --check` passed. No type-check or provider call was performed |
+| Gemini/Edge Function checks (2026-11-12) | `.tooling/deno lint` on the shared helper/test and four Gemini handlers passed (**6 files**). `.tooling/deno test --no-remote` over request validation, insight parsing, entitlement evaluation, and Gemini request construction passed **14/14** with no provider calls. `deno fmt --check` passed for the new helper/test and `git diff --check` passed. The earlier lint findings in analyze-clothing, today-suggestion, and style-coach were fixed with typed inputs and the configured import alias. Protected-function type-check and CI workflow execution remain deferred; no provider call was made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
@@ -409,7 +412,8 @@ grants. No device check was possible because `adb` is absent.
 - [x] Keep Gemini API keys out of URL query strings in analyze-clothing,
   today-suggestion, style-coach, and generate-ai-insights; the shared request
   helper regression test passed 1/1 without network access. Full-function lint
-  still reports legacy violations, and type-check/deployment remain deferred.
+  passed across the helper and four Gemini handlers after a follow-up cleanup;
+  type-check/deployment remain deferred.
 - [x] Add the pure no-remote Edge Function test set to CI, including Gemini
   request construction. The focused Gemini test passed locally; the workflow
   itself has not run.
