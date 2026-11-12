@@ -43,8 +43,9 @@ The beta build helper is
 [`scripts/build_uptodown_free_beta.sh`](../scripts/build_uptodown_free_beta.sh).
 It refuses the recovered production project ref, requires a private JSON config
 outside the checkout with exactly `SUPABASE_URL` and `SUPABASE_ANON_KEY`, checks
-the URL hostname matches the explicit staging ref, compiles a **debug-signed
-APK**, and writes a project-labelled copy under ignored `build/beta-artifacts/`.
+that the project ref is exactly the approved `aftdbphdobfrshienple` staging
+ref and that the URL hostname matches it, compiles a **debug-signed APK**, and
+writes a project-labelled copy under ignored `build/beta-artifacts/`.
 It performs no `supabase link`, hosted write, deployment, purchase, or ad call.
 A debug APK is for controlled test devices only, not an Uptodown publication
 artifact or signing-continuity proof. The app now shows a visible `STAGING`

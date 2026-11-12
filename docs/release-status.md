@@ -120,6 +120,9 @@ also remain unresolved. Google Play publication is deferred.
 - A targeted analyzer pass over `lib/main.dart`, the staging banner, and its
   test reported **5 info-level diagnostics** in existing `main.dart` lines and
   no warnings/errors; the banner/test introduced no reported diagnostics.
+- Tightened the APK helper to accept only the approved staging project ref.
+  `bash -n` passed, and a no-build guard check with the unrelated Clameo ref
+  exited 2 with the expected refusal. `git diff --check` passed.
 - The requested connected debug APK is not yet produced. The previous Android
   build attempts stopped on JDK selection and then resource exhaustion; current
   swap is fully used (511/511 MiB at the latest check), so the build helper must

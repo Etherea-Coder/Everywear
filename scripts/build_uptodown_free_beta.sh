@@ -8,8 +8,8 @@ if [[ -z "$project_ref" || -z "$config_file" ]]; then
   echo "Set EVERYWEAR_STAGE_PROJECT_REF and EVERYWEAR_STAGE_CONFIG_FILE to an isolated staging project and private config file." >&2
   exit 2
 fi
-if [[ ! "$project_ref" =~ ^[a-z0-9]{20}$ || "$project_ref" == "qxsdwwdrxoyxmnapuqqv" ]]; then
-  echo "Refusing invalid or production Supabase project reference." >&2
+if [[ "$project_ref" != "aftdbphdobfrshienple" ]]; then
+  echo "Refusing any Supabase project other than the approved Everywear staging ref." >&2
   exit 2
 fi
 if [[ ! -f "$config_file" ]]; then
