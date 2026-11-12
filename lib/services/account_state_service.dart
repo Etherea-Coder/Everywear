@@ -19,8 +19,9 @@ class AccountStateService {
     try {
       await LocalDatabaseService().clearCurrentUser();
     } catch (error) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('Unable to clear local wardrobe cache: $error');
+      }
     }
 
     final prefs = await SharedPreferences.getInstance();
