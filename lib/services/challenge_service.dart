@@ -13,76 +13,64 @@ class ChallengeService {
   // ── READ ─────────────────────────────────────────────────────────────────
 
   Future<Map<String, dynamic>?> fetchCurrentChallenge() async {
-    try {
-      final uid = _userId;
-      if (uid == null) return null;
+    final uid = _userId;
+    if (uid == null) throw StateError('Authentication required');
 
-      // Fetch all active challenges
-      final challenges = await _client
-          .from('style_challenges')
-          .select()
-          .eq('is_active', true)
-          .order('created_at');
+    // Fetch all active challenges
+    final challenges = await _client
+        .from('style_challenges')
+        .select()
+        .eq('is_active', true)
+        .order('created_at');
 
-      if (challenges.isEmpty) return null;
+    if (challenges.isEmpty) return null;
 
-      // Rotate by week of year
-      final weekSlot = DateTime.now().weekOfYear % challenges.length;
-      final challenge = Map<String, dynamic>.from(challenges[weekSlot]);
+    // Rotate by week of year
+    final weekSlot = DateTime.now().weekOfYear % challenges.length;
+    final challenge = Map<String, dynamic>.from(challenges[weekSlot]);
 
-      // Try to find an active user_challenge for this challenge
-      final userRows = await _client
-          .from('user_challenges')
-          .select()
-          .eq('user_id', uid)
-          .eq('challenge_id', challenge['id'] as String)
-          .limit(1);
+    // Try to find an active user_challenge for this challenge
+    final userRows = await _client
+        .from('user_challenges')
+        .select()
+        .eq('user_id', uid)
+        .eq('challenge_id', challenge['id'] as String)
+        .limit(1);
 
-      if (userRows.isNotEmpty) {
-        final uc = userRows.first;
-        challenge['is_joined'] = true;
-        challenge['progress'] = uc['progress'] ?? 0;
-        challenge['completed_at'] = uc['completed_at'];
-        challenge['insight'] = uc['insight'];
-        challenge['user_challenge_id'] = uc['id'];
-        challenge['anchor_item_id'] = uc['anchor_item_id'];
-      } else {
-        challenge['is_joined'] = false;
-        challenge['progress'] = 0;
-        challenge['completed_at'] = null;
-        challenge['insight'] = null;
-        challenge['user_challenge_id'] = null;
-        challenge['anchor_item_id'] = null;
-      }
-
-      return challenge;
-    } catch (e) {
-      if (kDebugMode)
-        debugPrint('ChallengeService.fetchCurrentChallenge error: $e');
-      return null;
+    if (userRows.isNotEmpty) {
+      final uc = userRows.first;
+      challenge['is_joined'] = true;
+      challenge['progress'] = uc['progress'] ?? 0;
+      challenge['completed_at'] = uc['completed_at'];
+      challenge['insight'] = uc['insight'];
+      challenge['user_challenge_id'] = uc['id'];
+      challenge['anchor_item_id'] = uc['anchor_item_id'];
+    } else {
+      challenge['is_joined'] = false;
+      challenge['progress'] = 0;
+      challenge['completed_at'] = null;
+      challenge['insight'] = null;
+      challenge['user_challenge_id'] = null;
+      challenge['anchor_item_id'] = null;
     }
+
+    return challenge;
   }
 
   /// Returns all challenges the user has ever joined (for history/insights).
   Future<List<Map<String, dynamic>>> fetchUserChallengeHistory() async {
-    try {
-      final uid = _userId;
-      if (uid == null) return [];
+    final uid = _userId;
+    if (uid == null) throw StateError('Authentication required');
 
-      final rows = await _client
-          .from('user_challenges')
-          // The recovered schema links progress to style_challenges. The
-          // separate legacy `challenges` relation is not this foreign key.
-          .select('*, style_challenges(*)')
-          .eq('user_id', uid)
-          .order('started_at', ascending: false);
+    final rows = await _client
+        .from('user_challenges')
+        // The recovered schema links progress to style_challenges. The
+        // separate legacy `challenges` relation is not this foreign key.
+        .select('*, style_challenges(*)')
+        .eq('user_id', uid)
+        .order('started_at', ascending: false);
 
-      return List<Map<String, dynamic>>.from(rows);
-    } catch (e) {
-      if (kDebugMode)
-        debugPrint('ChallengeService.fetchUserChallengeHistory error: $e');
-      return [];
-    }
+    return List<Map<String, dynamic>>.from(rows);
   }
 
   // ── JOIN ─────────────────────────────────────────────────────────────────
@@ -145,8 +133,9 @@ class ChallengeService {
         'insight': updatePayload['insight'],
       };
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('ChallengeService.incrementProgress error: $e');
+      }
       return {'progress': currentProgress, 'is_complete': false};
     }
   }
@@ -208,8 +197,9 @@ class ChallengeService {
 
       return null;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('ChallengeService.fetchLongestUnwornItem error: $e');
+      }
       return null;
     }
   }

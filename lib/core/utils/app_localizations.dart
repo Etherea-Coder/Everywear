@@ -589,6 +589,7 @@ class AppLocalizations {
   String get logFirstOutfit => translate('log_first_outfit');
   String get challengeAccepted => translate('challenge_accepted');
   String get noChallengesFound => translate('no_challenges_found');
+  String get failedToLoadChallenges => translate('failed_to_load_challenges');
   String get passwordUpdated => translate('password_updated');
   String get couldNotUpdatePassword => translate('could_not_update_password');
   String get updatePasswordBtn => translate('update_password_btn');

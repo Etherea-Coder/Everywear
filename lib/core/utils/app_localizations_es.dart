@@ -901,6 +901,8 @@ const Map<String, String> appLocalizationsEs = {
   'challenge_progress_msg': '{title} está completado al {pct}%. ¡Sigue así!',
   'keep_going_label': 'Sigue así',
   'no_challenges_found': 'No se encontraron desafíos',
+  'failed_to_load_challenges':
+      'No se pudieron cargar los desafíos. Comprueba tu conexión e inténtalo de nuevo.',
   'change_filter_explore_more': 'Intenta cambiar el filtro para explorar más opciones de desafíos.',
   'featured_label': 'DESTACADO',
   'points_label_value': '{} puntos',

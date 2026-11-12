@@ -898,6 +898,8 @@ const Map<String, String> appLocalizationsFr = {
   'challenge_progress_msg': '{title} est complété à {pct} %. Continuez !',
   'keep_going_label': 'Continuez',
   'no_challenges_found': 'Aucun défi trouvé',
+  'failed_to_load_challenges':
+      'Impossible de charger les défis. Vérifiez votre connexion et réessayez.',
   'change_filter_explore_more': 'Essayez de changer votre filtre pour explorer plus options de défis.',
   'featured_label': 'À LA UNE',
   'points_label_value': '{} points',

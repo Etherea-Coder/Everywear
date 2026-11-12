@@ -913,6 +913,8 @@ const Map<String, String> appLocalizationsEn = {
   'challenge_progress_msg': '{title} is {pct}% complete. Keep going!',
   'keep_going_label': 'Keep going',
   'no_challenges_found': 'No challenges found',
+  'failed_to_load_challenges':
+      'Could not load challenges. Check your connection and try again.',
   'change_filter_explore_more': 'Try changing your filter to explore more challenge options.',
   'featured_label': 'FEATURED',
   'points_label_value': '{} points',

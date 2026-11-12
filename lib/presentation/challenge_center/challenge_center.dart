@@ -5,12 +5,13 @@ import 'package:everywear/core/utils/app_localizations.dart';
 import '../../widgets/custom_app_bar.dart';
 
 import '../../services/challenge_service.dart';
+import '../../services/challenge_data.dart';
 import './widgets/featured_challenge_banner_widget.dart';
 import './widgets/challenge_category_card_widget.dart';
 import './widgets/challenge_filter_chip_widget.dart';
 
 class ChallengeCenter extends StatefulWidget {
-  const ChallengeCenter({Key? key}) : super(key: key);
+  const ChallengeCenter({super.key});
 
   @override
   State<ChallengeCenter> createState() => _ChallengeCenterState();
@@ -21,6 +22,7 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
 
   String _selectedFilter = 'all';
   bool _isLoading = true;
+  bool _loadFailed = false;
   List<Map<String, dynamic>> _challenges = [];
 
   @override
@@ -30,23 +32,23 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
   }
 
   Future<void> _loadChallenges() async {
-    setState(() => _isLoading = true);
-    final history = await _challengeService.fetchUserChallengeHistory();
-    final current = await _challengeService.fetchCurrentChallenge();
-    if (mounted) {
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    try {
+      final history = await _challengeService.fetchUserChallengeHistory();
+      final current = await _challengeService.fetchCurrentChallenge();
+      if (!mounted) return;
       setState(() {
-        _challenges = [
-          if (current != null) current,
-          ...history
-              .where((h) => h['challenge_id'] != current?['id'])
-              .map((h) => {
-                    ...Map<String, dynamic>.from(h['challenges'] as Map),
-                    'is_joined': true,
-                    'progress': h['progress'] ?? 0,
-                  })
-              .toList(),
-        ];
+        _challenges = mergeChallengeData(current: current, history: history);
         _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadFailed = true;
       });
     }
   }
@@ -76,7 +78,9 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
         .toList();
     if (joined.isEmpty) return null;
     joined.sort((a, b) =>
-        (b['progress'] as int).compareTo(a['progress'] as int));
+        ((b['progress'] as num?) ?? 0).compareTo(
+          (a['progress'] as num?) ?? 0,
+        ));
     return joined.first;
   }
 
@@ -108,6 +112,8 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
         onRefresh: _loadChallenges,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
+            : _loadFailed
+                ? _buildLoadError(theme)
             : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
@@ -145,6 +151,43 @@ class _ChallengeCenterState extends State<ChallengeCenter> {
                   ],
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildLoadError(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.7,
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(8.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 44,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  localizations.failedToLoadChallenges,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge,
+                ),
+                SizedBox(height: 1.5.h),
+                FilledButton.icon(
+                  onPressed: _loadChallenges,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(localizations.retry),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
