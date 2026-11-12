@@ -137,6 +137,12 @@ unverified. This is not yet a Play release candidate.
 - `04a57bc26c38ef1c4938eef5b19498b6af94ca87` — fixes protected-handler type
   errors, selects the Supabase Deno config in CI, and bounds style-coach rating
   hints with focused pure tests.
+- `917665d58df227a46abb76242a47e654cd7b4573` — records the successful
+  protected-handler Deno checks and current-source AAB.
+- `3ff72eab433b03d43de589e971479358f3196502` — clarifies that the Flutter
+  validation applies to unchanged Dart sources after the Deno-only changes.
+- `ff170eb8407367906acf96cb6e48a17e710188d9` — records the verified debug APK
+  and its debug-only signing/runtime limitations.
 - This work pass built an unsigned current-source AAB from `04a57bc`; archive
   integrity passed and signing was disabled because private upload-signing
   inputs are absent. It also built a locally installable debug APK with the
