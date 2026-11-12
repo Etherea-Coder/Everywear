@@ -8,9 +8,9 @@ Recovery is in progress on `recovery/android-v1`. Focused Flutter tests and
 partial earlier Deno checks passed locally. The latest project-wide Flutter
 analyzer run exited 1 with 249 informational diagnostics and no warnings or
 errors; the revised local CI gate succeeds while retaining fatal warnings and
-errors. One
-unsigned AAB packages successfully, but it is not uploadable as a signed Play
-release and has not been run on a device. Clean-database validation,
+errors. The unsigned AAB predates `e2085cb`, so it is not a bundle of current
+HEAD or uploadable as a signed Play release; it has not been run on a device.
+Clean-database validation,
 private-image runtime behavior, provider setup, and Play eligibility remain
 unverified. This is not yet a Play release candidate.
 
@@ -75,6 +75,10 @@ unverified. This is not yet a Play release candidate.
 - `e2085cb` — promotes the PDF image decoder to a direct runtime dependency,
   updates the RevenueCat purchase call to the current SDK API, and records
   focused image/billing tests plus clean targeted analysis.
+- `ec4e018` — records resumed focused test, analysis and Deno availability
+  results.
+- `36a0f22` — configures CI to keep warnings fatal while treating the current
+  info-level analyzer backlog as advisory; the exact gate passed locally.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -192,7 +196,7 @@ unverified. This is not yet a Play release candidate.
 | Challenge and localization | Pure challenge-history merge tests passed **3/3**; localization regression passed as part of the 59-test suite. Targeted Dart analysis of challenge service/screen/data and locale files reported no issues |
 | Learning path | Widget tests passed **3/3** for load outage retry, failed progress persistence, and successful completion; targeted analysis of learning service/screen, badge, translations, and tests reported no issues |
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
-| Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the current source built successfully in 64.8 seconds with one Gradle worker and a 2 GiB heap. `build/app/outputs/bundle/release/app-release.aab` is 76,532,620 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
+| Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the then-current source built successfully in 64.8 seconds with one Gradle worker and a 2 GiB heap. `build/app/outputs/bundle/release/app-release.aab` is 76,532,620 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`. The artifact predates `e2085cb` and does not include its dependency/API changes. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
 | Debug APK | A local debug APK build was attempted after the AAB. It was stopped after 4m19s when swap reached 511/511 MiB; the build-owned Kotlin daemon was terminated, and no APK was produced. No unrelated processes were stopped. Retry only after resource pressure clears. |
 | Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
 | Focused billing tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/subscription_service_test.dart test/services/serial_operation_queue_test.dart` — **4 passed**. This validates local identity/verification acceptance and serialization helpers; it is not a store purchase test |
@@ -218,9 +222,10 @@ Targeted formatting and `git diff --check` passed. The default project-wide
 analyzer invocation exits 1 with 249 informational diagnostics and no warnings
 or errors. The configured CI severity gate was also run locally and exits 0
 with the same info backlog. Focused image and billing analysis is clean. The
-current AAB was rebuilt from
-the learning-recovery source and archive-checked; it remains unsigned and has
-no provider configuration. Tests did not connect to a backend or call AI
+previous AAB was rebuilt from the learning-recovery source and archive-checked,
+but it predates `e2085cb` and does not represent current HEAD. It remains
+unsigned and has no provider configuration. Swap is currently full, so no
+rebuild was started. Tests did not connect to a backend or call AI
 providers. A project-local `pglast` parse accepted all 30 outer SQL statements
 in the Storage fixture; this does not execute policies or prove isolation.
 Read-only metadata queries confirmed public buckets and broad Storage table
@@ -246,8 +251,7 @@ grants. No device check was possible because `adb` is absent.
   schema, then run `storage_security.test.sql` after the reviewed cutover. Add a
   two-session concurrent quota proof; the current quota fixture only proves
   sequential calls in one session.
-- The locally built AAB has been rechecked: SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5` and archive integrity match the recorded artifact, and it remains unsigned without the private
-  upload key. Device/network behavior,
+- The locally built AAB has been rechecked: SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5` and archive integrity match the recorded artifact. It predates `e2085cb`, is unsigned, and lacks the private upload key. Device/network behavior,
   timezone/permission behavior, accessibility and export runtime checks remain
   pending. The optional local debug APK build was deferred when swap filled; no
   debug APK exists, and `adb` is not installed for local device validation.
@@ -344,9 +348,10 @@ grants. No device check was possible because `adb` is absent.
   notification scheduling: 4/4; AI payload: 3/3;
   Deno request validation: 5/5; app import: 1/1; image/app import selection:
   12/12.
-- [x] Rebuild the release AAB after the learning recovery source change; the
-  current final-source bundle passed archive integrity and is unsigned with no
-  Supabase/RevenueCat build values. SHA-256 is recorded above.
+- [x] Rebuild the release AAB after the learning recovery source change; that
+  bundle passed archive integrity and is unsigned with no Supabase/RevenueCat
+  build values. It predates `e2085cb`; rebuilding current HEAD remains pending
+  until swap pressure clears.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation

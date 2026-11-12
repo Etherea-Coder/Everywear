@@ -19,7 +19,7 @@ Last updated: 2026-11-12
    - Pin Flutter 3.35.7 (Dart 3.9-compatible) in `.fvmrc`.
    - Track `pubspec.lock`; add the Flutter SDK `integration_test` dependency.
    - Resolve the duplicate Gradle DSL configuration without changing the active package identity (`com.stylewise.app`) until Play and RevenueCat registrations are confirmed.
-   - Stale test sources were repaired; the current sequential suite passed 59 tests, including learning outage/save, challenge relation, and localization coverage. Targeted analysis of changed reset, notification, AI payload/client, splash screen, challenge, learning, image/export/storage and billing files reports no issues. The latest project-wide analysis run emitted 249 informational diagnostics, 0 warnings and 0 errors. The CI analyzer gate allowing infos while keeping warnings fatal passed locally. Two bundle attempts failed on the generated dev-only integration plugin reference; after adding the release-only no-op shim, the latest source built an unsigned AAB and passed archive integrity inspection. A later debug APK attempt was stopped after swap filled and produced no APK. The AAB lacks public provider values and upload signing, and was not installed or run.
+   - Stale test sources were repaired; the current sequential suite passed 59 tests, including learning outage/save, challenge relation, and localization coverage. Targeted analysis of changed reset, notification, AI payload/client, splash screen, challenge, learning, image/export/storage and billing files reports no issues. The latest project-wide analysis run emitted 249 informational diagnostics, 0 warnings and 0 errors. The CI analyzer gate allowing infos while keeping warnings fatal passed locally. Two bundle attempts failed on the generated dev-only integration plugin reference; after adding the release-only no-op shim, an unsigned AAB at that checkpoint passed archive integrity inspection. The artifact predates `e2085cb`; it does not represent current HEAD. A later debug APK attempt was stopped after swap filled and produced no APK. Swap is currently full, so rebuilding is deferred. The AAB lacks public provider values and upload signing, and was not installed or run.
 2. **Complete, secure Supabase backend** — schema proposal reconciled to read-only production metadata; execution/security proof pending
    - Inventory the app's tables, RPCs, Storage, Realtime and Edge Function contract.
    - Add forward-only migrations and local security fixtures.
@@ -34,7 +34,7 @@ Last updated: 2026-11-12
    - Bind purchases to the Supabase UUID and harden server verification/webhooks.
 5. **Android release candidate** — unsigned local AAB available; signed/provider-configured release and runtime validation pending
    - Accessibility, notifications/timezone, reporting opt-out and signing configuration.
-   - Current AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,532,620 bytes, SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`; archive integrity passed. It is unsigned until private upload-signing inputs are supplied.
+   - Previously built AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,532,620 bytes, SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`; archive integrity passed. It predates `e2085cb`, is unsigned and must be rebuilt for current HEAD after resource pressure clears. Private upload-signing inputs are also required.
 
 ## External inputs (only when dependent work reaches them)
 
