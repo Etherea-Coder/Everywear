@@ -101,6 +101,7 @@ Deno.test("drops unknown, duplicate and invalid-slot wardrobe items", () => {
       items: [
         { id: "shirt-1", slot: "top" },
         { id: "not-owned", slot: "top" },
+        { id: "shoe-1", slot: "anchor" },
         { id: "shoe-1", slot: "weapon" },
         { id: "shoe-1", slot: "shoes" },
       ],

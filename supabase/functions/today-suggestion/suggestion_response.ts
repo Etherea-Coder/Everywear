@@ -88,10 +88,11 @@ function toSuggestionItem(
   candidate: unknown,
   slot: unknown,
   wardrobeById: Map<string, WardrobeItem>,
+  isAnchor = false,
 ): SuggestionItem | null {
   const item = resolveWardrobeItem(candidate, wardrobeById);
   if (!item || typeof slot !== "string") return null;
-  if (slot !== "anchor" && !ALLOWED_SLOTS.has(slot)) return null;
+  if (isAnchor ? slot !== "anchor" : !ALLOWED_SLOTS.has(slot)) return null;
   return { ...item, slot };
 }
 
@@ -112,7 +113,7 @@ export function parseTodaySuggestion(
   const wardrobeById = buildWardrobeIndex(rawWardrobe);
   if (!parsed || wardrobeById.size === 0) return failure();
 
-  const anchor = toSuggestionItem(parsed.anchor, "anchor", wardrobeById);
+  const anchor = toSuggestionItem(parsed.anchor, "anchor", wardrobeById, true);
   if (!anchor) return failure();
 
   const items: SuggestionItem[] = [];
