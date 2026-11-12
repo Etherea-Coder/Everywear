@@ -70,7 +70,8 @@ run_concurrent_quota_check() {
       -c "BEGIN;
           SET LOCAL ROLE authenticated;
           SELECT set_config('request.jwt.claim.sub', '$fixture_user', true);
-          SELECT (public.reserve_ai_action('$request_a', 'today-suggestion')->>'allowed')::boolean;
+          SELECT CASE (public.reserve_ai_action('$request_a', 'today-suggestion')->>'allowed')::boolean
+            WHEN true THEN 'true' ELSE 'false' END;
           COMMIT;" |
       awk '$0 == "true" || $0 == "false" { print }' >"$output_a"
   ) &
@@ -82,7 +83,8 @@ run_concurrent_quota_check() {
       -c "BEGIN;
           SET LOCAL ROLE authenticated;
           SELECT set_config('request.jwt.claim.sub', '$fixture_user', true);
-          SELECT (public.reserve_ai_action('$request_b', 'style-coach')->>'allowed')::boolean;
+          SELECT CASE (public.reserve_ai_action('$request_b', 'style-coach')->>'allowed')::boolean
+            WHEN true THEN 'true' ELSE 'false' END;
           COMMIT;" |
       awk '$0 == "true" || $0 == "false" { print }' >"$output_b"
   ) &
@@ -109,3 +111,50 @@ run_concurrent_quota_check() {
 }
 
 run_concurrent_quota_check
+
+# Exercise the premium in-flight cap independently from monthly/day/burst
+# limits. Four simultaneous reservations must leave exactly three active.
+concurrency_requests=(
+  "$(python3 -c 'import uuid; print(uuid.uuid4())')"
+  "$(python3 -c 'import uuid; print(uuid.uuid4())')"
+  "$(python3 -c 'import uuid; print(uuid.uuid4())')"
+  "$(python3 -c 'import uuid; print(uuid.uuid4())')"
+)
+psql -Xq -v ON_ERROR_STOP=1 "$EVERYWEAR_TEST_DATABASE_URL" \
+  -c "UPDATE public.user_profiles SET tier = 'premium', subscription_status = 'active',
+        subscription_expires_at = now() + interval '1 day' WHERE id = '$fixture_user';
+      DELETE FROM public.ai_action_reservations WHERE user_id = '$fixture_user';
+      DELETE FROM public.ai_usage_buckets WHERE user_id = '$fixture_user';"
+
+release_file="$scratch_dir/concurrency-release"
+outputs=("$scratch_dir/concurrency-1" "$scratch_dir/concurrency-2" \
+  "$scratch_dir/concurrency-3" "$scratch_dir/concurrency-4")
+pids=()
+for index in 0 1 2 3; do
+  (
+    while [[ ! -e "$release_file" ]]; do sleep 0.01; done
+    psql -XqAt -v ON_ERROR_STOP=1 "$EVERYWEAR_TEST_DATABASE_URL" \
+      -c "BEGIN;
+          SET LOCAL ROLE authenticated;
+          SELECT set_config('request.jwt.claim.sub', '$fixture_user', true);
+          SELECT CASE (public.reserve_ai_action('${concurrency_requests[$index]}', 'style-coach')->>'allowed')::boolean
+            WHEN true THEN 'true' ELSE 'false' END;
+          COMMIT;" |
+      awk '$0 == "true" || $0 == "false" { print }' >"${outputs[$index]}"
+  ) &
+  pids+=("$!")
+done
+touch "$release_file"
+process_status=0
+for pid in "${pids[@]}"; do wait "$pid" || process_status=1; done
+if [[ "$process_status" != 0 ]]; then
+  echo "One or more premium concurrency sessions failed." >&2
+  exit 1
+fi
+concurrency_successes="$(cat "${outputs[@]}" | grep -cx 'true' || true)"
+concurrency_denials="$(cat "${outputs[@]}" | grep -cx 'false' || true)"
+if [[ "$concurrency_successes" != 3 || "$concurrency_denials" != 1 ]]; then
+  echo "Premium concurrency cap expected three successes and one denial; got $concurrency_successes success(es), $concurrency_denials denial(s)." >&2
+  exit 1
+fi
+echo "Concurrent premium reservations: three successes, one concurrency denial."

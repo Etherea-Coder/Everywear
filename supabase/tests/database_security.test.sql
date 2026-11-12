@@ -57,12 +57,14 @@ SELECT ok(
 SELECT throws_ok(
   $$UPDATE public.user_profiles SET tier = 'premium' WHERE id = '11111111-1111-4111-8111-111111111111'$$,
   '42501',
+  'permission denied for table user_profiles',
   'authenticated cannot write protected profile fields'
 );
 SELECT throws_ok(
   $$INSERT INTO public.outfit_items (outfit_id, item_id)
     VALUES ('55555555-5555-4555-8555-555555555555', '44444444-4444-4444-8444-444444444444')$$,
   '42501',
+  'new row violates row-level security policy for table "outfit_items"',
   'outfit_items RLS rejects a link to another user wardrobe item'
 );
 
@@ -188,7 +190,7 @@ SELECT is(
   'premium monthly maximum is atomic across endpoint names'
 );
 RESET ROLE;
-UPDATE public.ai_usage_buckets SET month_used = 50, day_used = 19, burst_used = 0,
+UPDATE public.ai_usage_buckets SET month_used = 50, day_used = 20, burst_used = 0,
   burst_start = date_trunc('minute', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'
 WHERE user_id = '22222222-2222-4222-8222-222222222222';
 SET LOCAL ROLE authenticated;

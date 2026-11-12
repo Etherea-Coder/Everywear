@@ -99,9 +99,9 @@ BEGIN
       p.subscription_expires_at > now_utc)
   );
   policy_tier := CASE WHEN v_paid THEN 'premium' ELSE 'free' END;
-  SELECT monthly_limit, daily_limit, burst_limit, concurrency_limit
+  SELECT q.monthly_limit, q.daily_limit, q.burst_limit, q.concurrency_limit
     INTO month_limit, day_limit, burst_limit, concurrency_limit
-    FROM public.ai_quota_policies WHERE tier = policy_tier;
+    FROM public.ai_quota_policies AS q WHERE q.tier = policy_tier;
   IF NOT FOUND THEN RAISE EXCEPTION 'AI quota policy unavailable' USING ERRCODE = 'P0002'; END IF;
   SELECT * INTO u FROM public.ai_usage_buckets WHERE user_id = uid;
   RETURN jsonb_build_object(
@@ -164,9 +164,9 @@ BEGIN
       p.subscription_expires_at > now_utc)
   );
   policy_tier := CASE WHEN v_paid THEN 'premium' ELSE 'free' END;
-  SELECT monthly_limit, daily_limit, burst_limit, concurrency_limit
+  SELECT q.monthly_limit, q.daily_limit, q.burst_limit, q.concurrency_limit
     INTO ml, dl, bl, cl
-    FROM public.ai_quota_policies WHERE tier = policy_tier;
+    FROM public.ai_quota_policies AS q WHERE q.tier = policy_tier;
   IF NOT FOUND THEN RAISE EXCEPTION 'AI quota policy unavailable' USING ERRCODE = 'P0002'; END IF;
 
   DELETE FROM public.ai_action_reservations
