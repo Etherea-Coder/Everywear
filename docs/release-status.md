@@ -5,8 +5,9 @@ Last updated: 2026-11-12
 ## Current classification
 
 Recovery is in progress on `recovery/android-v1`. The latest code checkpoint is
-`f71efd8`; it records staging deployment/hosted checks and the staging APK
-banner/helper. A sequential full Flutter suite passed **94/94** on a prior
+`aeda62a`; it restricts the staging APK helper to the exact approved project
+ref. The preceding `f71efd8` checkpoint records staging deployment/hosted
+checks and the visible staging banner. A sequential full Flutter suite passed **94/94** on a prior
 application checkpoint. A subsequent provider-test isolation change passed
 its focused file **6/6**; the full suite was not repeated after that change.
 The earlier full run printed nonfatal binding/Supabase initialization
@@ -186,6 +187,10 @@ also remain unresolved. Google Play publication is deferred.
 - Next exact step: obtain a disposable non-production Supabase database and reconcile the proposed schema against the recovered project's metadata read-only; only then run the migration fixtures in disposable staging. Separately confirm qualifying Gemini API access and paid tier plus OpenRouter account/routing access, then measure synthetic/staging output quality and token/call behavior. Production remains read-only; no provider setup, schema, deployment, or commercial decision is changed here.
 
 ## Local checkpoints
+
+- `aeda62a` — restricts the staging APK helper to
+  `aftdbphdobfrshienple` and records a no-build rejection check for an
+  unrelated project ref.
 
 - `f71efd8` — records the staging migration/function deployment and separated
   hosted integration results; adds a visible staging banner, staging APK
