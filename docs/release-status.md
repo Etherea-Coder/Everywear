@@ -4,12 +4,14 @@ Last updated: 2026-11-12
 
 ## Current classification
 
-Recovery is in progress on `recovery/android-v1`. The last complete Flutter
-suite passed 59 tests; a later resource-limited retry was interrupted, while
-the focused image/billing/notification selection passed 19 tests. The latest
-CI analyzer gate succeeds with 244 informational diagnostics and no warnings
-or errors. Deno pure tests, lint, and all protected handler type checks pass
-locally. On 2026-11-12, a Flutter CLI release AAB
+Recovery is in progress on `recovery/android-v1`. A previous complete Flutter
+suite passed 59 tests; the later full-suite retry was interrupted under memory
+pressure. Since then, focused image/billing/notification tests passed 19/19 and
+splash/auth/localization tests passed 5/5. The project CI analyzer gate passed
+with 244 informational diagnostics before the splash change; latest targeted
+analysis of the changed splash/auth/localization code reports no issues. Deno
+pure tests, lint, and all protected handler type checks pass locally. On
+2026-11-12, a Flutter CLI release AAB
 build succeeded after explicitly selecting JDK 21; Android Studio's JBR
 25.0.3 auto-selection had first caused Gradle to fail before compilation. CI
 now pins Temurin 21 and selects it for Flutter. The bundle remains unsigned
@@ -149,14 +151,19 @@ unverified. This is not yet a Play release candidate.
 - `645ff8b1c8d92c9220dcfcf31f9e18635bdfed4e` — fixes one account cleanup
   analyzer diagnostic; focused image, billing, operation-serialization and
   reminder tests pass, and Deno CI-equivalent checks pass from cache.
+- `ca800ea5468e0a66c22c6322469423a5e0814200` — loads the splash PNG with
+  `Image.asset`, ties auth-option visibility to animation completion, and
+  fails closed with localized messages when Supabase is unavailable for Google,
+  email, and password-recovery actions. Adds four splash and one localization
+  regression case.
 - `3ff72eab433b03d43de589e971479358f3196502` — clarifies that the Flutter
   validation applies to unchanged Dart sources after the Deno-only changes.
 - `ff170eb8407367906acf96cb6e48a17e710188d9` — records the verified debug APK
   and its debug-only signing/runtime limitations.
-- This work pass built an unsigned current-source AAB from `04a57bc`; archive
+- Latest work rebuilt the unsigned current-source AAB from `ca800ea`; archive
   integrity passed and signing was disabled because private upload-signing
-  inputs are absent. It also built a locally installable debug APK with the
-  Android debug certificate. Full artifact details are below.
+  inputs are absent. The debug APK is a prior artifact built with the Android
+  debug certificate. Full artifact details are below.
 
 ## 1. Completed local code changes
 
@@ -304,6 +311,8 @@ unverified. This is not yet a Play release candidate.
 | Flutter test retry / resource deferral (2026-11-12) | A sequential full-suite retry began, then was interrupted after memory pressure rose: available RAM fell from 5.3 GiB to 4.3 GiB, swap remained full at 511/511 MiB, and memory PSI avg10 reached 0.65. Several tests had started, but no complete result is claimed; Flutter printed temporary-listener cleanup errors during the interrupt. After stopping the test, available RAM returned to 5.3 GiB and PSI avg10 was 0.29. The earlier complete 59/59 run remains the last full-suite result. |
 | Targeted Dart analysis | Earlier cleanup removed four infos in `notification_service.dart`. Latest `.tooling/flutter/bin/dart analyze` across image, Storage, export, subscription, serialization, notification, account cleanup and their focused tests exited 0 with **No issues found** after adding braces to account cleanup's debug guard. |
 | Focused Flutter regression tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` over private image consumers, image reference routing, subscription, serial operation queue, and local notification schedule — **19 passed**. Tests use local fakes/helpers; they made no production, billing or AI requests. |
+| Splash/auth recovery tests (2026-11-12) | The four new splash widget cases plus `app_localizations_test.dart` passed **5/5** after correcting a timer-based splash gate and scrolling test targets into view. They verify the PNG is rendered as an image and that Google sign-in, email sign-in and password recovery show the localized unavailable state when Supabase is uninitialized. No backend/provider requests were made. An initial test-fixture attempt failed because controls were off-screen and a pending delay remained; the final run passed after fixing both. |
+| Current splash/auth targeted analysis | `.tooling/flutter/bin/dart analyze` on the four localization files, splash screen and two focused tests — **No issues found** after the final change. |
 | Current cached Deno checks (2026-11-12) | The exact CI pure test set passed **29/29** with `--no-remote`; lint passed over **25 files**; `deno check --cached-only --config supabase/functions/deno.json` passed all **nine protected handlers** without downloading modules. No handler was executed and no backend/provider was contacted. |
 | Deno formatting | `.tooling/deno/node_modules/.bin/deno fmt --check supabase/functions/delete-account/index.ts` passed. A combined default-format check of `delete-account`, `generate-ai-insights` and `ai-suggestions` reports the latter two files not formatted; legacy single-quote/no-semicolon options also report formatting differences. No mass formatting churn was applied |
 | Deno protected-function type check | The first current full check exposed nullable/union handling issues plus that CI did not select `supabase/functions/deno.json`. Those issues and the CI command were fixed. `.tooling/deno/node_modules/.bin/deno check --config supabase/functions/deno.json` then passed on all nine protected handlers, including `delete-account`, `generate-ai-insights`, `ai-suggestions`, and `verify-purchase` |
@@ -318,10 +327,10 @@ unverified. This is not yet a Play release candidate.
 | Learning path | Widget tests passed **3/3** for load outage retry, failed progress persistence, and successful completion; targeted analysis of learning service/screen, badge, translations, and tests reported no issues |
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
 | Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the then-current source built successfully in 64.8 seconds with one Gradle worker and a 2 GiB heap. `build/app/outputs/bundle/release/app-release.aab` is 76,532,620 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`. The artifact predates `e2085cb` and does not include its dependency/API changes. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
-| Flutter CLI refreshed AAB (2026-11-12) | Built after source commit `645ff8b` using `.tooling/flutter/bin/flutter build appbundle --release --no-pub` with Flutter pinned temporarily to `/usr/lib/jvm/java-21-openjdk`; Gradle completed in **66.9s**. The bundle is 76,421,105 bytes, SHA-256 `2f8574e6fef2c050b2d1d7f7ac7a4ab5bb3d0dba533414d38cec83061edc459b`. `unzip -tq` reported no archive errors; `jarsigner -verify` confirmed it is unsigned. Flutter's JDK override was reset to unset. No upload key or provider defines were used; the artifact was not installed or run. The previously recorded hash `20374321…239ab0` is superseded. |
+| Flutter CLI current-source AAB (2026-11-12) | Built after source commit `ca800ea` using `.tooling/flutter/bin/flutter build appbundle --release --no-pub` with Flutter pinned temporarily to `/usr/lib/jvm/java-21-openjdk`; Gradle completed in **65.6s**. The bundle is **76,421,600 bytes**, SHA-256 `ac2409f9eed9a6b9f5cf89f3fde6fb9e7a90439b327499889b56cb8e34c02243`. `unzip -tq` reported no archive errors; `jarsigner -verify` confirmed it is unsigned. Flutter's JDK override was reset to unset. No upload key or provider defines were used; the artifact was not installed or run. The previous `645ff8b` artifact hash `2f8574e6…edc459b` is superseded. |
 | Android CI change (2026-11-12) | Commit `2a3dedd` adds Temurin 21 setup and Flutter JDK selection before Android build, compiles the release AAB in CI after tests, and sets Gradle to a 2 GiB heap/1 GiB metaspace/one worker. `git diff --check` and cached diff check passed; remote Actions execution is pending. |
 | CI/JDK checkpoint verification scope | At the initial CI/JDK checkpoint, no tests or analyzers were rerun; the previously completed 59-test Flutter suite and Deno checks were the available evidence. Follow-up checks after account cleanup commit `645ff8b` are recorded separately above and include focused Flutter tests/analyzers plus cached Deno tests/lint/type checks. |
-| Follow-up checks (2026-11-12) | PyYAML `safe_load` parsed `.github/workflows/android-ci.yml`; `git diff --check` passed. After PSI returned to zero, focused Flutter tests, targeted/project analyzers, cached Deno checks, and a refreshed unsigned AAB build were completed as recorded above; the full Flutter retry remains interrupted. |
+| Follow-up checks (2026-11-12) | PyYAML `safe_load` parsed `.github/workflows/android-ci.yml`; `git diff --check` passed. After PSI returned to zero, focused Flutter tests, targeted/project analyzers, cached Deno checks, and refreshed unsigned AAB builds were completed as recorded above; the full Flutter retry remains interrupted. |
 | Debug APK | A local debug APK build was attempted after the AAB. It was stopped after 4m19s when swap reached 511/511 MiB; the build-owned Kotlin daemon was terminated, and no APK was produced. No unrelated processes were stopped. Retry only after resource pressure clears. |
 | Current-source AAB attempt (2026-11-12) | `.tooling/flutter/bin/flutter build appbundle --release --no-pub` ran with one Gradle worker and a 2 GiB heap. Memory PSI rose from zero to 0.18 average over 10 seconds and swap reached 511/511 MiB; the build-owned Flutter process and newly started 2 GiB Gradle daemon were stopped. No new AAB was produced. Existing artifact timestamp remains 2026-11-12 02:14:45 +0200, size 76,532,620 bytes, SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`; it predates `e2085cb`. No unrelated process was stopped |
 | Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
@@ -393,9 +402,9 @@ device.
   simultaneous free-tier suggestion and coach calls; it refuses non-loopback
   database hosts and remains unexecuted. Both calls should yield one success
   and one denial per quota kind.
-- Source through `04a57bc` has a fresh unsigned AAB at
-  `build/app/outputs/bundle/release/app-release.aab`, 76,421,114 bytes, SHA-256
-  `20374321c8cd0834782cf57be1dabd84879253876890ad2e98f34b5ddd239ab0`;
+- Source through `ca800ea` has the latest unsigned AAB at
+  `build/app/outputs/bundle/release/app-release.aab`, 76,421,600 bytes, SHA-256
+  `ac2409f9eed9a6b9f5cf89f3fde6fb9e7a90439b327499889b56cb8e34c02243`;
   ZIP integrity passed after explicitly pinning Flutter to Java 21. `jarsigner`
   confirms it is unsigned. The private upload
   key and `android/key.properties` are absent. Device/network behavior,
@@ -501,7 +510,7 @@ device.
   notification scheduling: 4/4; AI payload: 3/3;
   Deno request validation: 5/5; app import: 1/1; image/app import selection:
   12/12.
-- [x] Build and verify a current-source release AAB from `04a57bc` with one
+- [x] Build and verify a current-source release AAB from `ca800ea` with one
   Gradle worker and a 2 GiB heap. ZIP integrity passed; it is unsigned because
   private upload-signing inputs are absent. Hash and exact build results are
   recorded in the checks table; it was not installed or run.
