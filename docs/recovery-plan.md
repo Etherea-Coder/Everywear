@@ -19,7 +19,7 @@ Last updated: 2026-11-12
    - Pin Flutter 3.35.7 (Dart 3.9-compatible) in `.fvmrc`.
    - Track `pubspec.lock`; add the Flutter SDK `integration_test` dependency.
    - Resolve the duplicate Gradle DSL configuration without changing the active package identity (`com.stylewise.app`) until Play and RevenueCat registrations are confirmed.
-   - Stale test sources were repaired; the current sequential suite passed 53 tests, including the password-recovery localization regression. Targeted analysis of changed reset, notification, AI payload/client and splash screen/test code reports no issues. After the earlier 0 errors/9 warnings/281 info, project-wide analysis was rerun after warning-site edits and exited 1 with 273 diagnostics; output truncation prevents a full severity breakdown, so project-wide analysis is not green. Two bundle attempts failed on the generated dev-only integration plugin reference; after adding the release-only no-op shim, the latest source built an unsigned AAB and passed archive integrity inspection. It lacks public provider values and upload signing, and was not installed or run.
+   - Stale test sources were repaired; the current sequential suite passed 56 tests, including challenge relation/error handling and localization regressions. Targeted analysis of changed reset, notification, AI payload/client, splash screen and challenge files reports no issues. After the earlier 0 errors/9 warnings/281 info, project-wide analysis was rerun after warning-site edits and exited 1 with 273 diagnostics; output truncation prevents a full severity breakdown, so project-wide analysis is not green. Two bundle attempts failed on the generated dev-only integration plugin reference; after adding the release-only no-op shim, the latest source built an unsigned AAB and passed archive integrity inspection. It lacks public provider values and upload signing, and was not installed or run.
 2. **Complete, secure Supabase backend** — schema proposal reconciled to read-only production metadata; execution/security proof pending
    - Inventory the app's tables, RPCs, Storage, Realtime and Edge Function contract.
    - Add forward-only migrations and local security fixtures.
@@ -34,7 +34,7 @@ Last updated: 2026-11-12
    - Bind purchases to the Supabase UUID and harden server verification/webhooks.
 5. **Android release candidate** — unsigned local AAB available; signed/provider-configured release and runtime validation pending
    - Accessibility, notifications/timezone, reporting opt-out and signing configuration.
-   - Current AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,521,004 bytes, SHA-256 `846ecb268be353a012d63eaa2d90cf63ad6f477c105ca71276f36ee5dac1af04`; archive integrity passed. It is unsigned until private upload-signing inputs are supplied.
+   - Current AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,527,388 bytes, SHA-256 `fb1a48799a50943a51ece30b266c68754310e5397037d85991ec48b609309176`; archive integrity passed. It is unsigned until private upload-signing inputs are supplied.
 
 ## External inputs (only when dependent work reaches them)
 
