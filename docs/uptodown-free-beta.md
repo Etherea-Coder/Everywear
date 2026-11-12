@@ -23,6 +23,18 @@ that this particular new project's creation has zero cost; the owner must
 confirm the displayed project cost/limit before any creation. Do not send an
 access token in chat.
 
+As checked on 2026-11-12, Supabase's public billing guide says Free grants two
+active projects across organizations where the account is Owner/Admin; paused
+projects do not count. Each organization has its own plan, and paid plans bill
+compute by project/hour (the documented $10 monthly credit applies to paid-plan
+compute). The current CLI list shows one active Everywear project and one
+`INACTIVE` Clameo project in the only listed organization, but it does not say
+the organization's plan or whether the inactive project is paused. Therefore
+the public free-project allowance cannot establish that a project here would
+cost zero. See [Supabase billing](https://supabase.com/docs/guides/platform/billing-on-supabase),
+[the organization read endpoint](https://supabase.com/docs/reference/api/v1-get-an-organization),
+and [compute billing](https://supabase.com/docs/guides/platform/manage-your-usage/compute).
+
 The production app is not a safe beta backend: it still has the vulnerable
 profile grants and old Edge Function versions documented in
 [`recovered-supabase-reconciliation.md`](recovered-supabase-reconciliation.md).
@@ -128,12 +140,14 @@ account label (never passwords/tokens).
 
 ## Exact next actions
 
-1. Owner provides read-only confirmation from Supabase organization billing
-   metadata (organization plan/entitlements and project-specific cost) that an
-   isolated project adds no cost, or an already-approved isolated staging
-   project reference and private anon-key config. The authenticated CLI
-   available here cannot call the organization metadata routes with its stored
-   credentials.
+1. Owner provides read-only confirmation from the `GET /v1/organizations/{slug}`
+   and `GET /v1/organizations/{slug}/entitlements` responses, plus the
+   Dashboard's project cost/quota view. Confirm the org is on Free and has an
+   unused active-project slot, or confirm a different setup has a $0 creation
+   cost. Alternatively provide an already-approved isolated staging project
+   reference and private anon-key config. The authenticated CLI available here
+   has no command for the org metadata routes and does not expose its stored
+   bearer credential for direct API calls.
 2. If staging exists, use a separate working directory linked explicitly to
    its project ref; deploy the reviewed migrations/functions only there and run
    the two-user Auth/PostgREST/Storage/Realtime/quota checklist before building.

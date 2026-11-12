@@ -843,10 +843,18 @@ until the migration baseline and complete platform behaviors have been reviewed.
   `/v1/organizations/ioohmyibnlzfltqcsnkg/entitlements`, requiring
   `organization_admin_read` / `organizations:read`; the local CLI has no
   command for these routes, and they do not guarantee project-specific cost.
-  No staging project was created. The exact staging blocker is owner-provided
-  read-only organization/entitlement and project cost confirmation that a new
-  isolated project adds no cost, or an already-approved isolated staging
-  project.
+  Official Supabase billing docs checked 2026-11-12 allow two active Free-plan
+  projects across an account's Owner/Admin organizations and exclude paused
+  projects. Every organization has its own plan; paid organizations charge
+  compute per active project/hour, with the documented $10 monthly compute
+  credit on paid plans. The current listing's `INACTIVE` Clameo status is not
+  enough to prove paused state, and the organization's plan remains unknown.
+  Sources: [billing guide](https://supabase.com/docs/guides/platform/billing-on-supabase),
+  [organization endpoint](https://supabase.com/docs/reference/api/v1-get-an-organization),
+  [compute billing](https://supabase.com/docs/guides/platform/manage-your-usage/compute).
+  No staging project was created. The exact blocker is a read-only owner report
+  of organization plan/entitlements and the Dashboard's project-specific cost
+  and quota view proving $0, or an already-approved isolated staging project.
 - Queried only aggregate production metadata using explicit
   `supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only`. The three
   profile rows aggregate to two `free` and one legacy `premium` tier; all three
