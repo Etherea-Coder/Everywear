@@ -23,6 +23,28 @@ that this particular new project's creation has zero cost; the owner must
 confirm the displayed project cost/limit before any creation. Do not send an
 access token in chat.
 
+For an authorized private shell, the minimum scoped PAT permission is
+**Organization Settings: Read**. See the [Supabase PAT documentation](https://supabase.com/docs/guides/platform/personal-access-tokens).
+The Bash snippet below prompts without echoing the token, sends it to the two
+GET endpoints over HTTPS, and prints only their JSON responses:
+
+```bash
+read -r -s -p 'Scoped Supabase token: ' EVERYWEAR_SUPABASE_TOKEN
+printf '\n'
+for path in \
+  '/v1/organizations/ioohmyibnlzfltqcsnkg' \
+  '/v1/organizations/ioohmyibnlzfltqcsnkg/entitlements'; do
+  printf 'header = "Authorization: Bearer %s"\n' "$EVERYWEAR_SUPABASE_TOKEN" |
+    curl --config - --fail-with-body --silent --show-error \
+      "https://api.supabase.com$path"
+  printf '\n'
+done
+unset EVERYWEAR_SUPABASE_TOKEN
+```
+
+Do not place the token in shell history, a shared terminal log, or chat. The
+Dashboard's project creation/cost view still needs separate review.
+
 As checked on 2026-11-12, Supabase's public billing guide says Free grants two
 active projects across organizations where the account is Owner/Admin; paused
 projects do not count. Each organization has its own plan, and paid plans bill
