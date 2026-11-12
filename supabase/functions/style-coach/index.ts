@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
+import { parseCoachResponse } from './coach_response.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 
@@ -219,27 +220,12 @@ Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "pr
 
     const geminiData = await geminiResponse.json()
     const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-
-    // Try to parse JSON for structured modes
-    let result: Record<string, unknown> = { success: true, mode, raw: text }
-    if (mode === 'passive') {
-      result.tip = text.trim()
-    } else {
-      try {
-        const jsonMatch = text.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          const parsed: unknown = JSON.parse(jsonMatch[0])
-          if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-            result = { success: true, mode, ...(parsed as Record<string, unknown>) }
-          } else {
-            result.tip = text.trim()
-          }
-        } else {
-          result.tip = text.trim()
-        }
-      } catch {
-        result.tip = text.trim()
-      }
+    const result = parseCoachResponse(mode, text)
+    if (result.success !== true) {
+      return new Response(JSON.stringify(result), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      })
     }
 
     return new Response(JSON.stringify(result), {
