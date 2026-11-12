@@ -1,4 +1,4 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'

@@ -1,7 +1,19 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
+
+type WardrobePromptItem = {
+  id?: string
+  name?: string
+  category?: string
+  color?: string | null
+  times_worn?: number | null
+  last_worn?: string | null
+  image_url?: string | null
+  avg_rating?: number | null
+  rated_count?: number | null
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -52,7 +64,7 @@ Deno.serve(async (req) => {
     if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     // Build wardrobe list for prompt
-    const wardrobeList = (wardrobeItems ?? []).map((item: any) => {
+    const wardrobeList = (Array.isArray(wardrobeItems) ? wardrobeItems : []).map((item: WardrobePromptItem) => {
       let line = `- id:${item.id} | ${item.name} | ${item.category} | ${item.color ?? 'unknown color'} | worn ${item.times_worn ?? 0}x | last worn: ${item.last_worn ?? 'never'} | imageUrl: ${item.image_url ?? ''}`
       if (item.avg_rating) line += ` | avg outfit rating: ${item.avg_rating}/5 (${item.rated_count ?? 0} outfits)`
       return line

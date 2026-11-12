@@ -1,7 +1,19 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
+
+type RecentOutfit = {
+  date?: string
+  items?: string[]
+  rating?: number
+  name?: string
+  occasion?: string
+}
+
+type ItemRating = { avg_rating?: number; rated_count?: number }
+
+type SilhouetteMonth = { month: string; fitted: number; relaxed: number }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -70,7 +82,7 @@ WARDROBE DATA:
     // Build recent outfit history block
     let recentOutfitsBlock = ''
     if (Array.isArray(recentOutfits) && recentOutfits.length > 0) {
-      const lines = recentOutfits.map((o: any) => {
+      const lines = recentOutfits.map((o: RecentOutfit) => {
         const date = o.date ? new Date(o.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '?'
         const items = Array.isArray(o.items) && o.items.length > 0 ? o.items.join(', ') : 'no item details'
         const rating = o.rating ? ` — rated ${o.rating}/5` : ''
@@ -99,7 +111,7 @@ WARDROBE DATA:
     if (itemRatings && typeof itemRatings === 'object' && Object.keys(itemRatings).length > 0) {
       // itemRatings is { itemId: { avg_rating, rated_count } } — we don't have names here,
       // but recent outfits already carry item names. Build a summary of top-rated items.
-      const entries = Object.entries(itemRatings as Record<string, any>)
+      const entries = Object.entries(itemRatings as Record<string, ItemRating>)
         .filter(([, v]) => v.avg_rating && v.rated_count >= 2)
         .sort(([, a], [, b]) => (b.avg_rating as number) - (a.avg_rating as number))
         .slice(0, 5)
@@ -115,7 +127,7 @@ WARDROBE DATA:
       const months = silhouetteEvolution.months
       const trend = silhouetteEvolution.trend
       if (Array.isArray(months) && months.length > 0 && trend) {
-        const monthLines = months.map((m: any) => `- ${m.month}: ${m.fitted}% fitted, ${m.relaxed}% relaxed`).join('\n')
+        const monthLines = months.map((m: SilhouetteMonth) => `- ${m.month}: ${m.fitted}% fitted, ${m.relaxed}% relaxed`).join('\n')
         const trendNote = trend !== 'stable'
           ? `The user is ${trend}. Acknowledge this positively and build on it in your advice.`
           : 'The user\'s style silhouette has been consistent \u2014 acknowledge their confidence in their look.'
@@ -209,15 +221,19 @@ Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "pr
     const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 
     // Try to parse JSON for structured modes
-    let result: any = { success: true, mode, raw: text }
+    let result: Record<string, unknown> = { success: true, mode, raw: text }
     if (mode === 'passive') {
       result.tip = text.trim()
     } else {
       try {
         const jsonMatch = text.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0])
-          result = { success: true, mode, ...parsed }
+          const parsed: unknown = JSON.parse(jsonMatch[0])
+          if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            result = { success: true, mode, ...(parsed as Record<string, unknown>) }
+          } else {
+            result.tip = text.trim()
+          }
         } else {
           result.tip = text.trim()
         }
