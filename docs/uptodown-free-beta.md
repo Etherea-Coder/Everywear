@@ -13,6 +13,16 @@ read-only organization billing/capacity metadata or an already-approved
 isolated staging project. Until one is available, do not create a project or
 connect a beta build.
 
+The official Supabase Management API exposes `GET
+https://api.supabase.com/v1/organizations/ioohmyibnlzfltqcsnkg` (organization
+plan) and `GET
+https://api.supabase.com/v1/organizations/ioohmyibnlzfltqcsnkg/entitlements`
+(plan entitlements). The documented read permission is `organization_admin_read`
+with OAuth scope `organizations:read`. These GET routes still do not guarantee
+that this particular new project's creation has zero cost; the owner must
+confirm the displayed project cost/limit before any creation. Do not send an
+access token in chat.
+
 The production app is not a safe beta backend: it still has the vulnerable
 profile grants and old Edge Function versions documented in
 [`recovered-supabase-reconciliation.md`](recovered-supabase-reconciliation.md).
@@ -119,9 +129,11 @@ account label (never passwords/tokens).
 ## Exact next actions
 
 1. Owner provides read-only confirmation from Supabase organization billing
-   metadata that an isolated project adds no cost, or an already-approved
-   isolated staging project reference and private anon-key config. The
-   authenticated CLI available here cannot expose billing/capacity fields.
+   metadata (organization plan/entitlements and project-specific cost) that an
+   isolated project adds no cost, or an already-approved isolated staging
+   project reference and private anon-key config. The authenticated CLI
+   available here cannot call the organization metadata routes with its stored
+   credentials.
 2. If staging exists, use a separate working directory linked explicitly to
    its project ref; deploy the reviewed migrations/functions only there and run
    the two-user Auth/PostgREST/Storage/Realtime/quota checklist before building.

@@ -837,9 +837,15 @@ until the migration baseline and complete platform behaviors have been reviewed.
   Everywear `qxsdwwdrxoyxmnapuqqv` (active) and unrelated Clameo
   `sjpdgcopihwocalrsrdb` (inactive). The CLI exposes no organization plan,
   billing credits, or project-capacity fields; `projects create --help` has no
-  zero-cost preview. No staging project was created. The exact staging blocker
-  is owner-provided read-only billing/capacity confirmation that a new isolated
-  project adds no cost, or an already-approved isolated staging project.
+  zero-cost preview. The official Management API documents read-only GET
+  routes `/v1/organizations/ioohmyibnlzfltqcsnkg` and
+  `/v1/organizations/ioohmyibnlzfltqcsnkg/entitlements`, requiring
+  `organization_admin_read` / `organizations:read`; the local CLI has no
+  command for these routes, and they do not guarantee project-specific cost.
+  No staging project was created. The exact staging blocker is owner-provided
+  read-only organization/entitlement and project cost confirmation that a new
+  isolated project adds no cost, or an already-approved isolated staging
+  project.
 - Queried only aggregate production metadata using explicit
   `supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only`. The three
   profile rows aggregate to two `free` and one legacy `premium` tier; all three
