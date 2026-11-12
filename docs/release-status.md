@@ -5,13 +5,13 @@ Last updated: 2026-11-12
 ## Current classification
 
 Recovery is in progress on `recovery/android-v1`; latest local checkpoint is
-`796c561`. The sequential full Flutter suite passed **94/94** on the current
+`9558052`. The sequential full Flutter suite passed **94/94** on the current
 application code. That run printed nonfatal binding/Supabase initialization
 diagnostics in provider filter tests; the tests now use an isolated empty
 repository, and the affected file passed **6/6** without diagnostics. The full
-suite was not repeated after this test-only change. Targeted analysis of the
-free-beta changes reported five informational diagnostics and no warnings or
-errors; the provider test has no analyzer issues. Previous local checks include
+suite was not repeated after this test-only change. A full project analysis
+completed with **248 info diagnostics and no warnings or errors** after the
+test-only change. Previous local checks include
 Deno pure tests/lint/type checks and a JDK 21 unsigned release AAB build, but
 that AAB predates the Uptodown free-beta configuration and is not a beta
 artifact. No current beta APK has been built or run on a device.
@@ -889,7 +889,9 @@ until the migration baseline and complete platform behaviors have been reviewed.
   cleanup with no binding/Supabase initialization diagnostics; the full suite
   was not repeated after the test-only change. Targeted analysis of the 12
   changed Dart files reported five info diagnostics and no warnings or errors;
-  analysis of the changed provider test reported no issues. The build helper
+  analysis of the changed provider test reported no issues. A subsequent
+  project-wide analysis reported 248 info diagnostics with no warnings or
+  errors. The build helper
   passes `bash -n`; missing-config and production-ref guards both refused
   safely. Targeted formatting reported zero changes after cleanup, and
   `git diff --check` passed. No Android build, device test, Docker, production
