@@ -140,9 +140,9 @@ account label (never passwords/tokens).
    Verify hash/package identity, then install and run the physical-device
    checklist. Do not retry the Android build while swap is exhausted; two
    earlier attempts stopped on JDK selection and memory pressure.
-2. Remove the outside-repository service-role test config; only the public
-   staging URL/anon-key config is needed by the APK helper. Never commit either
-   config.
+2. The outside-repository service-role test config was removed after hosted
+   checks. Keep only the mode-0600 staging URL/anon-key config for the helper;
+   never commit it.
 3. Owner supplies existing upload-signing key access, privacy/deletion/support
    URLs, and approved listing artwork before public distribution. Keep the
    existing application ID and signing continuity intact.
