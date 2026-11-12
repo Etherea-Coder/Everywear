@@ -49,7 +49,7 @@ The recovered project has 10 active functions: `ai-suggestions` v15, `create-sub
 
 1. Keep current public bucket visibility while shipping and verifying client support for stable `bucket/path` references stored in the existing `wardrobe_items.image_url` and profile `avatar_url` fields, exact-origin legacy URL canonicalization, owner-authorized on-demand resolution, PDF in-memory embedding, and CSV omission. The client implementation and focused coverage are present; Flutter tests passed locally, but no device or private-bucket runtime verification exists. The new disposable-local `storage_security.test.sql` exercises private bucket state and anonymous/user-A/user-B ownership after the reviewed policy cutover; the test has only had a static outer-SQL parse, not database execution.
 2. Back up the project and inventory bucket paths plus only the reference columns needed for conversion. Confirm each owner-folder prefix equals the row's Supabase UUID; identify shared/provider images. Convert exact project Storage URLs to stable `bucket/path` strings in existing columns, preserving genuine external provider URLs and dropping signed query tokens. Keep a reversible audit mapping outside public/client-readable tables.
-3. Review and validate `supabase/review/private-image-cutover.sql` against current policy names and paths. It updates the existing bucket rows to private, drops the exact observed public-read policies, and installs authenticated owner-folder SELECT/INSERT/UPDATE/DELETE policies for both buckets. It is review-only and must not be run before the client and compatibility conversion are ready. Add MIME/size constraints only after inventorying existing valid formats.
+3. In isolated staging, apply `20261112140000_private_image_bucket_security.sql` after entitlement and quota migrations. It creates the two image buckets if absent, preserves existing bucket metadata while making them private, removes the exact recovered public policies, and installs authenticated owner-folder SELECT/INSERT/UPDATE/DELETE policies. The existing `supabase/review/private-image-cutover.sql` remains the review copy for production. Production must not apply this cutover until reference inventory/conversion and a compatible client rollout are ready. Add MIME/size constraints only after inventorying existing valid formats.
 4. Ship the compatible client first. In a non-production clone, prove anonymous denial and user A/user B same-owner/cross-owner read, list, upload, replacement, deletion and avatar access; test expired links, unavailable objects, legacy public URLs, stable references, PDF and CSV. Confirm account-switch caches and deletion cleanup.
 5. Only after those checks, run the reviewed record conversion, apply the policy/bucket cutover, and verify the same matrix against the private setup. Account for CDN/browser caches and old public URLs; toggling a bucket private does not prove already copied bytes were retracted.
 6. Privacy-preserving rollback keeps buckets private and restrictive policies in place. Roll back application code to an owner-authenticated compatibility build, or disable image display/export with explicit unavailable placeholders. Correct bad references from the private audit mapping. Never restore public buckets/policies as rollback.
@@ -104,6 +104,10 @@ The proposed deployment order is now explicit:
    ACLs and exact billing RPC grants.
 3. `20261112100000_server_ai_action_quotas.sql` installs the new quota RPCs and
    only then grants their authenticated entry points.
+4. `20261112140000_private_image_bucket_security.sql` provisions the private
+   image buckets and owner policies. It is safe on a fresh staging project; on
+   production it is a privacy cutover and must follow client compatibility and
+   legacy-reference conversion.
 
 Existing rows receive `subscription_status='inactive'` when the missing column
 is added. No active status is inferred from a future expiry, premium tier or

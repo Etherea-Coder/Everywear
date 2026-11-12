@@ -5,14 +5,18 @@ a production rollout authorization. Production project `qxsdwwdrxoyxmnapuqqv`
 remains read-only, and the local PostgreSQL harness is not a full Supabase
 staging environment.
 
-## Before provisioning
+## Staging setup
 
-- Obtain owner approval for a separate Supabase project and RevenueCat sandbox
-  project/entitlement. Do not clone production user data, Storage objects,
-  secrets, or migration history.
-- Configure staging-only Supabase URL/anon key, Edge Function service key,
-  RevenueCat API/webhook credentials, exact entitlement ID and
-  `REVENUECAT_EXPECTED_ENVIRONMENT=sandbox`. Keep all keys private.
+- The approved staging target is `aftdbphdobfrshienple`, confirmed by the
+  authenticated CLI as Everywear-staging in North EU/Stockholm. Owner confirms
+  the existing organization is Free. Verify the exact ref again before each
+  hosted write. Never use production or Clameo.
+- Payments and advertising stay disabled; no RevenueCat sandbox is required
+  for the free-beta checks. Do not configure or expose provider secrets. If a
+  database password is requested, enter it at the CLI's hidden local prompt.
+- Obtain staging anon/service-role keys only in a private local config when
+  required for synthetic Auth/API tests. Do not copy any production keys or
+  records; remove local secret files after the test window.
 - Configure a disposable test account per actor (anonymous, user A, user B,
   service role) and synthetic records/images only. Set provider spend limits.
 - Compare the staging schema and grants with the recovered metadata and this
@@ -33,13 +37,17 @@ staging environment.
 3. Apply `20261112100000_server_ai_action_quotas.sql`; verify the authenticated
    quota entry points, no direct table access, and fail-closed behavior when
    policy/profile/entitlement data is absent.
-4. Deploy compatible Edge Function revisions only after migrations are
+4. Apply `20261112140000_private_image_bucket_security.sql` on this
+   synthetic-only staging project; verify both buckets are private and only
+   owner-folder policies remain. This does not authorize immediate production
+   cutover, which still needs reference conversion and client rollout.
+5. Deploy compatible Edge Function revisions only after migrations are
    verified. Deploy authenticated AI handlers, purchase verifier, webhook and
    deletion function as a coordinated staging release.
-5. Do not start private-image cutover in this test. The two existing hosted
-   buckets are public; keep private-image migration and legacy-reference
-   conversion as a separately reviewed rollout after its client/storage matrix
-   passes.
+6. Do not convert production image references in this test. Production's two
+   existing hosted buckets are public; production record conversion and
+   cutover remain a separately reviewed rollout after its client/storage
+   matrix passes.
 
 ## Authentication and account isolation
 
@@ -150,6 +158,9 @@ Use provider sandbox only and an isolated Supabase staging backend:
   also passed against a local Storage catalog/RLS stub made only for this test.
   It does not exercise Supabase Storage API, signed URL behavior, or object
   delivery/deletion services.
-- Supabase Auth, PostgREST, Storage, Edge Runtime, Realtime delivery, and RevenueCat
-  sandbox behavior remain untested. No staging project was provisioned and no
-  production data or configuration was changed.
+- Preflight read-only inspection on approved staging confirmed a blank app
+  schema, no app migration history, no app buckets/policies, and no deployed
+  functions; PostgreSQL is 17.11. The reviewed migration chain was dry-run only
+  and has not yet been applied. Supabase Auth, PostgREST, Storage API/object
+  delivery, Edge Runtime, Realtime delivery, and RevenueCat sandbox behavior
+  remain untested. No production data or configuration was changed.

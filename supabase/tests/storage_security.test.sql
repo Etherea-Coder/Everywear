@@ -1,6 +1,6 @@
--- Local-only regression fixture. Requires the schema migration and the
--- review-only private-image cutover to have been applied to a disposable local
--- Supabase database. Never run against the recovered production project.
+-- Local-only regression fixture. Requires the complete migration chain,
+-- including 20261112140000_private_image_bucket_security.sql, on a disposable
+-- database. Never run against the recovered production project.
 BEGIN;
 SELECT plan(11);
 

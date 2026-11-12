@@ -17,12 +17,57 @@ Deno pure tests/lint/type checks and a JDK 21 unsigned release AAB build, but
 that AAB predates the Uptodown free-beta configuration and is not a beta
 artifact. No current beta APK has been built or run on a device.
 
-The safe Uptodown free beta is still blocked on an isolated staging backend and
-its verified zero-cost/owner-approved status. Production remains read-only and
-must not be used by the beta because recovered RLS, public buckets, and deployed
-Edge Function versions remain unsafe. Upload signing, provider setup, release
-URLs/artwork, and physical-device behavior also remain unresolved. Google Play
-publication is deferred.
+An owner-approved isolated Everywear staging project now exists. Preflight
+identity is confirmed, but its migration chain, Storage policies, Edge
+Functions, real Auth/PostgREST isolation, and device-connected app behavior are
+not yet verified. Production remains read-only and must not be used by the beta
+because its recovered RLS, public buckets, and deployed Edge Function versions
+remain unsafe. Upload signing, release URLs/artwork, and physical-device
+behavior also remain unresolved. Google Play publication is deferred.
+
+## Approved staging preflight (2026-11-12)
+
+- Authenticated `supabase projects list --output json` confirmed `Everywear-staging`,
+  ref `aftdbphdobfrshienple`, region `eu-north-1` (North EU/Stockholm), in the
+  existing Everywear organization `ioohmyibnlzfltqcsnkg`. The owner confirmed
+  the organization is on Free and approved this project. The CLI list does not
+  expose plan metadata; no billing API/plan check is needed to reconfirm this
+  owner-approved target. No paid upgrade, add-on, or extra project was made.
+- `supabase db query --read-only --remote=aftdbphdobfrshienple` confirmed
+  PostgreSQL 17.11; there are no app `public` tables, app functions, migration
+  history rows, Storage buckets, or app Storage policies. Supabase-managed
+  `storage` relations exist with RLS enabled. The explicit project list and
+  query output identified the target as staging, never production.
+- `supabase functions list --remote=aftdbphdobfrshienple` returned no deployed
+  functions. `supabase migration list --remote=...` showed all local migration
+  timestamps absent remotely. The initial `db push --dry-run` correctly showed
+  the eight reviewed migrations in timestamp order; after adding the staging
+  private-image migration it showed nine. These were dry-run/read-only checks;
+  no hosted write has occurred yet.
+- Read-only production policy inspection confirmed the exact two public image
+  policies are bucket-scoped (`avatars` and `wardrobe-images`). The new final
+  migration creates those buckets privately when absent, preserves existing
+  bucket metadata when present, and applies authenticated owner-folder policies.
+  Applying it to production later still requires legacy-reference conversion
+  and the compatible client rollout.
+- The main checkout remains explicitly linked to production. Staging work will
+  use a separate detached worktree and explicit `--remote=aftdbphdobfrshienple`
+  targets. No staging credentials were printed or written to tracked files.
+- Added `20261112140000_private_image_bucket_security.sql` after the entitlement
+  and quota migrations. It creates missing image buckets privately, preserves
+  existing bucket metadata except public visibility, removes the exact
+  production-observed public/legacy owner policies, and enforces owner-folder
+  access for select/insert/update/delete. The storage regression fixture and
+  staging/production rollout docs now reference the migration. Production must
+  still wait for client rollout and stable-reference conversion.
+- Checks performed: explicit CLI identity listing; metadata-only read-only
+  staging queries; deployed-function and migration-history listing; dry-run of
+  all nine migrations to the exact staging ref; read-only production lookup of
+  the two public policy predicates; source/diff review and `git diff --check`.
+  No staging write, migration, function deploy, key retrieval, build, or test
+  has occurred yet. Next is a local commit, then the reviewed chain to staging.
+  If `db push` asks for the database password, enter it only at the CLI's
+  hidden local prompt. Never send it or anon/service keys in chat.
 
 ## Uptodown billing checkpoint (2026-11-12)
 
@@ -926,8 +971,9 @@ until the migration baseline and complete platform behaviors have been reviewed.
 - [x] Prepare a staging-only APK helper with private config checks and a
   production-ref guard; preserve app identity and release signing setup.
 - [x] Draft Uptodown listing, notes, and physical-device checks.
-- [ ] Obtain zero-cost staging confirmation or an already-approved staging
-  project, then create a separate working directory/configuration.
+- [x] Obtain owner-approved staging project identity/cost authorization; CLI
+  confirmed name, ref, and region. Project's Free status is owner-confirmed.
+- [ ] Create a separate staging worktree and apply the reviewed migrations.
 - [ ] Reconcile/deploy the reviewed migrations and Edge Functions only to that
   isolated staging project; run two-user Auth, PostgREST, Storage, quota, and
   Realtime integration checks.

@@ -2,16 +2,14 @@
 
 ## Current gate
 
-**Not ready to build or distribute.** The authenticated Supabase CLI lists the
-Everywear production project (`qxsdwwdrxoyxmnapuqqv`) and an unrelated inactive
-Clameo project in organization `ioohmyibnlzfltqcsnkg`. The CLI exposes project
-identity but no billing plan, credit, or project-capacity metadata; its project
-creation command has no zero-cost preview. This is not evidence that another
-project is free. No new project has been created and no plan, add-on, or
-billing setting has been changed. The exact blocker is owner access to
-read-only organization billing/capacity metadata or an already-approved
-isolated staging project. Until one is available, do not create a project or
-connect a beta build.
+**Not ready to build or distribute.** The owner approved the isolated
+`Everywear-staging` project (`aftdbphdobfrshienple`) in the existing Everywear
+organization, and the authenticated CLI confirmed the exact name, ref, and
+North EU/Stockholm region. The owner confirmed Free-plan status. Preflight found
+an empty app schema and no deployed Edge Functions. No staging migration,
+function, secret, bucket, or setting has been changed yet. Production remains
+unsafe and read-only. Continue only with the explicit staging project ref; do
+not link this checkout away from production.
 
 The official Supabase Management API exposes `GET
 https://api.supabase.com/v1/organizations/ioohmyibnlzfltqcsnkg` (organization
@@ -176,19 +174,11 @@ account label (never passwords/tokens).
 
 ## Exact next actions
 
-1. Owner provides read-only confirmation from the `GET /v1/organizations/{slug}`
-   and `GET /v1/organizations/{slug}/entitlements` responses, plus the
-   Dashboard's project cost/quota view. Confirm the org is on Free and has an
-   unused active-project slot, or confirm a different setup has a $0 creation
-   cost. Alternatively provide an already-approved isolated staging project
-   reference and private anon-key config. The authenticated CLI available here
-   has no command for the org metadata routes and does not expose its stored
-   bearer credential for direct API calls.
-2. If staging exists, use a separate working directory linked explicitly to
-   its project ref; deploy the reviewed migrations/functions only there and run
-   the two-user Auth/PostgREST/Storage/Realtime/quota checklist before building.
-3. Supply the exact staging URL and anon key through a private mode-0600 JSON
-   file outside the repository. Run the beta helper, review APK hash, then test
-   it on a physical device. No test APK has been built yet.
-4. Owner supplies existing upload-signing key access, privacy/deletion/support
+1. Apply the reviewed migrations in order and deploy the relevant functions
+   only to staging; use hidden CLI password entry if the database password is
+   requested. Run the two-user Auth/PostgREST/Storage/Realtime/quota checklist.
+2. Keep staging URL/anon key in a private mode-0600 JSON file outside the
+   repository. Run the beta helper, review APK hash, then test on a physical
+   device. No staging beta APK has been built yet.
+3. Owner supplies existing upload-signing key access, privacy/deletion/support
    URLs, and approved listing artwork before public distribution.
