@@ -4,26 +4,24 @@ Last updated: 2026-11-12
 
 ## Current classification
 
-Recovery is in progress on `recovery/android-v1`. The complete sequential
-Flutter suite now passes 63 tests on source commit `ca800ea`; an earlier retry
-was interrupted under memory pressure. Focused image/billing/notification
-tests also passed 19/19 and splash/auth/localization tests passed 5/5. The
-current-source project CI
-analyzer gate passed with 244 informational diagnostics and no warnings or
-errors. Targeted analysis of the splash/auth/localization files also reports no
-issues. Deno
-pure tests, lint, and all protected handler type checks pass locally. On
-2026-11-12, a Flutter CLI release AAB
-build succeeded after explicitly selecting JDK 21; Android Studio's JBR
-25.0.3 auto-selection had first caused Gradle to fail before compilation. CI
-now pins Temurin 21 and selects it for Flutter. The bundle remains unsigned
-and has not been run on a device.
-Clean-database validation,
-private-image runtime behavior, provider setup, and Play eligibility remain
-unverified. Google Play publication is now deferred; the intended Android
-distribution is Uptodown. The earlier unsigned AAB predates the Uptodown billing
-source changes and contains no provider configuration, so it is not a tested
-Uptodown release candidate.
+Recovery is in progress on `recovery/android-v1`; latest local checkpoint is
+`796c561`. The sequential full Flutter suite passed **94/94** on the current
+application code. That run printed nonfatal binding/Supabase initialization
+diagnostics in provider filter tests; the tests now use an isolated empty
+repository, and the affected file passed **6/6** without diagnostics. The full
+suite was not repeated after this test-only change. Targeted analysis of the
+free-beta changes reported five informational diagnostics and no warnings or
+errors; the provider test has no analyzer issues. Previous local checks include
+Deno pure tests/lint/type checks and a JDK 21 unsigned release AAB build, but
+that AAB predates the Uptodown free-beta configuration and is not a beta
+artifact. No current beta APK has been built or run on a device.
+
+The safe Uptodown free beta is still blocked on an isolated staging backend and
+its verified zero-cost/owner-approved status. Production remains read-only and
+must not be used by the beta because recovered RLS, public buckets, and deployed
+Edge Function versions remain unsafe. Upload signing, provider setup, release
+URLs/artwork, and physical-device behavior also remain unresolved. Google Play
+publication is deferred.
 
 ## Uptodown billing checkpoint (2026-11-12)
 
@@ -878,11 +876,16 @@ until the migration baseline and complete platform behaviors have been reviewed.
   Dart formatting normalized the changed RevenueCat service; a second
   formatting check reported zero changed files. Focused Flutter tests passed
   **26/26** across RevenueCat config/hosted checkout, ad config/coordinator,
-  and localization. Targeted analysis of the 12 changed Dart files reported
-  five info diagnostics and no warnings or errors. The build helper passes
-  `bash -n`; missing-config and production-ref guards both refused safely.
-  `git diff --check` passed. No full Flutter suite, Android build, device test, Docker,
-  production write, deployment, or publication was performed.
+  and localization. A sequential full-suite run then passed **94/94** before a
+  test-only isolation cleanup. The provider suite passed **6/6** after that
+  cleanup with no binding/Supabase initialization diagnostics; the full suite
+  was not repeated after the test-only change. Targeted analysis of the 12
+  changed Dart files reported five info diagnostics and no warnings or errors;
+  analysis of the changed provider test reported no issues. The build helper
+  passes `bash -n`; missing-config and production-ref guards both refused
+  safely. Targeted formatting reported zero changes after cleanup, and
+  `git diff --check` passed. No Android build, device test, Docker, production
+  write, deployment, or publication was performed.
 
 ### Resumable free-beta checklist
 

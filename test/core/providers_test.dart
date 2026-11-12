@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:everywear/core/providers.dart';
+import 'package:everywear/services/wardrobe_repository.dart';
 
 void main() {
   group('State Providers', () {
@@ -36,7 +37,13 @@ void main() {
 
   group('filteredWardrobeItemsProvider', () {
     test('filters by category', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          wardrobeRepositoryProvider.overrideWithValue(
+            _EmptyWardrobeRepository(),
+          ),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(wardrobeCategoryProvider.notifier).state = 'Tops';
@@ -46,7 +53,13 @@ void main() {
     });
 
     test('filters by search query', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          wardrobeRepositoryProvider.overrideWithValue(
+            _EmptyWardrobeRepository(),
+          ),
+        ],
+      );
       addTearDown(container.dispose);
 
       container.read(wardrobeSearchQueryProvider.notifier).state = 'blue';
@@ -55,4 +68,12 @@ void main() {
       expect(filtered, isA<AsyncValue>());
     });
   });
+}
+
+class _EmptyWardrobeRepository extends WardrobeRepository {
+  @override
+  Future<List<Map<String, dynamic>>> getWardrobeItems({
+    String? category,
+    String? searchQuery,
+  }) async => [];
 }
