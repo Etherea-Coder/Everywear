@@ -28,6 +28,7 @@ Deno.test("selects only the exact configured RevenueCat entitlement", () => {
     purchase_date: "2026-01-01T00:00:00Z",
   });
   assertEquals(selectExactEntitlement(response, "missing"), null);
+  assertEquals(selectExactEntitlement(response, "toString"), null);
   assertEquals(selectExactEntitlement({ subscriber: [] }, "premium"), null);
 });
 

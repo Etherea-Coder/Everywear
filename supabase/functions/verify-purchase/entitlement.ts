@@ -19,7 +19,9 @@ export function selectExactEntitlement(
 ): JsonObject | null {
   if (!isRecord(response) || !isRecord(response.subscriber)) return null;
   const entitlements = response.subscriber.entitlements;
-  if (!isRecord(entitlements)) return null;
+  if (!isRecord(entitlements) || !Object.hasOwn(entitlements, entitlementId)) {
+    return null;
+  }
   const entitlement = entitlements[entitlementId];
   return isRecord(entitlement) ? entitlement : null;
 }
