@@ -148,19 +148,36 @@ Use provider sandbox only and an isolated Supabase staging backend:
   production enforcement, live purchase behavior, or device readiness from this
   staging checklist.
 
-## Current execution record
+## Current execution record — 2026-11-12
 
-- Local minimal PostgreSQL: 48/48 pgTAP assertions passed; legacy profile
-  transition and transactional rollback passed; direct authenticated invocation
-  of the overloaded self-upgrade function was denied; free/premium concurrent
-  reservations passed at 1/1 and 3/4 respectively.
-- The review-only private-image policy SQL and 11/11 Storage-policy assertions
-  also passed against a local Storage catalog/RLS stub made only for this test.
-  It does not exercise Supabase Storage API, signed URL behavior, or object
-  delivery/deletion services.
-- Preflight read-only inspection on approved staging confirmed a blank app
-  schema, no app migration history, no app buckets/policies, and no deployed
-  functions; PostgreSQL is 17.11. The reviewed migration chain was dry-run only
-  and has not yet been applied. Supabase Auth, PostgREST, Storage API/object
-  delivery, Edge Runtime, Realtime delivery, and RevenueCat sandbox behavior
-  remain untested. No production data or configuration was changed.
+- Verified target: `Everywear-staging`, `aftdbphdobfrshienple`,
+  `eu-north-1`; the owner confirmed the existing organization is on Free. The
+  CLI's `production` label refers to this staging project's primary branch.
+  Production `qxsdwwdrxoyxmnapuqqv` remained read-only; Clameo was untouched.
+- All nine repository migrations were applied in order to staging. A subsequent
+  migration list matched local and remote timestamps. The eight active Edge
+  Functions are the names listed in the deployment record in
+  `release-status.md`; gateway JWT verification is on. No provider secrets,
+  webhook, payments, or ad integration were configured.
+- Hosted synthetic checks passed in separate phases: Auth/PostgREST, protected
+  billing fields, self-upgrade denial, user isolation, AI auth/quota behavior,
+  and concurrent reservations **52/52**; user-filtered Realtime **5/5**;
+  private wardrobe/avatar upload, delivery, replacement, deletion, and complete
+  synthetic account deletion **31/31**. The passing phases were separate; the
+  full `all` runner was not rerun as one combined command after two early
+  assertion/Realtime harness defects were fixed.
+- An aggregate query after cleanup found zero synthetic users, image objects,
+  wardrobe rows, and outfit rows. No production customer content was queried.
+- All five model-backed paths returned authenticated `AI_UNAVAILABLE` (503)
+  with no configured provider, and the purchase verifier failed closed (503).
+  This proves the no-provider behavior only; no model inference, quality,
+  billing lifecycle, or real purchase was tested.
+- Earlier local minimal PostgreSQL checks passed 48/48 pgTAP assertions,
+  migration transition/rollback, and quota concurrency. The local Storage
+  catalog/RLS stub passed 11/11 policy assertions. These are not full Supabase
+  service tests; hosted staging API checks above cover the tested Auth,
+  PostgREST, Storage, functions, and Realtime paths.
+- Physical-device app startup, cold session restoration, export/PDF flows,
+  notifications, and UI behavior against staging are still untested. No
+  Android device is attached and the current staging debug APK has not been
+  built. RevenueCat and Monetag remain disabled.

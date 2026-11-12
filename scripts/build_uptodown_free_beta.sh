@@ -52,6 +52,7 @@ defines = {
     "SUPABASE_URL": config["SUPABASE_URL"],
     "SUPABASE_ANON_KEY": config["SUPABASE_ANON_KEY"],
     "EVERYWEAR_FREE_BETA": True,
+    "EVERYWEAR_STAGING": True,
     "APP_DISTRIBUTION": "uptodown",
     "REVENUECAT_BILLING_ENVIRONMENT": "unavailable",
     "EVERYWEAR_ADS_ENABLED": False,
@@ -71,7 +72,7 @@ mkdir -p "$artifact_dir"
   cd "$repo_root"
   "$flutter_bin" build apk --debug --no-pub --dart-define-from-file="$defines_file"
 )
-artifact="$artifact_dir/Everywear-Uptodown-Free-Beta-${version}-${project_ref}-debug.apk"
+artifact="$artifact_dir/Everywear-Uptodown-Free-STAGING-Beta-${version}-${project_ref}-debug.apk"
 cp "$repo_root/build/app/outputs/flutter-apk/app-debug.apk" "$artifact"
 sha256sum "$artifact"
 printf 'Staging-only debug APK: %s\n' "$artifact"

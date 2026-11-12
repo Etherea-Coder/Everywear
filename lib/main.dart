@@ -20,8 +20,14 @@ import './services/revenuecat_web_checkout.dart';
 import './services/notification_service.dart';
 import './services/analytics_service.dart';
 import './widgets/custom_error_widget.dart';
+import './widgets/staging_build_banner.dart';
 import './presentation/auth_gate.dart';
 import 'core/app_export.dart';
+
+const _isStagingBuild = bool.fromEnvironment(
+  'EVERYWEAR_STAGING',
+  defaultValue: false,
+);
 
 void main() async {
   // Ensure widgets are initialized
@@ -391,7 +397,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
               // Preserve the system text scale so Android accessibility
               // settings are honored throughout the application.
               data: MediaQuery.of(context),
-              child: child!,
+              child: StagingBuildBanner(
+                enabled: _isStagingBuild,
+                child: child!,
+              ),
             );
           },
           // 🚨 END CRITICAL SECTION

@@ -2,66 +2,23 @@
 
 ## Current gate
 
-**Not ready to build or distribute.** The owner approved the isolated
-`Everywear-staging` project (`aftdbphdobfrshienple`) in the existing Everywear
-organization, and the authenticated CLI confirmed the exact name, ref, and
-North EU/Stockholm region. The owner confirmed Free-plan status. Preflight found
-an empty app schema and no deployed Edge Functions. No staging migration,
-function, secret, bucket, or setting has been changed yet. Production remains
-unsafe and read-only. Continue only with the explicit staging project ref; do
-not link this checkout away from production.
+**Staging backend is verified; APK/device beta check remains.** The owner
+approved the isolated `Everywear-staging` project
+(`aftdbphdobfrshienple`) in the existing Everywear organization; authenticated
+CLI identity confirmed North EU/Stockholm and the owner confirmed Free-plan
+status. All nine reviewed migrations and eight JWT-protected Edge Functions
+are deployed there. Synthetic Auth/PostgREST, quota, private Storage, account
+deletion, and filtered Realtime checks passed; exact counts and limits are in
+[`staging-verification-checklist.md`](staging-verification-checklist.md).
+Production Everywear remains read-only and unchanged. Use only the explicit
+staging ref for beta configuration.
 
-The official Supabase Management API exposes `GET
-https://api.supabase.com/v1/organizations/ioohmyibnlzfltqcsnkg` (organization
-plan) and `GET
-https://api.supabase.com/v1/organizations/ioohmyibnlzfltqcsnkg/entitlements`
-(plan entitlements). The documented read permission is `organization_admin_read`
-with OAuth scope `organizations:read`. These GET routes still do not guarantee
-that this particular new project's creation has zero cost; the owner must
-confirm the displayed project cost/limit before any creation. Do not send an
-access token in chat.
-
-For an authorized private shell, the minimum scoped PAT permission is
-**Organization Settings: Read**. See the [Supabase PAT documentation](https://supabase.com/docs/guides/platform/personal-access-tokens).
-The Bash snippet below prompts without echoing the token, sends it to the two
-GET endpoints over HTTPS, and prints only their JSON responses:
-
-```bash
-read -r -s -p 'Scoped Supabase token: ' EVERYWEAR_SUPABASE_TOKEN
-printf '\n'
-for path in \
-  '/v1/organizations/ioohmyibnlzfltqcsnkg' \
-  '/v1/organizations/ioohmyibnlzfltqcsnkg/entitlements'; do
-  printf 'header = "Authorization: Bearer %s"\n' "$EVERYWEAR_SUPABASE_TOKEN" |
-    curl --config - --fail-with-body --silent --show-error \
-      "https://api.supabase.com$path"
-  printf '\n'
-done
-unset EVERYWEAR_SUPABASE_TOKEN
-```
-
-Do not place the token in shell history, a shared terminal log, or chat. The
-Dashboard's project creation/cost view still needs separate review.
-
-As checked on 2026-11-12, Supabase's public billing guide says Free grants two
-active projects across organizations where the account is Owner/Admin; paused
-projects do not count. Each organization has its own plan, and paid plans bill
-compute by project/hour (the documented $10 monthly credit applies to paid-plan
-compute). The current CLI list shows one active Everywear project and one
-`INACTIVE` Clameo project in the only listed organization, but it does not say
-the organization's plan or whether the inactive project is paused. Therefore
-the public free-project allowance cannot establish that a project here would
-cost zero. See [Supabase billing](https://supabase.com/docs/guides/platform/billing-on-supabase),
-[the organization read endpoint](https://supabase.com/docs/reference/api/v1-get-an-organization),
-and [compute billing](https://supabase.com/docs/guides/platform/manage-your-usage/compute).
-
-The production app is not a safe beta backend: it still has the vulnerable
-profile grants and old Edge Function versions documented in
-[`recovered-supabase-reconciliation.md`](recovered-supabase-reconciliation.md).
-Its buckets are public, quotas are not installed, and production is strictly
-read-only in this recovery. Do not put production URL/keys into the beta or
-copy production records. A staging project must receive the reviewed migration
-chain and Edge Functions before a connected beta can be built.
+The owner has approved staging on the existing Free organization. The staging
+backend now has the reviewed migration chain and relevant functions. Production
+still has the recovered schema, public image buckets and older function
+versions described in [`recovered-supabase-reconciliation.md`](recovered-supabase-reconciliation.md);
+it remains read-only and must not be used by this beta. No production data,
+keys or configuration were copied.
 
 ## Beta behavior and provider gates
 
@@ -90,8 +47,9 @@ the URL hostname matches the explicit staging ref, compiles a **debug-signed
 APK**, and writes a project-labelled copy under ignored `build/beta-artifacts/`.
 It performs no `supabase link`, hosted write, deployment, purchase, or ad call.
 A debug APK is for controlled test devices only, not an Uptodown publication
-artifact or signing-continuity proof. The helper has not been run because a
-zero-cost staging project and config are not confirmed.
+artifact or signing-continuity proof. The app now shows a visible `STAGING`
+banner when the helper's compile define is set. A private mode-0600 staging
+app config exists outside the checkout; the helper has not been run.
 
 A separate local-only compile was attempted with free-beta gates enabled and
 Supabase/provider defines explicitly empty. Flutter first selected Android
@@ -174,11 +132,16 @@ account label (never passwords/tokens).
 
 ## Exact next actions
 
-1. Apply the reviewed migrations in order and deploy the relevant functions
-   only to staging; use hidden CLI password entry if the database password is
-   requested. Run the two-user Auth/PostgREST/Storage/Realtime/quota checklist.
-2. Keep staging URL/anon key in a private mode-0600 JSON file outside the
-   repository. Run the beta helper, review APK hash, then test on a physical
-   device. No staging beta APK has been built yet.
+1. After memory/swap pressure clears, run the helper with
+   `EVERYWEAR_STAGE_PROJECT_REF=aftdbphdobfrshienple` and the existing private
+   `EVERYWEAR_STAGE_CONFIG_FILE`. Expected debug APK path:
+   `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`.
+   Verify hash/package identity, then install and run the physical-device
+   checklist. Do not retry the Android build while swap is exhausted; two
+   earlier attempts stopped on JDK selection and memory pressure.
+2. Remove the outside-repository service-role test config; only the public
+   staging URL/anon-key config is needed by the APK helper. Never commit either
+   config.
 3. Owner supplies existing upload-signing key access, privacy/deletion/support
-   URLs, and approved listing artwork before public distribution.
+   URLs, and approved listing artwork before public distribution. Keep the
+   existing application ID and signing continuity intact.

@@ -17,13 +17,14 @@ Deno pure tests/lint/type checks and a JDK 21 unsigned release AAB build, but
 that AAB predates the Uptodown free-beta configuration and is not a beta
 artifact. No current beta APK has been built or run on a device.
 
-An owner-approved isolated Everywear staging project now exists. Preflight
-identity is confirmed, but its migration chain, Storage policies, Edge
-Functions, real Auth/PostgREST isolation, and device-connected app behavior are
-not yet verified. Production remains read-only and must not be used by the beta
-because its recovered RLS, public buckets, and deployed Edge Function versions
-remain unsafe. Upload signing, release URLs/artwork, and physical-device
-behavior also remain unresolved. Google Play publication is deferred.
+An owner-approved isolated Everywear staging project now has the reviewed
+migrations and eight Edge Functions. Synthetic hosted checks verified Auth,
+PostgREST isolation, private Storage, quota enforcement, account deletion, and
+user-filtered Realtime (details below). No staging APK has been built or run on
+a device. Production remains read-only and unsafe for the beta because its
+recovered RLS, public buckets, and deployed Edge Function versions remain
+unchanged. Upload signing, release URLs/artwork, and physical-device behavior
+also remain unresolved. Google Play publication is deferred.
 
 ## Approved staging preflight (2026-11-12)
 
@@ -38,21 +39,23 @@ behavior also remain unresolved. Google Play publication is deferred.
   history rows, Storage buckets, or app Storage policies. Supabase-managed
   `storage` relations exist with RLS enabled. The explicit project list and
   query output identified the target as staging, never production.
-- `supabase functions list --remote=aftdbphdobfrshienple` returned no deployed
-  functions. `supabase migration list --remote=...` showed all local migration
-  timestamps absent remotely. The initial `db push --dry-run` correctly showed
-  the eight reviewed migrations in timestamp order; after adding the staging
-  private-image migration it showed nine. These were dry-run/read-only checks;
-  no hosted write has occurred yet.
+- `supabase functions list --remote=aftdbphdobfrshienple` initially returned
+  no deployed functions. The reviewed nine migrations were then applied in
+  order to staging, and a subsequent migration list matched all nine local and
+  remote versions. The migration chain includes the entitlement prerequisites,
+  security fixes, atomic AI quota operations, and private image buckets.
 - Read-only production policy inspection confirmed the exact two public image
   policies are bucket-scoped (`avatars` and `wardrobe-images`). The new final
   migration creates those buckets privately when absent, preserves existing
   bucket metadata when present, and applies authenticated owner-folder policies.
   Applying it to production later still requires legacy-reference conversion
   and the compatible client rollout.
-- The main checkout remains explicitly linked to production. Staging work will
-  use a separate detached worktree and explicit `--remote=aftdbphdobfrshienple`
-  targets. No staging credentials were printed or written to tracked files.
+- The main checkout remains explicitly linked to production. Staging changes
+  used a separate detached worktree and explicit
+  `--remote=aftdbphdobfrshienple` targets. No staging credentials were printed
+  or written to tracked files. The CLI labels the staging project's main branch
+  `production`; this is a branch environment label within staging, not the
+  recovered Everywear production project.
 - Added `20261112140000_private_image_bucket_security.sql` after the entitlement
   and quota migrations. It creates missing image buckets privately, preserves
   existing bucket metadata except public visibility, removes the exact
@@ -60,14 +63,65 @@ behavior also remain unresolved. Google Play publication is deferred.
   access for select/insert/update/delete. The storage regression fixture and
   staging/production rollout docs now reference the migration. Production must
   still wait for client rollout and stable-reference conversion.
-- Checks performed: explicit CLI identity listing; metadata-only read-only
-  staging queries; deployed-function and migration-history listing; dry-run of
-  all nine migrations to the exact staging ref; read-only production lookup of
-  the two public policy predicates; source/diff review and `git diff --check`.
-  No staging write, migration, function deploy, key retrieval, build, or test
-  has occurred yet. Next is a local commit, then the reviewed chain to staging.
-  If `db push` asks for the database password, enter it only at the CLI's
-  hidden local prompt. Never send it or anon/service keys in chat.
+- Read-only production policy lookup confirmed the two public image policies
+  are bucket-scoped (`avatars` and `wardrobe-images`). The private-bucket
+  migration drops those policy names and replaces them with owner-folder
+  policies. Production still requires compatible client rollout and stable
+  reference conversion before any private cutover.
+
+## Staging deployment and hosted checks (2026-11-12)
+
+- All nine ordered migrations are present in staging migration history. Eight
+  functions are active with gateway JWT verification: `ai-suggestions`,
+  `analyze-clothing`, `check-and-request-suggestion`, `delete-account`,
+  `generate-ai-insights`, `style-coach`, `today-suggestion`, and
+  `verify-purchase`. No webhook, payments, ad integration, or provider secret
+  was deployed/configured. The CLI's `production` environment label is the
+  staging project's branch label; the recovered Everywear production project
+  was not targeted.
+- Synthetic API checks passed in separate phases: security/Auth/PostgREST and
+  quota checks **52/52**; filtered two-user Realtime **5/5**; Storage ownership,
+  private URL delivery/replacement, object deletion, and account deletion
+  **31/31**. A read-only aggregate query after cleanup found zero synthetic
+  users, image objects, wardrobe rows, or outfit rows. These are live staging
+  integration results, not production results.
+- AI endpoint checks confirmed unauthenticated and invalid JWT requests are
+  denied. Authenticated model-backed requests returned the expected 503
+  `AI_UNAVAILABLE` without consuming allowance because no provider key was
+  configured. Purchase verification likewise failed closed with 503. No paid
+  inference, real purchase, or advertising request occurred. Model quality,
+  billing lifecycle, device behavior, and provider-backed paths remain
+  unverified.
+- The integrated smoke runner had two initial combined-run failures in test
+  assertion ordering and Realtime payload parsing. Both defects were fixed;
+  the final separated phases all passed. The complete `all` mode was not
+  rerun as a single invocation.
+- Added a staging-only visible app banner and wired the private-config APK
+  helper to set it. The focused banner widget test passes **2/2**. The helper
+  was syntax-checked but not run. APK build remains deferred after two earlier
+  Android build failures and full swap pressure; no physical Android device is
+  attached. No current staging APK exists.
+- Main checkout linkage is unchanged; staging operations used the detached
+  worktree and explicit ref. Staging service-role credentials are held only in
+  a mode-0600 file outside the repository and must be removed after the final
+  staging checks. No production or Clameo mutation occurred.
+
+## Checks from this continuation
+
+- Targeted Dart formatting completed with **0 changes** across the main entry,
+  banner, and banner test. `bash -n` passed for the APK helper; Python AST
+  parsing passed for the hosted smoke runner; `git diff --check` passed.
+- The staging-banner widget test passed **2/2** with
+  `.tooling/flutter/bin/flutter test --no-pub --concurrency=1
+  test/widgets/staging_build_banner_test.dart`. Two earlier attempts exposed
+  incorrect test finders (painted banner text and Flutter's built-in debug
+  banner); the test was corrected and the final run passed. This did not run a
+  build, emulator, analyzer, or broader test suite.
+- The requested connected debug APK is not yet produced. The previous Android
+  build attempts stopped on JDK selection and then resource exhaustion; current
+  swap is nearly full, so the build helper must wait for stable memory
+  headroom. The exact helper output path is recorded in
+  [`uptodown-free-beta.md`](uptodown-free-beta.md).
 
 ## Uptodown billing checkpoint (2026-11-12)
 
