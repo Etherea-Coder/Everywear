@@ -12,6 +12,13 @@ The linked production project `qxsdwwdrxoyxmnapuqqv` was inspected using the Doc
 
 The local forward migration has been reconciled to the recovered column names and types where metadata was available, but it remains an unexecuted review proposal. In particular it reuses the recovered `revenue_cat_id text` field and `suggestions_reset_at date`, and adds only missing subscription state/event fields and app relations. The `supabase_migrations.schema_migrations` relation was absent in the read-only lookup; migration history was not modified. Do not use `db push` or repair history against production.
 
+The `wardrobe_items` column inventory was rechecked read-only on 2026-11-12.
+It includes `id`, `user_id`, `name`, `category`, `image_url`,
+`semantic_label`, `wear_count`, and `last_worn`; it has no `color` or
+`times_worn` columns. The local daily-suggestion handler selects the recovered
+columns and obtains canonical wardrobe rows through the authenticated user's
+RLS context.
+
 ## Trust boundaries
 
 - The Flutter client receives only the Supabase URL, publishable/anon key, RevenueCat public Android SDK key, and the configured paid entitlement identifier.

@@ -110,6 +110,10 @@ unverified. This is not yet a Play release candidate.
 - `03aef89503c9b7dfd1a6cc81381c0c6e4122ccc3` — validates and bounds style
   coach model output by mode, prevents model fields from overriding response
   status, returns a gateway error for unusable responses, and adds pure tests.
+- `2714408822692e0ee8ba921c7b08e634dffcc9d3` — loads the daily suggestion's
+  canonical wardrobe through the authenticated user's RLS-protected query,
+  validates generated item IDs/slots, returns database image references, and
+  adds offline response-validation tests.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -159,6 +163,13 @@ unverified. This is not yet a Play release candidate.
   and event intro/outfit content, and returns HTTP 502 when output is malformed
   or incomplete. Existing client fields remain (`tip`, `answer`, `next_step`,
   and event outfit fields); unneeded raw model text is no longer returned.
+- `today-suggestion` loads its canonical wardrobe through the authenticated
+  user's RLS-protected `wardrobe_items` query, using recovered table columns.
+  It merges only rating hints tied to those database IDs, omits image paths from
+  the Gemini prompt, and returns canonical names/categories/image references.
+  Unknown IDs and invalid slots are removed; output without a real wardrobe
+  anchor fails closed. Unusable model output receives HTTP 502. This remote
+  database path has not been integration-tested against a disposable project.
 - All four Gemini-backed functions now construct requests through a shared
   helper that keeps the server API key in `x-goog-api-key`, avoiding key
   exposure in request URLs and URL-oriented logs. A pure test verifies the
@@ -254,6 +265,8 @@ unverified. This is not yet a Play release candidate.
 | Deno tests (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts supabase/functions/generate-ai-insights/ai_response_test.ts supabase/functions/verify-purchase/entitlement_test.ts` — **13 passed**, no remote imports or provider calls |
 | Edge Function lint and tests (2026-11-12) | `.tooling/deno lint supabase/functions` passed across **17 files**. `.tooling/deno test --no-remote` over request validation, insight parsing, entitlement evaluation, and Gemini request construction passed **14/14** with no provider calls. `deno fmt --check` passed for the new Gemini helper/test and `git diff --check` passed. Protected-function type-check and CI workflow execution remain deferred; no provider call was made |
 | Style coach response validation (2026-11-12) | After adding the pure mode-aware response parser and tests, full Deno lint passed across **19 files** and the no-remote pure test set passed **18/18**. Targeted `deno fmt --check` passed on the new parser/test; `git diff --check` passed. No provider/network call was made. Protected-function type-check and CI execution remain deferred |
+| Today suggestion ownership/output validation (2026-11-12) | Full Deno lint passed across **21 files**; the no-remote pure test set passed **22/22**. `deno check --no-remote` and `deno fmt --check` passed for the four pure style/daily response helper/test files; `git diff --check` passed. The handler's authenticated Supabase query and quota ordering were not integration-tested; no Supabase or Gemini function was invoked |
+| Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
@@ -440,6 +453,10 @@ grants. No device check was possible because `adb` is absent.
 - [x] Validate style-coach's model responses against the existing passive,
   active, and event client contracts; bound output and ignore untrusted control
   fields. Four pure regression cases pass without network access.
+- [x] Validate daily-suggestion item IDs against the authenticated user's
+  database-backed wardrobe, canonicalize image data from those rows, omit image
+  references from Gemini prompts, and bound response fields. Four pure cases
+  pass; the RLS query still needs disposable-database integration validation.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
