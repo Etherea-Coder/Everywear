@@ -4,9 +4,10 @@ Last updated: 2026-11-12
 
 ## Current classification
 
-Recovery is in progress on `recovery/android-v1`; latest local checkpoint is
-`9558052`. The sequential full Flutter suite passed **94/94** on the current
-application code. That run printed nonfatal binding/Supabase initialization
+Recovery is in progress on `recovery/android-v1`. The latest code checkpoint is
+`8a6abb5`; later commits in this sequence update release evidence. The
+sequential full Flutter suite passed **94/94** on the current application code.
+That run printed nonfatal binding/Supabase initialization
 diagnostics in provider filter tests; the tests now use an isolated empty
 repository, and the affected file passed **6/6** without diagnostics. The full
 suite was not repeated after this test-only change. A full project analysis
