@@ -319,8 +319,8 @@ grants. No device check was possible because `adb` is absent.
   notification scheduling: 4/4; AI payload: 3/3;
   Deno request validation: 5/5; app import: 1/1; image/app import selection:
   12/12.
-- [x] Rebuild the release AAB after the localized Dart change; the current
-  final-source bundle passed archive integrity and is unsigned with no
+- [x] Rebuild the release AAB after the learning recovery source change; the
+  current final-source bundle passed archive integrity and is unsigned with no
   Supabase/RevenueCat build values. SHA-256 is recorded above.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
