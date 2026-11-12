@@ -10,7 +10,6 @@ import '../presentation/welcome_philosophy/welcome_philosophy.dart';
 import '../presentation/feature_overview/feature_overview.dart';
 import '../presentation/personalization_setup/personalization_setup.dart';
 import '../presentation/daily_log/daily_log.dart';
-import '../presentation/outfit_rating/outfit_rating.dart';
 import '../presentation/insights_dashboard/insights_dashboard.dart';
 import '../presentation/purchase_tracking/purchase_tracking.dart';
 import '../presentation/settings_profile/profile_screen.dart'; // ← renamed
@@ -72,7 +71,6 @@ class AppRoutes {
   // ============================================
   static const String addClothingItem = '/add-clothing-item';
   static const String outfitCaptureFlow = '/outfit-capture-flow';
-  static const String outfitRating = '/outfit-rating';
   static const String outfitHistory = '/outfit-history';
 
   // ============================================
@@ -135,7 +133,6 @@ class AppRoutes {
     // Wardrobe operations
     addClothingItem: (context) => const AddClothingItem(),
     outfitCaptureFlow: (context) => const OutfitCaptureFlow(),
-    outfitRating: (context) => const OutfitRating(),
     outfitHistory: (context) => const OutfitHistoryScreen(),
 
     // AI & Intelligence
