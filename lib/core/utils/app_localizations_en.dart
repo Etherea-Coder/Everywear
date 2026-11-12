@@ -650,6 +650,8 @@ const Map<String, String> appLocalizationsEn = {
       'Current plans, prices, and renewal terms are shown on RevenueCat’s secure checkout page.',
   'hosted_checkout_unavailable':
       'Online checkout is unavailable in this build. No offer is available until billing is configured.',
+  'free_beta_purchases_unavailable':
+      'Purchases are disabled in this free beta.',
   'continue_to_checkout': 'Continue to checkout',
   'hosted_checkout_opened':
       'Checkout opened in your browser. Everywear enables Premium only after the subscription is verified.',
@@ -4022,7 +4024,7 @@ const Map<String, String> appLocalizationsEn = {
   'ai_allowance_exhausted':
       'Your AI action limit has been reached. Try again after the UTC reset.',
   'ai_service_unavailable':
-      'AI is temporarily unavailable. You can continue without AI and retry later.',
+      'AI is unavailable right now. You can continue without AI.',
   // Challenge type titles
   'challenge_type_anchor_title': 'Anchor Piece',
   'challenge_type_anchor_description':

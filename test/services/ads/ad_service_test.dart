@@ -57,6 +57,21 @@ void main() {
       );
     });
 
+    test('free beta overrides enabled Monetag or AdMob configuration', () {
+      for (final provider in [
+        AdProviderSelection.monetag,
+        AdProviderSelection.admob,
+      ]) {
+        final config = AdsConfiguration.forBuild(
+          freeBeta: true,
+          enabled: true,
+          provider: provider,
+        );
+        expect(config.enabled, isFalse);
+        expect(config.provider, AdProviderSelection.disabled);
+      }
+    });
+
     test('frequency history is persistent and scoped by account', () async {
       SharedPreferences.setMockInitialValues({});
       const store = PreferencesAdFrequencyStore();

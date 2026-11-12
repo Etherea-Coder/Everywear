@@ -1978,6 +1978,8 @@ class AppLocalizations {
       translate('hosted_checkout_description');
   String get hostedCheckoutUnavailable =>
       translate('hosted_checkout_unavailable');
+  String get freeBetaPurchasesUnavailable =>
+      translate('free_beta_purchases_unavailable');
   String get continueToCheckout => translate('continue_to_checkout');
   String get hostedCheckoutOpened => translate('hosted_checkout_opened');
   String get manageSubscription => translate('manage_subscription');

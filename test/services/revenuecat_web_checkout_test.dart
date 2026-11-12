@@ -11,12 +11,14 @@ RevenueCatWebCheckoutConfig config({
   String productionLink = 'https://pay.rev.cat/AbCd1234',
   String sandboxLink = 'https://pay.rev.cat/Test1234',
   bool isReleaseBuild = true,
+  bool freeBeta = false,
 }) => RevenueCatWebCheckoutConfig(
   distribution: distribution,
   environment: environment,
   productionLink: productionLink,
   sandboxLink: sandboxLink,
   isReleaseBuild: isReleaseBuild,
+  freeBeta: freeBeta,
 );
 
 void main() {
@@ -45,6 +47,11 @@ void main() {
         ['Test1234', userA],
       );
       expect(config(isReleaseBuild: false).checkoutUriFor(userA), isNull);
+    });
+
+    test('free beta forcibly disables hosted checkout', () {
+      expect(config(freeBeta: true).isAvailable, isFalse);
+      expect(config(freeBeta: true).checkoutUriFor(userA), isNull);
     });
 
     test(

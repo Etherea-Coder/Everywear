@@ -12,12 +12,17 @@ class RevenueCatWebCheckoutConfig {
     required this.productionLink,
     required this.sandboxLink,
     required this.isReleaseBuild,
+    this.freeBeta = false,
   });
 
   factory RevenueCatWebCheckoutConfig.fromEnvironment() {
     const distribution = String.fromEnvironment('APP_DISTRIBUTION');
     const environment = String.fromEnvironment(
       'REVENUECAT_BILLING_ENVIRONMENT',
+    );
+    const freeBeta = bool.fromEnvironment(
+      'EVERYWEAR_FREE_BETA',
+      defaultValue: false,
     );
     return RevenueCatWebCheckoutConfig(
       distribution: switch (distribution) {
@@ -37,6 +42,7 @@ class RevenueCatWebCheckoutConfig {
         'REVENUECAT_WEB_PURCHASE_LINK_SANDBOX',
       ),
       isReleaseBuild: kReleaseMode,
+      freeBeta: freeBeta,
     );
   }
 
@@ -45,12 +51,14 @@ class RevenueCatWebCheckoutConfig {
   final String productionLink;
   final String sandboxLink;
   final bool isReleaseBuild;
+  final bool freeBeta;
 
   bool get environmentMatchesBuild => isReleaseBuild
       ? environment == BillingEnvironment.production
       : environment == BillingEnvironment.sandbox;
 
   bool get isAvailable =>
+      !freeBeta &&
       distribution == AppDistribution.uptodown &&
       environmentMatchesBuild &&
       _parsePurchaseLink(

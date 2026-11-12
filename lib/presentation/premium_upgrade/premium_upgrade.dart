@@ -306,6 +306,8 @@ class _PremiumUpgradeState extends ConsumerState<PremiumUpgrade> {
           Text(
             ready
                 ? l10n.hostedCheckoutDescription
+                : _billingConfig.freeBeta
+                ? l10n.freeBetaPurchasesUnavailable
                 : l10n.hostedCheckoutUnavailable,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,

@@ -828,3 +828,74 @@ sandbox RevenueCat configuration, and confirm the customer-safe handling for
 existing subscribers whose new status defaults to inactive. Then run the
 checklist there with synthetic accounts/data and deploy nothing to production
 until the migration baseline and complete platform behaviors have been reviewed.
+
+## Uptodown free-beta preparation (2026-11-12)
+
+- Confirmed the authenticated Supabase CLI identity is the Everywear
+  organization `ioohmyibnlzfltqcsnkg`. Its project list contains production
+  Everywear `qxsdwwdrxoyxmnapuqqv` (active) and unrelated Clameo
+  `sjpdgcopihwocalrsrdb` (inactive). The CLI exposes no organization plan,
+  billing credits, or project-capacity fields; `projects create --help` has no
+  zero-cost preview. No staging project was created. The exact staging blocker
+  is owner-provided read-only billing/capacity confirmation that a new isolated
+  project adds no cost, or an already-approved isolated staging project.
+- Queried only aggregate production metadata using explicit
+  `supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only`. The three
+  profile rows aggregate to two `free` and one legacy `premium` tier; all three
+  have `subscription_expires_at IS NULL`. The subscription transaction table
+  has no rows in any event/store category. This is not verified payment
+  evidence: the profile flag alone cannot establish a paid account, and the
+  recovered schema has no transaction event evidence. No individual account,
+  private data, credentials, or Storage objects were queried. Do not promise
+  restoration of premium until provider-side purchase history is checked.
+- Added an explicit `EVERYWEAR_FREE_BETA` build gate. It disables RevenueCat
+  initialization/checkout and forces ad selection to disabled even if other
+  compile-time billing or ad values are accidentally supplied. The premium
+  screen explains that purchases are disabled, with English, Spanish, and
+  French strings. AI-unavailable copy no longer promises a retry. Added focused
+  configuration and localization regression coverage. Manual wardrobe and
+  deterministic outfit features remain usable; AI still needs an isolated
+  backend with the reviewed quota migration/provider state.
+- Updated the app version to `1.0.0-beta.1+2` (version code 2), preserving
+  application ID `com.stylewise.app`. Added a beta build helper that refuses
+  the production project ref and accepts only a private mode-0600 staging JSON
+  file outside the checkout with the exact staging URL and anon-key fields.
+  It produces only a clearly named debug APK in the ignored build directory;
+  it cannot create/link/deploy backend projects. Added draft Uptodown listing,
+  release notes, and device smoke instructions in
+  [`uptodown-free-beta.md`](uptodown-free-beta.md).
+- Not built: no zero-cost staging project or staging config exists, the
+  recovered production backend is unsafe and read-only, and no physical
+  Android device/ADB verification is available. No APK artifact or runtime
+  result is claimed. `android/key.properties` and the existing upload signing
+  key are absent, so no signed release artifact can be produced. Privacy,
+  deletion, support, data-retention URLs, artwork, and owner-approved handling
+  of the legacy premium profile are still needed before public distribution.
+- Checks for this checkpoint: read-only organization/project CLI listing and
+  aggregate production SQL; source inspection confirmed Android application ID
+  `com.stylewise.app`, version code `2`, and no upload signing config. Targeted
+  Dart formatting normalized the changed RevenueCat service; a second
+  formatting check reported zero changed files. Focused Flutter tests passed
+  **26/26** across RevenueCat config/hosted checkout, ad config/coordinator,
+  and localization. Targeted analysis of the 12 changed Dart files reported
+  five info diagnostics and no warnings or errors. The build helper passes
+  `bash -n`; missing-config and production-ref guards both refused safely.
+  `git diff --check` passed. No full Flutter suite, Android build, device test, Docker,
+  production write, deployment, or publication was performed.
+
+### Resumable free-beta checklist
+
+- [x] Force checkout and ads off in the free-beta build; update honest UI copy.
+- [x] Prepare a staging-only APK helper with private config checks and a
+  production-ref guard; preserve app identity and release signing setup.
+- [x] Draft Uptodown listing, notes, and physical-device checks.
+- [ ] Obtain zero-cost staging confirmation or an already-approved staging
+  project, then create a separate working directory/configuration.
+- [ ] Reconcile/deploy the reviewed migrations and Edge Functions only to that
+  isolated staging project; run two-user Auth, PostgREST, Storage, quota, and
+  Realtime integration checks.
+- [ ] Build the staging APK and smoke-test it on a physical device.
+- [ ] Resolve legacy premium account evidence/transition and provide privacy,
+  deletion, support, and data-retention URLs plus approved artwork.
+- [ ] Locate/validate the existing upload-signing key before any signed
+  distributable; do not generate a replacement.

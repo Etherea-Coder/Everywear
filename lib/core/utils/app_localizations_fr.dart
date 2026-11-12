@@ -628,6 +628,8 @@ const Map<String, String> appLocalizationsFr = {
       'Les offres, les prix et les conditions de renouvellement actuels sont affichés sur la page de paiement sécurisée de RevenueCat.',
   'hosted_checkout_unavailable':
       'Le paiement en ligne n’est pas disponible dans cette version. Aucune offre n’est proposée tant que la facturation n’est pas configurée.',
+  'free_beta_purchases_unavailable':
+      'Les achats sont désactivés dans cette bêta gratuite.',
   'continue_to_checkout': 'Continuer vers le paiement',
   'hosted_checkout_opened':
       'La page de paiement est ouverte dans votre navigateur. Everywear active Premium uniquement après vérification de l’abonnement.',
@@ -1753,7 +1755,7 @@ const Map<String, String> appLocalizationsFr = {
   'ai_allowance_exhausted':
       'Votre limite d’actions IA est atteinte. Réessayez après la réinitialisation UTC.',
   'ai_service_unavailable':
-      'Le service IA est temporairement indisponible. Vous pouvez continuer sans IA et réessayer plus tard.',
+      'Le service IA n’est pas disponible actuellement. Vous pouvez continuer sans IA.',
   // Challenge type titles
   'challenge_type_anchor_title': 'Pièce d\'Ancrage',
   'challenge_type_anchor_description':

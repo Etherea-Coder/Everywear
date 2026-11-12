@@ -74,10 +74,24 @@ class AdsConfiguration {
     'EVERYWEAR_AD_PROVIDER',
     defaultValue: 'disabled',
   );
+  static const _freeBeta = bool.fromEnvironment(
+    'EVERYWEAR_FREE_BETA',
+    defaultValue: false,
+  );
 
-  factory AdsConfiguration.fromEnvironment() => AdsConfiguration(
+  factory AdsConfiguration.fromEnvironment() => AdsConfiguration.forBuild(
+    freeBeta: _freeBeta,
     enabled: _environmentEnabled,
     provider: AdProviderSelectionParsing.parse(_environmentProvider),
+  );
+
+  factory AdsConfiguration.forBuild({
+    required bool freeBeta,
+    required bool enabled,
+    required AdProviderSelection provider,
+  }) => AdsConfiguration(
+    enabled: !freeBeta && enabled,
+    provider: freeBeta ? AdProviderSelection.disabled : provider,
   );
 
   final bool enabled;

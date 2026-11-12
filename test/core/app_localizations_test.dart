@@ -47,6 +47,17 @@ void main() {
         'fr': '4 actions IA restantes ce mois-ci',
         'es': 'Quedan 4 acciones de IA este mes',
       };
+      final expectedAiUnavailable = <String, String>{
+        'en': 'AI is unavailable right now. You can continue without AI.',
+        'fr':
+            'Le service IA n’est pas disponible actuellement. Vous pouvez continuer sans IA.',
+        'es': 'La IA no está disponible ahora. Puedes continuar sin IA.',
+      };
+      final expectedFreeBetaPaymentsUnavailable = <String, String>{
+        'en': 'Purchases are disabled in this free beta.',
+        'fr': 'Les achats sont désactivés dans cette bêta gratuite.',
+        'es': 'Las compras están desactivadas en esta beta gratuita.',
+      };
 
       for (final locale in AppLocalizations.supportedLocales) {
         final localizations = AppLocalizations(locale);
@@ -85,6 +96,16 @@ void main() {
           localizations.aiAllowanceRemaining(4),
           expectedAiAllowance[locale.languageCode],
           reason: 'AI allowance locale ${locale.languageCode}',
+        );
+        expect(
+          localizations.aiServiceUnavailable,
+          expectedAiUnavailable[locale.languageCode],
+          reason: 'AI unavailable locale ${locale.languageCode}',
+        );
+        expect(
+          localizations.freeBetaPurchasesUnavailable,
+          expectedFreeBetaPaymentsUnavailable[locale.languageCode],
+          reason: 'free beta payments locale ${locale.languageCode}',
         );
         expect(
           localizations.aiStatusMessage('AI_LIMIT_DAILY'),

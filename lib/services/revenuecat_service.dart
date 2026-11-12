@@ -5,6 +5,10 @@ import './serial_operation_queue.dart';
 import './supabase_service.dart';
 
 class RevenueCatService {
+  static const _freeBeta = bool.fromEnvironment(
+    'EVERYWEAR_FREE_BETA',
+    defaultValue: false,
+  );
   static const _androidKey = String.fromEnvironment(
     'REVENUECAT_ANDROID_API_KEY',
   );
@@ -17,10 +21,31 @@ class RevenueCatService {
   static final SerialOperationQueue _identityQueue = SerialOperationQueue();
 
   static bool get isConfigured {
-    if (kIsWeb || (!Platform.isIOS && !Platform.isAndroid)) return false;
-    final key = Platform.isAndroid ? _androidKey : _iosKey;
-    return key.isNotEmpty && entitlementId.isNotEmpty;
+    final supportedPlatform = !kIsWeb && (Platform.isIOS || Platform.isAndroid);
+    final key = !supportedPlatform
+        ? ''
+        : Platform.isAndroid
+        ? _androidKey
+        : _iosKey;
+    return canConfigurePurchases(
+      freeBeta: _freeBeta,
+      supportedPlatform: supportedPlatform,
+      apiKey: key,
+      requiredEntitlementId: entitlementId,
+    );
   }
+
+  @visibleForTesting
+  static bool canConfigurePurchases({
+    required bool freeBeta,
+    required bool supportedPlatform,
+    required String apiKey,
+    required String requiredEntitlementId,
+  }) =>
+      !freeBeta &&
+      supportedPlatform &&
+      apiKey.isNotEmpty &&
+      requiredEntitlementId.isNotEmpty;
 
   static Future<void> initialize() async {
     if (_initialized) return;
