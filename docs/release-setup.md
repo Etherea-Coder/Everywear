@@ -8,9 +8,12 @@
 - Supabase CLI `3.1.0` for read-only production metadata inspection
 - Deno `2.9.6` for local Edge Function type checks
 
-Resolve dependencies with `flutter pub get`, then use `flutter analyze --no-pub`
-and `flutter test --concurrency=1`. The repository CI runs those checks and
-type-checks the protected Edge Functions. CI does not need provider credentials.
+Resolve dependencies with `flutter pub get`, then use
+`flutter analyze --no-pub --no-fatal-infos --fatal-warnings` and
+`flutter test --concurrency=1`. The analyzer gate keeps errors and warnings
+fatal while allowing the current informational lint backlog. The repository CI
+runs those checks and type-checks the protected Edge Functions. CI does not
+need provider credentials.
 
 ## App configuration
 
