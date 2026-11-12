@@ -95,6 +95,9 @@ unverified. This is not yet a Play release candidate.
 - `483742c738165636367fcb9f3cee8d9aba1d37ec` — sends Gemini API keys in the
   `x-goog-api-key` header for all four model-backed functions instead of URL
   query parameters; adds a no-network request-construction regression test.
+- `621457a0015639682fe0959f42dac9a56bb36613` — runs the pure Deno Edge
+  Function regression tests with `--no-remote` in CI; this workflow change has
+  not yet run in CI.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -407,6 +410,9 @@ grants. No device check was possible because `adb` is absent.
   today-suggestion, style-coach, and generate-ai-insights; the shared request
   helper regression test passed 1/1 without network access. Full-function lint
   still reports legacy violations, and type-check/deployment remain deferred.
+- [x] Add the pure no-remote Edge Function test set to CI, including Gemini
+  request construction. The focused Gemini test passed locally; the workflow
+  itself has not run.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
