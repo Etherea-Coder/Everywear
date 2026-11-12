@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
+import {
+  parseClothingAnalysis,
+  validateImageRequest,
+} from './clothing_analysis.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
+const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,7 +22,10 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: CORS_HEADERS,
+      })
     }
 
     const userClient = createClient(
@@ -27,28 +35,44 @@ Deno.serve(async (req) => {
     )
     const { data: { user }, error: authError } = await userClient.auth.getUser()
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: CORS_HEADERS,
+      })
     }
 
-    const { imageBase64 } = await req.json()
-    if (typeof imageBase64 !== 'string' || imageBase64.length === 0) {
-      return new Response(JSON.stringify({ error: 'Missing imageBase64' }), { status: 400 })
+    let requestBody: unknown
+    try {
+      requestBody = await req.json()
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+        headers: CORS_HEADERS,
+      })
     }
-    if (imageBase64.length > 10_000_000) {
-      return new Response(JSON.stringify({ error: 'Image is too large' }), { status: 413 })
+    const validated = validateImageRequest(requestBody)
+    if (!validated.ok) {
+      return new Response(JSON.stringify({ error: validated.error }), {
+        status: validated.status,
+        headers: CORS_HEADERS,
+      })
     }
+    const { imageBase64 } = validated
+
+    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
+    if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     const { data: allowed, error: quotaError } = await userClient.rpc(
       'consume_ai_quota',
       { quota_kind: 'suggestion' },
     )
-    if (quotaError) throw new Error(`Quota check failed: ${quotaError.message}`)
+    if (quotaError) throw new Error('Quota check failed')
     if (allowed !== true) {
-      return new Response(JSON.stringify({ error: 'AI quota reached' }), { status: 429 })
+      return new Response(JSON.stringify({ error: 'AI quota reached' }), {
+        status: 429,
+        headers: CORS_HEADERS,
+      })
     }
-
-    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
-    if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
 
     const prompt = `Analyze this clothing item image and respond ONLY with a JSON object in this exact format:
 {
@@ -78,17 +102,19 @@ Respond with ONLY the JSON, no other text.`
 
     const geminiData = await geminiResponse.json()
     const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    const result = parseClothingAnalysis(text)
+    if (!result) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid analysis response.' }), {
+        status: 502,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      })
+    }
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in response')
-
-    const result = JSON.parse(jsonMatch[0])
-
-    return new Response(JSON.stringify({ success: true, ...result }), {
+    return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     })
-  } catch (error) {
-    console.error('analyze-clothing error:', error)
+  } catch {
+    console.error('analyze-clothing failed')
     return new Response(
       JSON.stringify({ success: false, error: 'Clothing analysis failed.' }),
       { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }

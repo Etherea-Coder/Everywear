@@ -34,6 +34,7 @@ jobs:
         run: |
           deno test --no-remote \
             supabase/functions/ai-suggestions/request_validation_test.ts \
+            supabase/functions/analyze-clothing/clothing_analysis_test.ts \
             supabase/functions/generate-ai-insights/ai_response_test.ts \
             supabase/functions/style-coach/coach_response_test.ts \
             supabase/functions/today-suggestion/suggestion_response_test.ts \
