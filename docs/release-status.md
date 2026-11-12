@@ -319,11 +319,11 @@ unverified. This is not yet a Play release candidate.
 | Current Dart-source Flutter regression and CI analyzer rerun (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` passed **59/59**. `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited **0** with **245 info** diagnostics and no warning/error diagnostics. Subsequent commits changed only Edge Function TypeScript, CI, and documentation; no Flutter/Dart source changed. No device, database, provider, or purchase behavior was tested |
 | Current-HEAD Edge Function verification (2026-11-12) | Project-local Deno **2.9.6** ran the CI no-remote pure test list plus rating-hint cases: **29 passed, 0 failed**; `deno lint supabase/functions` passed across **25 files**; formatting passed for the new helper/test; `deno check --config supabase/functions/deno.json` passed all **9 protected handlers**. Deno fetched module/type files from esm.sh; no function handler was executed, and no database/provider operation was performed |
 | Current-source Android release bundle (2026-11-12) | `./gradlew :app:bundleRelease --no-daemon --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError'` succeeded in **1m26s** (33 tasks executed, 738 up-to-date). Produced `build/app/outputs/bundle/release/app-release.aab` from source commit `04a57bc`: **76,959,486 bytes**, SHA-256 `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`. `unzip -t` passed; `jarsigner -verify` reported **jar is unsigned**. Gradle reported release signing disabled because `android/key.properties` is absent. No public app defines, device install, or runtime test was performed |
-| Current-source debug APK (2026-11-12) | `./gradlew :app:assembleDebug --no-daemon --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError'` succeeded in **1m57s** (97 tasks executed, 335 up-to-date). `build/app/outputs/flutter-apk/app-debug.apk` is **197,268,699 bytes**, SHA-256 `ea14e9f5511988977d80b9bdd405ab5a49e68623ce8763c68fe5608f6b3d252c`. ZIP integrity and `apksigner verify` passed; `aapt dump badging` confirms `com.stylewise.app`, version 1.0.0, target SDK 36. It uses the Android debug certificate and is not a Play artifact. D8 emitted Kotlin metadata/Appstore SDK warnings during dex transforms; build completed. No `adb`/device install was available |
+| Current-source debug APK (2026-11-12) | `./gradlew :app:assembleDebug --no-daemon --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError'` succeeded in **1m57s** (97 tasks executed, 335 up-to-date). `build/app/outputs/flutter-apk/app-debug.apk` is **197,268,699 bytes**, SHA-256 `ea14e9f5511988977d80b9bdd405ab5a49e68623ce8763c68fe5608f6b3d252c`. ZIP integrity and `apksigner verify` passed; `aapt dump badging` confirms `com.stylewise.app`, version 1.0.0, target SDK 36. It uses the Android debug certificate and is not a Play artifact. D8 emitted Kotlin metadata/Appstore SDK warnings during dex transforms; build completed. SDK `adb` is installed at `/home/theanarchitect/Android/Sdk/platform-tools/adb`, but `adb devices -l` returned no attached devices, so no install/runtime check was available |
 | AI request/quota ordering (2026-11-12) | Full Deno lint passed across **23 files** and the no-remote tests passed **26/26** after request validation was moved ahead of quota use. `deno check --no-remote` passed for pure response helpers/tests; no network or database call was made. Edge Function handler type-check remains deferred |
 | Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
-| Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
+| Device | No emulator/device used. `/home/theanarchitect/Android/Sdk/platform-tools/adb devices -l` returned an empty device list; physical-device installation/runtime verification remains pending |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
 
 Latest verification: after the dependency/API correction, the focused image
@@ -352,7 +352,9 @@ or call AI
 providers. A project-local `pglast` parse accepted all 30 outer SQL statements
 in the Storage fixture; this does not execute policies or prove isolation.
 Read-only metadata queries confirmed public buckets and broad Storage table
-grants. No device check was possible because `adb` is absent.
+grants. No device check was performed; `adb` was not on `PATH` at that earlier
+checkpoint. A later direct SDK-path check found `adb` installed but no attached
+device.
 
 ## 3. Deferred or incomplete verification
 
@@ -380,7 +382,7 @@ grants. No device check was possible because `adb` is absent.
   ZIP integrity passed. `jarsigner` confirms it is unsigned. The private upload
   key and `android/key.properties` are absent. Device/network behavior,
   timezone/permission behavior, accessibility, and export runtime checks remain
-  pending; `adb` is not installed.
+  pending; SDK `adb` is installed, but no device is attached.
 - A debug APK is also available at `build/app/outputs/flutter-apk/app-debug.apk`
   (197,268,699 bytes; SHA-256
   `ea14e9f5511988977d80b9bdd405ab5a49e68623ce8763c68fe5608f6b3d252c`). Its
@@ -426,9 +428,9 @@ grants. No device check was possible because `adb` is absent.
   verification. No successful purchase is claimed.
 - No private upload keystore or `android/key.properties` was found. A signed AAB
   cannot be produced without valid private upload-signing inputs.
-- Physical-device verification needs Android Platform Tools (`adb`) and a
-  connected Android device. Neither was available in this environment; no
-  emulator was started.
+- Physical-device verification needs a connected Android device. SDK `adb`
+  exists at `/home/theanarchitect/Android/Sdk/platform-tools/adb`, but the
+  current `adb devices -l` list is empty; no emulator was started.
 - Store privacy/deletion URLs, listing artwork/screenshots, required Play
   declarations and eligibility are still owner-provided release inputs.
 - The recovered `create-subscription-payment` Stripe Edge Function is still
@@ -487,7 +489,8 @@ grants. No device check was possible because `adb` is absent.
   recorded in the checks table; it was not installed or run.
 - [x] Build a debug APK from the same app source with one Gradle worker and a
   2 GiB heap. APK signature, archive, package identity and hash were verified;
-  `adb` is unavailable, so no device installation/runtime check is claimed.
+  SDK `adb` is present but reports no attached devices, so no runtime check is
+  claimed.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
 - [x] Prepare concurrent two-session quota regression harness for disposable
