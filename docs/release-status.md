@@ -89,6 +89,9 @@ unverified. This is not yet a Play release candidate.
 - `5d8433cf77b03b5d352778c8dd0247bc657f30b9` — makes purchase entitlement
   selection exact and date evaluation fail closed; four no-remote regression
   cases cover lifetime, active, grace, expired and malformed values.
+- `099cec7932dedad970b08fd975ab026ee0cb7d7e` — requires the configured
+  RevenueCat entitlement to be an own property and guards prototype-name edge
+  cases in the same focused test.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
