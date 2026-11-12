@@ -107,6 +107,9 @@ unverified. This is not yet a Play release candidate.
 - `3d725306c96eff2a521965d965e83f0b19090572` — orders isolated Deno tests
   before protected-function type-checking so a type-check failure does not
   suppress their independent CI result.
+- `03aef89503c9b7dfd1a6cc81381c0c6e4122ccc3` — validates and bounds style
+  coach model output by mode, prevents model fields from overriding response
+  status, returns a gateway error for unusable responses, and adds pure tests.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -151,6 +154,11 @@ unverified. This is not yet a Play release candidate.
   and bounds Gemini response fields before returning them. Malformed model
   output falls back safely without logging the response body. The affected
   functions use the project import-map alias and native `Deno.serve`.
+- `style-coach` now accepts only bounded fields for passive, active, and event
+  modes. It ignores model-supplied control fields, requires the active answer
+  and event intro/outfit content, and returns HTTP 502 when output is malformed
+  or incomplete. Existing client fields remain (`tip`, `answer`, `next_step`,
+  and event outfit fields); unneeded raw model text is no longer returned.
 - All four Gemini-backed functions now construct requests through a shared
   helper that keeps the server API key in `x-goog-api-key`, avoiding key
   exposure in request URLs and URL-oriented logs. A pure test verifies the
@@ -245,6 +253,7 @@ unverified. This is not yet a Play release candidate.
 | Focused billing tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/subscription_service_test.dart test/services/serial_operation_queue_test.dart` — **4 passed**. This validates local identity/verification acceptance and serialization helpers; it is not a store purchase test |
 | Deno tests (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts supabase/functions/generate-ai-insights/ai_response_test.ts supabase/functions/verify-purchase/entitlement_test.ts` — **13 passed**, no remote imports or provider calls |
 | Edge Function lint and tests (2026-11-12) | `.tooling/deno lint supabase/functions` passed across **17 files**. `.tooling/deno test --no-remote` over request validation, insight parsing, entitlement evaluation, and Gemini request construction passed **14/14** with no provider calls. `deno fmt --check` passed for the new Gemini helper/test and `git diff --check` passed. Protected-function type-check and CI workflow execution remain deferred; no provider call was made |
+| Style coach response validation (2026-11-12) | After adding the pure mode-aware response parser and tests, full Deno lint passed across **19 files** and the no-remote pure test set passed **18/18**. Targeted `deno fmt --check` passed on the new parser/test; `git diff --check` passed. No provider/network call was made. Protected-function type-check and CI execution remain deferred |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
@@ -428,6 +437,9 @@ grants. No device check was possible because `adb` is absent.
   all 14 no-remote pure tests passed after the change.
 - [x] Order the CI no-remote Deno test step before protected-function type
   checks so both results remain independently visible when type-checking fails.
+- [x] Validate style-coach's model responses against the existing passive,
+  active, and event client contracts; bound output and ignore untrusted control
+  fields. Four pure regression cases pass without network access.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
