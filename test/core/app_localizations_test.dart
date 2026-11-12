@@ -42,6 +42,11 @@ void main() {
         'fr': 'Impossible d’enregistrer la progression. Veuillez réessayer.',
         'es': 'No se pudo guardar el progreso del módulo. Inténtalo de nuevo.',
       };
+      final expectedAiAllowance = <String, String>{
+        'en': '4 AI actions left this month',
+        'fr': '4 actions IA restantes ce mois-ci',
+        'es': 'Quedan 4 acciones de IA este mes',
+      };
 
       for (final locale in AppLocalizations.supportedLocales) {
         final localizations = AppLocalizations(locale);
@@ -75,6 +80,19 @@ void main() {
           localizations.failedToSaveModuleProgress,
           expectedProgressSaveErrors[locale.languageCode],
           reason: 'module save error locale ${locale.languageCode}',
+        );
+        expect(
+          localizations.aiAllowanceRemaining(4),
+          expectedAiAllowance[locale.languageCode],
+          reason: 'AI allowance locale ${locale.languageCode}',
+        );
+        expect(
+          localizations.aiStatusMessage('AI_LIMIT_DAILY'),
+          localizations.aiAllowanceExhausted,
+        );
+        expect(
+          localizations.aiStatusMessage('AI_UNAVAILABLE'),
+          localizations.aiServiceUnavailable,
         );
       }
     });

@@ -223,7 +223,7 @@ class _AIIntelligenceState extends State<AIIntelligence> {
               ),
               SizedBox(height: 1.h),
               Text(
-                _error!,
+                _localizedAiError(_error!),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall,
               ),
@@ -249,6 +249,9 @@ class _AIIntelligenceState extends State<AIIntelligence> {
               minHeight: 2,
               color: theme.colorScheme.primary,
             ),
+
+          _buildAiAllowanceNotice(theme),
+          SizedBox(height: 1.h),
 
           AIHeroSectionWidget(
             confidenceScore: (_aiData['confidenceScore'] as num?)?.toInt() ?? 0,
@@ -319,6 +322,54 @@ class _AIIntelligenceState extends State<AIIntelligence> {
           SizedBox(height: 3.h),
           _buildGenerateInsightsButton(theme),
           SizedBox(height: 10.h),
+        ],
+      ),
+    );
+  }
+
+  String _localizedAiError(String error) {
+    final localizations = AppLocalizations.of(context);
+    final code = RegExp(r'AI_[A-Z_]+').firstMatch(error)?.group(0);
+    if (code != null) return localizations.aiStatusMessage(code);
+    return error;
+  }
+
+  Widget _buildAiAllowanceNotice(ThemeData theme) {
+    final allowance = _aiData['allowance'];
+    if (allowance is! Map) return const SizedBox.shrink();
+    final remaining = allowance['month_remaining'];
+    if (remaining is! num) return const SizedBox.shrink();
+    final dayRemaining = allowance['day_remaining'];
+    final burstRemaining = allowance['burst_remaining'];
+    final localizations = AppLocalizations.of(context);
+    final exhausted =
+        remaining <= 0 ||
+        (dayRemaining is num && dayRemaining <= 0) ||
+        (burstRemaining is num && burstRemaining <= 0);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Row(
+        children: [
+          Icon(
+            exhausted ? Icons.info_outline : Icons.bolt,
+            size: 16,
+            color: exhausted
+                ? theme.colorScheme.error
+                : theme.colorScheme.primary,
+          ),
+          SizedBox(width: 1.w),
+          Expanded(
+            child: Text(
+              exhausted
+                  ? localizations.aiAllowanceExhausted
+                  : localizations.aiAllowanceRemaining(remaining.toInt()),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: exhausted
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         ],
       ),
     );

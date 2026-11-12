@@ -1,4 +1,7 @@
-const MAX_IMAGE_BASE64_CHARS = 10_000_000;
+import { isRequestId } from "../_shared/ai_action.ts";
+import { isBoundedJpegBase64 } from "../_shared/jpeg_bounds.ts";
+
+const MAX_IMAGE_BASE64_CHARS = 4_000_000;
 const MAX_RESPONSE_CHARS = 2_000;
 const BASE64_PATTERN =
   /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
@@ -14,7 +17,7 @@ const CATEGORIES = new Set([
 const VIBES = new Set(["Casual", "Formal", "Sport", "Elegant", "Street"]);
 
 export type ImageRequestValidation =
-  | { ok: true; imageBase64: string }
+  | { ok: true; imageBase64: string; requestId: string }
   | { ok: false; status: 400 | 413; error: string };
 
 export type ClothingAnalysis = {
@@ -41,6 +44,7 @@ export function validateImageRequest(input: unknown): ImageRequestValidation {
     return { ok: false, status: 400, error: "Invalid request body" };
   }
   const imageBase64 = input.imageBase64;
+  const requestId = input.requestId;
   if (typeof imageBase64 !== "string" || imageBase64.length === 0) {
     return { ok: false, status: 400, error: "Missing imageBase64" };
   }
@@ -50,7 +54,17 @@ export function validateImageRequest(input: unknown): ImageRequestValidation {
   if (!BASE64_PATTERN.test(imageBase64)) {
     return { ok: false, status: 400, error: "Invalid image data" };
   }
-  return { ok: true, imageBase64 };
+  if (!isRequestId(requestId)) {
+    return { ok: false, status: 400, error: "Invalid request identifier" };
+  }
+  if (!isBoundedJpegBase64(imageBase64)) {
+    return {
+      ok: false,
+      status: 413,
+      error: "Image must be JPEG up to 1280 pixels and 3 MB",
+    };
+  }
+  return { ok: true, imageBase64, requestId };
 }
 
 // Model output is untrusted. Only return bounded fields from the expected shape.

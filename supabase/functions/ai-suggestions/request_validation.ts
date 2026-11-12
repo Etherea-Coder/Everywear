@@ -1,3 +1,6 @@
+import { isRequestId } from "../_shared/ai_action.ts";
+import { isBoundedJpegBase64 } from "../_shared/jpeg_bounds.ts";
+
 export type AiSuggestionLanguage = "EN" | "FR" | "ES";
 
 export interface AiSuggestionProfile {
@@ -9,6 +12,7 @@ export interface AiSuggestionProfile {
 
 export interface AiSuggestionRequest {
   imageBase64: string;
+  requestId: string;
   language: AiSuggestionLanguage;
   userName?: string;
   userProfile?: AiSuggestionProfile;
@@ -46,6 +50,7 @@ export function validateAiSuggestionRequest(
   }
 
   const imageBase64 = input.imageBase64;
+  const requestId = input.requestId;
   if (typeof imageBase64 !== "string" || imageBase64.length === 0) {
     return { ok: false, status: 400, error: "Missing image data" };
   }
@@ -54,6 +59,16 @@ export function validateAiSuggestionRequest(
   }
   if (!BASE64_PATTERN.test(imageBase64)) {
     return { ok: false, status: 400, error: "Invalid image data" };
+  }
+  if (!isBoundedJpegBase64(imageBase64)) {
+    return {
+      ok: false,
+      status: 413,
+      error: "Image must be JPEG up to 1280 pixels and 3 MB",
+    };
+  }
+  if (!isRequestId(requestId)) {
+    return { ok: false, status: 400, error: "Invalid request identifier" };
   }
 
   const language = input.language;
@@ -75,6 +90,7 @@ export function validateAiSuggestionRequest(
     ok: true,
     value: {
       imageBase64,
+      requestId,
       language: language as AiSuggestionLanguage,
       ...(userName === undefined ? {} : { userName }),
       ...(userProfile === undefined ? {} : { userProfile }),

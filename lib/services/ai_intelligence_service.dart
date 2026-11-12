@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'ai_request_id.dart';
+import 'ai_allowance_service.dart';
 
 /// Handles all data fetching for the AI Intelligence screen.
 /// Pure wardrobe stats are computed server-side (Edge Function).
@@ -38,11 +40,14 @@ class AIIntelligenceService {
     final session = _supabase.auth.currentSession;
     if (session == null) throw Exception('Not authenticated');
     final userId = session.user.id;
-    if (!forceRefresh && _isValid(userId, timeRange, category)) return _cache!;
+    if (!forceRefresh && _isValid(userId, timeRange, category)) {
+      return _withAllowance(_cache!);
+    }
     final response = await _supabase.functions.invoke(
       'generate-ai-insights',
       headers: {'Authorization': 'Bearer ${session.accessToken}'},
       body: {
+        'requestId': newAiRequestId(),
         'timeRange': timeRange,
         if (category != null) 'category': category,
       },
@@ -55,12 +60,32 @@ class AIIntelligenceService {
     }
 
     final data = Map<String, dynamic>.from(response.data as Map);
-    _cache = data;
+    _cache = Map<String, dynamic>.from(data)..remove('allowance');
     _cachedUserId = userId;
     _cachedTimeRange = timeRange;
     _cachedCategory = category;
     _cacheTime = DateTime.now();
-    return data;
+    return _withAllowance(_cache!);
+  }
+
+  Future<Map<String, dynamic>> _withAllowance(Map<String, dynamic> data) async {
+    try {
+      final allowance = await AiAllowanceService(_supabase).fetchCurrent();
+      return {
+        ...data,
+        'allowance': {
+          'month_remaining': allowance.monthRemaining,
+          'month_limit': allowance.monthLimit,
+          'day_remaining': allowance.dayRemaining,
+          'burst_remaining': allowance.burstRemaining,
+          'month_resets_at': allowance.monthResetsAt?.toIso8601String(),
+        },
+      };
+    } catch (_) {
+      // The successful insights payload remains useful when quota metadata is
+      // unavailable; AI requests still fail closed at the Edge Function.
+      return data;
+    }
   }
 
   void clearCache() {

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'ai_request_id.dart';
 import './supabase_service.dart';
 import './wardrobe_service.dart';
 import './outfit_log_service.dart';
@@ -32,22 +33,28 @@ class TodaySuggestionService {
           .toSet()
           .toList();
 
-      final compactWardrobe = wardrobeItems.map((item) => {
-        'id': item['id'],
-        'name': item['name'],
-        'category': item['category'],
-        'color': item['color'],
-        'image_url': item['image_url'],
-        'times_worn': item['times_worn'] ?? 0,
-        'last_worn': item['last_worn'],
-      }).toList();
+      final compactWardrobe = wardrobeItems
+          .map(
+            (item) => {
+              'id': item['id'],
+              'name': item['name'],
+              'category': item['category'],
+              'color': item['color'],
+              'image_url': item['image_url'],
+              'times_worn': item['times_worn'] ?? 0,
+              'last_worn': item['last_worn'],
+            },
+          )
+          .toList();
 
-      final profile = quizResult != null ? {
-        'styleProfile': quizResult['style_profile'],
-        'preferredColors': quizResult['preferred_colors']?.toString(),
-        'styleGoals': quizResult['style_goals']?.toString(),
-        'styleIntention': quizResult['style_intention']?.toString(),
-      } : null;
+      final profile = quizResult != null
+          ? {
+              'styleProfile': quizResult['style_profile'],
+              'preferredColors': quizResult['preferred_colors']?.toString(),
+              'styleGoals': quizResult['style_goals']?.toString(),
+              'styleIntention': quizResult['style_intention']?.toString(),
+            }
+          : null;
 
       Map<String, dynamic>? eventSummary;
       if (nextEvent != null) {
@@ -84,6 +91,7 @@ class TodaySuggestionService {
       final response = await _client.functions.invoke(
         'today-suggestion',
         body: {
+          'requestId': newAiRequestId(),
           'userName': userName,
           'localHour': DateTime.now().hour,
           'userProfile': profile,
@@ -104,17 +112,24 @@ class TodaySuggestionService {
       final data = _normalizeFunctionData(response.data);
       if (kDebugMode) {
         debugPrint('Today suggestion raw type: ${response.data.runtimeType}');
-        debugPrint('Today suggestion response: $data');
       }
 
       if (data != null && data['success'] == true) {
         final result = Map<String, dynamic>.from(data);
         return _clientSidePatch(result, wardrobeItems);
       }
-      return null;
+      return {
+        'success': false,
+        'errorCode': data?['code'] as String? ?? 'AI_UNAVAILABLE',
+      };
     } catch (e) {
-      if (kDebugMode) debugPrint('Today suggestion error: $e');
-      return null;
+      if (kDebugMode) debugPrint('Today suggestion error: ${e.runtimeType}');
+      return {
+        'success': false,
+        'errorCode':
+            RegExp(r'AI_[A-Z_]+').firstMatch(e.toString())?.group(0) ??
+            'AI_UNAVAILABLE',
+      };
     }
   }
 
@@ -164,8 +179,7 @@ class TodaySuggestionService {
   ) {
     final byId = <String, Map<String, dynamic>>{
       for (final w in wardrobeItems)
-        if ((w['id'] ?? '').toString().isNotEmpty)
-          w['id'].toString(): w,
+        if ((w['id'] ?? '').toString().isNotEmpty) w['id'].toString(): w,
     };
 
     Map<String, dynamic> patch(Map<String, dynamic> item) {
@@ -193,8 +207,9 @@ class TodaySuggestionService {
 
   String? _getUserFirstName(User? user) {
     if (user == null) return null;
-    final fullName = user.userMetadata?['full_name'] as String? ?? 
-                     user.userMetadata?['name'] as String?;
+    final fullName =
+        user.userMetadata?['full_name'] as String? ??
+        user.userMetadata?['name'] as String?;
     if (fullName == null || fullName.trim().isEmpty) return null;
     return fullName.trim().split(' ').first;
   }

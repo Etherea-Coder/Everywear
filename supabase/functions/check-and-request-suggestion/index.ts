@@ -37,23 +37,31 @@ Deno.serve(async (req) => {
 
     // UX preflight only. The model-calling Edge Function consumes atomically
     // after its own authentication check; preflight must never spend quota.
-    const { data: allowed, error: quotaError } = await userClient.rpc(
-      "can_request_suggestion",
+    const { data: allowance, error: quotaError } = await userClient.rpc(
+      "get_ai_allowance",
     );
     if (quotaError) throw quotaError;
+    const allowed = allowance && typeof allowance === "object" &&
+      allowance.month_remaining > 0 && allowance.day_remaining > 0 &&
+      allowance.burst_remaining > 0;
 
     return new Response(
-      JSON.stringify({ allowed: allowed === true }),
+      JSON.stringify({ allowed: allowed === true, allowance }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch {
+    return new Response(
+      JSON.stringify({
+        error: "AI allowance is unavailable.",
+        code: "AI_UNAVAILABLE",
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 });

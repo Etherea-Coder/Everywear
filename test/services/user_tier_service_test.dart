@@ -71,7 +71,7 @@ void main() {
       final result = await service.getUserTierInfo('nonexistent-user-id');
 
       expect(result['tier'], 'free');
-      expect(result['suggestions_limit'], 1);
+      expect(result['suggestions_limit'], 3);
       expect(result['suggestions_remaining'], 0);
       expect(result['coaching_remaining'], 0);
       expect(result['outfit_logs_remaining'], 0);

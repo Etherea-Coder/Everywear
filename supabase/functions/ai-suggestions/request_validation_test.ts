@@ -1,5 +1,21 @@
 import { validateAiSuggestionRequest } from "./request_validation.ts";
 
+const tinyJpeg = btoa(String.fromCharCode(
+  0xff,
+  0xd8,
+  0xff,
+  0xc0,
+  0x00,
+  0x07,
+  0x08,
+  0x00,
+  0x02,
+  0x00,
+  0x03,
+  0x03,
+));
+const requestId = "123e4567-e89b-42d3-a456-426614174000";
+
 function assertEquals(actual: unknown, expected: unknown): void {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(
@@ -18,7 +34,7 @@ Deno.test("rejects non-object request bodies", () => {
 
 Deno.test("rejects missing or malformed image payloads", () => {
   assertEquals(
-    validateAiSuggestionRequest({ imageBase64: "", language: "EN" }),
+    validateAiSuggestionRequest({ imageBase64: "", language: "EN", requestId }),
     {
       ok: false,
       status: 400,
@@ -26,7 +42,11 @@ Deno.test("rejects missing or malformed image payloads", () => {
     },
   );
   assertEquals(
-    validateAiSuggestionRequest({ imageBase64: "not-base64!", language: "EN" }),
+    validateAiSuggestionRequest({
+      imageBase64: "not-base64!",
+      language: "EN",
+      requestId,
+    }),
     {
       ok: false,
       status: 400,
@@ -38,6 +58,7 @@ Deno.test("rejects missing or malformed image payloads", () => {
 Deno.test("rejects oversized image payload before provider or quota work", () => {
   const result = validateAiSuggestionRequest({
     imageBase64: "A".repeat(4_000_001),
+    requestId,
     language: "EN",
   });
   assertEquals(result, {
@@ -49,7 +70,8 @@ Deno.test("rejects oversized image payload before provider or quota work", () =>
 
 Deno.test("accepts only supported languages and trims prompt fields", () => {
   const result = validateAiSuggestionRequest({
-    imageBase64: "AQID",
+    imageBase64: tinyJpeg,
+    requestId,
     language: "EN",
     userName: "A".repeat(100),
     userProfile: {
@@ -60,7 +82,7 @@ Deno.test("accepts only supported languages and trims prompt fields", () => {
   });
 
   if (!result.ok) throw new Error("Expected valid request");
-  assertEquals(result.value.imageBase64, "AQID");
+  assertEquals(result.value.imageBase64, tinyJpeg);
   assertEquals(result.value.language, "EN");
   assertEquals(result.value.userName?.length, 80);
   assertEquals(result.value.userProfile, {
@@ -71,7 +93,11 @@ Deno.test("accepts only supported languages and trims prompt fields", () => {
 
 Deno.test("rejects unsupported languages", () => {
   assertEquals(
-    validateAiSuggestionRequest({ imageBase64: "AQID", language: "DE" }),
+    validateAiSuggestionRequest({
+      imageBase64: tinyJpeg,
+      language: "DE",
+      requestId,
+    }),
     {
       ok: false,
       status: 400,

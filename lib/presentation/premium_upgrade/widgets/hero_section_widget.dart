@@ -70,7 +70,7 @@ class HeroSectionWidget extends StatelessWidget {
 
           // Subtitle
           Text(
-            'Get unlimited access to advanced analytics, AI-powered insights, and exclusive learning content',
+            'Get a larger monthly AI allowance, advanced analytics, and exclusive learning content',
             style: TextStyle(
               fontSize: 13.sp,
               color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),

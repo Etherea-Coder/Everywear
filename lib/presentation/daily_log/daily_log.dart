@@ -148,9 +148,11 @@ class _DailyLogState extends State<DailyLog> {
           _displayName = response['display_name'].toString();
         } else {
           final meta = user.userMetadata;
-          _displayName = meta?['full_name'] as String? ??
+          _displayName =
+              meta?['full_name'] as String? ??
               meta?['name'] as String? ??
-              user.email?.split('@').first ?? '';
+              user.email?.split('@').first ??
+              '';
         }
       }
     } catch (e) {
@@ -161,19 +163,31 @@ class _DailyLogState extends State<DailyLog> {
       final results = await Future.wait([
         _outfitLogService
             .fetchOutfitLogsForDate(_selectedDate)
-            .timeout(const Duration(seconds: 12), onTimeout: () => <Map<String, dynamic>>[])
+            .timeout(
+              const Duration(seconds: 12),
+              onTimeout: () => <Map<String, dynamic>>[],
+            )
             .catchError((_) => <Map<String, dynamic>>[]),
         _outfitLogService
             .fetchMonthlyStats(_selectedDate)
-            .timeout(const Duration(seconds: 12), onTimeout: () => <String, dynamic>{})
+            .timeout(
+              const Duration(seconds: 12),
+              onTimeout: () => <String, dynamic>{},
+            )
             .catchError((_) => <String, dynamic>{}),
         _weatherService
             .getCurrentWeather()
-            .timeout(const Duration(seconds: 12), onTimeout: () => <String, dynamic>{})
+            .timeout(
+              const Duration(seconds: 12),
+              onTimeout: () => <String, dynamic>{},
+            )
             .catchError((_) => <String, dynamic>{}),
         _styleService
             .fetchUpcomingEvents()
-            .timeout(const Duration(seconds: 12), onTimeout: () => <Map<String, dynamic>>[])
+            .timeout(
+              const Duration(seconds: 12),
+              onTimeout: () => <Map<String, dynamic>>[],
+            )
             .catchError((_) => <Map<String, dynamic>>[]),
         _styleService
             .fetchQuizResult()
@@ -181,7 +195,10 @@ class _DailyLogState extends State<DailyLog> {
             .catchError((_) => null),
         _wardrobeService
             .fetchWardrobeItems()
-            .timeout(const Duration(seconds: 12), onTimeout: () => <Map<String, dynamic>>[])
+            .timeout(
+              const Duration(seconds: 12),
+              onTimeout: () => <Map<String, dynamic>>[],
+            )
             .catchError((_) => <Map<String, dynamic>>[]),
       ]);
 
@@ -217,8 +234,9 @@ class _DailyLogState extends State<DailyLog> {
 
     if (_selectedOccasion == 'Work') {
       anchorName = loc.itemNavyBlazer;
-      topName =
-          _selectedMood == 'Comfort' ? loc.itemSoftKnitTop : loc.itemWhiteShirt;
+      topName = _selectedMood == 'Comfort'
+          ? loc.itemSoftKnitTop
+          : loc.itemWhiteShirt;
       bottomName = _selectedMood == 'Casual'
           ? loc.itemDarkJeans
           : loc.itemTailoredTrousers;
@@ -230,8 +248,9 @@ class _DailyLogState extends State<DailyLog> {
       anchorName = loc.itemStatementJacket;
       topName = loc.itemSilkTop;
       bottomName = loc.itemDarkTrousers;
-      shoesName =
-          _selectedMood == 'Comfort' ? loc.itemLowHeels : loc.itemChelseaBoots;
+      shoesName = _selectedMood == 'Comfort'
+          ? loc.itemLowHeels
+          : loc.itemChelseaBoots;
       description = loc.dinnerSuggestionDesc;
     } else if (_selectedOccasion == 'Travel') {
       anchorName = loc.itemLightOvershirt;
@@ -285,39 +304,36 @@ class _DailyLogState extends State<DailyLog> {
     // accidentally share references with the new suggestion.
     final prevOutfit = _deepCopyMap(_suggestedOutfit);
 
-    _suggestedOutfit = _mergeImageUrls(
-      {
-        'title': loc.todaysStyleIdea,
-        'description': description,
-        'anchor': {
-          'slot': 'anchor',
-          'name': anchorName,
-          'imageUrl': '',
-          'category': loc.catAnchor,
-        },
-        'items': [
-          {
-            'slot': 'top',
-            'name': topName,
-            'imageUrl': '',
-            'category': loc.catTop,
-          },
-          {
-            'slot': 'bottom',
-            'name': bottomName,
-            'imageUrl': '',
-            'category': loc.catBottom,
-          },
-          {
-            'slot': 'shoes',
-            'name': shoesName,
-            'imageUrl': '',
-            'category': loc.catShoes,
-          },
-        ],
+    _suggestedOutfit = _mergeImageUrls({
+      'title': loc.todaysStyleIdea,
+      'description': description,
+      'anchor': {
+        'slot': 'anchor',
+        'name': anchorName,
+        'imageUrl': '',
+        'category': loc.catAnchor,
       },
-      prevOutfit,
-    );
+      'items': [
+        {
+          'slot': 'top',
+          'name': topName,
+          'imageUrl': '',
+          'category': loc.catTop,
+        },
+        {
+          'slot': 'bottom',
+          'name': bottomName,
+          'imageUrl': '',
+          'category': loc.catBottom,
+        },
+        {
+          'slot': 'shoes',
+          'name': shoesName,
+          'imageUrl': '',
+          'category': loc.catShoes,
+        },
+      ],
+    }, prevOutfit);
   }
 
   // ─── IMAGE URL PRESERVATION ───────────────────────────────────────────────
@@ -344,8 +360,12 @@ class _DailyLogState extends State<DailyLog> {
     Map<String, dynamic> prevOutfit,
   ) {
     // --- anchor ---
-    final newAnchor = Map<String, dynamic>.from(newOutfit['anchor'] as Map? ?? {});
-    final prevAnchor = Map<String, dynamic>.from(prevOutfit['anchor'] as Map? ?? {});
+    final newAnchor = Map<String, dynamic>.from(
+      newOutfit['anchor'] as Map? ?? {},
+    );
+    final prevAnchor = Map<String, dynamic>.from(
+      prevOutfit['anchor'] as Map? ?? {},
+    );
     newAnchor['imageUrl'] = _resolveImageUrl(
       newAnchor['name'] as String?,
       (prevAnchor['imageUrl'] ?? '').toString(),
@@ -359,8 +379,10 @@ class _DailyLogState extends State<DailyLog> {
     final newItems = newItemsRaw.asMap().map((i, item) {
       final mutable = Map<String, dynamic>.from(item);
       final prevUrl = (prevItems.asMap()[i]?['imageUrl'] ?? '').toString();
-      mutable['imageUrl'] =
-          _resolveImageUrl(mutable['name'] as String?, prevUrl);
+      mutable['imageUrl'] = _resolveImageUrl(
+        mutable['name'] as String?,
+        prevUrl,
+      );
       return MapEntry(i, mutable);
     });
 
@@ -378,8 +400,9 @@ class _DailyLogState extends State<DailyLog> {
     setState(() => _isAISuggestionLoading = true);
 
     try {
-      final nextEvent =
-          _upcomingEvents.isNotEmpty ? _upcomingEvents.first : null;
+      final nextEvent = _upcomingEvents.isNotEmpty
+          ? _upcomingEvents.first
+          : null;
       final result = await _todaySuggestionService
           .fetchTodaySuggestion(
             weather: _weather,
@@ -388,27 +411,44 @@ class _DailyLogState extends State<DailyLog> {
             occasion: _selectedOccasion,
             mood: _selectedMood,
           )
-          .timeout(const Duration(seconds: 18), onTimeout: () => null);
+          .timeout(const Duration(seconds: 18));
 
       if (!mounted) return;
       setState(() {
         if (result != null) {
+          if (result['success'] != true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).aiStatusMessage(result['errorCode'] as String?),
+                ),
+              ),
+            );
+            return;
+          }
           // FIX: Deep-copy previous outfit to avoid shared references
           final prevOutfit = _deepCopyMap(_suggestedOutfit);
-          _suggestedOutfit = _mergeImageUrls(
-            {
-              'title': result['title'] ?? loc.todaysStyleIdea,
-              'description': result['description'] ?? '',
-              'styling_note': result['styling_note'] ?? '',
-              'anchor': result['anchor'] ?? _suggestedOutfit['anchor'],
-              'items': result['items'] ?? _suggestedOutfit['items'],
-            },
-            prevOutfit,
-          );
+          _suggestedOutfit = _mergeImageUrls({
+            'title': result['title'] ?? loc.todaysStyleIdea,
+            'description': result['description'] ?? '',
+            'styling_note': result['styling_note'] ?? '',
+            'anchor': result['anchor'] ?? _suggestedOutfit['anchor'],
+            'items': result['items'] ?? _suggestedOutfit['items'],
+          }, prevOutfit);
         }
       });
     } catch (e) {
-      if (kDebugMode) debugPrint('Today suggestion load failed: $e');
+      if (kDebugMode)
+        debugPrint('Today suggestion load failed: ${e.runtimeType}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).aiStatusMessage(null)),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isAISuggestionLoading = false);
     }
@@ -422,19 +462,21 @@ class _DailyLogState extends State<DailyLog> {
     final greeting = hour < 12
         ? localizations.goodMorning
         : hour < 17
-            ? localizations.goodAfternoon
-            : localizations.goodEvening;
+        ? localizations.goodAfternoon
+        : localizations.goodEvening;
 
-    final fullGreeting =
-        _displayName.isNotEmpty ? '$greeting, $_displayName' : greeting;
+    final fullGreeting = _displayName.isNotEmpty
+        ? '$greeting, $_displayName'
+        : greeting;
 
     final locale = Localizations.localeOf(context).toString();
-    final dayLabel =
-        DateFormat('EEEE, MMMM d', locale).format(DateTime.now());
+    final dayLabel = DateFormat('EEEE, MMMM d', locale).format(DateTime.now());
 
     final location = (_weather['location'] ?? '').toString();
     final condition = _getLocalizedCondition(
-        (_weather['condition'] ?? '').toString(), localizations);
+      (_weather['condition'] ?? '').toString(),
+      localizations,
+    );
     final temp = _weather['temperature'];
     final unit = (_weather['unit'] ?? '\u00B0C').toString();
     final hasWeather = temp != null && condition.isNotEmpty;
@@ -460,8 +502,7 @@ class _DailyLogState extends State<DailyLog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding:
-                EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.6.h),
+            padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.6.h),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.40),
               borderRadius: BorderRadius.circular(20),
@@ -697,8 +738,9 @@ class _DailyLogState extends State<DailyLog> {
                   child: Text(
                     _getWeatherTip(loc, condition),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.78),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.78,
+                      ),
                     ),
                   ),
                 ),
@@ -736,9 +778,7 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Future<void> _showManualCityDialog() async {
-    final controller = TextEditingController(
-      text: _weatherService.savedCity,
-    );
+    final controller = TextEditingController(text: _weatherService.savedCity);
     final loc = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -767,12 +807,11 @@ class _DailyLogState extends State<DailyLog> {
       ),
     );
 
-    if (confirmed == true &&
-        controller.text.trim().isNotEmpty &&
-        mounted) {
+    if (confirmed == true && controller.text.trim().isNotEmpty && mounted) {
       setState(() => _isLoading = true);
-      final result =
-          await _weatherService.getWeatherByCity(controller.text.trim());
+      final result = await _weatherService.getWeatherByCity(
+        controller.text.trim(),
+      );
       if (mounted) {
         setState(() {
           _weather = result;
@@ -890,11 +929,9 @@ class _DailyLogState extends State<DailyLog> {
               .isNotEmpty) ...[
             SizedBox(height: 1.6.h),
             Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: 3.5.w, vertical: 1.1.h),
+              padding: EdgeInsets.symmetric(horizontal: 3.5.w, vertical: 1.1.h),
               decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.secondary.withValues(alpha: 0.08),
+                color: theme.colorScheme.secondary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
@@ -958,8 +995,7 @@ class _DailyLogState extends State<DailyLog> {
             width: 12.w,
             height: 12.w,
             decoration: BoxDecoration(
-              color:
-                  theme.colorScheme.secondary.withValues(alpha: 0.08),
+              color: theme.colorScheme.secondary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -1046,7 +1082,8 @@ class _DailyLogState extends State<DailyLog> {
                         )
                       : const Icon(Icons.refresh),
                   label: Text(
-                      _isAISuggestionLoading ? loc.loading : loc.refresh),
+                    _isAISuggestionLoading ? loc.loading : loc.refresh,
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 1.45.h),
                     shape: RoundedRectangleBorder(
@@ -1076,17 +1113,20 @@ class _DailyLogState extends State<DailyLog> {
         borderRadius: BorderRadius.circular(isAnchor ? 22 : 16),
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.secondary
-                .withValues(alpha: isAnchor ? 0.08 : 0.05),
-            theme.colorScheme.secondary
-                .withValues(alpha: isAnchor ? 0.04 : 0.02),
+            theme.colorScheme.secondary.withValues(
+              alpha: isAnchor ? 0.08 : 0.05,
+            ),
+            theme.colorScheme.secondary.withValues(
+              alpha: isAnchor ? 0.04 : 0.02,
+            ),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: theme.colorScheme.secondary
-              .withValues(alpha: isAnchor ? 0.14 : 0.10),
+          color: theme.colorScheme.secondary.withValues(
+            alpha: isAnchor ? 0.14 : 0.10,
+          ),
         ),
       ),
       child: ClipRRect(
@@ -1095,8 +1135,10 @@ class _DailyLogState extends State<DailyLog> {
             ? CustomImageWidget(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                errorWidget:
-                    _buildSuggestionFallbackIcon(theme, isAnchor: isAnchor),
+                errorWidget: _buildSuggestionFallbackIcon(
+                  theme,
+                  isAnchor: isAnchor,
+                ),
               )
             : _buildSuggestionFallbackIcon(theme, isAnchor: isAnchor),
       ),
@@ -1138,19 +1180,18 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   void _showAnchorCategoryPicker(AppLocalizations loc) {
-    final categories = _wardrobeItems
-        .map((i) => (i['category'] as String? ?? 'Other'))
-        .toSet()
-        .toList()
-      ..sort();
+    final categories =
+        _wardrobeItems
+            .map((i) => (i['category'] as String? ?? 'Other'))
+            .toSet()
+            .toList()
+          ..sort();
 
     showModalBottomSheet(
       context: context,
-      backgroundColor:
-          Theme.of(context).bottomSheetTheme.backgroundColor,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(24.0)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
       builder: (context) => Container(
         padding: EdgeInsets.all(4.w),
@@ -1168,8 +1209,7 @@ class _DailyLogState extends State<DailyLog> {
             ),
             Text(
               'Choose a category',
-              style: TextStyle(
-                  fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 0.8.h),
             Text(
@@ -1208,17 +1248,16 @@ class _DailyLogState extends State<DailyLog> {
                       Navigator.pop(context);
                       final categoryItems = _wardrobeItems
                           .where((i) => i['category'] == category)
-                          .map((i) => {
-                                'slot': 'anchor',
-                                'name': i['name'] ??
-                                    i['title'] ??
-                                    loc.unknownItem,
-                                'imageUrl':
-                                    i['image_url'] ?? i['imageUrl'] ?? '',
-                                'category':
-                                    i['category'] ?? loc.catClothing,
-                                'id': i['id'],
-                              })
+                          .map(
+                            (i) => {
+                              'slot': 'anchor',
+                              'name':
+                                  i['name'] ?? i['title'] ?? loc.unknownItem,
+                              'imageUrl': i['image_url'] ?? i['imageUrl'] ?? '',
+                              'category': i['category'] ?? loc.catClothing,
+                              'id': i['id'],
+                            },
+                          )
                           .toList();
                       _showItemList(loc, 'anchor', categoryItems);
                     },
@@ -1234,14 +1273,15 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   void _showItemList(
-      AppLocalizations loc, String slot, List<Map<String, dynamic>> alternatives) {
+    AppLocalizations loc,
+    String slot,
+    List<Map<String, dynamic>> alternatives,
+  ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor:
-          Theme.of(context).bottomSheetTheme.backgroundColor,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(24.0)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
       builder: (context) => Container(
         padding: EdgeInsets.all(4.w),
@@ -1259,8 +1299,7 @@ class _DailyLogState extends State<DailyLog> {
             ),
             Text(
               loc.swapItemTitle(_getLocalizedSlotTitle(loc, slot)),
-              style: TextStyle(
-                  fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 0.8.h),
             Text(
@@ -1276,20 +1315,19 @@ class _DailyLogState extends State<DailyLog> {
                 padding: EdgeInsets.symmetric(vertical: 4.h),
                 child: Column(
                   children: [
-                    Icon(Icons.checkroom_outlined,
-                        size: 48,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.3)),
+                    Icon(
+                      Icons.checkroom_outlined,
+                      size: 48,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
                     SizedBox(height: 2.h),
                     Text(
                       loc.noItemsInCategory,
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1297,8 +1335,7 @@ class _DailyLogState extends State<DailyLog> {
                     TextButton.icon(
                       onPressed: () {
                         Navigator.pop(context);
-                        Navigator.pushNamed(
-                            context, AppRoutes.addClothingItem);
+                        Navigator.pushNamed(context, AppRoutes.addClothingItem);
                       },
                       icon: const Icon(Icons.add),
                       label: Text(loc.addItemToWardrobe),
@@ -1312,22 +1349,19 @@ class _DailyLogState extends State<DailyLog> {
                   shrinkWrap: true,
                   children: alternatives.map((item) {
                     return ListTile(
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.5.h),
+                      contentPadding: EdgeInsets.symmetric(vertical: 0.5.h),
                       leading: Container(
                         width: 13.w,
                         height: 13.w,
                         decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.08),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: (item['imageUrl'] as String? ?? '')
-                                  .isNotEmpty
+                          child: (item['imageUrl'] as String? ?? '').isNotEmpty
                               ? CustomImageWidget(
                                   imageUrl: item['imageUrl'] as String,
                                   fit: BoxFit.cover,
@@ -1339,20 +1373,21 @@ class _DailyLogState extends State<DailyLog> {
                       title: Text(
                         item['name'] as String,
                         style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600),
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       subtitle: Text(
                         item['category'] as String? ?? '',
                         style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant),
+                          fontSize: 11.sp,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      trailing: Icon(Icons.swap_horiz,
-                          color:
-                              Theme.of(context).colorScheme.primary),
+                      trailing: Icon(
+                        Icons.swap_horiz,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       onTap: () {
                         Navigator.pop(context);
                         _swapSuggestionItem(slot, item);
@@ -1384,7 +1419,7 @@ class _DailyLogState extends State<DailyLog> {
           'overshirt',
           'knitwear',
           'hoodie',
-          'sweater'
+          'sweater',
         ];
         break;
       case 'top':
@@ -1396,7 +1431,7 @@ class _DailyLogState extends State<DailyLog> {
           'tee',
           'sweater',
           'jumper',
-          'knitwear'
+          'knitwear',
         ];
         break;
       case 'bottom':
@@ -1408,7 +1443,7 @@ class _DailyLogState extends State<DailyLog> {
           'pants',
           'skirt',
           'shorts',
-          'denim'
+          'denim',
         ];
         break;
       case 'shoes':
@@ -1419,27 +1454,30 @@ class _DailyLogState extends State<DailyLog> {
           'sneakers',
           'loafers',
           'heels',
-          'trainers'
+          'trainers',
         ];
         break;
       default:
         categoryKeywords = [];
     }
 
-    final alternatives = _wardrobeItems.where((item) {
-      if (categoryKeywords.isEmpty) return true;
-      final itemCategory =
-          (item['category'] as String? ?? '').toLowerCase();
-      return categoryKeywords.any((kw) => itemCategory.contains(kw));
-    }).map((item) {
-      return <String, dynamic>{
-        'slot': slot,
-        'name': item['name'] ?? item['title'] ?? loc.unknownItem,
-        'imageUrl': item['image_url'] ?? item['imageUrl'] ?? '',
-        'category': item['category'] ?? loc.catClothing,
-        'id': item['id'],
-      };
-    }).toList();
+    final alternatives = _wardrobeItems
+        .where((item) {
+          if (categoryKeywords.isEmpty) return true;
+          final itemCategory = (item['category'] as String? ?? '')
+              .toLowerCase();
+          return categoryKeywords.any((kw) => itemCategory.contains(kw));
+        })
+        .map((item) {
+          return <String, dynamic>{
+            'slot': slot,
+            'name': item['name'] ?? item['title'] ?? loc.unknownItem,
+            'imageUrl': item['image_url'] ?? item['imageUrl'] ?? '',
+            'category': item['category'] ?? loc.catClothing,
+            'id': item['id'],
+          };
+        })
+        .toList();
 
     if (alternatives.isNotEmpty) return alternatives;
 
@@ -1490,8 +1528,7 @@ class _DailyLogState extends State<DailyLog> {
         outfit['anchor'] = Map<String, dynamic>.from(newItem);
 
         // Re-derive supporting slots based on new anchor's category
-        final category =
-            (newItem['category'] as String? ?? '').toLowerCase();
+        final category = (newItem['category'] as String? ?? '').toLowerCase();
 
         List<Map<String, dynamic>> newItems;
 
@@ -1504,13 +1541,13 @@ class _DailyLogState extends State<DailyLog> {
               'slot': 'bottom',
               'name': loc.itemDarkJeans,
               'imageUrl': '',
-              'category': loc.catBottom
+              'category': loc.catBottom,
             },
             <String, dynamic>{
               'slot': 'shoes',
               'name': loc.itemSneakers,
               'imageUrl': '',
-              'category': loc.catShoes
+              'category': loc.catShoes,
             },
           ];
         } else if (category.contains('bottom') ||
@@ -1522,13 +1559,13 @@ class _DailyLogState extends State<DailyLog> {
               'slot': 'top',
               'name': loc.itemWhiteTee,
               'imageUrl': '',
-              'category': loc.catTop
+              'category': loc.catTop,
             },
             <String, dynamic>{
               'slot': 'shoes',
               'name': loc.itemSneakers,
               'imageUrl': '',
-              'category': loc.catShoes
+              'category': loc.catShoes,
             },
           ];
         } else if (category.contains('outerwear') ||
@@ -1540,30 +1577,26 @@ class _DailyLogState extends State<DailyLog> {
               'slot': 'top',
               'name': loc.itemWhiteTee,
               'imageUrl': '',
-              'category': loc.catTop
+              'category': loc.catTop,
             },
             <String, dynamic>{
               'slot': 'bottom',
               'name': loc.itemDarkJeans,
               'imageUrl': '',
-              'category': loc.catBottom
+              'category': loc.catBottom,
             },
             <String, dynamic>{
               'slot': 'shoes',
               'name': loc.itemSneakers,
               'imageUrl': '',
-              'category': loc.catShoes
+              'category': loc.catShoes,
             },
           ];
         } else {
           // Default: keep existing slot structure but clear names/images
           // FIX: Use _safeCastItemList instead of .cast<>()
           newItems = _safeCastItemList(outfit['items'] as List?)
-              .map((i) => <String, dynamic>{
-                    ...i,
-                    'name': '',
-                    'imageUrl': '',
-                  })
+              .map((i) => <String, dynamic>{...i, 'name': '', 'imageUrl': ''})
               .toList();
         }
 
@@ -1571,7 +1604,10 @@ class _DailyLogState extends State<DailyLog> {
 
         // Try to resolve wardrobe images for new items
         // FIX: Use deep copy of outfit as "previous" state, not the same reference
-        _suggestedOutfit = _mergeImageUrls(outfit, _deepCopyMap(_suggestedOutfit));
+        _suggestedOutfit = _mergeImageUrls(
+          outfit,
+          _deepCopyMap(_suggestedOutfit),
+        );
       } else {
         // Supporting item swap — just replace that slot
         // FIX: Use _safeCastItemList instead of .cast<>()
@@ -1639,8 +1675,7 @@ class _DailyLogState extends State<DailyLog> {
   String _getQuickTip(AppLocalizations loc) {
     final totalOutfits = _monthlyStats['totalOutfits'] as int? ?? 0;
     final favoriteOccasion =
-        (_monthlyStats['favoriteOccasion'] ?? loc.occasionEveryday)
-            .toString();
+        (_monthlyStats['favoriteOccasion'] ?? loc.occasionEveryday).toString();
 
     if (totalOutfits == 0) return loc.styleTipNoLogs;
     if (totalOutfits < 5) return loc.styleTipFewLogs;
@@ -1683,14 +1718,10 @@ class _DailyLogState extends State<DailyLog> {
               width: 12.w,
               height: 12.w,
               decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.primary.withValues(alpha: 0.10),
+                color: theme.colorScheme.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.event,
-                color: theme.colorScheme.primary,
-              ),
+              child: Icon(Icons.event, color: theme.colorScheme.primary),
             ),
             SizedBox(width: 3.w),
             Expanded(
@@ -1715,8 +1746,8 @@ class _DailyLogState extends State<DailyLog> {
                     daysLeft <= 0
                         ? '${loc.today} \u00B7 $eventType'
                         : daysLeft == 1
-                            ? '${loc.tomorrow} \u00B7 $eventType'
-                            : '${loc.inDaysLeft(daysLeft)} \u00B7 $eventType',
+                        ? '${loc.tomorrow} \u00B7 $eventType'
+                        : '${loc.inDaysLeft(daysLeft)} \u00B7 $eventType',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -1888,11 +1919,11 @@ class _DailyLogState extends State<DailyLog> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 4.w),
                     child: StatsSummaryWidget(
-                      totalOutfits:
-                          _monthlyStats['totalOutfits'] as int,
+                      totalOutfits: _monthlyStats['totalOutfits'] as int,
                       uniqueItems: _monthlyStats['uniqueItems'] as int,
                       favoriteOccasion: loc.getLocalizedOccasion(
-                          _monthlyStats['favoriteOccasion'] as String?),
+                        _monthlyStats['favoriteOccasion'] as String?,
+                      ),
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -1908,10 +1939,8 @@ class _DailyLogState extends State<DailyLog> {
                             return OutfitEntryCardWidget(
                               entry: _formatEntry(entry),
                               onEdit: () => _editEntry(entry),
-                              onDelete: () =>
-                                  _deleteEntry(entry['id']),
-                              onRepeat: () =>
-                                  _repeatEntry(entry['id']),
+                              onDelete: () => _deleteEntry(entry['id']),
+                              onRepeat: () => _repeatEntry(entry['id']),
                             );
                           },
                         ),
@@ -1931,18 +1960,17 @@ class _DailyLogState extends State<DailyLog> {
     final outfitItems = (entry['outfit_items'] as List<dynamic>? ?? []);
 
     final items = outfitItems
-        .map((oi) => <String, dynamic>{
-              'name': (oi['wardrobe_items']?['name'] ?? loc.unknown)
-                  as String,
-              'imageUrl':
-                  (oi['wardrobe_items']?['image_url'] ?? '') as String,
-            })
+        .map(
+          (oi) => <String, dynamic>{
+            'name': (oi['wardrobe_items']?['name'] ?? loc.unknown) as String,
+            'imageUrl': (oi['wardrobe_items']?['image_url'] ?? '') as String,
+          },
+        )
         .toList();
 
     final imageUrl = outfitItems
         .map((oi) => oi['wardrobe_items']?['image_url'] as String?)
-        .firstWhere((url) => url != null && url.isNotEmpty,
-            orElse: () => null);
+        .firstWhere((url) => url != null && url.isNotEmpty, orElse: () => null);
 
     final wornDate = DateTime.parse(entry['worn_date']);
 
@@ -2025,11 +2053,9 @@ class _DailyLogState extends State<DailyLog> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor:
-          Theme.of(context).bottomSheetTheme.backgroundColor,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(24.0)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
       isScrollControlled: true,
       builder: (sheetContext) => DraggableScrollableSheet(
@@ -2056,7 +2082,9 @@ class _DailyLogState extends State<DailyLog> {
                 Text(
                   title,
                   style: TextStyle(
-                      fontSize: 18.sp, fontWeight: FontWeight.bold),
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 SizedBox(height: 2.h),
                 _buildQuickOption(
@@ -2065,8 +2093,7 @@ class _DailyLogState extends State<DailyLog> {
                   subtitle: photoSub,
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    Navigator.pushNamed(
-                        context, AppRoutes.outfitCaptureFlow);
+                    Navigator.pushNamed(context, AppRoutes.outfitCaptureFlow);
                   },
                 ),
                 _buildQuickOption(
@@ -2115,10 +2142,7 @@ class _DailyLogState extends State<DailyLog> {
       leading: Container(
         padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .primary
-              .withValues(alpha: 0.08),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12.0),
         ),
         child: Icon(icon, color: Theme.of(context).colorScheme.primary),
@@ -2158,26 +2182,22 @@ class _DailyLogState extends State<DailyLog> {
   // ─── SAVE DISPLAYED OUTFIT ────────────────────────────────────────────────
 
   Future<void> _saveDisplayedOutfit() async {
-    final anchor =
-        _suggestedOutfit['anchor'] as Map<String, dynamic>?;
+    final anchor = _suggestedOutfit['anchor'] as Map<String, dynamic>?;
     // FIX: Use _safeCastItemList instead of .cast<Map<String, dynamic>>()
-    final items =
-        _safeCastItemList(_suggestedOutfit['items'] as List?);
+    final items = _safeCastItemList(_suggestedOutfit['items'] as List?);
 
     if (anchor == null || items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(
-                AppLocalizations.of(context).noOutfitDisplayedError)),
+          content: Text(AppLocalizations.of(context).noOutfitDisplayedError),
+        ),
       );
       return;
     }
 
     final List<String> itemIds = [
       if (anchor['id'] != null) anchor['id'] as String,
-      ...items
-          .where((i) => i['id'] != null)
-          .map((i) => i['id'] as String),
+      ...items.where((i) => i['id'] != null).map((i) => i['id'] as String),
     ];
 
     String? selectedOccasion = _selectedOccasion ?? 'Casual';
@@ -2191,13 +2211,14 @@ class _DailyLogState extends State<DailyLog> {
           return AlertDialog(
             title: Row(
               children: [
-                Icon(Icons.checkroom,
-                    color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.checkroom,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 SizedBox(width: 2.w),
                 Expanded(
                   child: Text(
-                    _suggestedOutfit['title'] as String? ??
-                        loc.todaysStyleIdea,
+                    _suggestedOutfit['title'] as String? ?? loc.todaysStyleIdea,
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
@@ -2211,20 +2232,20 @@ class _DailyLogState extends State<DailyLog> {
                   [
                     anchor['name'] as String? ?? '',
                     ...items.map((i) => i['name'] as String? ?? ''),
-                  ]
-                      .where((n) => n.isNotEmpty)
-                      .join(' \u00B7 '),
+                  ].where((n) => n.isNotEmpty).join(' \u00B7 '),
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 SizedBox(height: 2.h),
-                Text(loc.dressingFor,
-                    style: TextStyle(
-                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                Text(
+                  loc.dressingFor,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 SizedBox(height: 1.h),
                 Wrap(
                   spacing: 2.w,
@@ -2232,43 +2253,37 @@ class _DailyLogState extends State<DailyLog> {
                   children: _occasions.map((occ) {
                     final sel = selectedOccasion == occ;
                     return GestureDetector(
-                      onTap: () =>
-                          setDialogState(() => selectedOccasion = occ),
+                      onTap: () => setDialogState(() => selectedOccasion = occ),
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                            horizontal: 3.w, vertical: 0.8.h),
+                          horizontal: 3.w,
+                          vertical: 0.8.h,
+                        ),
                         decoration: BoxDecoration(
                           color: sel
-                              ? Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.14)
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.14)
                               : Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
                             color: sel
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.4)
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .outline
-                                    .withValues(alpha: 0.2),
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.4)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.outline.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Text(
                           occ,
                           style: TextStyle(
                             fontSize: 12.sp,
-                            fontWeight: sel
-                                ? FontWeight.w600
-                                : FontWeight.w500,
+                            fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
                             color: sel
                                 ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurface,
+                                : Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -2283,7 +2298,9 @@ class _DailyLogState extends State<DailyLog> {
                     hintText: loc.optionalNotesHint,
                     border: const OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(
-                        horizontal: 3.w, vertical: 1.2.h),
+                      horizontal: 3.w,
+                      vertical: 1.2.h,
+                    ),
                   ),
                   maxLines: 2,
                 ),
@@ -2315,14 +2332,14 @@ class _DailyLogState extends State<DailyLog> {
           itemIds: itemIds,
           occasion: selectedOccasion ?? 'Casual',
           notes: notesController.text.trim(),
-          outfitName: _suggestedOutfit['title'] as String? ??
-              loc.todaysStyleIdea,
+          outfitName:
+              _suggestedOutfit['title'] as String? ?? loc.todaysStyleIdea,
         );
       } else {
         newId = await _outfitLogService.logOutfitByName(
           wornDate: DateTime.now(),
-          outfitName: _suggestedOutfit['title'] as String? ??
-              loc.todaysStyleIdea,
+          outfitName:
+              _suggestedOutfit['title'] as String? ?? loc.todaysStyleIdea,
           occasion: selectedOccasion ?? 'Casual',
           notes: notesController.text.trim(),
           itemNames: [
@@ -2335,23 +2352,20 @@ class _DailyLogState extends State<DailyLog> {
       if (newId != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  AppLocalizations.of(context).outfitLoggedSuccess)),
+            content: Text(AppLocalizations.of(context).outfitLoggedSuccess),
+          ),
         );
         _loadData();
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context).error)),
+          SnackBar(content: Text(AppLocalizations.of(context).error)),
         );
       }
     } catch (e) {
       if (kDebugMode) debugPrint('Error saving displayed outfit: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  '${AppLocalizations.of(context).error}: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context).error}: $e')),
         );
       }
     }
@@ -2390,8 +2404,7 @@ class _DailyLogState extends State<DailyLog> {
       );
     } else if (newId != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(AppLocalizations.of(context).outfitRepeated)),
+        SnackBar(content: Text(AppLocalizations.of(context).outfitRepeated)),
       );
       _loadData();
     } else if (mounted) {
@@ -2402,10 +2415,10 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Future<void> _editEntry(Map<String, dynamic> entry) async {
-    final occasionController =
-        TextEditingController(text: entry['occasion'] ?? '');
-    final notesController =
-        TextEditingController(text: entry['notes'] ?? '');
+    final occasionController = TextEditingController(
+      text: entry['occasion'] ?? '',
+    );
+    final notesController = TextEditingController(text: entry['notes'] ?? '');
     int rating = entry['rating'] ?? 0;
 
     await showDialog(
@@ -2419,25 +2432,27 @@ class _DailyLogState extends State<DailyLog> {
               TextField(
                 controller: occasionController,
                 decoration: InputDecoration(
-                    labelText:
-                        AppLocalizations.of(context).occasion),
+                  labelText: AppLocalizations.of(context).occasion,
+                ),
               ),
               SizedBox(height: 2.h),
               TextField(
                 controller: notesController,
                 decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context).notes),
+                  labelText: AppLocalizations.of(context).notes,
+                ),
                 maxLines: 2,
               ),
               SizedBox(height: 2.h),
               Row(
                 children: [
-                  Text(AppLocalizations.of(context).rating,
-                      style: TextStyle(fontSize: 14.sp)),
+                  Text(
+                    AppLocalizations.of(context).rating,
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
                   ...List.generate(5, (index) {
                     return GestureDetector(
-                      onTap: () =>
-                          setDialogState(() => rating = index + 1),
+                      onTap: () => setDialogState(() => rating = index + 1),
                       child: Icon(
                         index < rating ? Icons.star : Icons.star_border,
                         color: Colors.amber,
@@ -2457,8 +2472,7 @@ class _DailyLogState extends State<DailyLog> {
             TextButton(
               onPressed: () async {
                 if (context.mounted) Navigator.pop(context);
-                final success =
-                    await _outfitLogService.updateOutfitLog(
+                final success = await _outfitLogService.updateOutfitLog(
                   outfitId: entry['id'],
                   occasion: occasionController.text,
                   notes: notesController.text,
@@ -2467,8 +2481,8 @@ class _DailyLogState extends State<DailyLog> {
                 if (success && mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(AppLocalizations.of(context)
-                            .outfitUpdated)),
+                      content: Text(AppLocalizations.of(context).outfitUpdated),
+                    ),
                   );
                   _loadData();
                 }
@@ -2486,8 +2500,7 @@ class _DailyLogState extends State<DailyLog> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context).deleteOutfit),
-        content:
-            Text(AppLocalizations.of(context).deleteOutfitConfirmation),
+        content: Text(AppLocalizations.of(context).deleteOutfitConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -2495,8 +2508,10 @@ class _DailyLogState extends State<DailyLog> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLocalizations.of(context).delete,
-                style: const TextStyle(color: Colors.red)),
+            child: Text(
+              AppLocalizations.of(context).delete,
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -2507,9 +2522,7 @@ class _DailyLogState extends State<DailyLog> {
     final success = await _outfitLogService.deleteOutfitLog(id);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(AppLocalizations.of(context).outfitDeleted)),
+        SnackBar(content: Text(AppLocalizations.of(context).outfitDeleted)),
       );
       _loadData();
     }
@@ -2523,8 +2536,7 @@ class _DailyLogState extends State<DailyLog> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.insights,
-                color: Theme.of(context).colorScheme.primary),
+            Icon(Icons.insights, color: Theme.of(context).colorScheme.primary),
             SizedBox(width: 2.w),
             Text(AppLocalizations.of(context).thisMonth),
           ],
@@ -2585,8 +2597,7 @@ class _DailyLogState extends State<DailyLog> {
 
   // ─── WEATHER LOCALIZATION ─────────────────────────────────────────────────
 
-  String _getLocalizedCondition(
-      String condition, AppLocalizations loc) {
+  String _getLocalizedCondition(String condition, AppLocalizations loc) {
     switch (condition) {
       case 'Clear':
         return loc.weatherClear;

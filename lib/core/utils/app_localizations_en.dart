@@ -6,7 +6,8 @@ const Map<String, String> appLocalizationsEn = {
   'continue_google': 'Continue with Google',
   'continue_email': 'Continue with Email',
   'or_divider': 'OR',
-  'terms_privacy_agreement': 'By continuing, you agree to our Terms of Service and Privacy Policy',
+  'terms_privacy_agreement':
+      'By continuing, you agree to our Terms of Service and Privacy Policy',
   'label_full_name': 'Full Name',
   'name_required': 'Name is required',
   'email_required': 'Email is required',
@@ -25,7 +26,8 @@ const Map<String, String> appLocalizationsEn = {
   'confirm_email_msg': 'Check your email to confirm your account.',
   'signup_failed': 'Sign up failed.',
   'signin_failed': 'Sign in failed. Check your credentials.',
-  'auth_service_unavailable': 'Account services are unavailable right now. Please try again later.',
+  'auth_service_unavailable':
+      'Account services are unavailable right now. Please try again later.',
 
   // Common UI
   'continue': 'Continue',
@@ -71,7 +73,8 @@ const Map<String, String> appLocalizationsEn = {
   'view_history': 'View history',
   'outfits_logged_tap_to_view': 'outfits logged — tap to view',
   'no_outfits_logged_yet': 'No outfits logged yet',
-  'start_logging_outfits': 'Start logging your daily outfits to build your history.',
+  'start_logging_outfits':
+      'Start logging your daily outfits to build your history.',
   'sort_newest': 'Newest first',
   'sort_oldest': 'Oldest first',
   'sort_by_rating': 'By rating',
@@ -329,13 +332,15 @@ const Map<String, String> appLocalizationsEn = {
   'capture_outfit': 'Capture Outfit',
   'select_from_wardrobe': 'Select from Wardrobe',
   'confirm_outfit': 'Confirm Outfit',
-  'camera_permission_required': 'Camera permission is required to capture outfits',
+  'camera_permission_required':
+      'Camera permission is required to capture outfits',
   'camera_init_error': 'Failed to initialize camera. Please try again.',
   'getting_ai_suggestions': 'Getting AI suggestions...',
   'get_ai_tips': 'Get AI Tips',
   'gallery_pick_error': 'Failed to pick image from gallery',
   'how_to_log_outfit': 'How would you like to log your outfit?',
-  'capture_method_subtitle': 'Choose your preferred method to quickly capture today\'s look',
+  'capture_method_subtitle':
+      'Choose your preferred method to quickly capture today\'s look',
   'take_photo': 'Take Photo',
   'take_photo_subtitle': 'Capture your outfit with camera',
   'build_from_wardrobe': 'Build from Wardrobe',
@@ -372,14 +377,17 @@ const Map<String, String> appLocalizationsEn = {
   'stylistProfessional': 'Professional and polished for work',
   'stylistComfortable': 'Comfortable and relaxed for casual wear',
   'stylistAiCurated': 'AI-curated combination based on your wardrobe',
-  'stylistLayerOuterwear': 'Layer your outerwear for easy temperature adjustment',
+  'stylistLayerOuterwear':
+      'Layer your outerwear for easy temperature adjustment',
   'stylistAddBelt': 'Add a belt to define your waist and elevate the look',
-  'stylistConsiderAccessories': 'Consider adding a watch or simple jewelry to complete the outfit',
+  'stylistConsiderAccessories':
+      'Consider adding a watch or simple jewelry to complete the outfit',
   'stylistEnsureShoes': 'Ensure shoes are polished and accessories are minimal',
-  'stylistExperimentAccessories': 'Feel free to experiment with bold accessories',
+  'stylistExperimentAccessories':
+      'Feel free to experiment with bold accessories',
   'stylistWearConfidence': 'Wear with confidence and make it your own',
 
-  // CHALLENGES 
+  // CHALLENGES
   'challenge_weekly_label': 'Weekly Challenge',
   'challenge_accept': 'Accept Challenge',
   'challenge_log_progress': 'Log Outfit Progress',
@@ -393,16 +401,18 @@ const Map<String, String> appLocalizationsEn = {
   'challenge_progress_label': 'Progress',
   'challenge_anchor_chosen': 'Your anchor piece',
   'challenge_anchor_pick_title': 'Pick your anchor piece',
-  'challenge_anchor_pick_subtitle': 'This is the item you\'ll build 3 outfits around.',
+  'challenge_anchor_pick_subtitle':
+      'This is the item you\'ll build 3 outfits around.',
   'challenge_suggested_for_you': 'Suggested for you',
   'challenge_stylist_tip': 'Stylist tip',
   'challenge_how_it_works': 'How it works',
   'challenge_no_wardrobe': 'No wardrobe items found. Add items first.',
 
-  // Progress Dashboard 
+  // Progress Dashboard
   'my_progress': 'My Progress',
   'challenge_center': 'Challenge Center',
-  'challenge_center_subtitle': 'Browse and join new style challenges to keep growing.',
+  'challenge_center_subtitle':
+      'Browse and join new style challenges to keep growing.',
   'active_challenges': 'Active Challenges',
   'your_statistics': 'Your Statistics',
   'view_all': 'View All',
@@ -418,139 +428,185 @@ const Map<String, String> appLocalizationsEn = {
   'motivation_going': 'You\'re building strong style habits.',
   'motivation_strong': 'Impressive streak — you\'re on a roll!',
   'no_active_challenges': 'No active challenges right now',
-  'no_active_challenges_hint': 'Visit the Challenge Center to join a goal and keep your momentum going.',
+  'no_active_challenges_hint':
+      'Visit the Challenge Center to join a goal and keep your momentum going.',
   'browse_challenges': 'Browse Challenges',
   'wardrobe_items': 'Wardrobe Items',
   'total_spent': 'Total Spent',
   'wardrobe_utilization': 'Items Worn',
   'purchases_this_month': 'Buys This Month',
 
-    // ── HELP CENTER ──────────────────────────────────────────────────────────────
+  // ── HELP CENTER ──────────────────────────────────────────────────────────────
   'help_center_hero_title': 'Welcome to the Everywear Help Center',
-  'help_center_hero_subtitle': 'A calm guide to how the app works, what each space is for, and how to get the most out of your wardrobe journey.',
-  'help_center_studio_intro': 'Everywear is designed as a calm studio for your wardrobe. This space helps you understand how the app works, how to grow your style, and how to get the most from your clothes.',
+  'help_center_hero_subtitle':
+      'A calm guide to how the app works, what each space is for, and how to get the most out of your wardrobe journey.',
+  'help_center_studio_intro':
+      'Everywear is designed as a calm studio for your wardrobe. This space helps you understand how the app works, how to grow your style, and how to get the most from your clothes.',
   'help_center_philosophy_title': 'Our Philosophy',
-  'help_center_philosophy_heading': 'Everywear is designed as a calm personal wardrobe space.',
-  'help_center_philosophy_body': 'The goal is not to pressure you to buy more or dress in a certain way. The goal is to help you see your wardrobe more clearly, use it more intentionally, and build a style that feels like your own.',
+  'help_center_philosophy_heading':
+      'Everywear is designed as a calm personal wardrobe space.',
+  'help_center_philosophy_body':
+      'The goal is not to pressure you to buy more or dress in a certain way. The goal is to help you see your wardrobe more clearly, use it more intentionally, and build a style that feels like your own.',
   'help_center_how_it_works_title': 'How Everywear Works',
   'help_center_step1_title': 'Add your wardrobe',
-  'help_center_step1_desc': 'Start with a few pieces you wear often. You do not need to add everything at once.',
+  'help_center_step1_desc':
+      'Start with a few pieces you wear often. You do not need to add everything at once.',
   'help_center_step2_title': 'Log your outfits',
-  'help_center_step2_desc': 'Track what you actually wear. This helps the app understand your habits and improve your suggestions.',
+  'help_center_step2_desc':
+      'Track what you actually wear. This helps the app understand your habits and improve your suggestions.',
   'help_center_step3_title': 'Explore your daily suggestions',
-  'help_center_step3_desc': 'Use the Today page to get outfit ideas based on your mood, plans, and wardrobe context.',
+  'help_center_step3_desc':
+      'Use the Today page to get outfit ideas based on your mood, plans, and wardrobe context.',
   'help_center_step4_title': 'Grow your style with coaching',
-  'help_center_step4_desc': 'Use the Style page to discover challenges, answer quizzes, and get more thoughtful guidance over time.',
-  'help_center_pro_tip': 'Tip: The more outfits you log, the more personal your daily suggestions and insights become.',
+  'help_center_step4_desc':
+      'Use the Style page to discover challenges, answer quizzes, and get more thoughtful guidance over time.',
+  'help_center_pro_tip':
+      'Tip: The more outfits you log, the more personal your daily suggestions and insights become.',
   'help_center_pages_title': 'What each page does',
   'help_center_page_today_title': 'Today',
-  'help_center_page_today_desc': 'Your daily landing space for outfit ideas, quick logs, and morning guidance.',
+  'help_center_page_today_desc':
+      'Your daily landing space for outfit ideas, quick logs, and morning guidance.',
   'help_center_page_wardrobe_title': 'Wardrobe',
-  'help_center_page_wardrobe_desc': 'Your personal collection of clothes, organized and ready to style.',
+  'help_center_page_wardrobe_desc':
+      'Your personal collection of clothes, organized and ready to style.',
   'help_center_page_style_title': 'Style',
-  'help_center_page_style_desc': 'Your coaching area for quizzes, challenges, events, and personal growth.',
+  'help_center_page_style_desc':
+      'Your coaching area for quizzes, challenges, events, and personal growth.',
   'help_center_page_purchases_title': 'Purchases',
-  'help_center_page_purchases_desc': 'Track wardrobe spending, wishlist items, and the long-term value of what you buy.',
+  'help_center_page_purchases_desc':
+      'Track wardrobe spending, wishlist items, and the long-term value of what you buy.',
   'help_center_page_profile_title': 'Profile',
-  'help_center_page_profile_desc': 'See your insights, achievements, progress, membership, and settings.',
+  'help_center_page_profile_desc':
+      'See your insights, achievements, progress, membership, and settings.',
   'help_center_membership_title': 'Membership',
   'help_center_essential_title': 'Essential',
-  'help_center_essential_desc': 'A refined core experience with wardrobe management, daily use, and selected AI guidance.',
+  'help_center_essential_desc':
+      'A refined core experience with wardrobe management, daily use, and selected AI guidance.',
   'help_center_signature_title': 'Signature',
-  'help_center_signature_desc': 'A deeper experience with more suggestions, more coaching, more outfit possibilities, and a more seamless premium journey.',
+  'help_center_signature_desc':
+      'A deeper experience with more suggestions, more coaching, more outfit possibilities, and a more seamless premium journey.',
   'help_center_faq_title': 'Frequently Asked Questions',
   'help_center_need_help_title': 'Need more help?',
-  'help_center_need_help_body1': 'If something does not work as expected, or if you want to share feedback, please use the feedback option in Settings.',
-  'help_center_need_help_body2': 'Everywear is designed to evolve thoughtfully, and your feedback helps shape that process.',
-  
+  'help_center_need_help_body1':
+      'If something does not work as expected, or if you want to share feedback, please use the feedback option in Settings.',
+  'help_center_need_help_body2':
+      'Everywear is designed to evolve thoughtfully, and your feedback helps shape that process.',
+
   // FAQ Questions & Answers
   'faq_q1': 'What is Everywear?',
-  'faq_a1': 'Everywear is your personal wardrobe studio. It helps you organize your clothes, get daily outfit ideas, track your style habits, and make more thoughtful purchase decisions.',
+  'faq_a1':
+      'Everywear is your personal wardrobe studio. It helps you organize your clothes, get daily outfit ideas, track your style habits, and make more thoughtful purchase decisions.',
   'faq_q2': 'How should I start using the app?',
-  'faq_a2': 'Start by adding a few key wardrobe items, then log outfits as you wear them. The more you use the app, the more personal and accurate your suggestions, insights, and coaching become.',
+  'faq_a2':
+      'Start by adding a few key wardrobe items, then log outfits as you wear them. The more you use the app, the more personal and accurate your suggestions, insights, and coaching become.',
   'faq_q3': 'What does the Today page do?',
-  'faq_a3': 'The Today page is your daily styling space. It gives you an outfit idea based on your wardrobe, your selected mood, your plans, and contextual details like weather or upcoming events.',
+  'faq_a3':
+      'The Today page is your daily styling space. It gives you an outfit idea based on your wardrobe, your selected mood, your plans, and contextual details like weather or upcoming events.',
   'faq_q4': 'What is the Style page for?',
-  'faq_a4': 'The Style page is your coaching space. It is designed for reflection, challenges, quizzes, style growth, and more personal guidance beyond the daily suggestion.',
+  'faq_a4':
+      'The Style page is your coaching space. It is designed for reflection, challenges, quizzes, style growth, and more personal guidance beyond the daily suggestion.',
   'faq_q5': 'What are Style Insights?',
-  'faq_a5': 'Style Insights show patterns in how you use your wardrobe — like your most worn categories, outfit history, wardrobe utilization, and value over time. They help you understand your style more clearly.',
+  'faq_a5':
+      'Style Insights show patterns in how you use your wardrobe — like your most worn categories, outfit history, wardrobe utilization, and value over time. They help you understand your style more clearly.',
   'faq_q6': 'What is the difference between Essential and Signature?',
-  'faq_a6': 'Essential gives you access to the core experience of Everywear. Signature unlocks more suggestions, more coaching, more outfit options, and a smoother premium experience with fewer limitations.',
+  'faq_a6':
+      'Essential gives you access to the core experience of Everywear. Signature unlocks more suggestions, more coaching, more outfit options, and a smoother premium experience with fewer limitations.',
   'faq_q7': 'Will the app delete my wardrobe if I cancel Signature?',
-  'faq_a7': 'No. Your wardrobe data stays with your account. If you return to Essential, you keep your saved data, but some premium features and extra usage limits may no longer be available.',
+  'faq_a7':
+      'No. Your wardrobe data stays with your account. If you return to Essential, you keep your saved data, but some premium features and extra usage limits may no longer be available.',
   'faq_q8': 'How do purchases and wishlist tracking work?',
-  'faq_a8': 'The Purchases page helps you log what enters your wardrobe, monitor category spending, track cost-per-wear, and save items to a wishlist before buying them.',
+  'faq_a8':
+      'The Purchases page helps you log what enters your wardrobe, monitor category spending, track cost-per-wear, and save items to a wishlist before buying them.',
   'faq_q9': 'Does Everywear sell my personal data?',
-  'faq_a9': 'No. Your wardrobe and account data are used to power your experience inside the app. Analytics settings let you control whether anonymous usage data helps improve the app.',
+  'faq_a9':
+      'No. Your wardrobe and account data are used to power your experience inside the app. Analytics settings let you control whether anonymous usage data helps improve the app.',
   'faq_q10': 'How can I get better suggestions?',
-  'faq_a10': 'Add more wardrobe items, complete your style quiz, log outfits regularly, and use the occasion and vibe options. This gives the app more context to produce suggestions that feel more personal.',
+  'faq_a10':
+      'Add more wardrobe items, complete your style quiz, log outfits regularly, and use the occasion and vibe options. This gives the app more context to produce suggestions that feel more personal.',
 
-    // ── SEND FEEDBACK ─────────────────────────────────────────────────────────────
+  // ── SEND FEEDBACK ─────────────────────────────────────────────────────────────
   'feedback_hero_title': 'We would love to hear from you',
-  'feedback_hero_subtitle': 'Your ideas, bug reports, and reflections help shape Everywear into a more thoughtful wardrobe studio.',
+  'feedback_hero_subtitle':
+      'Your ideas, bug reports, and reflections help shape Everywear into a more thoughtful wardrobe studio.',
   'feedback_type_section_title': 'What would you like to share?',
   'feedback_message_section_title': 'Your message',
   'feedback_experience_section_title': 'How is your experience so far?',
   'feedback_email_section_title': 'Contact email',
   'feedback_note_section_title': 'A quick note',
-  
+
   // Feedback types
   'feedback_type_suggestion': 'Suggestion',
   'feedback_type_bug': 'Bug',
   'feedback_type_design': 'Design',
   'feedback_type_ai_suggestions': 'AI suggestions',
   'feedback_type_other': 'Other',
-  
+
   // Form fields
-  'feedback_message_hint': 'Tell us what happened, what you would improve, or what you would love to see next...',
+  'feedback_message_hint':
+      'Tell us what happened, what you would improve, or what you would love to see next...',
   'feedback_message_required': 'Please write a message',
   'feedback_message_too_short': 'Please add a little more detail',
   'feedback_rating_optional': 'Optional, but helpful',
   'feedback_email_hint': 'your@email.com',
   'feedback_email_invalid': 'Please enter a valid email',
-  'feedback_note_text': 'If you report a bug, a few details like where it happened, what you expected, and what happened instead will help a lot.',
-  
+  'feedback_note_text':
+      'If you report a bug, a few details like where it happened, what you expected, and what happened instead will help a lot.',
+
   // Button states
   'feedback_sending': 'Sending...',
   'feedback_success_message': 'Thank you — your feedback has been sent',
   'feedback_error_message': 'Could not send feedback. Please try again.',
 
-    // PRIVACY POLICY
+  // PRIVACY POLICY
   'privacy_title': 'Everywear Privacy Policy',
   'privacy_last_updated': 'Last updated: 2026',
   'privacy_philosophy_title': 'Our philosophy',
-  'privacy_philosophy_content': 'Everywear was designed as a calm wardrobe studio. Our goal is to help you rediscover the clothes you already own and develop your personal style intentionally. Your wardrobe data belongs to you.',
+  'privacy_philosophy_content':
+      'Everywear was designed as a calm wardrobe studio. Our goal is to help you rediscover the clothes you already own and develop your personal style intentionally. Your wardrobe data belongs to you.',
   'privacy_collect_title': 'Information we collect',
-  'privacy_collect_content': 'When you create an account we may collect:\n\n• Email address\n• Authentication data\n• Basic device information\n\nThis allows us to securely provide the service.',
+  'privacy_collect_content':
+      'When you create an account we may collect:\n\n• Email address\n• Authentication data\n• Basic device information\n\nThis allows us to securely provide the service.',
   'privacy_wardrobe_title': 'Wardrobe data',
-  'privacy_wardrobe_content': 'Everywear stores information you choose to add, such as:\n\n• Clothing items\n• Outfit logs\n• Wardrobe images\n• Style preferences\n\nThis data is used only to provide wardrobe features.',
+  'privacy_wardrobe_content':
+      'Everywear stores information you choose to add, such as:\n\n• Clothing items\n• Outfit logs\n• Wardrobe images\n• Style preferences\n\nThis data is used only to provide wardrobe features.',
   'privacy_analytics_title': 'Analytics',
-  'privacy_analytics_content': 'Anonymous usage data may be collected to understand how features are used and improve the application.',
+  'privacy_analytics_content':
+      'Anonymous usage data may be collected to understand how features are used and improve the application.',
   'privacy_subscriptions_title': 'Subscriptions',
-  'privacy_subscriptions_content': 'Signature subscriptions are processed through Apple App Store or Google Play. Everywear never stores payment information.',
+  'privacy_subscriptions_content':
+      'Signature subscriptions are processed through Apple App Store or Google Play. Everywear never stores payment information.',
   'privacy_rights_title': 'Your rights',
-  'privacy_rights_content': 'You may request:\n\n• Account deletion\n• Data export\n• Support regarding your data',
+  'privacy_rights_content':
+      'You may request:\n\n• Account deletion\n• Data export\n• Support regarding your data',
   'privacy_contact_title': 'Contact',
-  'privacy_contact_content': 'If you have privacy questions please contact:\n\nsupport@everywear.studio',
+  'privacy_contact_content':
+      'If you have privacy questions please contact:\n\nsupport@everywear.studio',
 
-  // TERMS OF USE 
+  // TERMS OF USE
   'terms_title': 'Everywear Terms',
   'terms_use_title': 'Use of the app',
-  'terms_use_content': 'Everywear provides tools to organize wardrobes and track outfits. By using the app you agree to use the service responsibly.',
+  'terms_use_content':
+      'Everywear provides tools to organize wardrobes and track outfits. By using the app you agree to use the service responsibly.',
   'terms_accounts_title': 'Accounts',
-  'terms_accounts_content': 'You are responsible for maintaining the confidentiality of your account credentials.',
+  'terms_accounts_content':
+      'You are responsible for maintaining the confidentiality of your account credentials.',
   'terms_tiers_title': 'Essential & Signature',
-  'terms_tiers_content': 'Everywear offers two tiers:\n\nEssential — free access to core wardrobe tools.\n\nSignature — premium access to advanced insights, analytics and enhanced outfit suggestions.',
+  'terms_tiers_content':
+      'Everywear offers two tiers:\n\nEssential — free access to core wardrobe tools.\n\nSignature — premium access to advanced insights, analytics and enhanced outfit suggestions.',
   'terms_subscriptions_title': 'Subscriptions',
-  'terms_subscriptions_content': 'Subscriptions renew automatically unless cancelled through your App Store or Google Play account.',
+  'terms_subscriptions_content':
+      'Subscriptions renew automatically unless cancelled through your App Store or Google Play account.',
   'terms_cancellation_title': 'Cancellation',
-  'terms_cancellation_content': 'You may cancel your subscription anytime through your store account settings.',
+  'terms_cancellation_content':
+      'You may cancel your subscription anytime through your store account settings.',
   'terms_user_content_title': 'User content',
-  'terms_user_content_content': 'You retain ownership of wardrobe photos and data you upload. Everywear stores this data only to provide the service.',
+  'terms_user_content_content':
+      'You retain ownership of wardrobe photos and data you upload. Everywear stores this data only to provide the service.',
   'terms_contact_title': 'Contact',
-  'terms_contact_content': 'Questions regarding these terms:\n\nsupport@everywear.studio',
+  'terms_contact_content':
+      'Questions regarding these terms:\n\nsupport@everywear.studio',
 
-    // Profile Screen
+  // Profile Screen
   'profile_title': 'Profile',
   'insights_analytics': 'Insights & Analytics',
   'style_insights': 'Style Insights',
@@ -568,7 +624,8 @@ const Map<String, String> appLocalizationsEn = {
   // Premium Upgrade Screen
   'premium_upgrade': 'Premium Upgrade',
   'choose_your_plan': 'Choose Your Plan',
-  'upgrade_more_features': 'Upgrade when you want more suggestions, more coaching, more outfit variations, and no ads.',
+  'upgrade_more_features':
+      'Upgrade when you want more suggestions, more coaching, more outfit variations, and no ads.',
   'monthly': 'Monthly',
   'per_month': '/month',
   'yearly': 'Yearly',
@@ -578,29 +635,39 @@ const Map<String, String> appLocalizationsEn = {
   'more_coach_interactions': 'More coach interactions',
   'more_event_outfit_generations': 'More event outfit generations',
   'ad_free_experience': 'Ad-free experience',
-  'access_premium_while_subscribed': 'Access to Premium features while subscribed',
+  'access_premium_while_subscribed':
+      'Access to Premium features while subscribed',
   'everything_in_monthly': 'Everything in Monthly',
   'better_yearly_value': 'Better yearly value',
   'fewer_renewals': 'Fewer renewals to manage',
   'full_premium_all_year': 'Full Premium access all year',
   'best_plan_regular_users': 'Best plan for regular users',
   'how_billing_works': 'How billing works',
-  'billing_managed_by_store': 'Your subscription will be managed by Google Play or the App Store. No card form is required here — billing continues through your store account.',
+  'billing_managed_by_store':
+      'Your subscription will be managed by Google Play or the App Store. No card form is required here — billing continues through your store account.',
   'hosted_checkout_title': 'Subscription options',
-  'hosted_checkout_description': 'Current plans, prices, and renewal terms are shown on RevenueCat’s secure checkout page.',
-  'hosted_checkout_unavailable': 'Online checkout is unavailable in this build. No offer is available until billing is configured.',
+  'hosted_checkout_description':
+      'Current plans, prices, and renewal terms are shown on RevenueCat’s secure checkout page.',
+  'hosted_checkout_unavailable':
+      'Online checkout is unavailable in this build. No offer is available until billing is configured.',
   'continue_to_checkout': 'Continue to checkout',
-  'hosted_checkout_opened': 'Checkout opened in your browser. Everywear enables Premium only after the subscription is verified.',
+  'hosted_checkout_opened':
+      'Checkout opened in your browser. Everywear enables Premium only after the subscription is verified.',
   'manage_subscription': 'Manage subscription',
-  'subscription_management_unavailable': 'Subscription management is not available for this account right now.',
+  'subscription_management_unavailable':
+      'Subscription management is not available for this account right now.',
   'refresh_subscription_status': 'Refresh subscription status',
-  'subscription_status_verified': 'Everywear verified an active subscription for this account.',
-  'subscription_not_verified': 'No active subscription was verified yet. If you just checked out, try again in a moment.',
-  'subscription_status_could_not_refresh': 'Everywear could not refresh subscription status. Please try again later.',
+  'subscription_status_verified':
+      'Everywear verified an active subscription for this account.',
+  'subscription_not_verified':
+      'No active subscription was verified yet. If you just checked out, try again in a moment.',
+  'subscription_status_could_not_refresh':
+      'Everywear could not refresh subscription status. Please try again later.',
   'what_users_say': 'What Our Users Say',
   'frequently_asked_questions': 'Frequently Asked Questions',
   'secure_store_billing': 'Secure Store Billing',
-  'subscriptions_handled_securely': 'Subscriptions are handled securely through Google Play or the App Store on your device.',
+  'subscriptions_handled_securely':
+      'Subscriptions are handled securely through Google Play or the App Store on your device.',
   'restore_purchases': 'Restore Purchases',
   'welcome_to_signature': 'Welcome to Signature!',
   'purchases_restored_success': 'Purchases restored successfully!',
@@ -612,25 +679,32 @@ const Map<String, String> appLocalizationsEn = {
 
   // FAQ
   'faq_cancel_anytime': 'Can I cancel anytime?',
-  'faq_cancel_anytime_answer': 'Yes. Your subscription renews automatically, and you can cancel anytime from your Play Store or App Store subscription settings.',
+  'faq_cancel_anytime_answer':
+      'Yes. Your subscription renews automatically, and you can cancel anytime from your Play Store or App Store subscription settings.',
   'faq_what_happens_cancel': 'What happens if I cancel?',
-  'faq_what_happens_cancel_answer': 'You will keep Premium access until the end of the current billing period, then your account will return to the free plan.',
+  'faq_what_happens_cancel_answer':
+      'You will keep Premium access until the end of the current billing period, then your account will return to the free plan.',
   'faq_restore_subscription': 'Can I restore my subscription?',
-  'faq_restore_subscription_answer': 'Yes. If you already purchased Premium on this account, you can restore your purchases at any time.',
+  'faq_restore_subscription_answer':
+      'Yes. If you already purchased Premium on this account, you can restore your purchases at any time.',
   'faq_discount_codes': 'Do you offer discount codes?',
-  'faq_discount_codes_answer': 'Occasionally, yes. Special discount codes may be shared through campaigns, partnerships, or selected creators.',
+  'faq_discount_codes_answer':
+      'Occasionally, yes. Special discount codes may be shared through campaigns, partnerships, or selected creators.',
 
   // Testimonials
-  'testimonial_sarah_text': 'Premium analytics helped me reduce impulse purchases and get more value from the clothes I already own.',
-  'testimonial_marcus_text': 'The AI suggestions and outfit variations made the app feel like a real personal stylist.',
-  'testimonial_emma_text': 'Premium made the app much more useful day to day. More ideas, more guidance, no ads.',
+  'testimonial_sarah_text':
+      'Premium analytics helped me reduce impulse purchases and get more value from the clothes I already own.',
+  'testimonial_marcus_text':
+      'The AI suggestions and outfit variations made the app feel like a real personal stylist.',
+  'testimonial_emma_text':
+      'Premium made the app much more useful day to day. More ideas, more guidance, no ads.',
 
   // Dynamic AI messages
   'ai_bubble_message_initial':
       '👋 Hi! I\'ve analyzed your wardrobe and found {count} perfect outfit combinations for you today! Each suggestion is personalized based on your style preferences, weather conditions, and past favorites.',
   'ai_bubble_message_found':
       '🎯 I found {count} AI-powered outfits with a {confidence}% match to your style! Tap any suggestion to see detailed styling tips and complete the look. Want to try something new? I\'ve also included combinations you haven\'t worn yet!',
-  
+
   // New Wardrobe & Item Management
   'retry': 'Retry',
   'items': 'items',
@@ -642,14 +716,16 @@ const Map<String, String> appLocalizationsEn = {
   'failed_to_load_wardrobe': 'Failed to load wardrobe',
   'delete_item': 'Delete Item',
   'delete_items': 'Delete Items',
-  'delete_item_confirmation': 'Are you sure you want to delete this item from your wardrobe?',
+  'delete_item_confirmation':
+      'Are you sure you want to delete this item from your wardrobe?',
   'item_deleted_success': 'Item deleted successfully',
   'item_delete_error': 'Failed to delete item',
   'items_deleted_success': 'Items deleted successfully',
   'items_delete_error': 'Failed to delete items',
   'item_added_to_wardrobe': 'added to wardrobe',
   'item_save_error': 'Failed to save item. Please try again.',
-  'unsaved_changes': 'You have unsaved changes. Are you sure you want to leave?',
+  'unsaved_changes':
+      'You have unsaved changes. Are you sure you want to leave?',
   'discard': 'Discard',
   'edit_item': 'Edit Item',
   'changes': 'Changes',
@@ -673,9 +749,11 @@ const Map<String, String> appLocalizationsEn = {
   'enter_city_manually': 'Enter your city',
   'enter_city_title': 'Enter City',
   'city_hint': 'e.g., London, UK',
-  'daily_log_welcome_subtitle': 'A calm space to choose what feels right today — guided by your wardrobe, your plans, and your mood.',
+  'daily_log_welcome_subtitle':
+      'A calm space to choose what feels right today — guided by your wardrobe, your plans, and your mood.',
   'set_todays_direction': 'Set today’s direction',
-  'set_direction_subtitle': 'Choose the occasion and vibe you want. Your suggestion updates around that.',
+  'set_direction_subtitle':
+      'Choose the occasion and vibe you want. Your suggestion updates around that.',
   'dressing_for': 'Dressing for',
   'todays_vibe': 'Today’s vibe',
   'occasion_work': 'Work',
@@ -699,7 +777,8 @@ const Map<String, String> appLocalizationsEn = {
   'search_achievements_title': 'Search Achievements',
   'enter_achievement_name_hint': 'Enter achievement name...',
   'hero_title_default': 'Your style journey is taking shape',
-  'hero_subtitle_default': 'Track the milestones that reflect your consistency, creativity, and mindful wardrobe habits.',
+  'hero_subtitle_default':
+      'Track the milestones that reflect your consistency, creativity, and mindful wardrobe habits.',
   'hero_chip_unlocked': '{} unlocked',
   'hero_title_progress': 'You are close to your next milestone',
   'hero_chip_next': 'Next up',
@@ -721,13 +800,16 @@ const Map<String, String> appLocalizationsEn = {
   'rarest_badge_label': 'Rarest Badge',
   'achievement_unlocked': 'Achievement Unlocked!',
   'keep_up_great_work': 'Keep up the great work!',
-  'try_different_search_or_clear': 'Try a different search term or clear your current query.',
-  'try_adjusting_category_filter': 'Try adjusting your category filter to explore more milestones.',
+  'try_different_search_or_clear':
+      'Try a different search term or clear your current query.',
+  'try_adjusting_category_filter':
+      'Try adjusting your category filter to explore more milestones.',
   'percent_complete': '{}% complete',
   'unlocked_on': 'Unlocked {}',
   'share_achievement_msg': 'Sharing "{}" achievement...',
   'showing_results_for': 'Showing results for "{}"',
-  'achievement_progress_subtitle': '{title} is {percent}% complete. Keep going to unlock your next achievement.',
+  'achievement_progress_subtitle':
+      '{title} is {percent}% complete. Keep going to unlock your next achievement.',
   'category_all': 'All',
   'category_consistency': 'Consistency',
   'category_style': 'Style',
@@ -738,51 +820,63 @@ const Map<String, String> appLocalizationsEn = {
   'achievement_title_1': 'First Steps',
   'achievement_descr_1': 'Logged your first outfit',
   'achievement_req_1': 'Log 1 outfit',
-  'achievement_backstory_1': 'Every journey begins with a single step. You\'ve started your mindful fashion journey!',
+  'achievement_backstory_1':
+      'Every journey begins with a single step. You\'ve started your mindful fashion journey!',
   'achievement_title_2': 'Week Warrior',
   'achievement_descr_2': 'Logged outfits for 7 consecutive days',
   'achievement_req_2': 'Log outfits for 7 days straight',
-  'achievement_backstory_2': 'Consistency is the foundation of mindful living. Your dedication is inspiring!',
+  'achievement_backstory_2':
+      'Consistency is the foundation of mindful living. Your dedication is inspiring!',
   'achievement_title_3': 'Monthly Milestone',
   'achievement_descr_3': 'Logged outfits on 30 different days',
   'achievement_req_3': 'Log outfits on 30 days',
-  'achievement_backstory_3': 'A month of mindfulness is a powerful achievement. You\'re building lasting change!',
+  'achievement_backstory_3':
+      'A month of mindfulness is a powerful achievement. You\'re building lasting change!',
   'achievement_title_4': 'Century Club',
   'achievement_descr_4': 'Logged 100 outfits',
   'achievement_req_4': 'Log 100 total outfits',
-  'achievement_backstory_4': 'Persistence creates transformation. You\'re building lasting habits!',
+  'achievement_backstory_4':
+      'Persistence creates transformation. You\'re building lasting habits!',
   'achievement_title_5': 'Style Innovator',
   'achievement_descr_5': 'Created 10 unique outfit logs',
   'achievement_req_5': 'Log 10 different outfits',
-  'achievement_backstory_5': 'Creativity flourishes when you explore your wardrobe\'s potential!',
+  'achievement_backstory_5':
+      'Creativity flourishes when you explore your wardrobe\'s potential!',
   'achievement_title_6': 'Wardrobe Optimizer',
   'achievement_descr_6': 'Wore every wardrobe item at least once',
   'achievement_req_6': 'Wear all wardrobe items',
-  'achievement_backstory_6': 'Every piece deserves its moment. You\'re maximizing your wardrobe\'s potential!',
+  'achievement_backstory_6':
+      'Every piece deserves its moment. You\'re maximizing your wardrobe\'s potential!',
   'achievement_title_7': 'Power Dresser',
   'achievement_descr_7': 'Have 3 items worn 10+ times each',
   'achievement_req_7': '3 items with 10+ wears',
-  'achievement_backstory_7': 'You know your staples. These pieces are the backbone of your wardrobe!',
+  'achievement_backstory_7':
+      'You know your staples. These pieces are the backbone of your wardrobe!',
   'achievement_title_8': 'Style Critic',
   'achievement_descr_8': 'Rated 10 outfits',
   'achievement_req_8': 'Rate 10 outfits',
-  'achievement_backstory_8': 'Self-awareness is the first step to better style. Keep reflecting!',
+  'achievement_backstory_8':
+      'Self-awareness is the first step to better style. Keep reflecting!',
   'achievement_title_9': 'Mindful Shopper',
   'achievement_descr_9': 'Tracked 5 purchases with reflection notes',
   'achievement_req_9': 'Log 5 purchases with notes',
-  'achievement_backstory_9': 'Mindful consumption starts with awareness. You\'re making intentional choices!',
+  'achievement_backstory_9':
+      'Mindful consumption starts with awareness. You\'re making intentional choices!',
   'achievement_title_10': 'Wardrobe Curator',
   'achievement_descr_10': 'Added 20 items to your wardrobe',
   'achievement_req_10': 'Have 20 wardrobe items',
-  'achievement_backstory_10': 'A curated wardrobe is a joy to dress from every morning!',
+  'achievement_backstory_10':
+      'A curated wardrobe is a joy to dress from every morning!',
   'achievement_title_11': 'Sustainability Champion',
   'achievement_descr_11': 'Logged 50+ outfits (maximizing what you own)',
   'achievement_req_11': 'Log 50 outfits',
-  'achievement_backstory_11': 'True sustainability means maximizing what you already own!',
+  'achievement_backstory_11':
+      'True sustainability means maximizing what you already own!',
   'achievement_title_12': 'Purchase Conscious',
   'achievement_descr_12': 'Tracked 10 purchases mindfully',
   'achievement_req_12': 'Log 10 purchases',
-  'achievement_backstory_12': 'Tracking your spending is the first step to a more intentional wardrobe!',
+  'achievement_backstory_12':
+      'Tracking your spending is the first step to a more intentional wardrobe!',
   'challenge_daily_logger': 'Daily Logger',
   'challenge_streak_master': 'Streak Master',
   'challenge_commitment_champion': 'Commitment Champion',
@@ -802,7 +896,8 @@ const Map<String, String> appLocalizationsEn = {
   'learning_modules': 'Learning Modules',
   'module_locked_title': 'Module Locked',
   'how_it_works': 'How it works:',
-  'about_lp_description': 'Learning Paths helps you develop sustainable fashion knowledge through progressive modules.',
+  'about_lp_description':
+      'Learning Paths helps you develop sustainable fashion knowledge through progressive modules.',
   'about_lp_point1': 'Log outfits and add wardrobe items to unlock new modules',
   'about_lp_point2': 'Complete modules to earn achievements and level up',
   'about_lp_point3': 'Learn at your own pace with mobile-optimized content',
@@ -818,7 +913,8 @@ const Map<String, String> appLocalizationsEn = {
   'module_completion_hint':
       'Review the overview and key learnings, then mark this module complete.',
   'view_requirements': 'View Requirements',
-  'complete_required_modules': 'Complete the required modules to unlock this content',
+  'complete_required_modules':
+      'Complete the required modules to unlock this content',
   'your_progress': 'Your Progress',
   'keep_learning_unlock': 'Keep learning to unlock more!',
   'overall_progress': 'Overall Progress',
@@ -891,7 +987,8 @@ const Map<String, String> appLocalizationsEn = {
   'goal_kg_label': 'Goal: {} kg',
   'outfit_combinations_label': '{} outfit combinations',
   'tips_label': '{} tips',
-  'sustainability_goal_progress_msg': 'You\'re {}% towards your monthly sustainability goal. Keep maximizing existing items!',
+  'sustainability_goal_progress_msg':
+      'You\'re {}% towards your monthly sustainability goal. Keep maximizing existing items!',
   'category_tops': 'Tops',
   'category_bottoms': 'Bottoms',
   'category_dresses': 'Dresses',
@@ -926,7 +1023,8 @@ const Map<String, String> appLocalizationsEn = {
   'available_challenges': 'Available Challenges',
   'active_challenges_count': '{} active',
   'build_better_style_habits': 'Build better style habits',
-  'challenge_center_desc': 'Take on focused challenges to improve consistency, creativity, and mindful wardrobe use.',
+  'challenge_center_desc':
+      'Take on focused challenges to improve consistency, creativity, and mindful wardrobe use.',
   'new_goals_label': 'New goals',
   'next_milestone_in_progress': 'Your next milestone is in progress',
   'challenge_progress_msg': '{title} is {pct}% complete. Keep going!',
@@ -934,7 +1032,8 @@ const Map<String, String> appLocalizationsEn = {
   'no_challenges_found': 'No challenges found',
   'failed_to_load_challenges':
       'Could not load challenges. Check your connection and try again.',
-  'change_filter_explore_more': 'Try changing your filter to explore more challenge options.',
+  'change_filter_explore_more':
+      'Try changing your filter to explore more challenge options.',
   'featured_label': 'FEATURED',
   'points_label_value': '{} points',
   'days_label_value': '{} days',
@@ -956,7 +1055,8 @@ const Map<String, String> appLocalizationsEn = {
   'saving_label': 'Saving...',
   'save_changes_label': 'Save Changes',
   'your_personal_profile': 'Your personal profile',
-  'edit_profile_hero_desc': 'Keep your profile simple, clear, and personal. Your email stays fixed, while your name and profile image can be updated here.',
+  'edit_profile_hero_desc':
+      'Keep your profile simple, clear, and personal. Your email stays fixed, while your name and profile image can be updated here.',
   'profile_picture_semantic': 'Profile picture',
   'tap_photo_to_update': 'Tap the photo to update it',
   'change_photo_label': 'Change Photo',
@@ -965,14 +1065,17 @@ const Map<String, String> appLocalizationsEn = {
   'please_enter_name': 'Please enter your name',
   'please_enter_valid_name': 'Please enter a valid name',
   'fixed_label': 'Fixed',
-  'email_fixed_info': 'Your email address stays linked to your account sign-in. To keep things simple and reliable, only your display name and profile image are editable here.',
+  'email_fixed_info':
+      'Your email address stays linked to your account sign-in. To keep things simple and reliable, only your display name and profile image are editable here.',
   'profile_photo_updated_msg': 'Profile photo updated',
-  'photo_upload_error_msg': 'Could not upload photo. Check debug console for details.',
+  'photo_upload_error_msg':
+      'Could not upload photo. Check debug console for details.',
   'profile_updated_success_msg': 'Profile updated successfully',
   'could_not_update_profile_prefix': 'Could not update profile: {}',
   'try_different_search': 'Try a different search term',
   'your_wardrobe_starts_here': 'Your wardrobe starts here',
-  'empty_wardrobe_subtitle': 'Add your clothes to unlock outfit suggestions and styling insights.',
+  'empty_wardrobe_subtitle':
+      'Add your clothes to unlock outfit suggestions and styling insights.',
   'start_with_something_simple': 'Start with something simple',
   'add_top_btn': 'Add a top',
   'add_pants_btn': 'Add pants',
@@ -1015,7 +1118,8 @@ const Map<String, String> appLocalizationsEn = {
   'purchase_date_hint': 'Select date',
   'store_label': 'Store/Website',
   'store_hint': 'e.g., Nordstrom',
-  'cost_per_wear_info': 'Adding purchase info helps track cost-per-wear and identify high-value items',
+  'cost_per_wear_info':
+      'Adding purchase info helps track cost-per-wear and identify high-value items',
   'cat_tops': 'Tops',
   'cat_bottoms': 'Bottoms',
   'cat_dresses': 'Dresses',
@@ -1028,8 +1132,9 @@ const Map<String, String> appLocalizationsEn = {
   'share_thoughts_outfit': 'Share your thoughts about this outfit',
   'feedback_hint': 'What worked well? What would you change?',
   'limit_reached': 'Limit reached',
-  'limit_reached_message': 'You’ve reached your outfit log limit for this month. Upgrade to continue logging more outfits.',
-  
+  'limit_reached_message':
+      'You’ve reached your outfit log limit for this month. Upgrade to continue logging more outfits.',
+
   // Theme Selector
   'select_theme': 'Select Theme',
   'light_mode_desc': 'Bright and clear interface',
@@ -1037,25 +1142,33 @@ const Map<String, String> appLocalizationsEn = {
   'system_auto': 'System Auto',
   'system_auto_desc': 'Follows system settings',
   'coach_limit_reached': 'Coach Limit Reached',
-  'premium_coach_limit_msg': 'You have used all your coaching sessions for this period. They will reset soon!',
-  'free_coach_limit_msg': 'Upgrade to Premium to get unlimited coaching sessions and detailed outfit ideas.',
+  'premium_coach_limit_msg':
+      'You have used all your coaching sessions for this period. They will reset soon!',
+  'free_coach_limit_msg':
+      'Upgrade to Premium for a larger monthly allowance of coaching and outfit ideas.',
   'topic_outfit_ideas': 'Outfit Ideas',
   'q_outfit_ideas': 'Can you give me some fresh outfit ideas from my wardrobe?',
   'topic_shopping_advice': 'Shopping Advice',
-  'q_shopping_advice': 'What is missing from my wardrobe? What should I buy next?',
+  'q_shopping_advice':
+      'What is missing from my wardrobe? What should I buy next?',
   'topic_my_wardrobe': 'My Wardrobe',
-  'q_my_wardrobe': 'Analyze my wardrobe. What are my most common colors and styles?',
+  'q_my_wardrobe':
+      'Analyze my wardrobe. What are my most common colors and styles?',
   'topic_for_an_event': 'For an Event',
-  'q_for_an_event': 'I have an important event coming up. Can you help me dress for it?',
+  'q_for_an_event':
+      'I have an important event coming up. Can you help me dress for it?',
   'topic_more_variety': 'More Variety',
-  'q_more_variety': 'I feel like I always wear the same things. How can I add variety?',
+  'q_more_variety':
+      'I feel like I always wear the same things. How can I add variety?',
   'topic_style_upgrade': 'Style Upgrade',
-  'q_style_upgrade': 'How can I make my current style look more polished and expensive?',
+  'q_style_upgrade':
+      'How can I make my current style look more polished and expensive?',
   'type_question_or_pick_topic': 'Type a question or pick a topic below',
   'coach_hint_text': 'Ask anything about your style...',
   'or_pick_a_topic': 'OR PICK A TOPIC',
   'no_insights_yet': 'No insights yet',
-  'add_items_for_insights': 'Add items and log outfits to see your style patterns.',
+  'add_items_for_insights':
+      'Add items and log outfits to see your style patterns.',
   'total_items_label': 'Total Items',
   'outfits_logged_label': 'Outfits Logged',
   'top_occasion_label': 'Top Occasion',
@@ -1129,13 +1242,16 @@ const Map<String, String> appLocalizationsEn = {
   'suggested_for_you': 'Suggested for you',
   'not_worn_yet': 'not worn yet',
   'stylist_tip': 'Stylist tip',
-  'color_stylist_tip': 'Try navy, camel, or olive — these tonal families are the easiest to build a full outfit around.',
-  'capsule_how_it_works': 'Choose 7 items from your wardrobe. Log 5 different outfits using only those pieces throughout the week.',
+  'color_stylist_tip':
+      'Try navy, camel, or olive — these tonal families are the easiest to build a full outfit around.',
+  'capsule_how_it_works':
+      'Choose 7 items from your wardrobe. Log 5 different outfits using only those pieces throughout the week.',
   'current_progress_label': 'Progress',
   'log_outfit_progress_btn': 'Log Outfit Progress',
   'new_challenge_next_week': 'New challenge arrives next week.',
   'building_suggestions_title': 'Building your suggestions',
-  'building_suggestions_subtitle': 'We need a bit more data to create personalized outfit suggestions for you.',
+  'building_suggestions_subtitle':
+      'We need a bit more data to create personalized outfit suggestions for you.',
   'step_log_outfits_title': 'Log 3 outfits',
   'step_log_outfits_subtitle': 'Start tracking your daily outfits',
   'step_rate_outfits_title': 'Rate your outfits',
@@ -1144,7 +1260,8 @@ const Map<String, String> appLocalizationsEn = {
   'step_get_suggestions_subtitle': 'We\'ll recommend outfits you\'ll love',
   'log_first_outfit_btn': 'Log Your First Outfit',
   'neglected_items_title': 'Items needing attention',
-  'neglected_items_subtitle': 'These pieces haven\'t been worn in a while. Give them some love!',
+  'neglected_items_subtitle':
+      'These pieces haven\'t been worn in a while. Give them some love!',
   'goal_outfit_label': 'Goal: {} outfits',
   'unworn_for_days': '"{n}" — unworn for {d} days',
   'not_worn_yet_item': '"{}" — not worn yet',
@@ -1152,7 +1269,8 @@ const Map<String, String> appLocalizationsEn = {
   'change_password_title': 'Change Password',
   'label_new_password': 'New password',
   'label_confirm_password': 'Confirm new password',
-  'strong_password_hint': 'Choose a strong password with at least 8 characters.',
+  'strong_password_hint':
+      'Choose a strong password with at least 8 characters.',
   'passwords_do_not_match': 'Passwords do not match',
   'min_password_length_msg': 'At least 8 characters',
   'update_password_btn': 'Update Password',
@@ -1161,10 +1279,12 @@ const Map<String, String> appLocalizationsEn = {
   'required_field_msg': 'Required',
   'export_data_title': 'Export Data',
   'hero_export_title': 'Take your wardrobe data with you',
-  'hero_export_subtitle': 'Export your wardrobe history, purchases, and insights in a format that feels useful and easy to keep.',
+  'hero_export_subtitle':
+      'Export your wardrobe history, purchases, and insights in a format that feels useful and easy to keep.',
   'choose_export_format': 'Choose export format',
   'pdf_report_title': 'Wardrobe Report',
-  'pdf_report_subtitle': 'A polished summary of your wardrobe, outfits, and insights',
+  'pdf_report_subtitle':
+      'A polished summary of your wardrobe, outfits, and insights',
   'csv_export_title': 'Spreadsheet Export',
   'csv_export_subtitle': 'Raw structured data for analysis or personal backup',
   'what_is_included': 'What is included',
@@ -1174,7 +1294,8 @@ const Map<String, String> appLocalizationsEn = {
   'export_item_wishlist': 'Wishlist items',
   'export_item_insights': 'Style insights and usage data',
   'privacy_note': 'Privacy note',
-  'export_privacy_content': 'Your export is intended for your own personal use and backup. It gives you a portable copy of the information connected to your wardrobe journey inside Everywear.',
+  'export_privacy_content':
+      'Your export is intended for your own personal use and backup. It gives you a portable copy of the information connected to your wardrobe journey inside Everywear.',
   'preparing_export': 'Preparing export...',
   'export_as': 'Export as {}',
   'preparing_csv_export': 'Preparing CSV export...',
@@ -1213,13 +1334,17 @@ const Map<String, String> appLocalizationsEn = {
   'label_month': 'Month',
   'label_year': 'Year',
   'hero_insight_title_new': 'Your wardrobe is taking shape',
-  'hero_insight_subtitle_new': 'Track how often you wear what you own and uncover the pieces delivering the most value.',
+  'hero_insight_subtitle_new':
+      'Track how often you wear what you own and uncover the pieces delivering the most value.',
   'hero_insight_title_empty': 'No insights yet',
-  'hero_insight_subtitle_empty': 'Add your first wardrobe items and start logging outfits to unlock personal analytics.',
+  'hero_insight_subtitle_empty':
+      'Add your first wardrobe items and start logging outfits to unlock personal analytics.',
   'hero_insight_title_strong': 'Your wardrobe is working well',
-  'hero_insight_subtitle_strong': 'You are getting strong use from your collection, especially in {}.',
+  'hero_insight_subtitle_strong':
+      'You are getting strong use from your collection, especially in {}.',
   'hero_insight_title_potential': 'There is room to unlock more value',
-  'hero_insight_subtitle_potential': 'Your wardrobe is leaning toward {}, but several pieces still have untapped potential.',
+  'hero_insight_subtitle_potential':
+      'Your wardrobe is leaning toward {}, but several pieces still have untapped potential.',
   'metric_total_items': 'Total Items',
   'metric_reliable_trend': '{} reliable',
   'metric_outfits_logged': 'Outfits Logged',
@@ -1230,42 +1355,58 @@ const Map<String, String> appLocalizationsEn = {
   'metric_utilization': 'Utilization',
   'metric_pieces_worn_trend': '{} pieces worn',
   'usage_utilization_title': 'Wardrobe utilization',
-  'usage_summary_text': '{worn} of {total} pieces were worn in the selected period.',
+  'usage_summary_text':
+      '{worn} of {total} pieces were worn in the selected period.',
   'usage_no_data': 'No wardrobe data available yet.',
   'label_worn': 'Worn',
   'label_unworn': 'Unworn',
   'label_top_category': 'Top Category',
   'label_top_occasion': 'Top Occasion',
   'cpw_no_data_title': 'No cost-per-wear data yet',
-  'cpw_no_data_subtitle': 'Log more outfits and add pricing to your pieces to see which items deliver the best value.',
+  'cpw_no_data_subtitle':
+      'Log more outfits and add pricing to your pieces to see which items deliver the best value.',
   'worn_x_times': 'worn {} times',
   'sustainability_score_label': 'Sustainability Score',
-  'sustainability_summary_strong': 'You are getting strong value from your wardrobe and making the most of the pieces you already own.',
-  'sustainability_summary_good': 'Your wardrobe is on a good path, but a few underused pieces are holding back its full potential.',
-  'sustainability_summary_improve': 'There is plenty of room to improve wardrobe value by wearing more of what you already own.',
+  'sustainability_summary_strong':
+      'You are getting strong value from your wardrobe and making the most of the pieces you already own.',
+  'sustainability_summary_good':
+      'Your wardrobe is on a good path, but a few underused pieces are holding back its full potential.',
+  'sustainability_summary_improve':
+      'There is plenty of room to improve wardrobe value by wearing more of what you already own.',
   'insight_start_title': 'Start building your insights',
-  'insight_start_desc': 'Add a few pieces and begin logging outfits to unlock more personal style intelligence.',
+  'insight_start_desc':
+      'Add a few pieces and begin logging outfits to unlock more personal style intelligence.',
   'insight_strong_util_title': 'Strong wardrobe utilization',
-  'insight_strong_util_desc': 'You are actively wearing {}% of your wardrobe, which suggests a practical and well-used collection.',
+  'insight_strong_util_desc':
+      'You are actively wearing {}% of your wardrobe, which suggests a practical and well-used collection.',
   'insight_untapped_potential_title': 'Untapped outfit potential',
-  'insight_untapped_potential_desc': 'Only {worn} of your {total} pieces were worn in this period. Styling more of your wardrobe could unlock better value and variety.',
+  'insight_untapped_potential_desc':
+      'Only {worn} of your {total} pieces were worn in this period. Styling more of your wardrobe could unlock better value and variety.',
   'insight_wardrobe_signature_title': 'Your wardrobe signature',
-  'insight_wardrobe_signature_desc': 'Your most-worn category is {}, which is shaping the core identity of your everyday style.',
+  'insight_wardrobe_signature_desc':
+      'Your most-worn category is {}, which is shaping the core identity of your everyday style.',
   'insight_current_rhythm_title': 'Your current rhythm',
-  'insight_current_rhythm_desc': 'Most of your logged outfits were for {}, which gives the app a clearer picture of how you dress in real life.',
+  'insight_current_rhythm_desc':
+      'Most of your logged outfits were for {}, which gives the app a clearer picture of how you dress in real life.',
   'insight_pieces_attention_title': 'A few pieces need attention',
-  'insight_pieces_attention_desc': '{} pieces have not shown up in your recent outfit history. Consider restyling them or deciding whether they still belong in your wardrobe.',
+  'insight_pieces_attention_desc':
+      '{} pieces have not shown up in your recent outfit history. Consider restyling them or deciding whether they still belong in your wardrobe.',
   'insight_cpw_check_title': 'Cost-per-wear check',
-  'insight_cpw_check_solid_desc': 'Your average cost per wear is {}, which indicates you are getting solid value from the pieces you own.',
-  'insight_cpw_check_improve_desc': 'Your average cost per wear is {}. Wearing your existing pieces more often would improve their long-term value.',
+  'insight_cpw_check_solid_desc':
+      'Your average cost per wear is {}, which indicates you are getting solid value from the pieces you own.',
+  'insight_cpw_check_improve_desc':
+      'Your average cost per wear is {}. Wearing your existing pieces more often would improve their long-term value.',
   'insight_reliable_piece_title': 'Most reliable piece',
-  'insight_reliable_piece_desc': '{name} has already been worn {count} times and is currently one of the strongest performers in your wardrobe.',
+  'insight_reliable_piece_desc':
+      '{name} has already been worn {count} times and is currently one of the strongest performers in your wardrobe.',
   'signature_feature_title': 'Signature feature',
-  'signature_feature_message': '{} is available on the Signature plan. Upgrade to unlock deeper wardrobe intelligence.',
+  'signature_feature_message':
+      '{} is available on the Signature plan. Upgrade to unlock deeper wardrobe intelligence.',
   'photos_label': 'Photos',
   'ai_analyzing': 'AI analyzing...',
   'add_photo_btn': 'Add Photo',
-  'ai_analysis_unavailable': 'AI analysis unavailable. You can still add the item manually.',
+  'ai_analysis_unavailable':
+      'AI analysis unavailable. You can still add the item manually.',
   'max_photos_allowed': 'Maximum {} photos allowed',
   'add_photos_hint': 'Add up to {} photos of your clothing item',
   'ai_detected_summary': 'AI detected: {color} {material} {category}',
@@ -1280,9 +1421,12 @@ const Map<String, String> appLocalizationsEn = {
   'style_tip': 'Style Tip',
   'style_tip_no_logs': 'Log your first outfit to get personalized tips!',
   'style_tip_few_logs': 'Keep logging to see more insights about your style.',
-  'style_tip_bold': 'You are feeling bold! Try adding a statement accessory to your suggested outfit.',
-  'style_tip_comfort': 'Focus on soft fabrics and flexible layers for maximum ease today.',
-  'style_tip_favorite_occasion': 'You often dress for {}. Discover new ways to style your favorites!',
+  'style_tip_bold':
+      'You are feeling bold! Try adding a statement accessory to your suggested outfit.',
+  'style_tip_comfort':
+      'Focus on soft fabrics and flexible layers for maximum ease today.',
+  'style_tip_favorite_occasion':
+      'You often dress for {}. Discover new ways to style your favorites!',
   'outfits_label': 'Outfits',
   'items_label': 'Items',
   'top_label': 'Top',
@@ -1365,7 +1509,8 @@ const Map<String, String> appLocalizationsEn = {
   'unknown_item': 'Unknown Item',
   'todays_log_section': 'Today\'s Log',
   'nothing_logged_today': 'Nothing logged yet today',
-  'quick_log_prompt': 'Use the quick log button to save today’s outfit and build your style history.',
+  'quick_log_prompt':
+      'Use the quick log button to save today’s outfit and build your style history.',
   'swap_item_title': 'Swap {item}',
   'choose_different_piece': 'Choose a different piece for this outfit idea',
   'quick_log_options': 'Quick Log Options',
@@ -1383,22 +1528,33 @@ const Map<String, String> appLocalizationsEn = {
   'retake_quiz': 'Retake',
   'ask_your_coach_new': 'Ask your coach',
   'no_outfit_displayed_error': 'No outfit displayed to save',
-  'no_valid_wardrobe_items_error': 'No valid wardrobe items in the displayed outfit',
+  'no_valid_wardrobe_items_error':
+      'No valid wardrobe items in the displayed outfit',
   'slot_anchor': 'anchor piece',
   'slot_top': 'top',
   'slot_bottom': 'bottom',
   'slot_shoes': 'shoes',
   'slot_item': 'item',
-  'fallback_suggestion_desc': 'A versatile everyday outfit idea built around one easy anchor piece.',
-  'work_suggestion_desc': 'A polished work-ready outfit that keeps things structured without feeling too rigid.',
-  'dinner_suggestion_desc': 'A slightly elevated evening look that feels intentional but still wearable.',
-  'travel_suggestion_desc': 'A practical travel outfit that keeps movement and layering in mind.',
-  'event_suggestion_desc': 'A more occasion-ready combination designed to look sharp and put together.',
-  'rain_suggestion_desc': 'A practical weather-aware outfit that stays comfortable in wet conditions.',
-  'sun_suggestion_desc': 'A lighter outfit idea that works well for a brighter day and easy movement.',
-  'polished_suggestion_desc': 'A clean, polished outfit idea that sharpens the overall look without overdoing it.',
-  'bold_suggestion_desc': 'A more expressive combination that keeps the silhouette simple while letting one piece stand out.',
-  'surprise_suggestion_desc': 'A fresher combination designed to help you wear something a little less expected today.',
+  'fallback_suggestion_desc':
+      'A versatile everyday outfit idea built around one easy anchor piece.',
+  'work_suggestion_desc':
+      'A polished work-ready outfit that keeps things structured without feeling too rigid.',
+  'dinner_suggestion_desc':
+      'A slightly elevated evening look that feels intentional but still wearable.',
+  'travel_suggestion_desc':
+      'A practical travel outfit that keeps movement and layering in mind.',
+  'event_suggestion_desc':
+      'A more occasion-ready combination designed to look sharp and put together.',
+  'rain_suggestion_desc':
+      'A practical weather-aware outfit that stays comfortable in wet conditions.',
+  'sun_suggestion_desc':
+      'A lighter outfit idea that works well for a brighter day and easy movement.',
+  'polished_suggestion_desc':
+      'A clean, polished outfit idea that sharpens the overall look without overdoing it.',
+  'bold_suggestion_desc':
+      'A more expressive combination that keeps the silhouette simple while letting one piece stand out.',
+  'surprise_suggestion_desc':
+      'A fresher combination designed to help you wear something a little less expected today.',
   'noItemsInCategory': 'No items in your wardrobe for this slot yet.',
   'addItemToWardrobe': 'Add an item',
 
@@ -1415,7 +1571,8 @@ const Map<String, String> appLocalizationsEn = {
   'profile_bold': 'Bold & Trendy',
   'profile_active': 'Active & Sporty',
   'profile_minimalist': 'Minimalist',
-  'coachFallbackTip': 'Try combining a familiar piece with something you wear less often this week.',
+  'coachFallbackTip':
+      'Try combining a familiar piece with something you wear less often this week.',
 
   // Purchase Tracking
   'monthly_budget': 'Monthly Budget',
@@ -1430,7 +1587,8 @@ const Map<String, String> appLocalizationsEn = {
   'added_to_wardrobe_log': 'added to your wardrobe log',
 
   // Wardrobe
-  'your_personal_collection': 'Your personal collection, ready to style anywhere.',
+  'your_personal_collection':
+      'Your personal collection, ready to style anywhere.',
   'updated_everywhere': 'Updated everywhere',
   'item_updated': 'Item updated',
   'outfits_logged': 'Outfits Logged',
@@ -1472,11 +1630,14 @@ const Map<String, String> appLocalizationsEn = {
   'reset_app': 'Reset App Data',
   'reset_app_subtitle': 'Erase all your data and start fresh',
   'reset_title': 'Reset App Data',
-  'reset_warning': 'This will permanently delete all your data. This action cannot be undone.',
-  'reset_keeps_account': 'Your account (email & password) will be kept. Only your data is deleted.',
+  'reset_warning':
+      'This will permanently delete all your data. This action cannot be undone.',
+  'reset_keeps_account':
+      'Your account (email & password) will be kept. Only your data is deleted.',
   'reset_continue_btn': 'Continue',
   'reset_confirm_title': 'Are you sure?',
-  'reset_type_instruction': 'Type RESET below to confirm you want to erase everything.',
+  'reset_type_instruction':
+      'Type RESET below to confirm you want to erase everything.',
   'reset_confirm_btn': 'Delete Everything',
   'reset_in_progress': 'Resetting your data...',
   'reset_error': 'Reset failed',
@@ -1598,7 +1759,7 @@ const Map<String, String> appLocalizationsEn = {
   'one_time': 'One Time',
   'daily': 'Daily',
   'weekly': 'Weekly',
-    'hourly': 'Hourly',
+  'hourly': 'Hourly',
   'minutes': 'Minutes',
   'hours': 'Hours',
   'days': 'Days',
@@ -3817,22 +3978,23 @@ const Map<String, String> appLocalizationsEn = {
   'influence_impact': 'Influence',
   'impact_impact': 'Impact',
   'maximum_photos_allowed': 'Maximum photos allowed',
-'failed_to_select_photo': 'Failed to select photo. Please try again.',
-'search_achievements': 'Search Achievements',
-'add_first_item': 'Add first item',
-'could_not_generate_export': 'Could not generate export',
-'export_error': 'Export error',
-'take_a_photo': 'Take a photo',
-'failed_to_save_preferences': 'Failed to save preferences. Please try again.',
-'purchases_restored': 'Purchases restored successfully!',
-'key_learnings': 'Key Learnings',
-'module_locked': 'Module Locked',
-'about_learning_paths': 'About Learning Paths',
+  'failed_to_select_photo': 'Failed to select photo. Please try again.',
+  'search_achievements': 'Search Achievements',
+  'add_first_item': 'Add first item',
+  'could_not_generate_export': 'Could not generate export',
+  'export_error': 'Export error',
+  'take_a_photo': 'Take a photo',
+  'failed_to_save_preferences': 'Failed to save preferences. Please try again.',
+  'purchases_restored': 'Purchases restored successfully!',
+  'key_learnings': 'Key Learnings',
+  'module_locked': 'Module Locked',
+  'about_learning_paths': 'About Learning Paths',
   'send_message': 'Send Message',
   'feedback_sent': 'Feedback sent. Thank you!',
   'contact_support_title': 'Contact & Support',
   'contact_support_hero_title': 'We’d love to hear from you',
-  'contact_support_hero_subtitle': 'Questions, feedback, or ideas help make Everywear better.',
+  'contact_support_hero_subtitle':
+      'Questions, feedback, or ideas help make Everywear better.',
   'label_category': 'Category',
   'category_general': 'General',
   'category_bug_report': 'Bug report',
@@ -3841,27 +4003,37 @@ const Map<String, String> appLocalizationsEn = {
   'label_email_optional': 'Email (optional)',
   'label_message_support': 'Message',
   'direct_support_title': 'Direct support',
-'could_not_send_feedback': 'Could not send feedback',
-'change_photo': 'Change Photo',
-'profile_photo_updated': 'Profile photo updated',
-'could_not_upload_photo': 'Could not upload photo. Check debug console for details.',
-'profile_updated_successfully': 'Profile updated successfully',
-'could_not_update_profile': 'Could not update profile',
-'wear_this': 'Wear This',
-'log_first_outfit': 'Log Your First Outfit',
-'challenge_accepted': 'Challenge accepted! Good luck!',
-'password_updated': 'Password updated successfully',
-'could_not_update_password': 'Could not update password',
-'morning_ai_suggestions': 'Morning AI suggestions',
-'daily_outfit_ideas': 'Daily outfit ideas every morning',
-'events': 'Events',
+  'could_not_send_feedback': 'Could not send feedback',
+  'change_photo': 'Change Photo',
+  'profile_photo_updated': 'Profile photo updated',
+  'could_not_upload_photo':
+      'Could not upload photo. Check debug console for details.',
+  'profile_updated_successfully': 'Profile updated successfully',
+  'could_not_update_profile': 'Could not update profile',
+  'wear_this': 'Wear This',
+  'log_first_outfit': 'Log Your First Outfit',
+  'challenge_accepted': 'Challenge accepted! Good luck!',
+  'password_updated': 'Password updated successfully',
+  'could_not_update_password': 'Could not update password',
+  'morning_ai_suggestions': 'Morning AI suggestions',
+  'daily_outfit_ideas': 'Daily outfit ideas every morning',
+  'events': 'Events',
+  'ai_allowance_remaining': '{count} AI actions left this month',
+  'ai_allowance_exhausted':
+      'Your AI action limit has been reached. Try again after the UTC reset.',
+  'ai_service_unavailable':
+      'AI is temporarily unavailable. You can continue without AI and retry later.',
   // Challenge type titles
   'challenge_type_anchor_title': 'Anchor Piece',
-  'challenge_type_anchor_description': 'Choose a key piece from your wardrobe and build 3 different outfits around it throughout the week.',
+  'challenge_type_anchor_description':
+      'Choose a key piece from your wardrobe and build 3 different outfits around it throughout the week.',
   'challenge_type_capsule_title': 'Capsule Challenge',
-  'challenge_type_capsule_description': 'Select 7 items and create 5 different outfits using only those pieces.',
+  'challenge_type_capsule_description':
+      'Select 7 items and create 5 different outfits using only those pieces.',
   'challenge_type_color_title': 'Color Story',
-  'challenge_type_color_description': 'Build outfits using a cohesive color palette - try navy, camel, or olive tones.',
+  'challenge_type_color_description':
+      'Build outfits using a cohesive color palette - try navy, camel, or olive tones.',
   'challenge_type_rediscover_title': 'Rediscover',
-  'challenge_type_rediscover_description': 'Find an unworn item in your wardrobe and style it in a new way.',
+  'challenge_type_rediscover_description':
+      'Find an unworn item in your wardrobe and style it in a new way.',
 };

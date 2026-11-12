@@ -66,38 +66,18 @@ Uptodown release candidate.
   still owner/provider inputs. The locally changed verifier/webhook are not
   deployed. No purchase or refund evidence is claimed.
 
-## AI model and price review (2026-11-12)
+## AI model, cost, and quota checkpoint (2026-11-12)
 
-- Added [`ai-cost-review.md`](ai-cost-review.md), tracing client requests,
-  local Edge Functions, and the ignored read-only deployed source snapshot.
-  The four direct Google functions use Gemini Developer API model
-  `gemini-2.5-flash-lite`; the owner's remembered `gemini-2.5-flash` is not
-  what source configures. Outfit-photo suggestions use OpenRouter, send a bare
-  model ID instead of its canonical `google/...` slug, and the provider page
-  says the configured model was going away on 2026-10-20. Runtime provider
-  access, keys, and token use remain unknown; no credential values were read.
-- Official pricing pages were checked on 2026-11-12. Under explicit token-mix
-  assumptions, estimated model cost is $0.0086/month light, $0.0378 typical,
-  and $0.1195 heavy. These are modeled estimates, not observed usage or invoice
-  data. The 999/day Signature quota could cost about $31/month per account at
-  the stated typical suggestion cost and is not a useful cost ceiling; prompt
-  sizes are not consistently bounded.
-- Proposed €2.99/month and €24.99/year appear potentially viable against
-  ordinary inference costs alone, but not proven sustainable after tax, Stripe
-  fees, Supabase fixed/usage costs, support, refunds, and unknown business
-  details. The annual effective gross is €2.0825/month before deductions. The
-  review recommends finite server-enforced quotas and measured prompt/image
-  bounds before product setup; no prices, models, quotas, or behavior changed.
-- Checks actually performed: source/configuration and deployed snapshot
-  inspection; current official Gemini, OpenRouter, RevenueCat, Stripe, EU VAT,
-  and Supabase documentation review; lightweight `rg`, `sed`, and `nl` source
-  inspection. No builds, tests, analyzers, paid API calls, provider setup,
-  hosted writes, or production secret reads were performed for this audit.
-- Next external inputs: confirm the intended model/provider route and paid
-  Google/OpenRouter access, actual Stripe merchant-country fee and tax setup,
-  RevenueCat account plan, and Supabase invoice/usage. Then obtain representative
-  per-feature token/call measurements in a controlled non-production pilot
-  before finalizing subscription prices and quotas.
+- Corrected the earlier model-retirement finding in [`ai-cost-review.md`](ai-cost-review.md): Google AI Studio currently lists `gemini-2.5-flash-lite` as not deprecated, with no shutdown date, but access is limited to qualifying existing 2.5 users. OpenRouter independently lists canonical `google/gemini-2.5-flash-lite`, image input, current $0.10/$0.40 per million token rates, and no public expiration date. This confirms public documentation/catalog status only; Google account eligibility, both provider keys, OpenRouter serving capacity, and output quality remain unverified. No paid inference or credential inspection occurred.
+- Added a local-only shared quota migration and integrated reservations into clothing analysis, photo advice, daily outfits, style coaching, and insights. Provisional server policy is 20 monthly / 3 daily / 1 per UTC minute for free and 200 monthly / 20 daily / 5 per UTC minute for premium, plus 1/3 in-flight request caps. Counters use server-derived subscription state and serialize via a per-user row lock; duplicate user/request IDs are rejected across endpoints. Provider errors, timeouts, invalid responses, and interrupted calls retain their consumed action. Requests are bounded to one JPEG ≤3 MB and ≤1280×1280, bounded JSON/prompt/response bytes, 200–800 output tokens, 20-second provider timeout, and no application retries or model fallback. OpenRouter provider fallback is explicitly disabled and rate capped.
+- Added localized remaining/exhausted/unavailable states and kept manual entry and deterministic/non-AI outfit features available. The daily-suggestion failure path now surfaces a localized status instead of silently returning no result. Insights in-memory caching remains a convenience; all cache misses/refreshes still pass server quota.
+- Added migration/security fixtures, two-session quota concurrency harness, bounded request/response, image bounds, timeout, OpenRouter request, request-ID, allowance parsing, and localization tests. Focused unit tests were executed as listed below; the database fixtures require an isolated disposable non-production database and remain unexecuted.
+- Updated [`ai-cost-review.md`](ai-cost-review.md) with fresh official model/pricing evidence and revised examples: approximately $0.00722 light, $0.04916 typical, $0.16720 heavy, and a modeled $0.405 premium monthly cap; 10,000 free accounts all exhausting allowance would be about $405/month. These are assumptions, not observed use. The €2.99/€24.99 proposals remain potentially plausible against inference alone, but net sustainability is unproven after merchant-country processing, tax, RevenueCat terms, hosting/storage, support, and refunds.
+- Added [`ai-quotas.md`](ai-quotas.md) with reset semantics, consumed-action rules, migration prerequisites, local-only staging sequence, and fail-closed rollback. No migration, provider setting, production record, or hosted function was changed.
+- Tightened the quota RPC premium rule: active, grace-period, and cancelled statuses all require a non-null future expiry; missing expiry fails closed to free. Added a pgTAP assertion for this case and updated the quota notes. Same user/request UUID is unique across all five endpoint names, so switching endpoints cannot replay it. The migration remains local-only and awaits exact recovered-schema reconciliation.
+- Focused verification completed on 2026-11-12: Deno lint passed on 16 changed Edge Function files; 34 AI-focused Deno tests passed; cached Deno type-check passed for all five AI handlers and the allowance endpoint. Flutter’s five focused test files passed 12/12 tests. Targeted Dart analysis covered 20 changed app files and returned 39 informational lints, with no warnings or errors. Targeted Dart formatting changed 0/24 files; Deno formatting checked 16 files and formatted the changed OpenRouter handler. Static pgTAP plan/assertion count is 29, `bash -n` passes for the concurrency fixture, and `git diff --check` passes.
+- Database isolation/concurrency fixtures remain unexecuted because no disposable non-production database was supplied or started; production was not queried for these tests. No full Flutter suite, project-wide analyzer, Android build, emulator, Docker, deployment, hosted mutation, paid inference, or purchase was run. Provider catalog/documentation facts are verified, but Google account eligibility/key, OpenRouter key/routing/account access, real response quality, and deployed quota enforcement remain unverified. Before staging, obtain authorized staging Supabase and provider configuration; reconcile rather than apply the migration against production.
+- Next exact step: stage only the AI quota/app/docs/test paths and create a local checkpoint. Then, once an isolated staging Supabase and qualifying provider accounts are available, reconcile schema, apply and execute the fixture only there, and measure token/call behavior before deciding commercial allowances. No secrets are requested or recorded here.
 
 ## Local checkpoints
 

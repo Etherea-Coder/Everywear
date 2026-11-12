@@ -1,80 +1,108 @@
-import { createClient } from '@supabase/supabase-js'
-import { createGeminiRequest } from '../_shared/gemini_request.ts'
+import { createClient } from "@supabase/supabase-js";
+import { createGeminiRequest } from "../_shared/gemini_request.ts";
+import {
+  cancelProviderResponse,
+  finalizeAiAction,
+  quotaDeniedResponse,
+  readBoundedJson,
+  readBoundedResponseJson,
+  reserveAiAction,
+  type RpcClient,
+  safeProviderLabel,
+  safeTokenCount,
+  withProviderTimeout,
+} from "../_shared/ai_action.ts";
 import {
   parseClothingAnalysis,
   validateImageRequest,
-} from './clothing_analysis.ts'
+} from "./clothing_analysis.ts";
 
-const GEMINI_MODEL = 'gemini-2.5-flash-lite'
-const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' }
+const GEMINI_MODEL = "gemini-2.5-flash-lite";
+const CORS_HEADERS = { "Access-Control-Allow-Origin": "*" };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  let quotaClient: RpcClient | null = null;
+  let pendingRequestId: string | null = null;
+  if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "authorization, x-client-info, apikey, content-type",
       },
-    })
+    });
   }
 
   try {
-    const authHeader = req.headers.get('authorization')
+    const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: CORS_HEADERS,
-      })
+      });
     }
 
     const userClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } },
-    )
-    const { data: { user }, error: authError } = await userClient.auth.getUser()
+    );
+    quotaClient = userClient;
+    const { data: { user }, error: authError } = await userClient.auth
+      .getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: CORS_HEADERS,
-      })
+      });
     }
 
-    let requestBody: unknown
+    let requestBody: unknown;
     try {
-      requestBody = await req.json()
-    } catch {
-      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
-        status: 400,
+      requestBody = await readBoundedJson(req, 4_100_000);
+    } catch (error) {
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: error instanceof RangeError ? 413 : 400,
         headers: CORS_HEADERS,
-      })
+      });
     }
-    const validated = validateImageRequest(requestBody)
+    const validated = validateImageRequest(requestBody);
     if (!validated.ok) {
       return new Response(JSON.stringify({ error: validated.error }), {
         status: validated.status,
         headers: CORS_HEADERS,
-      })
+      });
     }
-    const { imageBase64 } = validated
+    const { imageBase64, requestId } = validated;
 
-    const googleAiApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
-    if (!googleAiApiKey) throw new Error('GOOGLE_AI_API_KEY not configured')
-
-    const { data: allowed, error: quotaError } = await userClient.rpc(
-      'consume_ai_quota',
-      { quota_kind: 'suggestion' },
-    )
-    if (quotaError) throw new Error('Quota check failed')
-    if (allowed !== true) {
-      return new Response(JSON.stringify({ error: 'AI quota reached' }), {
-        status: 429,
-        headers: CORS_HEADERS,
-      })
+    const googleAiApiKey = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!googleAiApiKey) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "AI service is not configured.",
+          code: "AI_UNAVAILABLE",
+        }),
+        {
+          status: 503,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const prompt = `Analyze this clothing item image and respond ONLY with a JSON object in this exact format:
+    const reservation = await reserveAiAction(
+      userClient,
+      requestId,
+      "analyze-clothing",
+    );
+    if (!reservation.allowed) {
+      return quotaDeniedResponse(reservation, CORS_HEADERS);
+    }
+    pendingRequestId = requestId;
+
+    const prompt =
+      `Analyze this clothing item image and respond ONLY with a JSON object in this exact format:
 {
   "category": one of ["Tops", "Bottoms", "Shoes", "Outerwear", "Accessories", "Dresses", "Activewear"],
   "color": main color as a single word,
@@ -82,42 +110,185 @@ Deno.serve(async (req) => {
   "confidence": a number between 0.5 and 0.99,
   "style_vibe": one of ["Casual", "Formal", "Sport", "Elegant", "Street"]
 }
-Respond with ONLY the JSON, no other text.`
+Respond with ONLY the JSON, no other text.`;
 
     const geminiRequest = createGeminiRequest(GEMINI_MODEL, googleAiApiKey, {
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } }
-          ]
-        }],
-        generationConfig: { maxOutputTokens: 200, temperature: 0.1 },
-    })
-    const geminiResponse = await fetch(geminiRequest)
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inline_data: { mime_type: "image/jpeg", data: imageBase64 } },
+        ],
+      }],
+      generationConfig: { maxOutputTokens: 200, temperature: 0.1 },
+    });
+    const startedAt = performance.now();
+    let geminiResponse: Response;
+    try {
+      geminiResponse = await withProviderTimeout(geminiRequest);
+    } catch (error) {
+      await finalizeAiAction(
+        userClient,
+        requestId,
+        error instanceof DOMException && error.name === "AbortError"
+          ? "timeout"
+          : "provider_error",
+        error instanceof DOMException && error.name === "AbortError"
+          ? "timeout"
+          : "provider_unavailable",
+      );
+      pendingRequestId = null;
+      console.info(
+        JSON.stringify({
+          action: "analyze-clothing",
+          model: GEMINI_MODEL,
+          latency_ms: Math.round(performance.now() - startedAt),
+          error: "provider_unavailable",
+        }),
+      );
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "AI provider did not complete the request.",
+          code: "AI_PROVIDER_UNAVAILABLE",
+        }),
+        {
+          status: 502,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     if (!geminiResponse.ok) {
-      const err = await geminiResponse.text()
-      throw new Error(`Gemini error: ${err}`)
+      await cancelProviderResponse(geminiResponse);
+      await finalizeAiAction(
+        userClient,
+        requestId,
+        "provider_error",
+        "provider_rejected",
+      );
+      pendingRequestId = null;
+      console.info(
+        JSON.stringify({
+          action: "analyze-clothing",
+          model: GEMINI_MODEL,
+          latency_ms: Math.round(performance.now() - startedAt),
+          error: "provider_rejected",
+        }),
+      );
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "AI provider rejected the request.",
+          code: "AI_PROVIDER_REJECTED",
+        }),
+        {
+          status: 502,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const geminiData = await geminiResponse.json()
-    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-    const result = parseClothingAnalysis(text)
+    const geminiData = await readBoundedResponseJson(geminiResponse) as {
+      modelVersion?: unknown;
+      candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }>;
+      usageMetadata?: {
+        promptTokenCount?: unknown;
+        candidatesTokenCount?: unknown;
+        thoughtsTokenCount?: unknown;
+      };
+    };
+    const modelText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text = typeof modelText === "string" ? modelText : "";
+    const result = parseClothingAnalysis(text);
     if (!result) {
-      return new Response(JSON.stringify({ success: false, error: 'Invalid analysis response.' }), {
-        status: 502,
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-      })
+      await finalizeAiAction(
+        userClient,
+        requestId,
+        "invalid_response",
+        "invalid_response",
+      );
+      pendingRequestId = null;
+      console.info(
+        JSON.stringify({
+          action: "analyze-clothing",
+          model: GEMINI_MODEL,
+          latency_ms: Math.round(performance.now() - startedAt),
+          error: "invalid_response",
+        }),
+      );
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "AI returned an unusable analysis.",
+          code: "AI_INVALID_RESPONSE",
+        }),
+        {
+          status: 502,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    })
-  } catch {
-    console.error('analyze-clothing failed')
+    await finalizeAiAction(userClient, requestId, "succeeded");
+    pendingRequestId = null;
+    const usage = geminiData.usageMetadata;
+    console.info(
+      JSON.stringify({
+        action: "analyze-clothing",
+        model: GEMINI_MODEL,
+        served_model: safeProviderLabel(geminiData.modelVersion),
+        latency_ms: Math.round(performance.now() - startedAt),
+        input_tokens: safeTokenCount(usage?.promptTokenCount),
+        output_tokens: safeTokenCount(usage?.candidatesTokenCount),
+        thinking_tokens: safeTokenCount(usage?.thoughtsTokenCount),
+      }),
+    );
+
+    return new Response(JSON.stringify({ ...result, allowance: reservation }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  } catch (error) {
+    if (quotaClient && pendingRequestId) {
+      const outcome =
+        error instanceof DOMException && error.name === "AbortError"
+          ? "timeout"
+          : error instanceof SyntaxError || error instanceof RangeError
+          ? "invalid_response"
+          : "internal_error";
+      try {
+        await finalizeAiAction(
+          quotaClient,
+          pendingRequestId,
+          outcome,
+          outcome === "timeout"
+            ? "timeout"
+            : outcome === "invalid_response"
+            ? "invalid_response"
+            : "internal_error",
+        );
+      } catch { /* reservation still consumes allowance */ }
+    }
+    console.error(
+      "analyze-clothing failed",
+      error instanceof Error ? error.name : "unknown",
+    );
     return new Response(
-      JSON.stringify({ success: false, error: 'Clothing analysis failed.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
-    )
+      JSON.stringify({
+        success: false,
+        error:
+          "Clothing analysis is unavailable. Enter details manually and retry later.",
+        code: "AI_UNAVAILABLE",
+      }),
+      {
+        status: 503,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      },
+    );
   }
-})
+});

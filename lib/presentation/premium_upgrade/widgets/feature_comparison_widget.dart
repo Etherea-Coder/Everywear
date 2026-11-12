@@ -16,8 +16,8 @@ class FeatureComparisonWidget extends StatelessWidget {
       },
       {
         'feature': 'Daily suggestions',
-        'essential': '1 basic daily idea',
-        'signature': 'Intelligent outfit suggestions',
+        'essential': 'Shared AI allowance',
+        'signature': 'Larger shared AI allowance',
       },
       {
         'feature': 'Outfit swaps',
@@ -26,8 +26,8 @@ class FeatureComparisonWidget extends StatelessWidget {
       },
       {
         'feature': 'AI coach',
-        'essential': '1 per week',
-        'signature': '50 per month',
+        'essential': 'Uses the shared AI allowance',
+        'signature': 'Uses the larger shared AI allowance',
       },
       {
         'feature': 'Wardrobe insights',
@@ -102,7 +102,9 @@ class FeatureComparisonWidget extends StatelessWidget {
                     'Essential',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.65,
+                      ),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -175,15 +177,21 @@ class FeatureComparisonWidget extends StatelessWidget {
                         vertical: 0.8.h,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surface.withValues(alpha: 0.65),
+                        color: theme.colorScheme.surface.withValues(
+                          alpha: 0.65,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         essentialValue,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isLockedInEssential
-                              ? theme.colorScheme.onSurface.withValues(alpha: 0.35)
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.70),
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.35,
+                                )
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.70,
+                                ),
                           fontWeight: isLockedInEssential
                               ? FontWeight.w500
                               : FontWeight.w600,
@@ -201,10 +209,14 @@ class FeatureComparisonWidget extends StatelessWidget {
                         vertical: 0.8.h,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.secondary.withValues(alpha: 0.08),
+                        color: theme.colorScheme.secondary.withValues(
+                          alpha: 0.08,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: theme.colorScheme.secondary.withValues(alpha: 0.12),
+                          color: theme.colorScheme.secondary.withValues(
+                            alpha: 0.12,
+                          ),
                         ),
                       ),
                       child: Text(

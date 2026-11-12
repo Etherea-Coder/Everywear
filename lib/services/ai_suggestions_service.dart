@@ -1,5 +1,6 @@
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'ai_request_id.dart';
 import './ai_image_payload.dart';
 import './supabase_service.dart';
 import './style_service.dart';
@@ -72,6 +73,7 @@ class AiSuggestionsService {
       final response = await _supabase.functions.invoke(
         'ai-suggestions',
         body: {
+          'requestId': newAiRequestId(),
           'imageBase64': imageBase64,
           'language': language,
           'userName': userName,
@@ -87,6 +89,7 @@ class AiSuggestionsService {
           'success': success,
           'suggestions': response.data['suggestions'] ?? '',
           'error': response.data['error'],
+          'errorCode': response.data['code'],
         };
       }
 
@@ -94,6 +97,7 @@ class AiSuggestionsService {
     } catch (e) {
       return {
         'success': false,
+        'errorCode': RegExp(r'AI_[A-Z_]+').firstMatch(e.toString())?.group(0),
         'error': 'Failed to prepare or generate AI suggestions',
       };
     }

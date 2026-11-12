@@ -3,6 +3,22 @@ import {
   validateImageRequest,
 } from "./clothing_analysis.ts";
 
+const tinyJpeg = btoa(String.fromCharCode(
+  0xff,
+  0xd8,
+  0xff,
+  0xc0,
+  0x00,
+  0x07,
+  0x08,
+  0x00,
+  0x02,
+  0x00,
+  0x03,
+  0x03,
+));
+const requestId = "123e4567-e89b-42d3-a456-426614174000";
+
 function assertEquals(actual: unknown, expected: unknown): void {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(
@@ -14,13 +30,17 @@ function assertEquals(actual: unknown, expected: unknown): void {
 }
 
 Deno.test("accepts valid base64 image bodies and rejects malformed inputs", () => {
-  assertEquals(validateImageRequest({ imageBase64: "AQID" }), {
+  assertEquals(validateImageRequest({ imageBase64: tinyJpeg, requestId }), {
     ok: true,
-    imageBase64: "AQID",
+    imageBase64: tinyJpeg,
+    requestId,
   });
   const nonObject = validateImageRequest(null);
-  const empty = validateImageRequest({ imageBase64: "" });
-  const malformed = validateImageRequest({ imageBase64: "not base64" });
+  const empty = validateImageRequest({ imageBase64: "", requestId });
+  const malformed = validateImageRequest({
+    imageBase64: "not base64",
+    requestId,
+  });
   assertEquals(nonObject.ok ? 200 : nonObject.status, 400);
   assertEquals(empty.ok ? 200 : empty.status, 400);
   assertEquals(malformed.ok ? 200 : malformed.status, 400);
@@ -28,7 +48,8 @@ Deno.test("accepts valid base64 image bodies and rejects malformed inputs", () =
 
 Deno.test("rejects encoded image bodies above the existing size limit", () => {
   const result = validateImageRequest({
-    imageBase64: "A".repeat(10_000_001),
+    imageBase64: "A".repeat(4_000_001),
+    requestId,
   });
   assertEquals(result.ok ? 200 : result.status, 413);
 });

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../ai_request_id.dart';
 import './cloud_vision_service.dart';
 
 /// Vision Engine Service Interface
@@ -61,14 +62,14 @@ class VisionEngineServiceMobile implements VisionEngineService {
 
   @override
   Future<Map<String, dynamic>> analyzeClothing(String imagePath) async {
-    // Tier 1: Try Gemini via Supabase Edge Function
     final geminiResult = await _analyzeWithGemini(imagePath);
     if (geminiResult != null) {
       return geminiResult;
     }
 
-    // Tier 2: Fall back to basic analysis
-    return _getBasicAnalysis();
+    throw StateError(
+      'AI clothing analysis is unavailable. Enter item details manually.',
+    );
   }
 
   Future<Map<String, dynamic>?> _analyzeWithGemini(String imagePath) async {
@@ -77,12 +78,13 @@ class VisionEngineServiceMobile implements VisionEngineService {
       if (!await file.exists()) return null;
 
       final bytes = await file.readAsBytes();
+      if (bytes.length > 3_000_000) return null;
       final base64Image = base64Encode(bytes);
 
       final client = Supabase.instance.client;
       final response = await client.functions.invoke(
         'analyze-clothing',
-        body: {'imageBase64': base64Image},
+        body: {'imageBase64': base64Image, 'requestId': newAiRequestId()},
       );
 
       if (response.data != null && response.data['success'] == true) {
@@ -92,27 +94,18 @@ class VisionEngineServiceMobile implements VisionEngineService {
           'color': response.data['color'] ?? 'Unknown',
           'material': response.data['material'] ?? 'Cotton',
           'style_vibe': response.data['style_vibe'] ?? 'Casual',
-          'tags': [response.data['category']?.toLowerCase() ?? 'tops', 'gemini-ai'],
+          'tags': [
+            response.data['category']?.toLowerCase() ?? 'tops',
+            'gemini-ai',
+          ],
           'source': 'gemini',
         };
       }
       return null;
     } catch (e) {
-      if (kDebugMode) debugPrint('Gemini analysis failed: $e');
+      if (kDebugMode) debugPrint('Gemini analysis failed: ${e.runtimeType}');
       return null;
     }
-  }
-
-  Map<String, dynamic> _getBasicAnalysis() {
-    return {
-      'category': 'Tops',
-      'confidence': 0.55,
-      'color': 'Unknown',
-      'material': 'Cotton',
-      'style_vibe': 'Casual',
-      'tags': ['tops', 'basic-analysis'],
-      'source': 'basic',
-    };
   }
 
   @override

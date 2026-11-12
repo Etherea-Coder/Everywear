@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'ai_request_id.dart';
 import './supabase_service.dart';
 import './outfit_log_service.dart';
 
 class StyleService {
   final OutfitLogService _outfitLogService = OutfitLogService();
   SupabaseClient get _client => SupabaseService.instance.client;
-  
+
   // Public getter for accessing client
   SupabaseClient get client => _client;
 
@@ -40,14 +41,18 @@ class StyleService {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return null;
-      final response = await _client.from('style_events').insert({
-        'user_id': userId,
-        'title': title,
-        'event_date': eventDate.toIso8601String().split('T')[0],
-        'event_type': eventType,
-        'dress_code': dressCode,
-        'notes': notes,
-      }).select().single();
+      final response = await _client
+          .from('style_events')
+          .insert({
+            'user_id': userId,
+            'title': title,
+            'event_date': eventDate.toIso8601String().split('T')[0],
+            'event_type': eventType,
+            'dress_code': dressCode,
+            'notes': notes,
+          })
+          .select()
+          .single();
       return Map<String, dynamic>.from(response);
     } catch (e) {
       if (kDebugMode) debugPrint('Error adding event: $e');
@@ -166,8 +171,11 @@ class StyleService {
         categoryCount[cat] = (categoryCount[cat] ?? 0) + 1;
       }
 
-      final topCategory = categoryCount.isEmpty ? 'None' :
-          categoryCount.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+      final topCategory = categoryCount.isEmpty
+          ? 'None'
+          : categoryCount.entries
+                .reduce((a, b) => a.value > b.value ? a : b)
+                .key;
 
       // Outfit logs for wear patterns
       final logs = await _client
@@ -182,8 +190,11 @@ class StyleService {
         final occ = log['occasion'] as String? ?? 'Other';
         occasionCount[occ] = (occasionCount[occ] ?? 0) + 1;
       }
-      final topOccasion = occasionCount.isEmpty ? 'Casual' :
-          occasionCount.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+      final topOccasion = occasionCount.isEmpty
+          ? 'Casual'
+          : occasionCount.entries
+                .reduce((a, b) => a.value > b.value ? a : b)
+                .key;
 
       return {
         'totalItems': itemsList.length,
@@ -250,6 +261,7 @@ class StyleService {
       return false;
     }
   }
+
   // ── COACH ───────────────────────────────────────────────
   Future<String?> fetchPassiveCoachTip({
     required Map<String, dynamic> insights,
@@ -257,22 +269,26 @@ class StyleService {
   }) async {
     try {
       final userName = _getUserFirstName(_client.auth.currentUser);
-      final profile = quizResult != null ? {
-        'styleProfile': quizResult['style_profile'],
-        'preferredColors': quizResult['preferred_colors']?.toString(),
-        'styleGoals': quizResult['style_goals']?.toString(),
-        'styleIntention': quizResult['style_intention']?.toString(),
-      } : null;
+      final profile = quizResult != null
+          ? {
+              'styleProfile': quizResult['style_profile'],
+              'preferredColors': quizResult['preferred_colors']?.toString(),
+              'styleGoals': quizResult['style_goals']?.toString(),
+              'styleIntention': quizResult['style_intention']?.toString(),
+            }
+          : null;
 
       final wardrobeSummary = _buildWardrobeSummary(insights);
       final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
       final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
       final itemRatings = await _outfitLogService.fetchItemRatingAverages();
-      final silhouetteEvolution = await _outfitLogService.fetchSilhouetteEvolution();
+      final silhouetteEvolution = await _outfitLogService
+          .fetchSilhouetteEvolution();
 
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
+          'requestId': newAiRequestId(),
           'userName': userName,
           'localHour': DateTime.now().hour,
           'mode': 'passive',
@@ -303,21 +319,25 @@ class StyleService {
   }) async {
     try {
       final userName = _getUserFirstName(_client.auth.currentUser);
-      final profile = quizResult != null ? {
-        'styleProfile': quizResult['style_profile'],
-        'preferredColors': quizResult['preferred_colors']?.toString(),
-        'styleGoals': quizResult['style_goals']?.toString(),
-        'styleIntention': quizResult['style_intention']?.toString(),
-      } : null;
+      final profile = quizResult != null
+          ? {
+              'styleProfile': quizResult['style_profile'],
+              'preferredColors': quizResult['preferred_colors']?.toString(),
+              'styleGoals': quizResult['style_goals']?.toString(),
+              'styleIntention': quizResult['style_intention']?.toString(),
+            }
+          : null;
 
       final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
       final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
       final itemRatings = await _outfitLogService.fetchItemRatingAverages();
-      final silhouetteEvolution = await _outfitLogService.fetchSilhouetteEvolution();
+      final silhouetteEvolution = await _outfitLogService
+          .fetchSilhouetteEvolution();
 
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
+          'requestId': newAiRequestId(),
           'userName': userName,
           'mode': 'active',
           'userProfile': profile,
@@ -332,19 +352,24 @@ class StyleService {
       );
 
       if (kDebugMode) debugPrint('Coach response status: ${response.status}');
-      if (kDebugMode) debugPrint('Coach response data: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
         return {
-          'answer': response.data['answer'] ?? response.data['tip'] ?? 'No answer received.',
+          'answer':
+              response.data['answer'] ??
+              response.data['tip'] ??
+              'No answer received.',
           'next_step': response.data['next_step'] ?? '',
         };
       }
-      final errMsg = response.data?['error'] ?? 'Unknown error (status ${response.status})';
-      return {'answer': 'Coach error: $errMsg', 'next_step': ''};
+      return {
+        'errorCode': response.data is Map ? response.data['code'] : null,
+        'answer': '',
+        'next_step': '',
+      };
     } catch (e) {
-      if (kDebugMode) debugPrint('Coach active error: $e');
-      return {'answer': 'ERROR: ${e.runtimeType}: ${e.toString()}', 'next_step': ''};
+      if (kDebugMode) debugPrint('Coach active error: ${e.runtimeType}');
+      return {'errorCode': _aiErrorCode(e), 'answer': '', 'next_step': ''};
     }
   }
 
@@ -357,21 +382,25 @@ class StyleService {
       final userName = _getUserFirstName(_client.auth.currentUser);
       final date = DateTime.parse(event['event_date']);
       final daysLeft = date.difference(DateTime.now()).inDays;
-      final profile = quizResult != null ? {
-        'styleProfile': quizResult['style_profile'],
-        'preferredColors': quizResult['preferred_colors']?.toString(),
-        'styleGoals': quizResult['style_goals']?.toString(),
-        'styleIntention': quizResult['style_intention']?.toString(),
-      } : null;
+      final profile = quizResult != null
+          ? {
+              'styleProfile': quizResult['style_profile'],
+              'preferredColors': quizResult['preferred_colors']?.toString(),
+              'styleGoals': quizResult['style_goals']?.toString(),
+              'styleIntention': quizResult['style_intention']?.toString(),
+            }
+          : null;
 
       final recentOutfits = await _outfitLogService.fetchRecentOutfitHistory();
       final occasionPatterns = await _outfitLogService.fetchOccasionPatterns();
       final itemRatings = await _outfitLogService.fetchItemRatingAverages();
-      final silhouetteEvolution = await _outfitLogService.fetchSilhouetteEvolution();
+      final silhouetteEvolution = await _outfitLogService
+          .fetchSilhouetteEvolution();
 
       final response = await _client.functions.invoke(
         'style-coach',
         body: {
+          'requestId': newAiRequestId(),
           'userName': userName,
           'mode': 'event',
           'userProfile': profile,
@@ -395,7 +424,7 @@ class StyleService {
       }
       return {'error': 'Coach response unsuccessful'};
     } catch (e) {
-      return {'error': 'ERROR: ${e.runtimeType}: ${e.toString()}'};
+      return {'errorCode': _aiErrorCode(e)};
     }
   }
 
@@ -407,11 +436,15 @@ class StyleService {
     final distStr = dist.entries.map((e) => '${e.key}: ${e.value}').join(', ');
     return 'Total: $total items. Distribution: $distStr. Top category: $topCat. Top occasion: $topOcc.';
   }
- 
+
+  String? _aiErrorCode(Object error) =>
+      RegExp(r'AI_[A-Z_]+').firstMatch(error.toString())?.group(0);
+
   String? _getUserFirstName(User? user) {
     if (user == null) return null;
-    final fullName = user.userMetadata?['full_name'] as String? ?? 
-                     user.userMetadata?['name'] as String?;
+    final fullName =
+        user.userMetadata?['full_name'] as String? ??
+        user.userMetadata?['name'] as String?;
     if (fullName == null || fullName.trim().isEmpty) return null;
     return fullName.trim().split(' ').first;
   }

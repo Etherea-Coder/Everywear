@@ -120,16 +120,19 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
 
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 75,
       );
 
       if (photo != null) {
         // Optimize image
-        final optimizedFile = await ImageOptimizer.compressImage(File(photo.path));
-        
-        final updatedPhotos = List<String>.from(widget.photos)..add(optimizedFile.path);
+        final optimizedFile = await ImageOptimizer.compressImage(
+          File(photo.path),
+        );
+
+        final updatedPhotos = List<String>.from(widget.photos)
+          ..add(optimizedFile.path);
         widget.onPhotosChanged(updatedPhotos);
 
         // Run AI analysis on the optimized photo
@@ -152,16 +155,19 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 75,
       );
 
       if (image != null) {
         // Optimize image
-        final optimizedFile = await ImageOptimizer.compressImage(File(image.path));
-        
-        final updatedPhotos = List<String>.from(widget.photos)..add(optimizedFile.path);
+        final optimizedFile = await ImageOptimizer.compressImage(
+          File(image.path),
+        );
+
+        final updatedPhotos = List<String>.from(widget.photos)
+          ..add(optimizedFile.path);
         widget.onPhotosChanged(updatedPhotos);
 
         // Run AI analysis on the optimized photo
@@ -173,7 +179,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
           SnackBar(
             content: Text(localizations.failedToSelectPhoto),
             behavior: SnackBarBehavior.floating,
-          )
+          ),
         );
       }
     }
@@ -200,11 +206,17 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
       final confidence = (result['confidence'] as num?)?.toDouble() ?? 0.0;
       final detectedCategory = result['category'] as String? ?? '';
       final detectedColor = result['color'] as String? ?? '';
-      final isUnknown = detectedCategory.toLowerCase() == 'unknown' || detectedColor.toLowerCase() == 'unknown';
+      final isUnknown =
+          detectedCategory.toLowerCase() == 'unknown' ||
+          detectedColor.toLowerCase() == 'unknown';
       if (mounted && confidence > 0.6 && !isUnknown) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).aiDetectedSummary(detectedColor, '', detectedCategory)),
+            content: Text(
+              AppLocalizations.of(
+                context,
+              ).aiDetectedSummary(detectedColor, '', detectedCategory),
+            ),
             backgroundColor: Theme.of(context).colorScheme.primary,
             duration: const Duration(seconds: 3),
           ),
@@ -218,9 +230,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context).aiAnalysisUnavailable,
-            ),
+            content: Text(AppLocalizations.of(context).aiAnalysisUnavailable),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -288,9 +298,11 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
-          if (_aiAnalysisResult != null && 
-              ((_aiAnalysisResult!['confidence'] as num?)?.toDouble() ?? 0.0) > 0.6 &&
-              (_aiAnalysisResult!['category'] as String? ?? '').toLowerCase() != 'unknown') ...[
+          if (_aiAnalysisResult != null &&
+              ((_aiAnalysisResult!['confidence'] as num?)?.toDouble() ?? 0.0) >
+                  0.6 &&
+              (_aiAnalysisResult!['category'] as String? ?? '').toLowerCase() !=
+                  'unknown') ...[
             SizedBox(height: 1.h),
             Container(
               padding: EdgeInsets.all(2.w),

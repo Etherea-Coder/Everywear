@@ -1,348 +1,114 @@
-# Everywear AI cost and subscription price review
+# Everywear AI cost and quota review
 
-**Checked:** 2026-11-12
+**Official provider prices and public model catalogs checked:** 2026-11-12.
 
-**Purpose:** planning review for proposed €2.99 monthly and €24.99 annual
-subscriptions. No price, model, quota, app behavior, or provider configuration
-was changed. No paid API request or production mutation was made.
+**Local implementation reviewed:** 2026-11-12.
+**Commercial prices:** €2.99/month and €24.99/year are owner-proposed values only. No products, prices, quotas, or public promises have been configured or published by this review.
 
-## Executive assessment
+## Recommendation
 
-At the published Gemini 2.5 Flash-Lite standard rates, modeled ordinary AI
-usage is a small variable cost: approximately **$0.009/month** for the light
-example, **$0.038/month** for typical paid use, and **$0.12/month** for the
-heavy example below. These estimates are conditional, not observed bills. They
-exclude retries outside source, unbounded prompt growth, provider/model changes,
-FX, tax, hosting allocation, support, refunds, and payment disputes.
+Retain `gemini-2.5-flash-lite` in the direct Gemini Developer API handlers and correct the OpenRouter identifier to `google/gemini-2.5-flash-lite`. Google currently says Flash-Lite is not deprecated and has no announced API shutdown date, but access is restricted to existing users who actively used the 2.5 models. OpenRouter's current public catalog independently lists the canonical model with image input and the same standard rates, with no `expiration_date`. Those are public documentation/catalog facts, not proof that either project key can call it or that its fashion outputs meet product quality needs. No provider inference or account-level metadata request was made.
 
-**The AI token bill alone does not make either proposed price look untenable.**
-The annual offer is materially discounted (about 30.4% versus twelve monthly
-payments), and its effective gross is €2.0825/month before deductions. Stripe's
-fixed per-payment component takes a larger share of €2.99 monthly billing.
-At low subscriber counts, shared Supabase compute and fixed operating costs
-matter more than the modeled per-user AI bill. Therefore these prices look
-plausible for a capped, measured launch, but overall sustainability is not
-proven.
+The local quota proposal now caps accounts at 20 (free) or 200 (premium) shared AI actions per UTC month, plus 3/20 per UTC day and 1/5 per fixed UTC minute. At standard model rates and the source request bounds, estimated worst-case inference is about **$0.041 per free account-month** and **$0.405 per premium account-month**. An ordinary illustrative use mix costs less than a cent (light), about five cents (typical), or about seventeen cents (heavy). These figures are modeled, not measured. They exclude hosting/storage allocation, support, refunds, taxes, exchange-rate effects, and provider price changes.
 
-There are launch blockers before creating products:
+These proposed € prices look plausible against bounded inference alone; overall sustainability is **not demonstrated**. The annual gross average is **€2.0825/month** before fees and taxes. Under an illustrative France standard EEA card rate of 1.5% + €0.25, Stripe alone would be about €0.295 on a €2.99 monthly charge and €0.625 on a €24.99 annual charge. This leaves €2.695 and €24.365 respectively before tax and other costs. It is only an example: merchant country, Stripe contract, card mix, checkout currency, refunds, and tax treatment are unknown. Run a measured staging beta before fixing the commercial allowance or publishing either price.
 
-1. The deployed/source OpenRouter call uses model ID `gemini-2.5-flash-lite`
-   instead of OpenRouter's canonical `google/gemini-2.5-flash-lite`; its model
-   page says it was going away on 2026-10-20. Do not assume image outfit advice
-   currently works.
-2. Source AI functions are hardcoded to Gemini 2.5 Flash-Lite, while Google
-   currently says access to 2.5 models is limited to projects that actively
-   used them before and recommends newer models for new projects.
-3. The local quota migration is only a proposal. Recovered production source
-   has no atomic quota call in its interactive model functions, so production
-   currently has no verified per-account AI cap.
-4. The proposed Signature allowance of 999 suggestion operations/day is
-   effectively uncapped. Request input is not consistently bounded, and
-   passive coach generation consumes the same coaching allowance as a customer
-   action.
+## Provider and feature trace
 
-Do not create paid offers or advertise “unlimited AI” until the serving model,
-backend-enforced limits, payment/tax treatment, and cost telemetry are resolved.
-
-## AI integrations found in source
-
-| Feature | Client path and backend | Provider/model in local source | Request bounds and controls |
+| Feature | Client → local handler | Local provider, endpoint, model and auth | Source bounds / behavior |
 |---|---|---|---|
-| Clothing item/image analysis | `VisionEngineServiceMobile` sends one JPEG as base64 to `analyze-clothing`; Edge Function calls Google `generativelanguage.googleapis.com/v1beta/models/...:generateContent` with `GOOGLE_AI_API_KEY`. Web uses a local heuristic; mobile falls back to static basic analysis when remote analysis fails. | **Gemini Developer API**, hardcoded `gemini-2.5-flash-lite`; not Vertex AI. No model override or alternate provider/model. | Camera/gallery is initially limited to 1920×1920 at quality 85 and then recompressed at quality 80 (without a second dimension bound). Edge accepts up to 10,000,000 base64 characters (about 7.5 MB decoded), one image, max 200 output tokens, temperature 0.1. No explicit thinking budget, retry, cache, batch, or provider fallback. A quota is consumed before the model call in local source. |
-| Outfit-photo suggestions | `AiSuggestionsService` compresses an image and calls `ai-suggestions`; function posts an OpenAI-compatible multimodal chat request to OpenRouter using `OPENROUTER_API_KEY`. | **OpenRouter**, model field currently `gemini-2.5-flash-lite`. OpenRouter's canonical ID is `google/gemini-2.5-flash-lite`; its page currently marks that model “Going away October 20, 2026.” No explicit alternative model/fallback list in request. | Client rejects originals over 20 MiB, recompresses to max 1280×1280 at JPEG quality 75, and caps encoded bytes at 3 MB. Edge caps base64 text at 4,000,000 characters and bounds profile fields to 500 characters and name to 80. One image; max 500 output tokens; temperature 0.1. No explicit thinking, request retry, or response cache. Quota is consumed before model call in local source. |
-| Today's outfit suggestion | `TodaySuggestionService` calls `today-suggestion`; the function authenticates, reads the user's wardrobe under RLS, then calls Google GenerateContent with `GOOGLE_AI_API_KEY`. | **Gemini Developer API**, hardcoded `gemini-2.5-flash-lite`. No model override or alternate model. | Text-only prompt includes wardrobe rows, recent items, profile, event, weather and habits. Output cap 600 tokens, temperature 0.7. No request-body or wardrobe-row/token cap is visible in this function. No cache or retry. The daily-log screen starts this call automatically on load and can call again from UI actions; a local in-flight flag only covers one widget instance. |
-| Style coach | Passive, active and event methods in `StyleService` call `style-coach`; function authenticates and calls Google GenerateContent with `GOOGLE_AI_API_KEY`. | **Gemini Developer API**, hardcoded `gemini-2.5-flash-lite`. No model override or alternate model. | Text-only prompts include profile, aggregate wardrobe data, recent outfits, patterns, ratings, silhouette history and/or question/event. Output cap 400 tokens, temperature 0.7. The Edge Function has no visible body-size or input-token cap. No cache or retry. Passive coaching is automatically requested when the Smart Suggestions screen loads and spends the same coach quota as active/event requests. |
-| AI insights | `AIIntelligenceService` calls `generate-ai-insights`; function authenticates, reads wardrobe/outfit/quiz data, and calls Google GenerateContent with `GOOGLE_AI_API_KEY`. | **Gemini Developer API**, hardcoded `gemini-2.5-flash-lite`. No model override or alternate model. | Text-only prompt summarizes wardrobe, logs and quiz data; output cap 800 tokens, temperature 0.4. Database reads and prompt input have no clear row/token cap. Client caches successful results in memory for 30 minutes per user/range/category, but force-refresh, filter changes, app restart, and concurrent cache misses can issue additional calls. Server quota is consumed before JSON/body validation and data fetches, so failures can spend quota without a result. |
-| Other apparent AI features | `StylistEngineService` and `InsightsDashboard` compute deterministic local suggestions/metrics; `CloudVisionService` is a connectivity utility, not a provider SDK. | No external model call found in these paths. | No provider token cost. Do not count deterministic suggestions as model usage. |
+| Clothing analysis | `VisionEngineServiceMobile` → `analyze-clothing` | Gemini Developer API REST `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`, server `GOOGLE_AI_API_KEY` in `x-goog-api-key`; not Vertex AI | One JPEG, ≤3,000,000 decoded bytes, dimensions ≤1280×1280; small static prompt, output ≤200 tokens, temperature .1; model default thinking is off with no request override; 20s timeout, no retry/fallback. Manual entry remains available if AI fails. |
+| Outfit-photo advice | `AiSuggestionsService` → `ai-suggestions` | OpenRouter chat completions `https://openrouter.ai/api/v1/chat/completions`, server `OPENROUTER_API_KEY`, canonical `google/gemini-2.5-flash-lite` | One JPEG with same server byte/dimension limits; profile fields ≤500 chars, name ≤80; system prompt ≤4,000 UTF-8 bytes; output ≤500 tokens, temperature .1; 20s timeout; provider fallbacks disabled and input/output `max_price` set to $0.10/$0.40 per million tokens; no app retries/model fallback. |
+| Today's outfit | `TodaySuggestionService` → `today-suggestion` | Same direct Gemini Developer API endpoint/key/model as clothing | Request body ≤16 KiB; server reads at most 40 owned wardrobe rows; final prompt ≤16,000 UTF-8 bytes; output ≤600 tokens, temperature .7; model default thinking is off with no request override; 20s timeout; no retry/fallback. Triggered automatically on daily screen load and by user actions. |
+| Style coaching | Passive, active, event calls from `StyleService` → `style-coach` | Same direct Gemini Developer API | Body ≤32 KiB; final prompt ≤16,000 UTF-8 bytes; output ≤400 tokens, temperature .7; model default thinking is off with no request override; 20s timeout; no retry/fallback. Passive coaching is requested automatically when its screen loads and consumes the shared allowance. |
+| AI insights | `AIIntelligenceService` → `generate-ai-insights` | Same direct Gemini Developer API | Body ≤4 KiB; authenticated reads capped at 250 wardrobe/outfit rows; final prompt ≤16,000 UTF-8 bytes; output ≤800 tokens, temperature .4; model default thinking is off with no request override; 20s timeout; no retry/fallback. Successful result cache is 30 min per user/range/category in app memory; force-refresh, app restart, or simultaneous cache misses can create more calls, all still quota-bound. |
+| Deterministic / utility paths | `StylistEngineService`, `InsightsDashboard`, `CloudVisionService` | Local deterministic logic or connectivity check; no external inference | No model token charge. |
 
-Source references: `lib/services/ai/vision_engine_service.dart`; `lib/presentation/add_clothing_item/widgets/photo_capture_section.dart:121-162`; `lib/services/ai_suggestions_service.dart:20-82`; `lib/services/ai_image_payload.dart`; `lib/presentation/outfit_capture_flow/outfit_capture_flow.dart:323`; `lib/services/today_suggestion_service.dart:12-117`; `lib/presentation/daily_log/daily_log.dart:199,376`; `lib/services/style_service.dart:254-391`; `lib/presentation/smart_suggestions/smart_suggestions.dart:60-89`; `lib/services/ai_intelligence_service.dart:20-72`; `lib/presentation/ai_intelligence/ai_intelligence.dart:52-92`; `lib/services/ai/stylist_engine_service.dart`; `lib/services/ai/cloud_vision_service.dart`; `lib/core/tier_limits.dart:6-40`; `supabase/functions/analyze-clothing/index.ts:8,62-95` and `clothing_analysis.ts`; `ai-suggestions/index.ts:4-5,60-64,135-160` and `request_validation.ts`; `today-suggestion/index.ts:5,83-84,224-226`; `style-coach/index.ts:6,72-76,233-235`; `generate-ai-insights/index.ts:27,69-73,246-247,312-314`; `_shared/gemini_request.ts`; `supabase/migrations/20261111090000_reconstruct_and_secure_backend.sql:343-386`.
+Sources: `lib/services/ai/vision_engine_service.dart`, `ai_suggestions_service.dart`, `today_suggestion_service.dart`, `style_service.dart`, `ai_intelligence_service.dart`; `supabase/functions/analyze-clothing/index.ts`, `ai-suggestions/index.ts`, `ai-suggestions/openrouter_request.ts`, `today-suggestion/index.ts`, `style-coach/index.ts`, `generate-ai-insights/index.ts`, `_shared/ai_action.ts`, and `_shared/jpeg_bounds.ts`.
 
-### Configured versus deployed
+### Source, deployed snapshot, and account access
 
-- Local source and the read-only production Edge Function snapshot both show
-  Gemini 2.5 Flash-Lite in the four Google GenerateContent functions and the
-  same OpenRouter model field in `ai-suggestions`. The snapshot is preserved in
-  ignored `.tooling/recovery/remote-functions-project/`; source was inspected,
-  not copied over working files.
-- The Google direct API is established by the `generativelanguage.googleapis.com`
-  endpoint and `x-goog-api-key` header. The `GOOGLE_AI_API_KEY` value is a
-  server environment input; its provider project, tier, quota, billing status,
-  and key validity were not inspected. Values were not retrieved.
-- `OPENROUTER_API_KEY` is also a server environment input. The deployed source
-  identifies the intended provider but does not establish whether the secret
-  exists, has credits, or can route the requested model. The caller's model ID
-  lacks the canonical OpenRouter provider prefix. No provider request was
-  attempted.
-- No model ID is configurable through Dart defines or server environment in
-  the inspected source. The model constants are code literals. No source
-  fallback model is configured. Gemini 2.5 Flash-Lite's own documented default
-  is no thinking; source does not set `thinkingBudget` or OpenRouter reasoning
-  parameters. All model-backed functions set explicit output caps. No function
-  implements an explicit retry or model failover.
-- No AI provider key is shipped in Flutter code. Clients call authenticated
-  Supabase Edge Functions; source scans found no direct client Gemini/OpenRouter
-  request or client-side provider credential.
-- Source is not proof of what currently runs or can be billed at runtime. In
-  particular, production server secret values, provider billing tiers, model
-  availability to those accounts, and current live token usage remain unknown.
+- The inspected local source uses direct Gemini Developer API in four functions. It does not use Vertex AI endpoints, Vertex credentials, or Google Cloud SDKs. Google's Vertex AI model prices/retirement dates therefore do not apply to these four REST calls.
+- The ignored read-only deployed source snapshot under `.tooling/recovery/remote-functions-project/supabase/functions/` showed Gemini Flash-Lite in all five deployed feature files at snapshot time. Its deployed `ai-suggestions` source used an OpenRouter key but had a noncanonical bare model field. It predates the current local request constraints and quota handlers; it was not copied over local code. Snapshot inspection cannot prove whether functions have changed after that read.
+- The app contains no model provider key. The direct Gemini and OpenRouter keys are server-side environment variables. Source does not expose model selection through a client define or server environment override. The model constants are code literals. No automatic expensive fallback is configured locally.
+- No secret values were read. Google AI Studio's public docs currently limit API access to qualifying existing 2.5 users; whether the Everywear Google API project qualifies and its key/billing tier are unknown. The OpenRouter public metadata/catalog confirms the canonical slug is listed, supports `text+image+file+audio+video -> text`, has `expiration_date: null`, and lists current $0.10 input / $0.40 output per million token rates. It does not confirm this account's key, route capacity, billing balance, actual provider selection, or output quality. OpenRouter routing remains OpenRouter and should not be misreported as direct Google AI Studio or Vertex AI.
+- No paid inference, authenticated Google model metadata call, live key validation, or quality evaluation was performed.
 
-## Limits, enforcement, and request risks
+## Limits and server enforcement
 
-`lib/core/tier_limits.dart` sets Essential to **1 shared suggestion operation
-per day**, **1 coach operation per week**, and 30 outfit logs; Signature is
-**999 suggestion operations per day**, **50 coach operations per month**, and
-100 outfit logs. Wardrobe items are effectively unlimited. The local
-`consume_ai_quota` proposal in
-`supabase/migrations/20261111090000_reconstruct_and_secure_backend.sql`
-row-locks the profile, shares the suggestion counter across clothing analysis,
-photo suggestions, daily suggestions and AI insights, and applies the same
-1/999 daily plus 1/50-per-period coach limits.
+The prepared migration `supabase/migrations/20261112100000_server_ai_action_quotas.sql` and handler changes are **local only**. All five handlers authenticate with Supabase Auth and call a shared atomic reservation RPC immediately before model execution. The database—not client tier state—derives premium status from `user_profiles.tier`, `subscription_status`, and expiry. See [`ai-quotas.md`](ai-quotas.md) for windows, idempotency, failure behavior, migration prerequisites, staged rollout, and fail-closed rollback.
 
-Those limits are **not verified in recovered production**. The local migration
-has not been applied; `docs/recovered-supabase-reconciliation.md` records that
-deployed interactive AI functions do not call `consume_ai_quota`. The legacy
-production counter RPCs/grants were also found unsafe. UI quota checks are not
-a substitute for a protected atomic server check.
+A reservation consumes one shared action after preflight. Provider errors, malformed output, timeout, interrupted work, or finalization failure are not refunded because the provider might already have billed the request. Same user/request UUID replay is rejected across endpoints. A caller that retries with a fresh UUID remains inside the shared quota. UTC month/day/minute windows are independent. Premium downgrades or expiry use the free limits on the next reservation; a request already reserved continues to completion. The quota RPC requires a non-null future expiry for active, grace-period, or cancelled records; a missing expiry fails closed to free limits. This is stricter than some existing entitlement helpers, so reconcile subscription renewal and grace-period webhook semantics before rollout.
 
-Additional cost-control findings:
+Request ceilings in source:
 
-- `generate-ai-insights` spends a suggestion operation before it parses JSON
-  or loads data. A malformed request or backend failure can consume allowance.
-- `today-suggestion` reads all owned wardrobe rows without a server-side row
-  cap and interpolates them into the prompt. `style-coach` accepts a client
-  JSON body without a total size or token cap. Both can be called directly by
-  any authenticated user, outside the app UI.
-- `ai-suggestions` bounds image and selected profile fields, but does not set an
-  OpenRouter provider constraint/fallback or retry. The API call may fail after
-  quota has been spent.
-- There is no server idempotency key or duplicate-request suppression for AI
-  calls. UI loading flags and the insights memory cache are local conveniences,
-  not usage security. Parallel clients can make parallel requests; only the
-  proposed row-locked quota would serialize the counter, and it is not deployed.
-- Passive coaching runs automatically on screen entry and counts against the
-  weekly/50 monthly coaching quota. This can use a free user's only weekly
-  coach allowance without an explicit coach question.
-- Client messages and premium copy are inconsistent: `lib/core/utils/
-  app_localizations_en.dart` says free users can get “unlimited coaching”,
-  while source quota is 50/month for Signature. The 999/day suggestion limit
-  is also described in code as “effectively unlimited”. Do not advertise
-  unlimited model usage.
-- No Gemini or OpenRouter calls use Google Search/Maps grounding, audio, video,
-  image generation, batch, or context caching in inspected requests. Their
-  associated prices are therefore excluded from these projections.
+- At most one JPEG per image operation; decoded image bytes ≤3 MB, width and height ≤1280 px. Server verifies base64 format, JPEG structure, and dimensions.
+- Handler JSON body limits are 4.1 MB for image endpoints, 16 KiB for daily suggestion, 32 KiB for style coach, and 4 KiB for insights.
+- Final text prompts are capped at 16,000 UTF-8 bytes for direct Gemini, 4,000 bytes for the OpenRouter system prompt, plus a short bounded language line. Google's current token docs say text and image inputs are tokenized; a 1280×1280 image would be about four 768px tiles ×258 tokens = roughly 1,032 image input tokens. Token cost scenarios below treat the 16,000-byte text cap as 16,000 input tokens, a conservative planning approximation, then add image tokens.
+- Output caps are 200/500/600/400/800 tokens by feature. Gemini Flash-Lite documents thinking off by default and requests no thinking override; OpenRouter does not request reasoning and its catalog says reasoning is not mandatory. Any billable output thinking tokens are included in the provider output-rate policy.
+- Provider execution has a 20-second timeout and response body cap of 65,536 bytes. Application retries are zero. OpenRouter model/provider fallback is disabled. Concurrent work is capped per account at 1 free / 3 premium requests, alongside minute burst limits.
+- There is no provider-response cache server-side. Local 30-minute insights cache is a usability optimization, not enforcement. Automatic daily suggestion and passive coach calls count as actions and may use free allowance without a tap.
+- Logs contain action, configured model, latency, provider-reported token counts where available, and safe error class; they must not contain prompts, photos, user tokens, or provider secrets.
 
-## Provider pricing checked on 2026-11-12
+Manual entry and non-AI wardrobe/outfit functions remain usable at zero quota. AI errors do not turn into fake successful recommendations. The new localized UI displays monthly remaining allowance and maps monthly/daily/burst denials and unavailability to messages; day/burst availability is also considered when marking an allowance exhausted.
 
-### Gemini Developer API (the direct Google integration in source)
+## Current official provider pricing checked 2026-11-12
 
-Google's [Gemini API pricing page](https://ai.google.dev/gemini-api/docs/pricing)
-lists Gemini 2.5 Flash-Lite Standard paid rates at **$0.10 / 1M input tokens**
-(text/image/video) and **$0.40 / 1M output tokens**, including thinking tokens.
-Its free tier lists these token prices as free, but marks free-tier content as
-used to improve Google's products; the paid tier says it is not. For users
-sending personal wardrobe images, do not build production economics or privacy
-promises on the free tier. Context caching is not available as a discounted
-token input tier; the listed cache storage rate is $1 / 1M tokens/hour.
+### Gemini Developer API / AI Studio
 
-The [image understanding/token documentation](https://ai.google.dev/gemini-api/docs/tokens)
-says an image no larger than 384×384 counts as 258 tokens; larger images are
-processed as 768×768 tiles of 258 tokens each. Image token count depends on
-dimensions/tiling, not JPEG byte size alone. A 1920×1920 image may therefore
-be roughly nine tiles (2,322 input tokens) before text, depending on actual
-image sizing/resolution behavior. The app does not log Gemini token usage, so
-this is an estimate. The [thinking guide](https://ai.google.dev/gemini-api/docs/generate-content/thinking)
-describes 2.5 Flash-Lite as a model that does not think by default; its
-generation configuration can disable thinking explicitly. The source sets no
-thinking budget. Output-token caps still bound the output charge.
+Google's [Gemini 2.5 Flash-Lite pricing table](https://aistudio.google.com/docs/pricing#gemini-2.5-flash-lite) lists Standard paid rates of **$0.10 per million text/image/video input tokens** and **$0.40 per million output tokens, including thinking tokens**. Audio uses different rates but no Everywear path sends audio. The free tier lists free token prices, but says content is used to improve Google products; the paid tier says it is not. Do not base personal-photo production privacy or cost planning on free-tier access. Priority and cached rates differ; source requests do not use either. No search/map grounding is configured.
 
-Google's [model availability page](https://ai.google.dev/gemini-api/docs/models)
-states the 2.5 models are not deprecated but access is being limited to
-projects that actively used them, and recommends newer models for new projects.
-This makes model/key eligibility an external blocker even though a stable model
-ID is in source.
+Google's [current model page](https://aistudio.google.com/docs/models#gemini-2.5-flash-lite) says `gemini-2.5-flash-lite` is not deprecated and will continue through the API until further notice, while access is restricted to existing users who actively used the 2.5 models. Google's [deprecation schedule](https://aistudio.google.com/docs/deprecations#gemini-2.5-flash-models) lists no shutdown date for Flash-Lite. The different `gemini-2.5-flash` model is deprecated; that schedule must not be applied to Flash-Lite.
 
-### OpenRouter path
+[Gemini token documentation](https://aistudio.google.com/docs/tokens#images) says a ≤384px image counts as 258 tokens; larger images are tiled into 768×768px tiles, each counting as 258 tokens. At the app's 1280×1280 maximum, roughly four tiles/1,032 tokens is used as an estimate here, not a measured tokenizer result. Provider response usage metadata should be retained to replace this estimate.
 
-OpenRouter's official [Gemini 2.5 Flash-Lite catalog page](https://openrouter.ai/google/gemini-2.5-flash-lite)
-lists the canonical ID `google/gemini-2.5-flash-lite`, currently listed rates
-of **$0.10 / 1M input and $0.40 / 1M output**, and labels the model as going
-away on **2026-10-20**. The checked date is later. The source's bare model ID
-is not the documented canonical slug and the catalog entry's retirement date
-has passed. Cost projections for photo outfit advice are only a same-price
-proxy, not a confirmed payable route. Provider pricing/routing can vary, and
-the current request does not set a provider preference or fallback list.
+### OpenRouter
 
-The direct Google URL in four features uses the **Gemini Developer API**. It
-does not use Vertex AI's endpoint/credentials. Vertex AI is a distinct product
-and has its own [Google Cloud pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing);
-those rates are not applied to the current direct API calls. OpenRouter may
-route to Google AI Studio or Vertex providers, so exact underlying provider is
-unknown for that code path.
+The [official model page](https://openrouter.ai/google/gemini-2.5-flash-lite) and public [model metadata](https://openrouter.ai/api/v1/model/google/gemini-2.5-flash-lite) independently show canonical ID `google/gemini-2.5-flash-lite`, image input, $0.10/M prompt and $0.40/M completion prices, `expiration_date: null`, and no mandatory reasoning. This is catalog availability, not account access or quality evidence. The local request disables routing fallback and caps accepted rates using OpenRouter's documented [`provider.max_price`](https://openrouter.ai/docs/guides/routing/provider-selection) controls. If no route meets the cap, AI should error rather than silently pick a costlier model/provider.
 
-## Per-request cost assumptions
+## Modeled inference costs
 
-These are deliberately simple list-rate estimates, not measured token counts.
-They use $0.10/M input + $0.40/M output, no caching, no paid grounding, and no
-retry. Inputs below include image tokens where applicable.
+Formula: `input tokens × $0.10 / 1,000,000 + output tokens × $0.40 / 1,000,000`. No caching discounts, tax, grounding, audio, inference retries, or unconfigured fees are included. Failed/time-out provider operations consume quota and may still have incurred costs; one operation never causes an application retry.
 
-| Request type | Assumed input tokens | Assumed output tokens | Estimated model cost/request |
+| Feature | Assumed normal input | Assumed output | Estimate/action |
 |---|---:|---:|---:|
-| Clothing analysis (one resized image + small JSON prompt) | 2,500 | 200 | $0.00033 |
-| Outfit-photo suggestions (one 1280px image + short prompt) | 5,000 | 500 | $0.00070* |
-| Today's suggestion (typical wardrobe and context) | 8,000 | 600 | $0.00104 |
-| Coach turn (profile and bounded recent context assumption) | 6,000 | 400 | $0.00076 |
-| AI insights (typical summary prompt) | 10,000 | 800 | $0.00132 |
+| Clothing image | 2,500 tokens including image | 200 | $0.00033 |
+| Outfit-photo advice | 5,000 including image/profile | 500 | $0.00070 |
+| Today's outfit | 8,000 | 600 | $0.00104 |
+| Coach turn | 6,000 | 400 | $0.00076 |
+| Insights | 10,000 | 800 | $0.00132 |
 
-Formula: `input_tokens × $0.10 / 1,000,000 + output_tokens × $0.40 /
-1,000,000`. `*` Outfit suggestions use OpenRouter's currently published model
-price only as a planning proxy; source ID/retirement prevents claiming this
-route works.
-
-No token-count data was available for live Everywear users. Real inputs may be
-larger: the prompt data has no consistent cap and wardrobe size is unlimited.
-Input estimates are therefore not upper bounds.
-
-## Subscriber usage scenarios
-
-| Scenario/month | Feature mix assumed | Relation to local proposed limits | Estimated AI provider cost |
+| Scenario | Feature mix per month | Quota relation | Modeled cost |
 |---|---|---|---:|
-| Light (free) | 4 clothing analyses + 5 daily suggestions + 1 AI insight + 1 coach | 10 of roughly 28–31 free shared suggestion operations/month; 1 of about 4–5 weekly coach allowances | **$0.0086** |
-| Typical (paid) | 12 clothing analyses + 20 daily suggestions + 4 outfit-photo suggestions + 10 coach turns + 2 AI insights | 38 suggestion operations/month versus proposed 999/day; 10/50 coach operations | **$0.0378** |
-| Heavy (paid) | 50 clothing analyses + 30 daily suggestions + 20 outfit-photo suggestions + 50 coach turns + 15 AI insights | 115 suggestion operations/month versus proposed 999/day; all 50 coach operations | **$0.1195** |
+| Light | 4 clothing, 3 daily, 1 coach, 1 insights, 1 outfit photo (10 actions) | Free: 10/20 month, within 3/day when spread across at least four days | $0.00722 |
+| Typical | 12 clothing, 20 daily, 18 coach, 6 insights, 4 outfit photos (60 actions) | Premium: 60/200 month, with no more than 20/day | $0.04916 |
+| Heavy | 40 clothing, 40 daily, 60 coach, 40 insights, 20 outfit photos (200 actions) | Premium monthly maximum; spread across at least 10 days under 20/day | $0.16720 |
+| Bounded maximum | 200 actions at maximum text/image and output bounds | Premium monthly and daily limits both allow 200/month | ≈$0.405/month |
 
-The model quota categories do not currently correspond cleanly to the UI's
-feature labels: photo analysis, photo advice, daily looks, and insights all
-spend the same suggestion counter. Scenarios assume every request succeeds
-once and consumes one unit. They omit the passively generated coach tip count
-unless included in the coach-turn totals.
+The bounded maximum assumes at most 17,032 input tokens/action (16,000 text-token planning ceiling plus estimated 1,032 image tokens) and 800 output tokens: `$0.0017032 + $0.00032 = $0.0020232/action`, multiplied by 200 = `$0.40464`. It is a conservative cost model, not a mathematically strict bound: UTF-8 bytes are not an exact model-token counter, Google tokenization can differ, and provider metadata/prices can change. Current source output caps and image dimensions are strict; input text is byte-bounded, not checked against a provider token counter.
 
-The 999/day Signature suggestion limit is not a practical safety cap. At the
-assumed typical daily-suggestion cost of $0.00104, 999 calls/day for 30 days
-would cost about **$31.17 for one account in a month** before coach use. This
-illustrative figure does not bound high-input prompts; a malicious or
-unusually large wardrobe/prompt can exceed the assumed unit cost. Rate limits
-and prompt-size bounds are needed even if ordinary users stay far below that
-volume.
+The maximum free account cost is approximately **$0.041/month** (20 actions). With 10,000 free monthly-active accounts each exhausting quota, the modeled aggregate is about **$405/month**, before platform costs. Premium exhaustion costs up to about **$0.405/subscriber-month** before shared infrastructure. Typical premium use is about five cents. Free-user abuse therefore remains a population-level cost to monitor even under the cap.
 
-## Payment, tax, and hosting context
+## Commercial and hosting scenarios
 
-### Stripe and RevenueCat Billing
+- Proposed monthly gross: €2.99.
+- Proposed annual gross: €24.99/year = **€2.0825/month average** before deductions.
+- Illustrative Stripe France standard EEA card schedule is 1.5% + €0.25 per transaction ([official pricing](https://stripe.com/fr/pricing)). On those sticker amounts that is about €0.295/monthly and €0.625/annual charge. Fee is not guaranteed for this merchant; UK, premium/international cards, currency conversion, payment method, merchant country, and negotiated rates differ.
+- RevenueCat currently advertises Pro free through $2,500 monthly tracked revenue, then 1% of tracked revenue ([official plans](https://www.revenuecat.com/pricing)). RevenueCat says web billing is included and reports US Stripe 2.9% + $0.30 and optional Stripe Tax fees, while actual Stripe fees vary by country ([RevenueCat Billing overview](https://www.revenuecat.com/docs/web/web-billing/overview)). Check the owner account's plan and actual fee schedule; do not stack the US quote on top of the France scenario as though both applied.
+- Taxes cannot be calculated without merchant establishment, customer residence, registration, tax-inclusive/exclusive pricing, and collection settings. For a tax-inclusive price and rate `r`, VAT-exclusive revenue is `price/(1+r)`; this is only a formula, not an assumed rate or legal conclusion. Applicable tax could materially reduce the available gross.
+- Supabase's current public [Pro pricing](https://supabase.com/pricing) shows $25/month before overages, 100GB storage, 250GB uncached and cached egress, with compute costs depending on project configuration. This is an example public plan, not evidence about the recovered project's plan/invoice. If the entire $25 base were allocated per paying subscriber, it is $0.25/user at 100 users or $0.025/user at 1,000, before compute/usage; actual allocations also need to include free users.
+- Currency conversion, Stripe tax/processing, RevenueCat account terms, Supabase bill, image storage/egress, support, disputes, and refunds remain unmeasured. Therefore no net margin/profit estimate is asserted.
 
-RevenueCat's [Billing overview](https://www.revenuecat.com/docs/web/web-billing/overview)
-says RevenueCat Billing uses Stripe as the payment gateway, that RevenueCat
-Web is included in RevenueCat's plan, and quotes **US pricing** of 2.9% + $0.30
-per Stripe transaction. That US quote is not an exact fee for a EUR merchant.
-Stripe's current [France pricing page](https://stripe.com/fr/pricing) lists
-**1.5% + €0.25** for standard EEA cards (and different prices for UK,
-international, premium, currency-conversion, and other payment cases). This
-table uses only that EEA standard-card scenario, not an assumption about the
-owner's country, Stripe contract, card mix, or currency settlement.
+## Launch recommendation
 
-| Proposed price | Gross listed price | EEA standard-card fee scenario | After fee, before tax/hosting/AI |
-|---|---:|---:|---:|
-| Monthly | €2.99 | €0.29485 | €2.69515 |
-| Annual | €24.99 | €0.62485 once per year | €24.36515/year = €2.03043/month equivalent |
+The 20/200 monthly, 3/20 daily, and 1/5 per-minute server policy is a reasonable **provisional implementation baseline**, not a final commercial promise. It is finite, limits the model cost in source, and leaves manual/basic styling available. Keep it through a private staging pilot only if observed tokens and automatic-call frequency match assumptions. Consider reducing free automatic calls (especially passive coaching and page-load suggestions) or moving them behind explicit user action if they routinely consume the allowance; do not make AI “unlimited.” Consider reducing premium monthly allowance from 200 if telemetry reveals higher-than-modeled inputs, unbounded provider/hosting costs, or excessive passive calls.
 
-The annual price is about **30.35% below** twelve monthly payments (€35.88).
-Annual effective gross is €2.0825/month before processing; after the example
-Stripe transaction fee it is about €2.03/month before tax and all other costs.
+Before product creation, establish Google API eligibility/key and paid tier, OpenRouter account/key/routing access (without using production photos for a smoke test), and response quality with consented synthetic/staging examples. Run staging traffic to measure provider-reported input, output, and thought tokens plus error/timeout/call rates. Confirm owner Stripe activation, merchant country, actual payment method fees and VAT/tax setup, RevenueCat plan, and Supabase actual bill. Only then decide whether proposed €2.99/€24.99 pricing and these limits are commercially viable.
 
-RevenueCat's [current public Pro pricing](https://www.revenuecat.com/pricing)
-is free below $2,500 Monthly Tracked Revenue and 1% of MTR in months above
-that threshold. RevenueCat's [billing explanation](https://www.revenuecat.com/docs/welcome/set-up-revenuecat/account-management)
-says the 1% applies to the full MTR, before store fees and taxes, once the
-threshold is exceeded. It also says RevenueCat Billing itself adds no separate
-RevenueCat web fee. The recovered project's actual RevenueCat plan/legacy
-terms are unknown; verify before relying on this public schedule.
+## Official sources
 
-### Tax sensitivity
+Checked 2026-11-12:
 
-Tax treatment is not known. As a purely illustrative calculation, if the
-listed consumer price includes 20% VAT, the price is divided by 1.20 to
-separate VAT; Stripe's fee is still calculated on the gross charge in this
-example:
-
-| Price | Gross | Illustrative VAT component at 20% | EEA fee scenario | Remainder after VAT and fee |
-|---|---:|---:|---:|---:|
-| Monthly | €2.99 | €0.49833 | €0.29485 | €2.19682/month |
-| Annual | €24.99 | €4.16500 | €0.62485 | €20.20015/year = €1.68335/month equivalent |
-
-20% is an example, not an asserted applicable rate. The [European Commission
-place-of-taxation guidance](https://taxation-customs.ec.europa.eu/taxation/vat/vat-directive/place-taxation_en)
-states B2C electronic services are generally taxed where the customer resides,
-with a cross-border €10,000 threshold exception for certain EU-established
-suppliers. Merchant establishment, VAT registration, threshold, customer mix,
-whether prices are tax-inclusive, and tax collection configuration all remain
-unknown. RevenueCat Billing can use Stripe Tax or Avalara; verify selected
-provider and contract. RevenueCat's overview quotes US Stripe Tax at $0.50 per
-transaction, while current Stripe documentation describes 0.5% PAYG for some
-no-code Stripe Tax transactions. This pricing/plan difference must be resolved
-for the actual account; neither tax-provider fee is included above.
-
-### Supabase and image hosting
-
-Supabase's [public pricing](https://supabase.com/pricing) currently lists Pro
-from **$25/month**, 100 GB file storage, 250 GB uncached/cached egress, and
-included Edge Function invocation allowance; overages and compute can add
-charges. Current published usage docs list storage overage at $0.0213/GB-month,
-uncached egress at $0.09/GB, cached egress at $0.03/GB, and 2 million Pro Edge
-Function invocations included. The recovered organization's actual plan,
-compute size, included credits, storage volume, image sizes, egress, and current
-invoice were not inspected. Do not allocate a precise per-subscriber platform
-cost without these measurements. For scale context only, a $25/month Pro
-baseline allocated over 100 subscribers is $0.25/subscriber/month; over 1,000
-it is $0.025, before compute and overages. This is a shared fixed-cost example,
-not the project's confirmed bill.
-
-Supabase hosts customer wardrobe/avatar images; private-image code does not
-remove Storage, CDN/egress, database, or backup costs. Image transforms are not
-currently charged as model calls but may have their own plan usage charge if
-introduced.
-
-## Launch configuration recommendation (review only)
-
-1. **Do not promise unlimited AI.** Keep Essential at one server-enforced AI
-   operation per day shared across model-backed features during initial
-   measurement. This is useful enough for evaluation and is already the local
-   proposal, but it is not enforced in recovered production. Avoid having an
-   automatic passive coach consume a free user's explicit weekly coach action;
-   cache/precompute it or make it user-triggered before launch.
-2. **Replace Signature 999/day with a measured finite allowance.** A cautious
-   initial proposal is 10 AI operations/day shared across suggestion/image/
-   insights features and 30 coach turns/month. Set server-side maximum request
-   bytes and a target prompt input budget (for example 12k tokens, validated by
-   measuring real prompts); cap rows/items passed into prompts and retain
-   current per-feature output caps. The 10/day and 30/month values are review
-   proposals, not finalized commercial terms.
-3. Enforce quota atomically in protected functions before each billable request,
-   with idempotency/in-flight deduplication where retries can duplicate calls.
-   Validate request size and required data before spending quota. Production
-   rollout needs schema review and verified migration/deployment; do not rely on
-   client counters or UI guards.
-4. Resolve the OpenRouter model ID/retirement and confirm Google Developer API
-   key access to a supported paid tier. Use paid processing for personal
-   wardrobe images if the product requires the provider not to use prompts for
-   product improvement; document the data path and retention accurately.
-5. Instrument per-feature request counts, token usage, provider/model,
-   failures, duplicate requests, and cost per active subscriber. Recheck the
-   scenarios after a representative private beta and then adjust quotas/price.
-6. Confirm Stripe's merchant-country/card/currency schedule, VAT inclusion and
-   tax provider, RevenueCat account plan, Supabase bill/plan/usage, and approved
-   price display before creating production products.
-
-**Recommendation:** €2.99/month and €24.99/year appear **potentially viable
-against ordinary paid AI inference costs**, with annual receipts less robust
-after transaction fees/tax and fixed operating costs. Do not call them
-profitable or sustainable yet. Obtain real feature/token usage and actual
-provider/platform billing, fix the unavailable/incorrect model route, and
-deploy auditable finite server quotas in an approved staging rollout before
-making the commercial decision.
-
-## Official sources checked
-
-- Google Gemini API [pricing](https://ai.google.dev/gemini-api/docs/pricing), [models](https://ai.google.dev/gemini-api/docs/models), [image understanding](https://ai.google.dev/gemini-api/docs/image-understanding), and [thinking](https://ai.google.dev/gemini-api/docs/generate-content/thinking) — checked 2026-11-12.
-- OpenRouter [Google Gemini 2.5 Flash-Lite catalog](https://openrouter.ai/google/gemini-2.5-flash-lite) — checked 2026-11-12.
-- RevenueCat [RevenueCat Billing overview](https://www.revenuecat.com/docs/web/web-billing/overview), [Pro pricing](https://www.revenuecat.com/pricing), and [MTR billing](https://www.revenuecat.com/docs/welcome/set-up-revenuecat/account-management) — checked 2026-11-12.
-- Stripe [France/EUR standard pricing](https://stripe.com/fr/pricing) and [Tax pricing explanation](https://support.stripe.com/questions/understanding-stripe-tax-pricing?locale=en-GB) — checked 2026-11-12.
-- European Commission [VAT place of taxation](https://taxation-customs.ec.europa.eu/taxation/vat/vat-directive/place-taxation_en) — checked 2026-11-12.
-- Supabase [pricing](https://supabase.com/pricing), [billing/quotas](https://supabase.com/docs/guides/platform/billing-on-supabase), [storage pricing](https://supabase.com/docs/guides/storage/pricing), and [egress pricing](https://supabase.com/docs/guides/platform/manage-your-usage/egress) — checked 2026-11-12.
+- Google Gemini Developer API: [deprecations](https://aistudio.google.com/docs/deprecations), [model catalog](https://aistudio.google.com/docs/models), [pricing](https://aistudio.google.com/docs/pricing), [thinking behavior](https://aistudio.google.com/docs/thinking), [token counting/image tokenization](https://aistudio.google.com/docs/tokens).
+- OpenRouter: [model page](https://openrouter.ai/google/gemini-2.5-flash-lite), [public model metadata](https://openrouter.ai/api/v1/model/google/gemini-2.5-flash-lite), [provider routing and max price](https://openrouter.ai/docs/guides/routing/provider-selection).
+- Fees/hosting: [RevenueCat plans](https://www.revenuecat.com/pricing), [RevenueCat Billing and web fees](https://www.revenuecat.com/docs/web/web-billing/overview), [Stripe France pricing](https://stripe.com/fr/pricing), [Supabase pricing](https://supabase.com/pricing).

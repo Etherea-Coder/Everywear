@@ -153,14 +153,9 @@ class UserTierService {
   Future<bool> canRequestSuggestion(String userId) async {
     lastCheckError = null;
     try {
-      final response = await _supabase.functions.invoke(
-        'check-and-request-suggestion',
-      );
-      if (response.status != 200) {
-        final error = response.data?['error'] ?? 'Check failed';
-        throw Exception(error);
-      }
-      return response.data?['allowed'] as bool? ?? false;
+      if (_supabase.auth.currentUser?.id != userId) return false;
+      final allowance = await _readAiAllowance();
+      return _hasAiAllowance(allowance);
     } catch (e) {
       if (kDebugMode) debugPrint('canRequestSuggestion check failed: $e');
       lastCheckError = e.toString();
@@ -182,19 +177,8 @@ class UserTierService {
   Future<bool> canUseCoach(String userId) async {
     lastCheckError = null;
     try {
-      final response = await _supabase
-          .from('user_profiles')
-          .select(
-            'tier, subscription_status, subscription_expires_at, coaching_sessions_used, coaching_reset_at',
-          )
-          .eq('id', userId)
-          .single();
-
-      final tier = _effectiveTier(response);
-      final limit = TierLimits.coachingLimit(tier);
-      final used = response['coaching_sessions_used'] as int? ?? 0;
-
-      return used < limit;
+      if (_supabase.auth.currentUser?.id != userId) return false;
+      return _hasAiAllowance(await _readAiAllowance());
     } catch (e) {
       if (kDebugMode) debugPrint('canUseCoach check failed: $e');
       lastCheckError = e.toString();
@@ -218,22 +202,21 @@ class UserTierService {
   /// into thinking they have quota when the service is down.
   Future<Map<String, dynamic>> getCoachingQuota(String userId) async {
     try {
-      final response = await _supabase
-          .from('user_profiles')
-          .select(
-            'tier, subscription_status, subscription_expires_at, coaching_sessions_used, coaching_reset_at',
-          )
-          .eq('id', userId)
-          .single();
-      final tier = _effectiveTier(response);
-      final used = response['coaching_sessions_used'] as int? ?? 0;
-      final limit = TierLimits.coachingLimit(tier);
+      if (_supabase.auth.currentUser?.id != userId)
+        throw StateError('Account changed');
+      final allowance = await _readAiAllowance();
+      final tier = allowance['tier'] as String? ?? 'free';
+      final limit = allowance['month_limit'] as int? ?? 0;
+      final remaining = allowance['month_remaining'] as int? ?? 0;
       return {
-        'used': used,
+        'used': (limit - remaining).clamp(0, limit),
         'limit': limit,
-        'remaining': (limit - used).clamp(0, limit),
+        'remaining': remaining,
         'tier': tier,
-        'period': tier == 'premium' ? 'this month' : 'this week',
+        'period': 'this month',
+        'daily_remaining': allowance['day_remaining'],
+        'burst_remaining': allowance['burst_remaining'],
+        'resets_at': allowance['month_resets_at'],
       };
     } catch (e) {
       if (kDebugMode) debugPrint('getCoachingQuota failed: $e');
@@ -263,18 +246,22 @@ class UserTierService {
       final response = await _supabase
           .from('user_profiles')
           .select(
-            'tier, subscription_status, subscription_expires_at, daily_suggestions_used, '
-            'suggestions_reset_at, coaching_sessions_used, coaching_reset_at, '
+            'tier, subscription_status, subscription_expires_at, '
             'outfit_logs_count',
           )
           .eq('id', userId)
           .single();
 
       final tier = _effectiveTier(response);
-      final suggestionsUsed = response['daily_suggestions_used'] as int? ?? 0;
-      final suggestionsLimit = TierLimits.dailySuggestionLimit(tier);
-      final coachingUsed = response['coaching_sessions_used'] as int? ?? 0;
-      final coachingLimit = TierLimits.coachingLimit(tier);
+      final allowance = await _readAiAllowance();
+      final suggestionsUsed =
+          (allowance['day_limit'] as int? ?? 0) -
+          (allowance['day_remaining'] as int? ?? 0);
+      final suggestionsLimit = allowance['day_limit'] as int? ?? 0;
+      final coachingUsed =
+          (allowance['month_limit'] as int? ?? 0) -
+          (allowance['month_remaining'] as int? ?? 0);
+      final coachingLimit = allowance['month_limit'] as int? ?? 0;
       final outfitLogsCount = response['outfit_logs_count'] as int? ?? 0;
       final outfitLogsLimit = TierLimits.outfitLogLimit(tier);
 
@@ -293,7 +280,11 @@ class UserTierService {
           0,
           coachingLimit,
         ),
-        'coaching_period': tier == 'premium' ? 'this month' : 'this week',
+        'coaching_period': 'this month',
+        'ai_month_remaining': allowance['month_remaining'],
+        'ai_day_remaining': allowance['day_remaining'],
+        'ai_burst_remaining': allowance['burst_remaining'],
+        'ai_month_resets_at': allowance['month_resets_at'],
         'outfit_logs_count': outfitLogsCount,
         'outfit_logs_limit': outfitLogsLimit,
         'outfit_logs_remaining': (outfitLogsLimit - outfitLogsCount).clamp(
@@ -321,6 +312,25 @@ class UserTierService {
         'error': true,
       };
     }
+  }
+
+  Future<Map<String, dynamic>> _readAiAllowance() async {
+    final response = await _supabase.rpc('get_ai_allowance');
+    if (response is! Map)
+      throw const FormatException('AI allowance unavailable');
+    return Map<String, dynamic>.from(response);
+  }
+
+  bool _hasAiAllowance(Map<String, dynamic> allowance) {
+    final monthly = allowance['month_remaining'];
+    final daily = allowance['day_remaining'];
+    final burst = allowance['burst_remaining'];
+    return monthly is num &&
+        daily is num &&
+        burst is num &&
+        monthly > 0 &&
+        daily > 0 &&
+        burst > 0;
   }
 
   /// Upgrade user to Signature (premium) tier

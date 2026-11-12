@@ -331,6 +331,13 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
       _isLoadingSuggestions = false;
       if (result['success'] == true) {
         _aiSuggestions = result['suggestions'];
+      } else if (mounted) {
+        final code = result['errorCode'] as String?;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).aiStatusMessage(code)),
+          ),
+        );
       }
     });
   }

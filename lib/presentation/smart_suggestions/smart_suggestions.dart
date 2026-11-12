@@ -1026,7 +1026,11 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            result['answer'] as String? ?? '',
+                            result['errorCode'] is String
+                                ? AppLocalizations.of(context).aiStatusMessage(
+                                    result['errorCode'] as String?,
+                                  )
+                                : result['answer'] as String? ?? '',
                             style: TextStyle(
                               fontSize: 14,
                               height: 1.5,
