@@ -139,7 +139,8 @@ unverified. This is not yet a Play release candidate.
   hints with focused pure tests.
 - This work pass built an unsigned current-source AAB from `04a57bc`; archive
   integrity passed and signing was disabled because private upload-signing
-  inputs are absent. Full artifact details are below.
+  inputs are absent. It also built a locally installable debug APK with the
+  Android debug certificate. Full artifact details are below.
 
 ## 1. Completed local code changes
 
@@ -312,6 +313,7 @@ unverified. This is not yet a Play release candidate.
 | Current Dart-source Flutter regression and CI analyzer rerun (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` passed **59/59**. `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited **0** with **245 info** diagnostics and no warning/error diagnostics. Subsequent commits changed only Edge Function TypeScript, CI, and documentation; no Flutter/Dart source changed. No device, database, provider, or purchase behavior was tested |
 | Current-HEAD Edge Function verification (2026-11-12) | Project-local Deno **2.9.6** ran the CI no-remote pure test list plus rating-hint cases: **29 passed, 0 failed**; `deno lint supabase/functions` passed across **25 files**; formatting passed for the new helper/test; `deno check --config supabase/functions/deno.json` passed all **9 protected handlers**. Deno fetched module/type files from esm.sh; no function handler was executed, and no database/provider operation was performed |
 | Current-source Android release bundle (2026-11-12) | `./gradlew :app:bundleRelease --no-daemon --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError'` succeeded in **1m26s** (33 tasks executed, 738 up-to-date). Produced `build/app/outputs/bundle/release/app-release.aab` from source commit `04a57bc`: **76,959,486 bytes**, SHA-256 `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`. `unzip -t` passed; `jarsigner -verify` reported **jar is unsigned**. Gradle reported release signing disabled because `android/key.properties` is absent. No public app defines, device install, or runtime test was performed |
+| Current-source debug APK (2026-11-12) | `./gradlew :app:assembleDebug --no-daemon --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError'` succeeded in **1m57s** (97 tasks executed, 335 up-to-date). `build/app/outputs/flutter-apk/app-debug.apk` is **197,268,699 bytes**, SHA-256 `ea14e9f5511988977d80b9bdd405ab5a49e68623ce8763c68fe5608f6b3d252c`. ZIP integrity and `apksigner verify` passed; `aapt dump badging` confirms `com.stylewise.app`, version 1.0.0, target SDK 36. It uses the Android debug certificate and is not a Play artifact. D8 emitted Kotlin metadata/Appstore SDK warnings during dex transforms; build completed. No `adb`/device install was available |
 | AI request/quota ordering (2026-11-12) | Full Deno lint passed across **23 files** and the no-remote tests passed **26/26** after request validation was moved ahead of quota use. `deno check --no-remote` passed for pure response helpers/tests; no network or database call was made. Edge Function handler type-check remains deferred |
 | Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
@@ -373,6 +375,11 @@ grants. No device check was possible because `adb` is absent.
   key and `android/key.properties` are absent. Device/network behavior,
   timezone/permission behavior, accessibility, and export runtime checks remain
   pending; `adb` is not installed.
+- A debug APK is also available at `build/app/outputs/flutter-apk/app-debug.apk`
+  (197,268,699 bytes; SHA-256
+  `ea14e9f5511988977d80b9bdd405ab5a49e68623ce8763c68fe5608f6b3d252c`). Its
+  Android debug certificate verifies and its manifest reports the preserved
+  `com.stylewise.app` identity; it has not been installed or run.
 - No purchase, restore, RevenueCat webhook, production deployment, Play tester
   transaction, database migration or private bucket cutover was executed.
 - Deno 2.9.6 is available at the project-local ignored path. The current pure
@@ -472,6 +479,9 @@ grants. No device check was possible because `adb` is absent.
   Gradle worker and a 2 GiB heap. ZIP integrity passed; it is unsigned because
   private upload-signing inputs are absent. Hash and exact build results are
   recorded in the checks table; it was not installed or run.
+- [x] Build a debug APK from the same app source with one Gradle worker and a
+  2 GiB heap. APK signature, archive, package identity and hash were verified;
+  `adb` is unavailable, so no device installation/runtime check is claimed.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
 - [x] Prepare concurrent two-session quota regression harness for disposable
@@ -535,11 +545,11 @@ grants. No device check was possible because `adb` is absent.
 - [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
   the Supabase-backed reset flow remains unverified without a disposable DB.
 
-**Exact next step:** current source has a built, hash-verified unsigned AAB, and
-the Flutter/Deno test and analysis gates pass locally. The next database step is
-to obtain an explicitly disposable non-production Supabase environment for the
-migration chain and Storage/concurrent-quota fixtures; production remains
-read-only and no local stack is authorized. Before a signed or interactive
+**Exact next step:** current source has a hash-verified unsigned AAB and debug
+APK. Flutter and Deno checks pass locally. The next database step is to obtain
+an explicitly disposable non-production Supabase environment for the migration
+chain and Storage/concurrent-quota fixtures; production remains read-only and
+no local stack is authorized. Before a signed or interactive
 Android release check, provide public app configuration and private
 upload-signing inputs through the private build environment, complete
 RevenueCat/Play dashboard setup, and run the AAB on
