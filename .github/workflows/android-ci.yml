@@ -37,6 +37,7 @@ jobs:
             supabase/functions/analyze-clothing/clothing_analysis_test.ts \
             supabase/functions/generate-ai-insights/ai_response_test.ts \
             supabase/functions/style-coach/coach_response_test.ts \
+            supabase/functions/style-coach/item_ratings_test.ts \
             supabase/functions/today-suggestion/suggestion_response_test.ts \
             supabase/functions/verify-purchase/entitlement_test.ts \
             supabase/functions/_shared/gemini_request_test.ts
@@ -45,6 +46,7 @@ jobs:
       - name: Type-check protected functions
         run: |
           deno check \
+            --config supabase/functions/deno.json \
             supabase/functions/ai-suggestions/index.ts \
             supabase/functions/analyze-clothing/index.ts \
             supabase/functions/check-and-request-suggestion/index.ts \

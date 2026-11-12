@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { createGeminiRequest } from '../_shared/gemini_request.ts'
 import { isCoachMode, parseCoachResponse } from './coach_response.ts'
+import { selectTopRatedItems } from './item_ratings.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 
@@ -11,8 +12,6 @@ type RecentOutfit = {
   name?: string
   occasion?: string
 }
-
-type ItemRating = { avg_rating?: number; rated_count?: number }
 
 type SilhouetteMonth = { month: string; fitted: number; relaxed: number }
 
@@ -136,15 +135,12 @@ WARDROBE DATA:
 
     // Build top-rated items block from item rating averages
     let ratingsBlock = ''
-    if (itemRatings && typeof itemRatings === 'object' && Object.keys(itemRatings).length > 0) {
+    if (itemRatings && typeof itemRatings === 'object') {
       // itemRatings is { itemId: { avg_rating, rated_count } } — we don't have names here,
       // but recent outfits already carry item names. Build a summary of top-rated items.
-      const entries = Object.entries(itemRatings as Record<string, ItemRating>)
-        .filter(([, v]) => v.avg_rating && v.rated_count >= 2)
-        .sort(([, a], [, b]) => (b.avg_rating as number) - (a.avg_rating as number))
-        .slice(0, 5)
+      const entries = selectTopRatedItems(itemRatings)
       if (entries.length > 0) {
-        const lines = entries.map(([id, v]) => `- Item ${id.slice(0, 8)}… avg ${v.avg_rating}/5 across ${v.rated_count} outfits`).join('\n')
+        const lines = entries.map(({ id, avg_rating, rated_count }) => `- Item ${id.slice(0, 8)}… avg ${avg_rating}/5 across ${rated_count} outfits`).join('\n')
         ratingsBlock = `\n\nITEM RATING FEEDBACK:\nThe user rates their outfits. These items consistently appear in high-rated outfits — prefer them when building suggestions:\n${lines}`
       }
     }

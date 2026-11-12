@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
 
     // Client-supplied rating hints are accepted only for IDs returned by the
     // authenticated wardrobe query; names and image references come from DB.
-    const ratingHints = new Map<string, { avg_rating?: number; rated_count?: number }>()
+    const ratingHints = new Map<string, { avg_rating?: number | null; rated_count?: number | null }>()
     for (const item of (Array.isArray(requestedWardrobeItems) ? requestedWardrobeItems : []) as WardrobePromptItem[]) {
       if (typeof item?.id === 'string') {
         ratingHints.set(item.id, {

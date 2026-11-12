@@ -106,11 +106,12 @@ Deno.serve(async (req) => {
     // ── Compute per-item average ratings from outfit logs ─────────────────
     const itemRatingAccum: Record<string, number[]> = {}
     logs.forEach((log) => {
-      if (log.rating == null) return
+      const rating = log.rating
+      if (rating == null) return
       log.outfit_items?.forEach((oi) => {
         if (!oi.item_id) return
         if (!itemRatingAccum[oi.item_id]) itemRatingAccum[oi.item_id] = []
-        itemRatingAccum[oi.item_id].push(log.rating)
+        itemRatingAccum[oi.item_id].push(rating)
       })
     })
     const itemRatingAverages: Record<string, { avg: number; count: number; name?: string }> = {}
@@ -183,9 +184,11 @@ Deno.serve(async (req) => {
     const cpwValues = items
       .map((i) => i.cost_per_wear)
       .filter((v): v is number | string => v !== null)
+      .map(Number)
+      .filter(Number.isFinite)
 
     const avgCostPerWear = cpwValues.length
-      ? Math.round((cpwValues.reduce((a: number, b: number) => a + Number(b), 0) / cpwValues.length) * 100) / 100
+      ? Math.round((cpwValues.reduce((a, b) => a + b, 0) / cpwValues.length) * 100) / 100
       : 0
 
     const recentPurchases = items.filter((i) => {

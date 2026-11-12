@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 const jsonHeaders = { "Content-Type": "application/json" };
 
 async function deleteStoragePrefix(
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: Pick<ReturnType<typeof createClient>, "storage">,
   bucket: string,
   prefix: string,
 ): Promise<void> {
