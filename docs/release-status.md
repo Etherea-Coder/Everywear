@@ -256,7 +256,7 @@ unverified. This is not yet a Play release candidate.
 
 | Check | Actual result |
 |---|---|
-| Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 6.7 GiB available after stopping the build, 511/511 MiB swap used, 395 GiB free; the prior 4 GiB Gradle daemon remains; Linux/macOS generated changes preserved |
+| Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 7.3 GiB available, 511/511 MiB swap used, memory PSI avg10/avg60/avg300 at 0.00; an idle 4 GiB Gradle daemon from this checkout remains; Linux/macOS generated changes preserved |
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; Supabase CLI 3.1.0; Deno 2.9.6 exists at `.tooling/deno/node_modules/.bin/deno` but is not on PATH |
 | Dependency resolution | `flutter pub get` completed; the latest offline resolution records `image` as a direct runtime dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **59 passed**, including learning and challenge recovery coverage. |
@@ -499,14 +499,15 @@ grants. No device check was possible because `adb` is absent.
 - [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
   the Supabase-backed reset flow remains unverified without a disposable DB.
 
-**Exact next step:** wait until swap pressure and memory PSI clear before a new
-build attempt; the current-source AAB build filled swap and was stopped. Then
-rebuild the unsigned AAB from current HEAD with one Gradle worker and verify its
-archive/hash; the existing bundle predates `e2085cb`. Obtain an explicitly disposable
-non-production database environment (or authorization to use a local stack)
-to apply the migration chain and run the Storage and concurrent quota fixtures.
-Before any signed or interactive Android release validation, supply public app
-configuration and private upload-signing inputs through the private build
-environment, complete RevenueCat/Play dashboard setup, and run the AAB on a
-physical device/internal tester track. Final Deno type checks remain deferred
-after the two-attempt limit; invoke Deno by its project-local ignored path.
+**Exact next step:** do not retry the AAB while swap remains full. After swap
+pressure clears, rebuild the unsigned AAB from current HEAD with one Gradle
+worker and a conservative heap, then verify its archive/hash; the existing
+bundle predates `e2085cb`. Separately, request an explicitly disposable
+non-production Supabase environment for applying the migration chain and
+running Storage/concurrent quota fixtures; no local stack or production mutation
+is authorized. Before a signed or interactive Android release check, provide
+public app configuration and private upload-signing inputs through the private
+build environment, complete RevenueCat/Play dashboard setup, and run the AAB on
+a physical device/internal tester track. Final protected-function type checks
+remain deferred after the prior two-attempt limit; invoke Deno by its
+project-local ignored path.
