@@ -831,6 +831,7 @@ until the migration baseline and complete platform behaviors have been reviewed.
 
 ## Uptodown free-beta preparation (2026-11-12)
 
+- Local checkpoint: `ff4b58c` (`Prepare gated Uptodown free beta`).
 - Confirmed the authenticated Supabase CLI identity is the Everywear
   organization `ioohmyibnlzfltqcsnkg`. Its project list contains production
   Everywear `qxsdwwdrxoyxmnapuqqv` (active) and unrelated Clameo
