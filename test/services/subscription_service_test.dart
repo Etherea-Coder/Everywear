@@ -1,7 +1,37 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:everywear/services/subscription_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
+  group('session entitlement refresh', () {
+    test('refreshes restored and explicit sign-in sessions only', () {
+      expect(
+        SubscriptionService.shouldVerifyEntitlementForAuthEvent(
+          AuthChangeEvent.initialSession,
+        ),
+        isTrue,
+      );
+      expect(
+        SubscriptionService.shouldVerifyEntitlementForAuthEvent(
+          AuthChangeEvent.signedIn,
+        ),
+        isTrue,
+      );
+      expect(
+        SubscriptionService.shouldVerifyEntitlementForAuthEvent(
+          AuthChangeEvent.tokenRefreshed,
+        ),
+        isFalse,
+      );
+      expect(
+        SubscriptionService.shouldVerifyEntitlementForAuthEvent(
+          AuthChangeEvent.signedOut,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group('subscription verification result', () {
     bool accepted({
       String expected = 'user-a',

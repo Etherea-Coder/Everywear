@@ -735,3 +735,96 @@ source and captured session output, then the current source/tests were
 reformatted and rerun (16/16 focused tests). This reconstructed version is not
 asserted to be byte-identical to the earlier uncommitted files. No tracked
 source or pre-existing generated Linux/macOS changes were removed.
+
+## Recovered backend entitlement security checkpoint (2026-11-12)
+
+- Rechecked production `qxsdwwdrxoyxmnapuqqv` using only explicit
+  `supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` metadata queries.
+  The project identity was reported as Everywear production. `user_profiles`
+  still lacks `subscription_status`; it has nullable `subscription_expires_at`
+  and `revenue_cat_id`. Effective catalog checks reconfirmed anon profile
+  SELECT/UPDATE and authenticated updates to protected tier, expiry, limits and
+  counters. The permissive own-row `ALL` policy still ORs with the ineffective
+  narrow tier policy. Legacy self-upgrade, suggestion/counter and trigger
+  helpers remain executable by anon/authenticated; SECURITY DEFINER helpers
+  have no pinned settings. No quota policy/tables or verified-event RPC exist
+  remotely. No user rows, Storage content, function source text, credentials or
+  production migration history were retrieved or modified.
+- Kept prior migration history intact. The coordinated deployment proposal is
+  ordered: `20261111090000_reconstruct_and_secure_backend.sql`, then
+  `20261111120000_lock_entitlement_mutator_grants.sql`, then
+  `20261112100000_server_ai_action_quotas.sql`. The new lock migration adds the
+  recovered `revenue_cat_id` shape to fresh local chains, revokes every overload
+  of known self-upgrade/quota/counter/trigger helpers (including legacy
+  `consume_ai_quota`), pins privileged paths, asserts unknown protected profile
+  mutators cannot remain client-executable, enforces profile table/column ACL
+  invariants, and grants the exact verified billing-event RPC only to
+  `service_role`. The reconstruction migration protects legitimate profile
+  fields while blocking direct entitlement/counter/limit writes and validates
+  both sides of outfit-item ownership.
+- Added quiet server entitlement verification on restored auth sessions and
+  explicit sign-in, with per-account state invalidation; token refreshes do not
+  trigger repeated checks. This gives existing subscribers a provider-backed
+  path after the fail-closed status migration. The verifier must be deployed
+  before this client release is used against the recovered project.
+- Subscription-state mismatch is explicit: the missing status defaults to
+  `inactive`; no expiry-only, tier-only, or Auth-metadata backfill grants paid
+  access. Existing subscribers must be revalidated by the authenticated
+  RevenueCat server path. Owner review is required to coordinate this temporary
+  fail-closed downgrade and any provider-verified snapshot reconciliation.
+- In a disposable localhost PostgreSQL 17.6 minimal platform harness, the fresh
+  early migration chain plus recovered legacy schema transition, reconstruction,
+  lock and quota migrations applied. The legacy premium/future-expiry profile
+  remained inactive/free until a service-role verified billing event. A
+  synthetic text overload of the legacy self-upgrade routine was revoked; its
+  direct authenticated invocation failed with permission denied. The expanded
+  `supabase/tests/database_security.test.sql` passed **48/48** pgTAP assertions,
+  including own-profile editing, anonymous denial, protected tier/status/expiry,
+  limits/counters, billing and quota isolation, forged metadata, exact service
+  billing updates, duplicate/out-of-order events, and expired/downgraded access.
+  Transaction rollback restored the disposable database's pre-migration test
+  grant; reapplication revoked it. Concurrent quota tests passed one-of-two
+  free burst reservations and three-of-four premium in-flight reservations.
+  This is not full Supabase staging: Auth, PostgREST, Storage, Edge Runtime, and
+  Supabase Storage services, Edge Runtime, and Realtime delivery are outside the
+  harness; the local publication warning confirms logical Realtime delivery was
+  unavailable. The review-only image policy and 11/11 SQL policy assertions
+  also passed against a purpose-built Storage catalog/RLS stub; this did not
+  exercise Supabase Storage APIs, signed URLs, or object byte delivery.
+- Added [`staging-verification-checklist.md`](staging-verification-checklist.md)
+  covering auth/isolation, private image access/deletion, AI entitlement/quotas,
+  RevenueCat sandbox purchase/renewal/cancel/expiry/refund, unpaid checkout
+  return, account switching, and ads remaining disabled. Local Edge Function
+  code includes auth-before-provider handling in `analyze-clothing` and
+  `today-suggestion`, exact server purchase entitlement verification, ordered
+  idempotent webhook RPC use, and checked Storage/account deletion. Those local
+  fixes have not been deployed; recovered production still runs older vulnerable
+  revisions. Buckets remain public. Monetag remains disabled pending publisher
+  approval and supported Android SDK documentation.
+- Rollback is fail-closed: transactional rollback was tested only in the local
+  disposable database. After a committed rollout, use forward corrections or
+  revoke new quota RPC entry points while preserving counters/audit rows. Never
+  restore client self-upgrade/quota grants, broad profile policies, or public
+  image access. There is no production rollback or migration-history repair in
+  this checkpoint.
+- Checks actually performed: production read-only metadata queries; a clean local
+  PostgreSQL 17.6 migration chain; 48/48 pgTAP security/quota assertions; legacy
+  status transition, migration rollback, direct denied overload invocation,
+  free/premium concurrency fixtures; and 11/11 private-image policy assertions
+  against a local Storage catalog/RLS stub. The full Flutter suite passed
+  89/89 once before the final auth-session refresh addition (some existing
+  fallback tests emitted binding/Supabase initialization diagnostics); after
+  that addition its focused subscription tests passed 4/4. Deno pure tests
+  passed 32/32, lint checked 33 files, protected handler type-check passed for
+  nine functions, and project analysis completed with 248 info-level findings
+  and no reported warnings or errors. Targeted analysis after the auth-session
+  edit reported five pre-existing info diagnostics and no warnings/errors.
+  Deno formatting checked 34 files, shell syntax and `git diff --check` passed.
+  No Android build, emulator, production mutation, deployment, paid API call,
+  purchase, or advertising traffic occurred.
+
+**Exact next owner action:** approve an isolated Supabase staging project and
+sandbox RevenueCat configuration, and confirm the customer-safe handling for
+existing subscribers whose new status defaults to inactive. Then run the
+checklist there with synthetic accounts/data and deploy nothing to production
+until the migration baseline and complete platform behaviors have been reviewed.

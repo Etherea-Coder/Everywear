@@ -54,6 +54,71 @@ The recovered project has 10 active functions: `ai-suggestions` v15, `create-sub
 5. Only after those checks, run the reviewed record conversion, apply the policy/bucket cutover, and verify the same matrix against the private setup. Account for CDN/browser caches and old public URLs; toggling a bucket private does not prove already copied bytes were retracted.
 6. Privacy-preserving rollback keeps buckets private and restrictive policies in place. Roll back application code to an owner-authenticated compatibility build, or disable image display/export with explicit unavailable placeholders. Correct bad references from the private audit mapping. Never restore public buckets/policies as rollback.
 
-`20261111090000_reconstruct_and_secure_backend.sql` is now a rewritten, forward-only local proposal: it matches the recovered `style_challenges.type`, `learning_modules.key_learnings text[]`, required `order_index`, `feedback.type/message`, purchase enum/date, profile reset date and `revenue_cat_id` field; it conditionally handles optional legacy counter functions, preserves existing subscription audit rows, and adds ordered/idempotent event metadata. It removes insecure profile policies/grants and self-upgrade, protects server-managed counters, checks both outfit and item ownership, pins/restricts privileged helpers, adds atomic quotas, catalog seeds and required Realtime membership. Storage remains untouched in this migration. Its outer PostgreSQL statements passed a project-local `pglast` grammar parse. This does not validate embedded PL/pgSQL bodies, the clean migration chain, recovered-schema compatibility, or runtime behavior. It has not been executed on a clean local chain or applied remotely and is not approved for production. The remote migration-history relation was absent, so never repair or assume that history.
+`20261111090000_reconstruct_and_secure_backend.sql` is a forward-only local
+proposal: it matches the recovered `style_challenges.type`,
+`learning_modules.key_learnings text[]`, required `order_index`,
+`feedback.type/message`, purchase enum/date and profile reset date; it
+conditionally handles optional legacy counter functions, preserves existing
+subscription audit rows, and adds ordered/idempotent event metadata. It removes
+insecure profile policies/grants and self-upgrade, protects server-managed
+counters, checks both outfit and item ownership, pins/restricts privileged
+helpers, adds catalog seeds and required Realtime membership. Storage remains
+untouched. The following `20261111120000_lock_entitlement_mutator_grants.sql`
+adds/reuses the recovered `revenue_cat_id` column before enabling the server
+billing RPC. The two migrations plus quota migration have now executed in a
+clean local migration-chain harness; this does not prove full Supabase behavior
+or production compatibility. Production remains unchanged. The remote
+migration-history relation was absent, so never repair or assume that history.
 
 The deployed `create-subscription-payment` Stripe function is legacy relative to the RevenueCat client and has no client call site. Its local source has been removed; it remains active in the recovered project until a separate reviewed deployment retires it. Production source snapshots remain ignored under `.tooling/recovery` and were not copied into working files.
+
+## Entitlement security checkpoint (2026-11-12, read-only recheck)
+
+The database query route was explicitly run against `qxsdwwdrxoyxmnapuqqv`
+with `--read-only`; the CLI identified the target as Everywear production.
+Metadata-only queries confirmed that `subscription_status` remains absent,
+`subscription_expires_at` is nullable `timestamptz`, and `revenue_cat_id` is
+nullable `text`. Effective ACL checks returned anon SELECT and UPDATE, plus
+authenticated UPDATE on the table and protected tier/expiry/counter columns.
+The two permissive policies documented above are still present. Catalog
+inspection of every public function whose body references profile/tier or
+quota fields returned the listed tier mutator, suggestion/counter RPCs and
+trigger helpers; every returned overload is executable by anon/authenticated,
+and the SECURITY DEFINER functions have no pinned settings. The read-only
+function inventory showed no `apply_subscription_event` or AI quota RPCs.
+No records, function source text, secret values, or hosted migration history
+were returned in this recheck.
+
+The proposed deployment order is now explicit:
+
+1. `20261111090000_reconstruct_and_secure_backend.sql` removes broad profile
+   policies, protects server-managed columns, checks both owners in outfit
+   links, installs the exact server billing-event path, and reconciles
+   `revenue_cat_id` with `ADD COLUMN IF NOT EXISTS` for fresh local chains.
+2. `20261111120000_lock_entitlement_mutator_grants.sql` adds/reuses the
+   recovered `revenue_cat_id` field before the verified billing RPC can be
+   invoked, then revokes every overload of legacy self-upgrade/quota/counter/
+   trigger helpers (including
+   `consume_ai_quota`), pins remaining SECURITY DEFINER paths, checks for any
+   unknown client-executable protected-profile mutator, and asserts profile
+   ACLs and exact billing RPC grants.
+3. `20261112100000_server_ai_action_quotas.sql` installs the new quota RPCs and
+   only then grants their authenticated entry points.
+
+Existing rows receive `subscription_status='inactive'` when the missing column
+is added. No active status is inferred from a future expiry, premium tier or
+Auth metadata. Existing paid users must be revalidated by the authenticated
+RevenueCat server-verification path. Owner review is required to decide how to
+coordinate this entitlement refresh with rollout; do not restore premium by
+client write or expiry-only backfill. Production migration history is still
+absent at the inspected lookup, so these files are proposals only; never run
+`migration repair`, reset, or apply them to production as part of this work.
+
+The complete code/migration changes are locally exercised in a minimal
+PostgreSQL 17.6 test harness. The 48 pgTAP assertions, legacy status transition,
+overloaded self-upgrade rollback/revocation and direct denied invocation, and
+two-session quota fixtures passed. This is not Supabase staging and does not
+validate Auth, PostgREST grant exposure, Storage, Edge Function deployment,
+Realtime delivery, or every production-only constraint/index. See
+[`staging-verification-checklist.md`](staging-verification-checklist.md) for
+the required non-production proof before any rollout.

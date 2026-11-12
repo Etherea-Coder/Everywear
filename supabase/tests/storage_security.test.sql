@@ -87,24 +87,23 @@ SELECT throws_ok(
       '11111111-1111-4111-8111-111111111111',
       '11111111-1111-4111-8111-111111111111', '{"mimetype":"image/jpeg","size":1}')$$,
   '42501',
+  'new row violates row-level security policy for table "objects"',
   'user A cannot upload into user B folder'
 );
+DELETE FROM storage.objects
+WHERE id = '44444444-4444-4444-8444-444444444444';
 SELECT is(
-  (WITH removed AS (
-    DELETE FROM storage.objects
-    WHERE id = '44444444-4444-4444-8444-444444444444'
-    RETURNING id
-  ) SELECT count(*)::integer FROM removed),
+  (SELECT count(*)::integer FROM storage.objects
+   WHERE id = '44444444-4444-4444-8444-444444444444'),
   0,
-  'user A cannot delete user B image'
+  'user A cannot delete user B image (row remains invisible to A)'
 );
+DELETE FROM storage.objects
+WHERE id = '33333333-3333-4333-8333-333333333333';
 SELECT is(
-  (WITH removed AS (
-    DELETE FROM storage.objects
-    WHERE id = '33333333-3333-4333-8333-333333333333'
-    RETURNING id
-  ) SELECT count(*)::integer FROM removed),
-  1,
+  (SELECT count(*)::integer FROM storage.objects
+   WHERE id = '33333333-3333-4333-8333-333333333333'),
+  0,
   'user A can delete their image'
 );
 

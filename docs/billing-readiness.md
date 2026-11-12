@@ -24,6 +24,7 @@ The recovered production metadata recorded in `docs/recovered-supabase-reconcili
 - `lib/services/revenuecat_web_checkout.dart` supports only explicit `APP_DISTRIBUTION=uptodown` for hosted checkout. It selects a production URL only in a release build and a sandbox URL only in a non-release build.
 - The configured base must be a single-path `https://pay.rev.cat/<token>` URL with no user info, port, query or fragment. The app appends the currently authenticated Supabase UUID as RevenueCat's App User ID. Checkout links or redirect destinations cannot be supplied dynamically.
 - Android and iOS register `io.supabase.everywear://billing-return`. The RevenueCat dashboard success redirect must be set to that exact scheme; RevenueCat appends `app_user_id`. A matching return or application resume invokes the authenticated `verify-purchase` function and refreshes profile/tier providers. The app never trusts the callback as proof of payment.
+- On each restored initial auth session and explicit sign-in, the app now quietly invokes the same server verifier and invalidates tier/profile state only for the still-current account. This supports fail-closed migration of existing profiles whose new `subscription_status` starts inactive. Token refresh does not trigger another provider request. This local client path still depends on deploying the protected verifier; current production function is not safe for this client behavior.
 - Production and sandbox URL defines are separate. Release builds reject the sandbox selector. The server also requires `REVENUECAT_EXPECTED_ENVIRONMENT` and verifies RevenueCat's `is_sandbox` subscription field; webhook events with a different or missing environment do not change production entitlements. Use a separate non-production Supabase project and RevenueCat project for end-to-end sandbox verification.
 - Subscription management reads the SDK's RevenueCat `managementURL` while identity is bound to the Supabase UUID and opens only recognized RevenueCat-hosted management origins. If the provider returns no supported URL, the UI reports it unavailable. RevenueCat Billing's customer portal is also linked from provider emails.
 - Uptodown builds show provider-hosted subscription options instead of fabricated monthly/yearly prices. Missing app keys, entitlement, selected link, or unsupported distribution leaves checkout unavailable.
@@ -57,3 +58,18 @@ For a non-release sandbox build only, use `REVENUECAT_BILLING_ENVIRONMENT=sandbo
 - Hosted web product prices are rendered by the RevenueCat page, not fetched into the app before browser launch. This avoids mismatching currency/localization and avoids claiming unconfigured prices; the app does not preselect a product/package.
 - Web purchase launch is prepared, but it remains unavailable until public SDK/entitlement and a correct production link are built in. The backend expected-environment configuration and compatible Edge Function deployment are also required before any live transaction should be attempted.
 - Current local production environment cannot be used to accept sandbox entitlements. Sandbox purchase verification requires an isolated staging backend/project; local sandbox UI alone is not a security boundary.
+
+## Existing-account entitlement migration note
+
+The recovered production profile has `subscription_expires_at` and
+`revenue_cat_id`, but no `subscription_status`. The reviewed additive schema
+sequence creates the missing status as `inactive`; it intentionally does not
+infer active premium from legacy tier, future expiry, or user metadata. This
+fails closed but can temporarily remove existing customers' premium access
+until their authenticated account completes the exact-entitlement server
+verification. Coordinate migration with a tested sign-in/refresh path in an
+isolated staging project. The owner must confirm that this temporary downgrade
+and revalidation sequence is acceptable, and whether to schedule a provider
+snapshot reconciliation for current subscribers. Any reconciliation must use
+verified RevenueCat data; do not backfill from expiry alone or accept client
+claims. Production remains unchanged.

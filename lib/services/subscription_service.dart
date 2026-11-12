@@ -1,6 +1,7 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import './revenuecat_service.dart';
 import './supabase_service.dart';
 import './revenuecat_web_checkout.dart';
@@ -25,6 +26,13 @@ class SubscriptionActionResult {
 
 class SubscriptionService {
   static bool _storeOperationInProgress = false;
+
+  /// Sessions restored at startup and explicit sign-ins must refresh the
+  /// server-owned entitlement after legacy billing fields are migrated.
+  static bool shouldVerifyEntitlementForAuthEvent(AuthChangeEvent event) =>
+      event == AuthChangeEvent.initialSession ||
+      event == AuthChangeEvent.signedIn;
+
   SubscriptionService({RevenueCatWebCheckout? webCheckout})
     : _webCheckout = webCheckout ?? RevenueCatWebCheckout.shared;
 

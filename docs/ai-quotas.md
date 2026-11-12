@@ -74,8 +74,9 @@ concurrency checks, and monthly/daily/burst increments. It derives access from
 grace-period, and cancelled profiles require a non-null future expiry to obtain
 premium limits; missing expiry fails closed to free. Legacy client-callable AI
 quota functions are revoked. This migration depends on the
-reviewed subscription fields in the preceding recovery migration and has not
-been reconciled against or applied to production.
+reviewed subscription fields in the preceding recovery migration and must be
+installed only after the entitlement ACL hardening migration
+`20261111120000_lock_entitlement_mutator_grants.sql`.
 
 All five model-backed handlers authenticate with Supabase Auth before reading
 protected data or invoking providers. They reserve only after request parsing,
@@ -90,15 +91,21 @@ feature input/output ceilings and modeled costs.
 
 1. Reconcile the full migration chain against the recovered database, including
    exact `user_profiles` subscription column names/status semantics, existing
-   quota RPC consumers, and privileges. Do not rewrite or reset history.
+   quota RPC consumers, and privileges. Do not rewrite or reset history. Apply
+   `20261111090000_reconstruct_and_secure_backend.sql`, then
+   `20261111120000_lock_entitlement_mutator_grants.sql`, and only then
+   `20261112100000_server_ai_action_quotas.sql`; the quota RPCs are not approved
+   before protected entitlement fields and every legacy mutator are secured.
 2. Apply the migration to an isolated disposable staging database, then run
-   `supabase/tests/database_security.test.sql` and
-   `supabase/tests/concurrent_quota.sh` there. The SQL fixture currently has
-   29 assertions, including missing-expiry downgrade, and the shell fixture
-   refuses non-loopback database hosts. Both fixtures passed in the minimal
-   local PostgreSQL 17.6 harness documented below. They still need to run in a
-   disposable full Supabase staging environment because the local harness does
-   not implement the complete Auth, PostgREST, Storage, or Realtime services.
+   `supabase/tests/database_security.test.sql`,
+   `supabase/tests/legacy_entitlement_transition.sh`, and
+   `supabase/tests/concurrent_quota.sh` there. These fixtures refuse non-loopback
+   database hosts where applicable. Local runs passed 48 pgTAP assertions, the
+   legacy profile/status transition and rollback checks, and free/premium
+   concurrent reservation limits in a minimal PostgreSQL harness. They still
+   need to run against a disposable full Supabase staging environment because
+   the harness does not implement complete Auth, PostgREST, Storage, or
+   Realtime behavior.
 3. Deploy all five handler revisions and the migration to a staging project
    together. A handler without the RPC fails closed (AI unavailable), which
    preserves cost safety but interrupts AI.
@@ -160,7 +167,7 @@ to `127.0.0.1:55432` (Unix socket under `/tmp/everywear-pg-sock`). pgTAP 1.3.3
 was installed into that local toolchain. No system packages/root, shared
 PostgreSQL service, Docker, or production project were changed.
 
-The clean disposable `everywear_security` database applied the complete local
+The clean disposable `everywear_security` database applied the earlier local
 migration chain with only the Supabase platform prerequisites represented:
 roles `anon`/`authenticated`/`service_role`, a minimal `auth.users` table,
 `auth.uid()` backed by the test JWT claim setting, Supabase-like default table
@@ -170,7 +177,7 @@ installation. PostgreSQL warned that `wal_level` is insufficient for logical
 replication; publication membership SQL applied, but actual Realtime delivery
 was not tested.
 
-Results:
+Results from the earlier checkpoint:
 
 - All 29 pgTAP assertions passed, including two-user RLS isolation, protected
   tier writes, cross-account outfit/item link rejection, grants, request replay
@@ -186,9 +193,58 @@ Results:
   concurrency script to parse psql's boolean output, and added the missing
   local expiry-column prerequisite.
 
-These results verify migration/RPC behavior in this representative local
+These earlier results verify migration/RPC behavior in this representative local
 PostgreSQL harness only. They do not prove compatibility with every recovered
 production object, that production privileges match the local baseline, or
 that hosted quotas are enforced. Do not deploy until the recovered schema,
 migration history, Supabase platform behavior, and staging rollout are
 reviewed.
+
+## Entitlement security reconciliation (2026-11-12)
+
+The recovered project was rechecked through the explicit read-only query route
+for reference `qxsdwwdrxoyxmnapuqqv`. The metadata confirms that
+`user_profiles.subscription_status` is absent; `subscription_expires_at` and
+`revenue_cat_id` are nullable timestamps/text as already documented. Effective
+privilege checks confirm anon SELECT/UPDATE and authenticated table/column UPDATE
+on protected tier, expiry, counters, and limits. The two permissive profile
+policies remain, so the narrow tier policy does not constrain the broad own-row
+`ALL` policy. Catalog inspection found the legacy self-upgrade, arbitrary-UUID
+suggestion/counter routines, and trigger helpers still executable by anon and
+authenticated; the SECURITY DEFINER versions have no pinned search path. No
+quota objects or verified-event RPC exist remotely. No records, object contents,
+function bodies, secrets, or hosted migration history were retrieved or
+changed.
+
+The reviewed local sequence now has a dedicated
+`20261111120000_lock_entitlement_mutator_grants.sql` after the recovered-shape
+reconstruction and before the quota migration. It scans every overload of the
+legacy upgrade/quota/trigger helper names, revokes anon/authenticated/service
+execution, pins remaining SECURITY DEFINER paths, asserts no unknown
+client-callable routine updates protected profile state, validates protected
+column/table grants, and restores execute only to the exact service-role
+verified billing-event function. The reconstruction migration now explicitly
+adds `revenue_cat_id text` only when absent, preserving the recovered field and
+allowing its billing RPC to compile on a fresh local schema.
+
+For legacy rows, adding `subscription_status` gives `inactive`; no migration
+infers a paid status from a future `subscription_expires_at`, `tier`, Auth
+metadata, or client cache. This safely removes entitlement until the server
+verifies a current RevenueCat snapshot/event. Existing legitimate subscribers
+must sign in and complete authenticated server verification; any migration
+backfill from a verified provider snapshot requires an owner-approved plan and
+must not be replaced by an expiry-only inference.
+
+Fresh local execution applied the early chain, constructed a recovered-shape
+legacy profile without `subscription_status`, added a synthetic
+`upgrade_user_to_premium(text)` overload, then applied reconstruction,
+entitlement-lock, and quota migrations. The transition confirmed stale legacy
+premium+future-expiry data becomes inactive/free, while a verified service-role
+event updates premium state. Transaction rollback restored only the disposable
+database's prior overload grant; the committed migration then revoked it, and a
+direct authenticated invocation failed with SQLSTATE `42501`. The expanded
+`database_security.test.sql` passed **48/48** assertions; the two-session free
+burst fixture passed one-success/one-denial, and four simultaneous premium
+reservations passed three-success/one-concurrency-denial. This remains a minimal
+PostgreSQL harness, not full Supabase staging. The warning that `wal_level` is
+not logical means publication SQL was exercised but Realtime delivery was not.

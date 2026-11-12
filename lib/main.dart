@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -117,6 +118,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   bool _isInitialized = false;
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _appLinkSubscription;
+  StreamSubscription<AuthState>? _authStateSubscription;
   String? _activeBillingRefreshUserId;
   String? _queuedBillingRefreshUserId;
   String? _lastBillingReturnUri;
@@ -130,6 +132,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(_listenForBillingReturn());
+    _listenForSubscriptionRefresh();
     _initializeApp();
   }
 
@@ -137,7 +140,37 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_appLinkSubscription?.cancel());
+    unawaited(_authStateSubscription?.cancel());
     super.dispose();
+  }
+
+  void _listenForSubscriptionRefresh() {
+    if (!SupabaseService.isInitialized) return;
+    final currentUserId = SupabaseService.instance.client.auth.currentUser?.id;
+    if (currentUserId != null) {
+      // Supabase may emit initialSession before this widget subscribes.
+      unawaited(
+        _refreshSubscriptionFromBackend(currentUserId, showFeedback: false),
+      );
+    }
+    _authStateSubscription = SupabaseService
+        .instance
+        .client
+        .auth
+        .onAuthStateChange
+        .listen((state) {
+          if (!SubscriptionService.shouldVerifyEntitlementForAuthEvent(
+            state.event,
+          )) {
+            return;
+          }
+          final userId = state.session?.user.id;
+          if (userId != null) {
+            unawaited(
+              _refreshSubscriptionFromBackend(userId, showFeedback: false),
+            );
+          }
+        });
   }
 
   Future<void> _listenForBillingReturn() async {
@@ -186,7 +219,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     await _refreshSubscriptionFromBackend(userId);
   }
 
-  Future<void> _refreshSubscriptionFromBackend(String expectedUserId) async {
+  Future<void> _refreshSubscriptionFromBackend(
+    String expectedUserId, {
+    bool showFeedback = true,
+  }) async {
     if (_activeBillingRefreshUserId == expectedUserId) return;
     if (_lastBillingRefreshUserId == expectedUserId &&
         _lastBillingRefreshAt != null &&
@@ -223,7 +259,8 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
             ref.invalidate(userProfileProvider);
           }
         }
-        if (mounted &&
+        if (showFeedback &&
+            mounted &&
             _isInitialized &&
             SupabaseService.instance.client.auth.currentUser?.id == userId) {
           final l10n = AppLocalizations.of(context);
