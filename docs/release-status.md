@@ -248,9 +248,11 @@ grants. No device check was possible because `adb` is absent.
   coordinated in any future rollout. The local function now returns generic
   client errors while retaining detailed server logs. Nothing was deployed.
 - Run the new pgTAP fixture and migration chain against a clean non-production
-  schema, then run `storage_security.test.sql` after the reviewed cutover. Add a
-  two-session concurrent quota proof; the current quota fixture only proves
-  sequential calls in one session.
+  schema, then run `storage_security.test.sql` after the reviewed cutover. A
+  two-session harness at `supabase/tests/concurrent_quota.sh` is prepared for
+  simultaneous free-tier suggestion and coach calls; it refuses non-loopback
+  database hosts and remains unexecuted. Both calls should yield one success
+  and one denial per quota kind.
 - The locally built AAB has been rechecked: SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5` and archive integrity match the recorded artifact. It predates `e2085cb`, is unsigned, and lacks the private upload key. Device/network behavior,
   timezone/permission behavior, accessibility and export runtime checks remain
   pending. The optional local debug APK build was deferred when swap filled; no
@@ -354,6 +356,9 @@ grants. No device check was possible because `adb` is absent.
   until swap pressure clears.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
+- [x] Prepare concurrent two-session quota regression harness for disposable
+  loopback database; syntax checked only, execution deferred until a local
+  database is permitted and available.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
@@ -366,11 +371,13 @@ grants. No device check was possible because `adb` is absent.
 - [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
   the Supabase-backed reset flow remains unverified without a disposable DB.
 
-**Exact next step:** start an explicitly disposable local Supabase database
-when the no-Docker restriction is lifted and run the migration chain, then run
-the Storage fixture after the review cutover plus a two-session concurrent
-quota proof. Before any signed or interactive
-Android release validation, supply public app configuration and private upload
-signing inputs through the private build environment, complete RevenueCat/Play
-dashboard setup, and run the AAB on a physical device/internal tester track.
-Final Deno type checks remain deferred after the two-attempt limit.
+**Exact next step:** after current swap pressure clears, rebuild the unsigned
+AAB from current HEAD with a single Gradle worker and verify its archive/hash;
+the existing bundle predates `e2085cb`. Then obtain an explicitly disposable
+non-production database environment (or authorization to use a local stack)
+to apply the migration chain and run the Storage and concurrent quota fixtures.
+Before any signed or interactive Android release validation, supply public app
+configuration and private upload-signing inputs through the private build
+environment, complete RevenueCat/Play dashboard setup, and run the AAB on a
+physical device/internal tester track. Final Deno type checks remain deferred
+after the two-attempt limit; Deno is also absent from the current PATH.
