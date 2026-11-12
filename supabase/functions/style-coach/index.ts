@@ -1,7 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createGeminiRequest } from '../_shared/gemini_request.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
-const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -194,14 +194,11 @@ If relevant, reference recent outfits to avoid repeats or build on successful lo
 Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "prep_tip"`
     }
 
-    const geminiResponse = await fetch(`${GOOGLE_API_URL}?key=${googleAiApiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const geminiRequest = createGeminiRequest(GEMINI_MODEL, googleAiApiKey, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
-      }),
     })
+    const geminiResponse = await fetch(geminiRequest)
 
     if (!geminiResponse.ok) {
       const err = await geminiResponse.text()

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { extractGeminiText, parseAiInsights } from "./ai_response.ts";
+import { createGeminiRequest } from "../_shared/gemini_request.ts";
 
 type WardrobeItem = {
   id: string;
@@ -24,7 +25,6 @@ type OutfitLog = {
 };
 
 const GEMINI_MODEL   = 'gemini-2.5-flash-lite'
-const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -306,14 +306,11 @@ Return exactly this structure:
   ]
 }`
 
-    const geminiResponse = await fetch(`${GOOGLE_API_URL}?key=${googleAiApiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const geminiRequest = createGeminiRequest(GEMINI_MODEL, googleAiApiKey, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { maxOutputTokens: 800, temperature: 0.4 },
-      }),
     })
+    const geminiResponse = await fetch(geminiRequest)
 
     if (!geminiResponse.ok) {
       const err = await geminiResponse.text()

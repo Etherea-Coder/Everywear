@@ -1,7 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createGeminiRequest } from '../_shared/gemini_request.ts'
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite'
-const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -60,10 +60,7 @@ Deno.serve(async (req) => {
 }
 Respond with ONLY the JSON, no other text.`
 
-    const geminiResponse = await fetch(`${GOOGLE_API_URL}?key=${googleAiApiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const geminiRequest = createGeminiRequest(GEMINI_MODEL, googleAiApiKey, {
         contents: [{
           parts: [
             { text: prompt },
@@ -71,8 +68,8 @@ Respond with ONLY the JSON, no other text.`
           ]
         }],
         generationConfig: { maxOutputTokens: 200, temperature: 0.1 },
-      }),
     })
+    const geminiResponse = await fetch(geminiRequest)
 
     if (!geminiResponse.ok) {
       const err = await geminiResponse.text()
