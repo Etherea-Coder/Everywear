@@ -15,11 +15,11 @@ Last updated: 2026-11-12
 
 ## Milestones
 
-1. **Reproducible Flutter/Android build** — toolchain pinned and current-source unsigned bundle built; signing, provider configuration and device validation remain pending. The default analyzer reports 249 informational lints; the CI gate permits infos while keeping warnings fatal and passed locally.
+1. **Reproducible Flutter/Android build** — toolchain pinned and current-source unsigned bundle built; signing, provider configuration and device validation remain pending. The default analyzer reports informational lints; the CI gate permits infos while keeping warnings fatal and passed locally.
    - Pin Flutter 3.35.7 (Dart 3.9-compatible) in `.fvmrc`.
    - Track `pubspec.lock`; add the Flutter SDK `integration_test` dependency.
    - Resolve the duplicate Gradle DSL configuration without changing the active package identity (`com.stylewise.app`) until Play and RevenueCat registrations are confirmed.
-   - Stale test sources were repaired; the current sequential suite passed 59 tests, including learning outage/save, challenge relation, and localization coverage. Targeted analysis of changed reset, notification, AI payload/client, splash screen, challenge, learning, image/export/storage and billing files reports no issues. The latest project-wide analysis run emitted 249 informational diagnostics, 0 warnings and 0 errors. The CI analyzer gate allowing infos while keeping warnings fatal passed locally. Two bundle attempts failed on the generated dev-only integration plugin reference; after adding the release-only no-op shim, an unsigned AAB at that checkpoint passed archive integrity inspection. The artifact predates `e2085cb`; it does not represent current HEAD. A debug APK and a later single-worker current-source AAB attempt were stopped when swap filled; no APK or current-source AAB was produced. The AAB lacks public provider values and upload signing, and was not installed or run.
+   - Stale test sources were repaired; the current sequential suite passed 59 tests, including learning outage/save, challenge relation, and localization coverage. Targeted analysis of changed reset, notification, AI payload/client, splash screen, challenge, learning, image/export/storage and billing files reports no issues. The CI analyzer gate passed with 245 informational diagnostics, 0 warnings and 0 errors. An unsigned AAB from current source commit `04a57bc` built successfully with one Gradle worker and a 2 GiB heap; ZIP integrity passed and SHA-256 is `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`. It has no upload signing or public app defines and was not installed or run. An earlier debug APK attempt was deferred under swap pressure; `adb` remains unavailable.
 2. **Complete, secure Supabase backend** — schema proposal reconciled to read-only production metadata; execution/security proof pending
    - Inventory the app's tables, RPCs, Storage, Realtime and Edge Function contract.
    - Add forward-only migrations and local security fixtures.
@@ -34,7 +34,7 @@ Last updated: 2026-11-12
    - Bind purchases to the Supabase UUID and harden server verification/webhooks.
 5. **Android release candidate** — unsigned local AAB available; signed/provider-configured release and runtime validation pending
    - Accessibility, notifications/timezone, reporting opt-out and signing configuration.
-   - Previously built AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,532,620 bytes, SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`; archive integrity passed. It predates `e2085cb`, is unsigned and must be rebuilt for current HEAD after resource pressure clears. Private upload-signing inputs are also required.
+   - Current AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,959,486 bytes, SHA-256 `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`; archive integrity passed. It is unsigned and not device-tested. Private upload-signing inputs and app/provider configuration are also required.
 
 ## External inputs (only when dependent work reaches them)
 

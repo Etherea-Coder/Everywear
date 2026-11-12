@@ -4,12 +4,12 @@ Last updated: 2026-11-12
 
 ## Current classification
 
-Recovery is in progress on `recovery/android-v1`. Focused Flutter tests and
-partial earlier Deno checks passed locally. The latest project-wide Flutter
-analyzer run exited 1 with 249 informational diagnostics and no warnings or
-errors; the revised local CI gate succeeds while retaining fatal warnings and
-errors. The unsigned AAB predates `e2085cb`, so it is not a bundle of current
-HEAD or uploadable as a signed Play release; it has not been run on a device.
+Recovery is in progress on `recovery/android-v1`. The current Flutter suite
+passes 59 tests; the CI analyzer gate succeeds with 245 informational
+diagnostics and no warnings or errors. Deno pure tests, lint, and all protected
+handler type checks now pass locally. The unsigned AAB was built from current
+source commit `04a57bc`; it is not uploadable as a signed Play release and has
+not been run on a device.
 Clean-database validation,
 private-image runtime behavior, provider setup, and Play eligibility remain
 unverified. This is not yet a Play release candidate.
@@ -130,8 +130,16 @@ unverified. This is not yet a Play release candidate.
   that screen; daily-log and outfit-history rating flows remain available.
 - `505c5730dcbd4ea6dba65938e0eeb4b9fbfcbf64` — records the rating-demo
   removal and its focused route/import checks in this status document.
-- This work pass also built and inspected an unsigned AAB after the release shim
-  and cheaper Flutter checks passed; the artifact is ignored under `build/`.
+- `8140241d29e1e0729cdba6ee230eabe32881be66` — records the current full
+  Flutter suite and CI analyzer gate results.
+- `5055140fd15a2a4df9e79966d347e83e09d9cc43` — records the current Deno
+  pure tests and lint results before the protected-handler type check was fixed.
+- `04a57bc26c38ef1c4938eef5b19498b6af94ca87` — fixes protected-handler type
+  errors, selects the Supabase Deno config in CI, and bounds style-coach rating
+  hints with focused pure tests.
+- This work pass built an unsigned current-source AAB from `04a57bc`; archive
+  integrity passed and signing was disabled because private upload-signing
+  inputs are absent. Full artifact details are below.
 
 ## 1. Completed local code changes
 
@@ -184,6 +192,10 @@ unverified. This is not yet a Play release candidate.
   and event outfit fields); unneeded raw model text is no longer returned.
   Invalid JSON/unsupported modes fail before quota use, and missing Gemini
   configuration no longer consumes the atomic coach quota.
+- `style-coach` now accepts only finite outfit averages from 1–5 and bounded
+  safe-integer rating counts when building its model-facing item list. Invalid
+  hints are dropped; regression tests cover null/malformed values, score/count
+  bounds, descending order, and the five-item prompt cap.
 - `today-suggestion` loads its canonical wardrobe through the authenticated
   user's RLS-protected `wardrobe_items` query, using recovered table columns.
   It merges only rating hints tied to those database IDs, omits image paths from
@@ -270,12 +282,12 @@ unverified. This is not yet a Play release candidate.
 | Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; Supabase CLI 3.1.0; Deno 2.9.6 exists at `.tooling/deno/node_modules/.bin/deno` but is not on PATH |
 | Dependency resolution | `flutter pub get` completed; the latest offline resolution records `image` as a direct runtime dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **59 passed**, including learning and challenge recovery coverage. |
-| Flutter analyzer | Latest `.tooling/flutter/bin/flutter analyze --no-pub` completed in 6.4 seconds and exited 1 with **249 info, 0 warnings, 0 errors**. Project-wide analysis is not green. Targeted analysis of image/export/storage/billing source and focused tests exited 0 with **No issues found** |
-| CI analyzer severity gate (2026-11-12) | `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited 0; output still reports 249 informational lints, with no warnings/errors. CI workflow now uses this gate; the remote workflow itself has not run |
+| Flutter analyzer | Default `.tooling/flutter/bin/flutter analyze --no-pub` exits 1 on informational diagnostics (latest earlier run: **249 info, 0 warnings, 0 errors**). The CI severity gate on current HEAD exits 0 with **245 info**, no warnings/errors. Targeted analysis of image/export/storage/billing source and focused tests exited 0 with **No issues found** |
+| CI analyzer severity gate (2026-11-12) | `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited 0 on current HEAD; output reports 245 informational lints, with no warnings/errors. The remote workflow itself has not run |
 | Targeted Dart analysis | `.tooling/flutter/bin/dart analyze` on the changed reset, notification, helper, and focused test files — initially reported four infos in `notification_service.dart`; after cleanup, rerun exited 0 with **No issues found!** |
 | Deno formatting | `.tooling/deno/node_modules/.bin/deno fmt --check supabase/functions/delete-account/index.ts` passed. A combined default-format check of `delete-account`, `generate-ai-insights` and `ai-suggestions` reports the latter two files not formatted; legacy single-quote/no-semicolon options also report formatting differences. No mass formatting churn was applied |
-| Deno type checks | Earlier checks passed `check-and-request-suggestion`, `delete-account`, `today-suggestion`, `style-coach`, `analyze-clothing`, `revenuecat-webhook`, and `verify-purchase`. The deletion function was later changed to check and paginate outfit-link cleanup and has not been rechecked. `generate-ai-insights` exposed nullable query results and was patched with `?? []`; it was not rechecked. `ai-suggestions` was not reached. Two check attempts were used; further type-checking is deferred |
-| AI request validation | Dart payload tests passed **3/3**; Deno validation tests passed **5/5** with `--no-remote`; `deno fmt --check` passed on the new pure validator and test. `ai-suggestions/index.ts` keeps the repository's existing style and remains un-typechecked after the earlier check deferral |
+| Deno protected-function type check | The first current full check exposed nullable/union handling issues plus that CI did not select `supabase/functions/deno.json`. Those issues and the CI command were fixed. `.tooling/deno/node_modules/.bin/deno check --config supabase/functions/deno.json` then passed on all nine protected handlers, including `delete-account`, `generate-ai-insights`, `ai-suggestions`, and `verify-purchase` |
+| AI request validation | Dart payload tests passed **3/3**; Deno validation tests passed **5/5** with `--no-remote`; `deno fmt --check` passed on the pure validator and test. The handler now also passes the configured protected-function type check |
 | Edge Function lint/tests (2026-11-12) | Initial targeted lint found 24 explicit `any` annotations and five inline dependency imports. After replacing those patterns, project-local Deno 2.9.6 lint passed on `delete-account`, `generate-ai-insights`, `ai-suggestions`, `verify-purchase` and pure helper tests. Combined no-remote request, insight and entitlement tests passed **13/13**. Pure helper formatting checks passed; `delete-account` formatting check passed |
 | Read-only recovered schema | Production identity reverified. Read-only metadata query confirmed `revenue_cat_id text`, `suggestions_reset_at date`, nullable integer counters and nullable timestamptz expiry. Follow-up Storage metadata query confirmed `storage.objects.owner uuid`, `owner_id text`, nullable `bucket_id`/`name`, `metadata jsonb`, and `id` defaulting to `gen_random_uuid()`. The two image buckets remain public with no MIME/size restrictions; `anon` and `authenticated` have table CRUD grants on `storage.objects`, so row isolation depends on RLS and public bucket visibility currently permits public reads. Read-only policy catalog confirms two public SELECT policies (one `PUBLIC`, one `anon`) plus authenticated owner policies; no customer rows, Storage contents or secrets queried |
 | Hosted operations | Read-only only. No migrations/history repair, settings, buckets/policies, records, functions or provider configuration changed |
@@ -298,7 +310,8 @@ unverified. This is not yet a Play release candidate.
 | Current Edge Function CI steps (2026-11-12) | Reran the exact CI pure-test file list after the anchor-slot fix: **26 passed**. `deno lint supabase/functions` passed across **23 files**; `deno check --no-remote` and `deno fmt --check` passed on all six pure validation helpers/tests; `git diff --check` passed. No remote database/provider call was made. Protected handler type-check and CI workflow execution remain deferred |
 | Outfit rating placeholder removal (2026-11-12) | `.tooling/flutter/bin/dart analyze lib/routes/app_routes.dart` reported **No issues found**. `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/app_import_smoke_test.dart` passed **1/1**, verifying app entry and transitively imported screens compile. This does not test device behavior |
 | Current-HEAD Flutter regression and CI analyzer rerun (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` passed **59/59**. `.tooling/flutter/bin/flutter analyze --no-pub --no-fatal-infos --fatal-warnings` exited **0** with **245 info** diagnostics and no warning/error diagnostics. No build, device, database, provider, or purchase behavior was tested |
-| Current-HEAD Edge Function pure checks (2026-11-12) | Project-local Deno **2.9.6** ran the exact CI no-remote pure test list: **26 passed, 0 failed**; `deno lint supabase/functions` passed across **23 files**. No function handler type-check, network call, database operation, or provider request was performed |
+| Current-HEAD Edge Function verification (2026-11-12) | Project-local Deno **2.9.6** ran the CI no-remote pure test list plus rating-hint cases: **29 passed, 0 failed**; `deno lint supabase/functions` passed across **25 files**; formatting passed for the new helper/test; `deno check --config supabase/functions/deno.json` passed all **9 protected handlers**. Deno fetched module/type files from esm.sh; no function handler was executed, and no database/provider operation was performed |
+| Current-source Android release bundle (2026-11-12) | `./gradlew :app:bundleRelease --no-daemon --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError'` succeeded in **1m26s** (33 tasks executed, 738 up-to-date). Produced `build/app/outputs/bundle/release/app-release.aab` from source commit `04a57bc`: **76,959,486 bytes**, SHA-256 `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`. `unzip -t` passed; `jarsigner -verify` reported **jar is unsigned**. Gradle reported release signing disabled because `android/key.properties` is absent. No public app defines, device install, or runtime test was performed |
 | AI request/quota ordering (2026-11-12) | Full Deno lint passed across **23 files** and the no-remote tests passed **26/26** after request validation was moved ahead of quota use. `deno check --no-remote` passed for pure response helpers/tests; no network or database call was made. Edge Function handler type-check remains deferred |
 | Recovered wardrobe schema (2026-11-12) | `.tooling/supabase/node_modules/.bin/supabase db query --remote=qxsdwwdrxoyxmnapuqqv --read-only` against `information_schema.columns` confirmed `wardrobe_items` includes `semantic_label`, `wear_count`, `image_url`, and `last_worn`, but not `color` or `times_worn`. Only metadata was queried; no account rows or Storage content were read and no hosted changes were made |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
@@ -340,11 +353,9 @@ grants. No device check was possible because `adb` is absent.
   diagnostics, 0 warnings and 0 errors. CI now allows info-level lints while
   keeping warnings fatal; that configured gate passed locally. The remote CI
   workflow itself has not run.
-- Deno check has two failed attempts: first found `today-suggestion` unknown
-  catch typing (fixed with generic client error), second found nullable data in
-  `generate-ai-insights` (fixed with `?? []`). Do not claim those final fixes
-  verified. `ai-suggestions` type check and full CI remain pending. Its five
-  pure request validation tests pass without remote imports.
+- The remote CI workflow has not run. Local pure tests, lint, and protected
+  function type checks pass; this does not execute handlers or validate
+  authentication, quota, database, or provider behavior at runtime.
 - The local `ai-suggestions` client contract now sends `imageBase64`; recovered
   production still uses `imageUrl`. Keep those client/function versions
   coordinated in any future rollout. The local function now returns generic
@@ -355,18 +366,19 @@ grants. No device check was possible because `adb` is absent.
   simultaneous free-tier suggestion and coach calls; it refuses non-loopback
   database hosts and remains unexecuted. Both calls should yield one success
   and one denial per quota kind.
-- The locally built AAB has been rechecked: SHA-256 `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5` and archive integrity match the recorded artifact. It predates `e2085cb`, is unsigned, and lacks the private upload key. Device/network behavior,
-  timezone/permission behavior, accessibility and export runtime checks remain
-  pending. The optional local debug APK build was deferred when swap filled; no
-  debug APK exists, and `adb` is not installed for local device validation.
+- Current source commit `04a57bc` now has a fresh unsigned AAB at
+  `build/app/outputs/bundle/release/app-release.aab`, 76,959,486 bytes, SHA-256
+  `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`;
+  ZIP integrity passed. `jarsigner` confirms it is unsigned. The private upload
+  key and `android/key.properties` are absent. Device/network behavior,
+  timezone/permission behavior, accessibility, and export runtime checks remain
+  pending; `adb` is not installed.
 - No purchase, restore, RevenueCat webhook, production deployment, Play tester
   transaction, database migration or private bucket cutover was executed.
-- Deno 2.9.6 is available at the project-local ignored path. The pure request
-  request, insight-parser and entitlement tests pass 13/13, and targeted Deno
-  lint passes on the affected functions. Final type-checking remains deferred
-  after the earlier two attempts; no type-check success is claimed for the last
-  edits to `delete-account`, `generate-ai-insights`, `ai-suggestions` or
-  `verify-purchase`.
+- Deno 2.9.6 is available at the project-local ignored path. The current pure
+  test set passes 29/29, lint passes across 25 files, and all nine protected
+  function handlers pass `deno check` using the explicit functions config. No
+  handler has been invoked against a database or provider.
 
 ## 4. Provider setup, risks and blockers
 
@@ -443,8 +455,9 @@ grants. No device check was possible because `adb` is absent.
   private bucket state, and user A/user B read/upload/delete owner isolation;
   the fixture assumes private cutover policies are installed only in the
   disposable test database and remains unexecuted.
-- [ ] Finish Deno verification after the two-attempt deferral; resolve any
-  remaining type errors without `@ts-nocheck`.
+- [x] Type-check all nine protected Edge Function handlers with the explicit
+  Supabase functions import map; fix nullable data handling and ensure the CI
+  command uses the same config. All nine now type-check without `@ts-nocheck`.
 - [x] Rerun project-wide Flutter analysis after the earlier warning cleanup;
   latest run exited 1 with 249 infos, 0 warnings and 0 errors. Targeted
   analysis for image/export/storage/billing sources and focused tests passed.
@@ -455,27 +468,25 @@ grants. No device check was possible because `adb` is absent.
   notification scheduling: 4/4; AI payload: 3/3;
   Deno request validation: 5/5; app import: 1/1; image/app import selection:
   12/12.
-- [x] Rebuild the release AAB after the learning recovery source change; that
-  bundle passed archive integrity and is unsigned with no Supabase/RevenueCat
-  build values. It predates `e2085cb`; rebuilding current HEAD remains pending
-  until swap pressure clears. A current-source attempt stopped when swap filled
-  and created no new bundle.
+- [x] Build and verify a current-source release AAB from `04a57bc` with one
+  Gradle worker and a 2 GiB heap. ZIP integrity passed; it is unsigned because
+  private upload-signing inputs are absent. Hash and exact build results are
+  recorded in the checks table; it was not installed or run.
 - [ ] Validate migration on non-production schema and prepare isolated security
   fixtures; production stays read-only.
 - [x] Prepare concurrent two-session quota regression harness for disposable
   loopback database; syntax checked only, execution deferred until a local
   database is permitted and available.
 - [x] Replace insight aggregation's explicit `any` types, bound untrusted Gemini
-  response fields, and add pure parser tests. Deno lint and 9 no-remote tests
-  passed; function type-check remains deferred.
+  response fields, and add pure parser tests. Deno lint/tests and the protected
+  handler type-check now pass.
 - [x] Extract RevenueCat exact-entitlement/date evaluation into a pure helper;
-  malformed date data fails closed. Four focused tests pass. The final Edge
-  Function source remains un-typechecked after the two-attempt deferral.
+  malformed date data fails closed. Four focused tests pass and the handler
+  passes the current protected-function type check.
 - [x] Keep Gemini API keys out of URL query strings in analyze-clothing,
   today-suggestion, style-coach, and generate-ai-insights; the shared request
   helper regression test passed 1/1 without network access. Full-function lint
-  passed across the helper and four Gemini handlers after a follow-up cleanup;
-  type-check/deployment remain deferred.
+  and protected-handler type checks pass; deployment remains deferred.
 - [x] Add the pure no-remote Edge Function test set to CI, including Gemini
   request construction. The focused Gemini test passed locally; the workflow
   itself has not run.
@@ -497,7 +508,8 @@ grants. No device check was possible because `adb` is absent.
 - [x] Validate analyze-clothing image inputs and Gemini output; reject malformed
   or oversized input before quota use, verify provider configuration before
   quota use, and return bounded contract fields with generic errors. Four pure
-  regression cases pass; handler type-check/runtime validation remains deferred.
+  regression cases pass; handler type-check passes. Runtime/provider validation
+  remains deferred.
 - [x] Validate style-coach modes and JSON before quota use; check Gemini
   configuration before consuming coach quota. Today-suggestion similarly checks
   request/provider configuration and confirms the authenticated wardrobe before
@@ -508,9 +520,9 @@ grants. No device check was possible because `adb` is absent.
 - [x] Re-run the complete Flutter tests sequentially and the configured
   CI-equivalent analyzer on current HEAD after removing the dead route: **59/59**
   tests passed; analyzer exited 0 with **245 infos**, no warnings or errors.
-- [x] Re-run the exact CI no-remote Deno pure test set and full Edge Function
-  lint on current HEAD: **26/26** tests passed; lint checked **23 files**.
-  Protected handler type-checking remains deferred after its earlier attempts.
+- [x] Re-run current Edge Function CI checks on current HEAD: **29/29** no-remote
+  tests passed, lint checked **25 files**, new files passed formatting, and all
+  nine protected handlers passed `deno check` with the explicit config path.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
@@ -523,16 +535,14 @@ grants. No device check was possible because `adb` is absent.
 - [x] Verify the paginated in-app reset cleanup helper: 3 focused tests passed;
   the Supabase-backed reset flow remains unverified without a disposable DB.
 
-**Exact next step:** the Flutter suite/analyzer and Edge Function pure tests/lint
-now pass on current HEAD. Do not retry the AAB while swap remains nearly full.
-After memory pressure clears, rebuild the unsigned AAB from current HEAD with
-one Gradle worker and a conservative heap, then verify its archive/hash; the
-existing bundle predates `e2085cb`. Separately, request an explicitly disposable
-non-production Supabase environment for applying the migration chain and
-running Storage/concurrent quota fixtures; no local stack or production mutation
-is authorized. Before a signed or interactive Android release check, provide
-public app configuration and private upload-signing inputs through the private
-build environment, complete RevenueCat/Play dashboard setup, and run the AAB on
-a physical device/internal tester track. Final protected-function type checks
-remain deferred after the prior two-attempt limit; invoke Deno by its
-project-local ignored path.
+**Exact next step:** current source has a built, hash-verified unsigned AAB, and
+the Flutter/Deno test and analysis gates pass locally. The next database step is
+to obtain an explicitly disposable non-production Supabase environment for the
+migration chain and Storage/concurrent-quota fixtures; production remains
+read-only and no local stack is authorized. Before a signed or interactive
+Android release check, provide public app configuration and private
+upload-signing inputs through the private build environment, complete
+RevenueCat/Play dashboard setup, and run the AAB on
+a physical device/internal tester track. Type-checking the handlers does not
+prove runtime auth/quota behavior; those still need disposable-database and
+provider tests.
