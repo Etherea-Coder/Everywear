@@ -667,3 +667,71 @@ device.
   upload-signing inputs and a physical Android device are still required for a
   signed artifact and runtime check. Targeted tests and source checks do not
   prove live provider, database, or device behavior.
+
+## Quota database and advertising checkpoint (2026-11-12)
+
+- Read-only recovered-project inspection reconfirmed project reference
+  `qxsdwwdrxoyxmnapuqqv`. Remote `user_profiles` has
+  `subscription_expires_at` but lacks `subscription_status`; quota tables and
+  quota RPCs are absent. The current remote profile policy/grants and legacy
+  self-upgrade RPC remain unsafe. Exact metadata and migration-history
+  limitations are recorded in [`ai-quotas.md`](ai-quotas.md). No hosted
+  migration, policy, record, or function changed.
+- Added `20261110090000_add_subscription_expiry_prerequisite.sql`, an additive
+  no-op on recovered schema that completes fresh local migration chains. Local
+  PostgreSQL 17.6 revealed an ambiguous `burst_limit` variable in
+  `get_ai_allowance()`; the quota RPC query now qualifies policy columns.
+  Corrected pgTAP expected-error arguments and the concurrency fixture's
+  boolean parsing. The premium concurrency scenario now independently checks
+  its in-flight cap.
+- A project-local PostgreSQL 17.6 and pgTAP 1.3.3 toolchain was built under
+  ignored `.tooling/` and bound only to localhost. In a minimal Supabase
+  platform harness, the complete local migration chain applied; all 29 pgTAP
+  security/quota assertions passed. Concurrent fixtures produced one success
+  and one denial for two free requests, and three successes/one denial for
+  four simultaneous premium reservations. The fail-closed rollback was tested
+  transactionally. This does not test a full Supabase stack; logical Realtime
+  delivery was not verified because local PostgreSQL's `wal_level` is not
+  logical. Production quotas remain unenforced pending reviewed migration and
+  staging rollout.
+- Added a provider-neutral ad coordinator and focused tests. Monetag and future
+  AdMob can be selected explicitly, but no adapter/SDK initializes; ads remain
+  unavailable unless an adapter is configured. Verified premium access,
+  account changes, explicit granted consent, safe context/lifecycle, successful
+  display frequency, failures, and overlap are gated. Current focused Flutter
+  tests passed 16/16; targeted analysis found only two existing informational
+  brace-style lints and no warnings/errors. Targeted format reported 0 changes;
+  `bash -n` and `git diff --check` passed.
+- Monetag's [Android SDK article](https://monetag.com/blog/app-monetization-with-sdk-for-android-apps-apk/)
+  says its Android SDK supports Flutter/APK and interstitials, but its linked
+  technical docs at `docs.inappi.co` returned HTTP 502. Public
+  `docs.monetag.com` instructions are for Telegram Mini Apps and are not
+  applicable. No guessed SDK, package, placement ID, push format, or fake ad
+  was added. Approval, an accessible official Android/Flutter guide, placements,
+  consent setup, and device/staging checks remain owner/provider inputs.
+  Advertising revenue remains modeled as zero in
+  [`ai-cost-review.md`](ai-cost-review.md).
+- Focused checks in this checkpoint: Flutter ad/tier tests 16/16; targeted
+  Dart analysis: 0 warnings/errors, 2 info diagnostics; local PostgreSQL 17.6
+  migration/RPC/pgTAP 29/29; free and premium concurrent reservation fixtures
+  passed; rollback revocation/transaction rollback passed; shell syntax,
+  targeted Dart format, and `git diff --check` passed. No project-wide analysis,
+  full test suite, native build, emulator, Docker, production mutation,
+  deployment, or ad traffic was run.
+
+**Next exact step:** complete final local diff review and checkpoint the quota
+fixes, tests, ad scaffolding, and readiness notes in separate commits. Before
+any backend rollout, reconcile the full recovered schema and migration history,
+then use an isolated full Supabase staging project for migration, RLS, Storage,
+Realtime, and Edge Function integration tests. Before enabling Monetag, obtain
+the account-generated supported Android/Flutter integration guide, approved
+Uptodown app/placement setup, and consent requirements; keep ads disabled until
+those are validated.
+
+During local PostgreSQL setup, an untracked ad scaffold/test directory and the
+new advertising-readiness document were accidentally removed along with
+configure-generated files. They were reconstructed from the inspected working
+source and captured session output, then the current source/tests were
+reformatted and rerun (16/16 focused tests). This reconstructed version is not
+asserted to be byte-identical to the earlier uncommitted files. No tracked
+source or pre-existing generated Linux/macOS changes were removed.

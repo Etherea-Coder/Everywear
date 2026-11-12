@@ -15,7 +15,6 @@ import '../core/tier_limits.dart';
 class UserTierService {
   SupabaseClient get _supabase => SupabaseService.instance.client;
 
-  @visibleForTesting
   static bool hasVerifiedPremiumAccess({
     required String? tier,
     required String? status,
@@ -24,7 +23,7 @@ class UserTierService {
   }) {
     if (tier != 'premium') return false;
     final instant = now ?? DateTime.now().toUtc();
-    if (expiresAt == null) return status == 'active';
+    if (expiresAt == null) return false;
     final expiry = DateTime.tryParse(expiresAt);
     if (expiry == null) return false;
     if (status == 'active') return expiry.isAfter(instant);

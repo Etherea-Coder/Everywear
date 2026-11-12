@@ -107,6 +107,14 @@ The 20/200 monthly, 3/20 daily, and 1/5 per-minute server policy is a reasonable
 
 Before product creation, establish Google API eligibility/key and paid tier, OpenRouter account/key/routing access (without using production photos for a smoke test), and response quality with consented synthetic/staging examples. Run staging traffic to measure provider-reported input, output, and thought tokens plus error/timeout/call rates. Confirm owner Stripe activation, merchant country, actual payment method fees and VAT/tax setup, RevenueCat plan, and Supabase actual bill. Only then decide whether proposed €2.99/€24.99 pricing and these limits are commercially viable.
 
+## Advertising revenue assumption
+
+Advertising contributes **€0** to every scenario in this review. Monetag has no
+verified Everywear adapter, placement, approval, test traffic, or payout, and
+the accessible official Android SDK article does not establish the actual
+Flutter integration API. Do not offset AI or hosting cost with projected ad
+revenue until an approved integration has measured staging results.
+
 ## Official sources
 
 Checked 2026-11-12:
