@@ -4,13 +4,24 @@ Last updated: 2026-11-12
 
 This document is derived from application code and Edge Functions. It is a living contract; it does not treat the incomplete historical migrations as authoritative.
 
-The original Supabase project has been recovered. The forward migration in this branch is a reconciliation proposal, not an approved hosted migration. It must be compared with the recovered schema, policies, buckets, publications, functions, and existing data before any deployment.
+The original Supabase project has been recovered. Production
+`qxsdwwdrxoyxmnapuqqv` remains strictly read-only. The reviewed forward migration
+chain has been applied only to the owner-approved isolated staging project
+`aftdbphdobfrshienple`; see [release status](release-status.md) for exact
+deployment and synthetic integration evidence. Staging behavior does not prove
+production state or authorize production migration.
 
 ## Recovered project facts (read-only, 2026-11-11)
 
 The linked production project `qxsdwwdrxoyxmnapuqqv` was inspected using the Docker-free Supabase CLI read-only query path as `supabase_read_only_user` on PostgreSQL 17.6. The exact tables, policies, function/trigger inventory, bucket settings, grants, relationships, and deployed-function defects are recorded in [recovered-supabase-reconciliation.md](recovered-supabase-reconciliation.md). In brief: all 16 public app tables enable RLS but none forces it; the current profile policy/grants permit self-editing all protected columns; the self-upgrade SECURITY DEFINER RPC is present and callable; outfit links check outfit ownership only; counter helpers are callable; the Realtime publication has no tables; and both Storage buckets are public. These are production risks, not locally verified fixes.
 
-The local forward migration has been reconciled to the recovered column names and types where metadata was available, but it remains an unexecuted review proposal. In particular it reuses the recovered `revenue_cat_id text` field and `suggestions_reset_at date`, and adds only missing subscription state/event fields and app relations. The `supabase_migrations.schema_migrations` relation was absent in the read-only lookup; migration history was not modified. Do not use `db push` or repair history against production.
+The local forward migration was reconciled to the recovered column names and
+types where metadata was available. It reuses `revenue_cat_id text` and
+`suggestions_reset_at date`, and adds missing subscription state/event fields
+and app relations. All nine migrations are present in staging history. The
+production `supabase_migrations.schema_migrations` relation was absent in the
+read-only lookup; production migration history was not modified. Do not use
+`db push` or repair history against production.
 
 The `wardrobe_items` column inventory was rechecked read-only on 2026-11-12.
 It includes `id`, `user_id`, `name`, `category`, `image_url`,
