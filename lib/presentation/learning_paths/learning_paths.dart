@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
-import 'package:everywear/core/utils/app_localizations.dart';
 import '../../core/app_export.dart';
 
 import '../../widgets/custom_app_bar.dart';
@@ -11,16 +10,20 @@ import './widgets/module_card_widget.dart';
 import './widgets/progress_header_widget.dart';
 
 class LearningPaths extends StatefulWidget {
-  const LearningPaths({Key? key}) : super(key: key);
+  const LearningPaths({super.key, this.learningService});
+
+  final LearningService? learningService;
 
   @override
   State<LearningPaths> createState() => _LearningPathsState();
 }
 
 class _LearningPathsState extends State<LearningPaths> {
-  final LearningService _learningService = LearningService();
+  late final LearningService _learningService =
+      widget.learningService ?? LearningService();
 
   bool _isLoading = true;
+  bool _loadFailed = false;
   List<Map<String, dynamic>> _modules = [];
   List<Map<String, dynamic>> _achievements = [];
   Map<String, dynamic> _stats = {
@@ -37,22 +40,32 @@ class _LearningPathsState extends State<LearningPaths> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    final results = await Future.wait([
-      _learningService.fetchModulesWithProgress(),
-      _learningService.getUserLearningStats(),
-    ]);
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    try {
+      final results = await Future.wait([
+        _learningService.fetchModulesWithProgress(),
+        _learningService.getUserLearningStats(),
+      ]);
 
-    final modules = results[0] as List<Map<String, dynamic>>;
-    final stats = results[1] as Map<String, dynamic>;
-    final achievements = _learningService.deriveAchievements(stats);
+      final modules = results[0] as List<Map<String, dynamic>>;
+      final stats = results[1] as Map<String, dynamic>;
+      final achievements = _learningService.deriveAchievements(stats);
 
-    if (mounted) {
+      if (!mounted) return;
       setState(() {
         _modules = modules;
         _stats = stats;
         _achievements = achievements;
         _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadFailed = true;
       });
     }
   }
@@ -131,6 +144,11 @@ class _LearningPathsState extends State<LearningPaths> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
+          : _loadFailed
+              ? RefreshIndicator(
+                  onRefresh: _loadData,
+                  child: _buildLoadError(theme),
+                )
           : RefreshIndicator(
               onRefresh: _loadData,
               child: CustomScrollView(
@@ -158,7 +176,7 @@ class _LearningPathsState extends State<LearningPaths> {
                             ),
                           ),
                           SizedBox(
-                            height: 12.h,
+                            height: 18.h,
                             child: ListView.separated(
                               padding:
                                   EdgeInsets.symmetric(horizontal: 4.w),
@@ -167,7 +185,7 @@ class _LearningPathsState extends State<LearningPaths> {
                                   .where((a) =>
                                       a['is_unlocked'] == true)
                                   .length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   SizedBox(width: 3.w),
                               itemBuilder: (context, index) {
                                 final unlocked = _achievements
@@ -275,6 +293,43 @@ class _LearningPathsState extends State<LearningPaths> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildLoadError(ThemeData theme) {
+    final localizations = AppLocalizations.of(context);
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.7,
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(8.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 44,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  localizations.failedToLoadLearning,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge,
+                ),
+                SizedBox(height: 1.5.h),
+                FilledButton.icon(
+                  onPressed: _loadData,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(localizations.retry),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -420,19 +475,52 @@ class _LearningPathsState extends State<LearningPaths> {
                           ),
                         ),
                     SizedBox(height: 3.h),
+                    if (!isCompleted) ...[
+                      Text(
+                        AppLocalizations.of(context).moduleCompletionHint,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      SizedBox(height: 1.h),
+                    ],
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () async {
-                          Navigator.pop(context);
-                          // Mark as started if not already
-                          if (!isCompleted) {
-                            await _learningService
-                                .updateModuleProgress(
-                                    module['id'] as String, 0.1);
-                            _loadData();
+                          if (isCompleted) {
+                            Navigator.pop(context);
+                            return;
                           }
-                          _showComingSoonMessage(context);
+
+                          final saved = await _learningService
+                              .updateModuleProgress(
+                            module['id'] as String,
+                            1.0,
+                          );
+                          if (!mounted) return;
+                          if (!saved) {
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(this.context)
+                                      .failedToSaveModuleProgress,
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (context.mounted) Navigator.pop(context);
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                AppLocalizations.of(this.context)
+                                    .moduleProgressSaved,
+                              ),
+                            ),
+                          );
+                          await _loadData();
                         },
                         style: ElevatedButton.styleFrom(
                           padding:
@@ -440,7 +528,8 @@ class _LearningPathsState extends State<LearningPaths> {
                         ),
                         child: Text(isCompleted
                             ? AppLocalizations.of(context).reviewModule
-                            : AppLocalizations.of(context).startModule),
+                            : AppLocalizations.of(context)
+                                .markModuleComplete),
                       ),
                     ),
                   ],
@@ -585,16 +674,6 @@ class _LearningPathsState extends State<LearningPaths> {
               child:
                   Text(text, style: theme.textTheme.bodyMedium)),
         ],
-      ),
-    );
-  }
-
-  void _showComingSoonMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            AppLocalizations.of(context).moduleComingSoon),
-        duration: Duration(seconds: 2),
       ),
     );
   }

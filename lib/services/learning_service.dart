@@ -9,42 +9,37 @@ class LearningService {
 
   /// Fetch all learning modules with user progress
   Future<List<Map<String, dynamic>>> fetchModulesWithProgress() async {
-    try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) return [];
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('Authentication required');
 
-      final modules = await _client
-          .from('learning_modules')
-          .select()
-          .eq('is_active', true)
-          .order('order_index', ascending: true);
+    final modules = await _client
+        .from('learning_modules')
+        .select()
+        .eq('is_active', true)
+        .order('order_index', ascending: true);
 
-      final userProgress = await _client
-          .from('user_module_progress')
-          .select()
-          .eq('user_id', userId);
+    final userProgress = await _client
+        .from('user_module_progress')
+        .select()
+        .eq('user_id', userId);
 
-      final progressMap = {
-        for (final p in (userProgress as List))
-          p['module_id'] as String: p,
+    final progressMap = {
+      for (final p in (userProgress as List))
+        p['module_id'] as String: p,
+    };
+
+    return (modules as List).map((m) {
+      final progress = progressMap[m['id'] as String];
+      return {
+        ...Map<String, dynamic>.from(m),
+        'progress': progress != null
+            ? (progress['progress'] as num).toDouble()
+            : 0.0,
+        'is_completed': progress?['completed_at'] != null,
+        'started_at': progress?['started_at'],
+        'completed_at': progress?['completed_at'],
       };
-
-      return (modules as List).map((m) {
-        final progress = progressMap[m['id'] as String];
-        return {
-          ...Map<String, dynamic>.from(m),
-          'progress': progress != null
-              ? (progress['progress'] as num).toDouble()
-              : 0.0,
-          'is_completed': progress?['completed_at'] != null,
-          'started_at': progress?['started_at'],
-          'completed_at': progress?['completed_at'],
-        };
-      }).toList();
-    } catch (e) {
-      if (kDebugMode) debugPrint('Error fetching modules: $e');
-      return [];
-    }
+    }).toList();
   }
 
   /// Start or update progress on a module
@@ -74,51 +69,39 @@ class LearningService {
 
   /// Get real user stats needed for unlock logic
   Future<Map<String, dynamic>> getUserLearningStats() async {
-    try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) return _emptyStats();
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('Authentication required');
 
-      final outfitLogsResult = await _client
-          .from('outfit_logs')
-          .select('id')
-          .eq('user_id', userId);
+    final outfitLogsResult = await _client
+        .from('outfit_logs')
+        .select('id')
+        .eq('user_id', userId);
 
-      final wardrobeResult = await _client
-          .from('wardrobe_items')
-          .select('id')
-          .eq('user_id', userId);
+    final wardrobeResult = await _client
+        .from('wardrobe_items')
+        .select('id')
+        .eq('user_id', userId);
 
-      final completedModulesResult = await _client
-          .from('user_module_progress')
-          .select('id')
-          .eq('user_id', userId)
-          .not('completed_at', 'is', null);
+    final completedModulesResult = await _client
+        .from('user_module_progress')
+        .select('id')
+        .eq('user_id', userId)
+        .not('completed_at', 'is', null);
 
-      final outfitsLogged = (outfitLogsResult as List).length;
-      final wardrobeItems = (wardrobeResult as List).length;
-      final completedModules = (completedModulesResult as List).length;
+    final outfitsLogged = (outfitLogsResult as List).length;
+    final wardrobeItems = (wardrobeResult as List).length;
+    final completedModules = (completedModulesResult as List).length;
 
-      // Calculate level based on completed modules
-      final level = (completedModules ~/ 3) + 1;
+    // Calculate level based on completed modules
+    final level = (completedModules ~/ 3) + 1;
 
-      return {
-        'outfits_logged': outfitsLogged,
-        'wardrobe_items': wardrobeItems,
-        'completed_modules': completedModules,
-        'level': level,
-      };
-    } catch (e) {
-      if (kDebugMode) debugPrint('Error fetching learning stats: $e');
-      return _emptyStats();
-    }
+    return {
+      'outfits_logged': outfitsLogged,
+      'wardrobe_items': wardrobeItems,
+      'completed_modules': completedModules,
+      'level': level,
+    };
   }
-
-  Map<String, dynamic> _emptyStats() => {
-    'outfits_logged': 0,
-    'wardrobe_items': 0,
-    'completed_modules': 0,
-    'level': 1,
-  };
 
   // ── ACHIEVEMENTS ────────────────────────────────────────
 

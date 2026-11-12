@@ -750,10 +750,15 @@ class AppLocalizations {
   String get aboutLpPoint1 => translate('about_lp_point1');
   String get aboutLpPoint2 => translate('about_lp_point2');
   String get aboutLpPoint3 => translate('about_lp_point3');
-  String get moduleComingSoon => translate('module_coming_soon');
+  String get failedToLoadLearning => translate('failed_to_load_learning');
   String get keyLearningsTitle => translate('key_learnings_title');
   String get reviewModule => translate('review_module');
   String get startModule => translate('start_module');
+  String get markModuleComplete => translate('mark_module_complete');
+  String get moduleProgressSaved => translate('module_progress_saved');
+  String get moduleCompletionHint => translate('module_completion_hint');
+  String get failedToSaveModuleProgress =>
+      translate('failed_to_save_module_progress');
   String get viewRequirements => translate('view_requirements');
   String get completeRequiredModules => translate('complete_required_modules');
   String get yourProgress => translate('your_progress');

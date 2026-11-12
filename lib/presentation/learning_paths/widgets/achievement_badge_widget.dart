@@ -12,12 +12,12 @@ class AchievementBadgeWidget extends StatelessWidget {
   final bool isUnlocked;
 
   const AchievementBadgeWidget({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     required this.icon,
     required this.isUnlocked,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class AchievementBadgeWidget extends StatelessWidget {
 
     return Container(
       width: 28.w,
-      padding: EdgeInsets.all(3.w),
+      padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
       decoration: BoxDecoration(
         color: isUnlocked
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)

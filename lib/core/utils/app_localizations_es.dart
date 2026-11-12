@@ -782,10 +782,17 @@ const Map<String, String> appLocalizationsEs = {
   'about_lp_point1': 'Registra atuendos y añade prendas para desbloquear nuevos módulos',
   'about_lp_point2': 'Completa módulos para ganar logros y subir de nivel',
   'about_lp_point3': 'Aprende a tu propio ritmo con contenido optimizado para móviles',
-  'module_coming_soon': '¡Contenido del módulo próximamente! Sigue registrando atuendos para desbloquear más.',
+  'failed_to_load_learning':
+      'No se pudo cargar tu progreso de aprendizaje. Comprueba tu conexión e inténtalo de nuevo.',
   'key_learnings_title': 'Aprendizajes Clave',
   'review_module': 'Revisar Módulo',
   'start_module': 'Comenzar Módulo',
+  'mark_module_complete': 'Marcar módulo como completado',
+  'module_progress_saved': 'Módulo completado y progreso guardado.',
+  'failed_to_save_module_progress':
+      'No se pudo guardar el progreso del módulo. Inténtalo de nuevo.',
+  'module_completion_hint':
+      'Revisa el resumen y los puntos clave y marca el módulo como completado.',
   'view_requirements': 'Ver Requisitos',
   'complete_required_modules': 'Completa los módulos requeridos para desbloquear este contenido',
   'your_progress': 'Tu Progreso',

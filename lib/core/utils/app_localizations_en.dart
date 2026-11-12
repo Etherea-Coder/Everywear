@@ -794,10 +794,17 @@ const Map<String, String> appLocalizationsEn = {
   'about_lp_point1': 'Log outfits and add wardrobe items to unlock new modules',
   'about_lp_point2': 'Complete modules to earn achievements and level up',
   'about_lp_point3': 'Learn at your own pace with mobile-optimized content',
-  'module_coming_soon': 'Module content coming soon! Keep logging outfits to unlock more.',
+  'failed_to_load_learning':
+      'Could not load your learning progress. Check your connection and try again.',
   'key_learnings_title': 'Key Learnings',
   'review_module': 'Review Module',
   'start_module': 'Start Module',
+  'mark_module_complete': 'Mark Module Complete',
+  'module_progress_saved': 'Module completed and your progress was saved.',
+  'failed_to_save_module_progress':
+      'Could not save module progress. Please try again.',
+  'module_completion_hint':
+      'Review the overview and key learnings, then mark this module complete.',
   'view_requirements': 'View Requirements',
   'complete_required_modules': 'Complete the required modules to unlock this content',
   'your_progress': 'Your Progress',
