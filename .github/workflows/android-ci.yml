@@ -42,3 +42,10 @@ jobs:
             supabase/functions/style-coach/index.ts \
             supabase/functions/today-suggestion/index.ts \
             supabase/functions/verify-purchase/index.ts
+      - name: Run pure Edge Function regression tests
+        run: |
+          deno test --no-remote \
+            supabase/functions/ai-suggestions/request_validation_test.ts \
+            supabase/functions/generate-ai-insights/ai_response_test.ts \
+            supabase/functions/verify-purchase/entitlement_test.ts \
+            supabase/functions/_shared/gemini_request_test.ts
