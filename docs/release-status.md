@@ -83,6 +83,9 @@ unverified. This is not yet a Play release candidate.
   unsigned AAB predates current HEAD and defers its rebuild under full swap.
 - `d8fc87b3d1baa5309531168aaaace28e23e390ad` — prepares a loopback-only,
   two-session regression for concurrent suggestion and coach quotas.
+- `0a95323d748d6cc1a93499e09fa21949b6fcd117` — removes explicit `any` from
+  insights aggregation, bounds untrusted Gemini output, adds pure tests, and
+  verifies targeted Deno lint plus no-remote tests.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
