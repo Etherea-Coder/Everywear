@@ -104,6 +104,9 @@ unverified. This is not yet a Play release candidate.
 - `487ed3e5537366a6c0098f7456ab01aacc6d7922` — switches the final two Edge
   Functions to the configured Supabase import alias; the full Edge Function
   lint check now passes.
+- `3d725306c96eff2a521965d965e83f0b19090572` — orders isolated Deno tests
+  before protected-function type-checking so a type-check failure does not
+  suppress their independent CI result.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -423,6 +426,8 @@ grants. No device check was possible because `adb` is absent.
 - [x] Clear Deno lint across all 17 Edge Function files by replacing the last
   two inline Supabase imports with the existing import-map alias; full lint and
   all 14 no-remote pure tests passed after the change.
+- [x] Order the CI no-remote Deno test step before protected-function type
+  checks so both results remain independently visible when type-checking fails.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
