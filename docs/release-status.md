@@ -92,6 +92,9 @@ unverified. This is not yet a Play release candidate.
 - `099cec7932dedad970b08fd975ab026ee0cb7d7e` — requires the configured
   RevenueCat entitlement to be an own property and guards prototype-name edge
   cases in the same focused test.
+- `483742c738165636367fcb9f3cee8d9aba1d37ec` — sends Gemini API keys in the
+  `x-goog-api-key` header for all four model-backed functions instead of URL
+  query parameters; adds a no-network request-construction regression test.
 - This work pass also built and inspected an unsigned AAB after the release shim
   and cheaper Flutter checks passed; the artifact is ignored under `build/`.
 
@@ -136,6 +139,12 @@ unverified. This is not yet a Play release candidate.
   and bounds Gemini response fields before returning them. Malformed model
   output falls back safely without logging the response body. The affected
   functions use the project import-map alias and native `Deno.serve`.
+- All four Gemini-backed functions now construct requests through a shared
+  helper that keeps the server API key in `x-goog-api-key`, avoiding key
+  exposure in request URLs and URL-oriented logs. A pure test verifies the
+  request method, body, content type, empty query, and header placement without
+  contacting Google. This local source change still needs a separately reviewed
+  Edge Function deployment.
 - `verify-purchase` now selects only the exact configured entitlement and
   rejects malformed date fields before producing a verified snapshot. Valid
   active, grace-period and no-expiry lifetime cases are covered by pure tests.
@@ -223,6 +232,7 @@ unverified. This is not yet a Play release candidate.
 | Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
 | Focused billing tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/subscription_service_test.dart test/services/serial_operation_queue_test.dart` — **4 passed**. This validates local identity/verification acceptance and serialization helpers; it is not a store purchase test |
 | Deno tests (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts supabase/functions/generate-ai-insights/ai_response_test.ts supabase/functions/verify-purchase/entitlement_test.ts` — **13 passed**, no remote imports or provider calls |
+| Gemini credential transport (2026-11-12) | `.tooling/deno/node_modules/.bin/deno test --no-remote supabase/functions/_shared/gemini_request_test.ts` — **1 passed**, with no network call. Targeted lint and `deno fmt --check` passed for the shared helper/test. Lint over the four full function files reported 8 existing violations (inline JSR imports and `any` usage); none are in the changed request construction. `git diff --check` passed. No type-check or provider call was performed |
 | Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
@@ -393,6 +403,10 @@ grants. No device check was possible because `adb` is absent.
 - [x] Extract RevenueCat exact-entitlement/date evaluation into a pure helper;
   malformed date data fails closed. Four focused tests pass. The final Edge
   Function source remains un-typechecked after the two-attempt deferral.
+- [x] Keep Gemini API keys out of URL query strings in analyze-clothing,
+  today-suggestion, style-coach, and generate-ai-insights; the shared request
+  helper regression test passed 1/1 without network access. Full-function lint
+  still reports legacy violations, and type-check/deployment remain deferred.
 - [x] Update CI/setup/status. Source commits are recorded above; documentation
   and CI changes are committed separately.
 - [x] Clean up replaced/deleted owner-scoped wardrobe images, avoid deleting
