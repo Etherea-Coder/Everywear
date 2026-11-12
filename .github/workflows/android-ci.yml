@@ -40,6 +40,8 @@ jobs:
             supabase/functions/today-suggestion/suggestion_response_test.ts \
             supabase/functions/verify-purchase/entitlement_test.ts \
             supabase/functions/_shared/gemini_request_test.ts
+      - name: Lint Edge Functions
+        run: deno lint supabase/functions
       - name: Type-check protected functions
         run: |
           deno check \
