@@ -71,7 +71,9 @@ class SubscriptionService {
         );
       }
       final result = await RevenueCatService.runForCurrentUser(userId, () async {
-        final purchase = await Purchases.purchasePackage(package);
+        final purchase = await Purchases.purchase(
+          PurchaseParams.package(package),
+        );
         if (SupabaseService.instance.client.auth.currentUser?.id != userId) {
           return const SubscriptionActionResult(
             SubscriptionActionStatus.verificationFailed,
@@ -210,8 +212,9 @@ class SubscriptionService {
         responseBody: response.data,
       );
     } catch (error) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('Backend purchase verification failed: $error');
+      }
       return false;
     }
   }

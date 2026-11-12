@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -228,8 +227,9 @@ class StorageService {
         configured.host.isEmpty ||
         uri.userInfo.isNotEmpty ||
         uri.scheme != 'https' ||
-        uri.origin != configured.origin)
+        uri.origin != configured.origin) {
       return null;
+    }
     final segments = uri.pathSegments;
     if (segments.length < 5 ||
         segments[0] != 'storage' ||

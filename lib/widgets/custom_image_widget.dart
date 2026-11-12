@@ -90,7 +90,7 @@ class CustomImageWidget extends StatelessWidget {
   }
 
   ///build the image with border radius
-  _buildCircleImage() {
+  Widget _buildCircleImage() {
     if (radius != null) {
       return ClipRRect(
         borderRadius: radius ?? BorderRadius.zero,
@@ -102,7 +102,7 @@ class CustomImageWidget extends StatelessWidget {
   }
 
   ///build the image with border and border radius style
-  _buildImageWithBorder() {
+  Widget _buildImageWithBorder() {
     if (border != null) {
       return Container(
         decoration: BoxDecoration(border: border, borderRadius: radius),
@@ -180,7 +180,7 @@ class CustomImageWidget extends StatelessWidget {
     fit: fit,
     imageUrl: url,
     color: color,
-    placeholder: (context, url) => Container(
+    placeholder: (context, url) => SizedBox(
       height: 30,
       width: 30,
       child: LinearProgressIndicator(

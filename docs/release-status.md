@@ -107,6 +107,9 @@ unverified. This is not yet a Play release candidate.
   image URLs; unavailable images do not fail an export. Private image cache keys
   use stable owner paths, are indexed without signed URLs, and are evicted on
   account cleanup and object deletion.
+- The PDF image normalizer's `image` package is now a production dependency,
+  matching its runtime import. Subscription purchases use RevenueCat's current
+  `PurchaseParams.package` API rather than deprecated `purchasePackage`.
 - Challenge history now reads the `style_challenges` relation actually selected
   by the service (instead of the nonexistent `challenges` key), safely skips
   dangling relationships and deduplicates the featured challenge. Read errors
@@ -166,9 +169,9 @@ unverified. This is not yet a Play release candidate.
 
 | Check | Actual result |
 |---|---|
-| Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 8.4 GiB available, 398 GiB free at start; Linux/macOS generated changes preserved |
-| Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; installed ignored project-local Deno 2.9.6; Supabase CLI 3.1.0 |
-| Dependency resolution | `flutter pub get` completed; lockfile updated for the direct image test dependency |
+| Checkout/resources | `recovery/android-v1`; no `AGENTS.md`; 14 GiB RAM, 6.7 GiB available, 509/511 MiB swap used, 395 GiB free; a long-lived 4 GiB Gradle daemon is resident; Linux/macOS generated changes preserved |
+| Toolchain | project Flutter 3.35.7 / Dart 3.9.2; Java 21; Node 22.23; Supabase CLI 3.1.0. `deno` is not available on PATH in this resumed environment; prior Deno checks remain historical results |
+| Dependency resolution | `flutter pub get` completed; the latest offline resolution records `image` as a direct runtime dependency |
 | Full Flutter tests | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1` — **59 passed**, including learning and challenge recovery coverage. |
 | Flutter analyzer | Previous run: 0 errors, 9 warnings, 281 info; the warning sites were edited. Rerun after those edits completed in 5.3 seconds and exited 1 with 273 diagnostics (full output was truncated by the command tool, so the final severity breakdown is not retained). Do not claim project-wide analysis is clean; targeted analysis of changed Dart files previously reported no issues |
 | Targeted Dart analysis | `.tooling/flutter/bin/dart analyze` on the changed reset, notification, helper, and focused test files — initially reported four infos in `notification_service.dart`; after cleanup, rerun exited 0 with **No issues found!** |
@@ -185,10 +188,18 @@ unverified. This is not yet a Play release candidate.
 | Notification scheduler | First test attempt failed because the IANA location was resolved before timezone initialization; setup was corrected. The rerun of `local_notification_schedule_test.dart` passed **4/4**, covering spring-forward, before-08:00, exact-08:00 and invalid-hour cases. `app_import_smoke_test.dart` passed **1/1** after the notification/reset changes |
 | Android AAB | Two initial attempts failed at `compileReleaseJavaWithJavac` because Flutter 3.35.7's generated main registrant contains dev-only `IntegrationTestPlugin`, excluded from release dependencies. After adding the release-only no-op shim, the current source built successfully in 64.8 seconds with one Gradle worker and a 2 GiB heap. `build/app/outputs/bundle/release/app-release.aab` is 76,532,620 bytes; `unzip -tq` passed; `jarsigner -verify` reports `jar is unsigned`. SHA-256: `31c4b88da33b03d06d69935502816daa6f55589461231be20a4a8098fd5d14d5`. No provider values or signing inputs were supplied; no install/device/runtime verification was done. |
 | Debug APK | A local debug APK build was attempted after the AAB. It was stopped after 4m19s when swap reached 511/511 MiB; the build-owned Kotlin daemon was terminated, and no APK was produced. No unrelated processes were stopped. Retry only after resource pressure clears. |
+| Focused image tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/private_image_consumers_test.dart test/services/image_reference_routing_test.dart` — **11 passed**. This uses test doubles; it did not contact production |
+| Focused billing tests (2026-11-12) | `.tooling/flutter/bin/flutter test --no-pub --concurrency=1 test/services/subscription_service_test.dart test/services/serial_operation_queue_test.dart` — **4 passed**. This validates local identity/verification acceptance and serialization helpers; it is not a store purchase test |
+| Deno availability (2026-11-12) | `deno test --no-remote supabase/functions/ai-suggestions/request_validation_test.ts` could not start: `/bin/bash: deno: command not found`. No test was executed by this command |
+| Runtime dependency/API correction (2026-11-12) | `.tooling/flutter/bin/flutter pub get --offline` succeeded and updated the lockfile for direct runtime `image` usage; targeted Dart analysis of image/storage/export/subscription code and regression tests reported **No issues found** after migrating to `Purchases.purchase(PurchaseParams.package(package))` |
 | Device | No emulator/device used; `adb` is unavailable in the current environment, so no physical-device installation or runtime check was possible |
 | Formatting/diff | Targeted Dart formatting; `deno fmt --check` on the new AI validator/test and three earlier functions; `git diff --check` and `git diff --cached --check` passed |
 
-Latest verification: the full serial Flutter suite passed **59/59** after the
+Latest verification: after the dependency/API correction, the focused image
+consumer/routing tests passed **11/11** and the subscription/operation-queue
+tests passed **4/4** on 2026-11-12. Targeted Dart analysis of these source and
+test files reported **No issues found**. The
+latest full serial Flutter suite passed **59/59** after the
 learning recovery change. Learning widget tests passed 3/3 for outage retry,
 failed save, and confirmed success. Pure challenge merge tests passed 3/3; the
 three-locale password-recovery/challenge/learning localization test passed 1/1.
@@ -232,6 +243,9 @@ grants. No device check was possible because `adb` is absent.
   debug APK exists, and `adb` is not installed for local device validation.
 - No purchase, restore, RevenueCat webhook, production deployment, Play tester
   transaction, database migration or private bucket cutover was executed.
+- The resumed shell does not have Deno on `PATH`; the latest attempted pure
+  Deno test did not start. Deno type-checks remain deferred after the earlier
+  two attempts and must be rerun only when the compatible CLI is available.
 
 ## 4. Provider setup, risks and blockers
 
