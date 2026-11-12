@@ -68,6 +68,11 @@ Uptodown release candidate.
 
 ## Local checkpoints
 
+- `e3de01c` — prepares Uptodown hosted checkout with explicit production and
+  sandbox configuration, authenticated Supabase identity, callback-based
+  backend verification, management links, and exact server environment checks;
+  adds focused Flutter and Deno regression coverage. Flutter checkout tests
+  passed 14/14 and targeted Dart analysis reported seven infos only.
 - `395255ba2937c31fd2d486e0ec823c3b0273f125` — recovered-schema-aligned
   security proposal, local-only pgTAP fixture, private image cutover review,
   and protected Edge Function cleanup.
