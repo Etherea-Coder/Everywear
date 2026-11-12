@@ -79,6 +79,10 @@ zero-cost staging project and config are not confirmed.
   identity without confirming existing store/provider registrations.
 - The prior inspected AAB is unsigned, predates current source, and is not a
   release candidate. Do not reuse it as this beta.
+- The existing `build/app/outputs/flutter-apk/app-debug.apk` was inspected with
+  Android `aapt`: it is `com.stylewise.app`, version `1.0.0`, version code `1`,
+  SHA-256 `ea14e9f5511988977d80b9bdd405ab5a49e68623ce8763c68fe5608f6b3d252c`.
+  This is the older pre-beta APK, not a staging artifact; do not distribute it.
 - `android/key.properties` and an upload keystore are absent. Do not generate a
   replacement that could break signing continuity. The owner must privately
   locate and validate the existing signing key before a store-quality signed
@@ -86,9 +90,9 @@ zero-cost staging project and config are not confirmed.
 - A staging debug APK is signed with the local Android debug key and cannot
   upgrade an Uptodown-signed install. Keep it on controlled test devices.
 - Proposed beta version: `1.0.0-beta.1`, Android version code `2` (the previous
-  local AAB used version code `1`). Increment the numeric code for each new
-  artifact. Confirm no external release used this identity/version before
-  distributing.
+  local AAB and existing debug APK use version code `1`). Increment the numeric
+  code for each new artifact. Confirm no external release used this
+  identity/version before distributing.
 
 ## Draft listing copy
 

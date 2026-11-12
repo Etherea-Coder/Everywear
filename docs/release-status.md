@@ -882,9 +882,12 @@ until the migration baseline and complete platform behaviors have been reviewed.
   [`uptodown-free-beta.md`](uptodown-free-beta.md).
 - Not built: no zero-cost staging project or staging config exists, the
   recovered production backend is unsafe and read-only, and no physical
-  Android device/ADB verification is available. No APK artifact or runtime
-  result is claimed. `android/key.properties` and the existing upload signing
-  key are absent, so no signed release artifact can be produced. Privacy,
+  Android device is attached for ADB verification. The existing APK was
+  inspected with `aapt`: it is the old `com.stylewise.app` version `1.0.0`
+  (code 1), SHA-256 `ea14e9f5511988977d80b9bdd405ab5a49e68623ce8763c68fe5608f6b3d252c`,
+  and does not contain this beta source/configuration. No current beta APK or
+  runtime result is claimed. `android/key.properties` and the existing upload
+  signing key are absent, so no signed release artifact can be produced. Privacy,
   deletion, support, data-retention URLs, artwork, and owner-approved handling
   of the legacy premium profile are still needed before public distribution.
 - Checks for this checkpoint: read-only organization/project CLI listing and
