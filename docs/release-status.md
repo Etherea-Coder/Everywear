@@ -299,6 +299,10 @@ also remain unresolved. Google Play publication is deferred.
 
 ## Local checkpoints
 
+- `0cbf2fff0a9ab1b70ea4b1e5e782a316c72bee26` — render a branded first frame
+  before essential service initialization, defer auth and billing-return
+  listeners until Supabase bootstrap, and cover pending startup with a focused
+  widget test. Device symptom remains unverified without an attached device.
 - `aeda62a` — restricts the staging APK helper to
   `aftdbphdobfrshienple` and records a no-build rejection check for an
   unrelated project ref.
@@ -1157,11 +1161,14 @@ evidence above. The no-project/no-APK statements below describe the state on
 - [x] Draft Uptodown listing, notes, and physical-device checks.
 - [x] Obtain owner-approved staging project identity/cost authorization; CLI
   confirmed name, ref, and region. Project's Free status is owner-confirmed.
-- [ ] Create a separate staging worktree and apply the reviewed migrations.
-- [ ] Reconcile/deploy the reviewed migrations and Edge Functions only to that
-  isolated staging project; run two-user Auth, PostgREST, Storage, quota, and
-  Realtime integration checks.
-- [ ] Build the staging APK and smoke-test it on a physical device.
+- [x] Apply the reviewed migration chain and deploy the relevant Edge Functions
+  only to the isolated staging project; run synthetic Auth, PostgREST, Storage,
+  quota, account-deletion, and Realtime checks.
+- [x] Build, archive-check, identify, and hash the staging APK.
+- [ ] Rebuild with the committed first-frame fix, then install and run it on a
+  physical Android device. Capture sanitized logcat if the black screen remains.
+- [x] Add a widget regression test that proves the branded startup screen paints
+  while startup services are still pending.
 - [ ] Resolve legacy premium account evidence/transition and provide privacy,
   deletion, support, and data-retention URLs plus approved artwork.
 - [ ] Locate/validate the existing upload-signing key before any signed
