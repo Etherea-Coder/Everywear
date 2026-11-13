@@ -5,7 +5,7 @@ void main() {
   test(
     'the application entry point and transitively imported screens compile',
     () {
-      expect(const MyApp(), isA<MyApp>());
+      expect(MyApp(), isA<MyApp>());
     },
   );
 }

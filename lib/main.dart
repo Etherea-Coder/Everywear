@@ -49,18 +49,26 @@ void main() async {
     return const SizedBox.shrink();
   };
 
-  // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Keep the first Flutter frame independent of platform/service startup.
+  // Android can otherwise remain on its native launch screen (or black) while
+  // Sentry, Supabase, or Hive are still initializing.
+  unawaited(
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]).catchError((Object error) {
+      if (kDebugMode) debugPrint('Unable to set device orientation: $error');
+    }),
+  );
 
-  // Initial service bootstrapper - Critical services first
-  await _initializeEssentialServices();
+  final essentialServices = _initializeEssentialServices();
+  runApp(ProviderScope(child: MyApp(startupServices: essentialServices)));
 
-  // Run the app after critical services are ready
-  runApp(const ProviderScope(child: MyApp()));
-
-  // Initialize remaining non-critical services in the background
-  _initializeBackgroundServices().catchError((e) {
-    if (kDebugMode) debugPrint('⚠️ Background services init failed: $e');
+  // Non-critical billing initialization follows essential bootstrap and never
+  // gates rendering. Free-beta builds short-circuit this service.
+  essentialServices.then((_) => _initializeBackgroundServices()).catchError((
+    Object error,
+  ) {
+    if (kDebugMode) debugPrint('⚠️ Background services init failed: $error');
   });
 }
 
@@ -68,7 +76,9 @@ void main() async {
 Future<void> _initializeEssentialServices() async {
   // Sentry tracking first
   try {
-    await AnalyticsService.instance.isAnalyticsEnabled();
+    await AnalyticsService.instance.isAnalyticsEnabled().timeout(
+      const Duration(seconds: 2),
+    );
     await SentryFlutter.init((options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
       options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
@@ -77,7 +87,7 @@ Future<void> _initializeEssentialServices() async {
           AnalyticsService.instance.reportingEnabled ? event : null;
       options.beforeSendTransaction = (event, hint) =>
           AnalyticsService.instance.reportingEnabled ? event : null;
-    });
+    }).timeout(const Duration(seconds: 5));
   } catch (e) {
     if (kDebugMode) debugPrint('⚠️ Sentry failed to init: $e');
   }
@@ -108,7 +118,11 @@ Future<void> _initializeBackgroundServices() async {
 }
 
 class MyApp extends ConsumerStatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key, Future<void>? startupServices})
+    : startupServices = startupServices ?? Future<void>.value(),
+      super(key: key);
+
+  final Future<void> startupServices;
 
   @override
   ConsumerState<MyApp> createState() => _MyAppState();
@@ -137,8 +151,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    unawaited(_listenForBillingReturn());
-    _listenForSubscriptionRefresh();
     _initializeApp();
   }
 
@@ -292,6 +304,13 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
   Future<void> _initializeApp() async {
     try {
+      await widget.startupServices;
+      if (!mounted) return;
+      // Attach listeners only after Supabase bootstrap, while checking the
+      // current session handles an initial auth event emitted before listen.
+      unawaited(_listenForBillingReturn());
+      _listenForSubscriptionRefresh();
+
       final results = await Future.wait([
         LocaleManager.getSavedLocale(),
         LocaleManager.getSavedThemeMode(),

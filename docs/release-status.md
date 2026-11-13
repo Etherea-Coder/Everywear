@@ -1,11 +1,107 @@
 # Android release status
 
+## Physical-device startup investigation (2026-11-13)
+
+- Reviewed source at `b23a2e0d71d4ec99f234a15d6e890313c35ad0dc` on `main`.
+  `adb devices -l` reported no attached devices, so the logo-to-black-screen
+  symptom could not be reproduced and no device logcat was captured. The
+  existing staging APK was not rebuilt or installed during this investigation.
+- Confirmed startup defect in the reviewed source: `main()` awaited orientation
+  setup and essential service initialization before `runApp()`. That path
+  awaited stored analytics preference, Sentry initialization (then unbounded),
+  Supabase (10-second timeout), and Hive (5-second timeout). Therefore a
+  stalled plugin/service could prevent Flutter's first frame entirely. This is
+  a confirmed first-frame gate and a credible cause of a launch-screen-to-black
+  transition; it is **not confirmed as the physical device's specific failure**
+  without device logs.
+- Changed startup to call `runApp()` immediately, render the existing branded
+  loading screen while services initialize, bound Sentry initialization to five
+  seconds, and attach auth/billing-return listeners after Supabase bootstrap.
+  Billing background initialization remains after essential bootstrap and the
+  free-beta config keeps it disabled. Added a focused test asserting that the
+  startup screen paints while the injected service future is still pending.
+- Focused Flutter tests passed **2/2** (`main_startup_test.dart` and
+  `app_import_smoke_test.dart`). Targeted analysis of those tests and
+  `lib/main.dart` completed with **five info diagnostics and no warnings or
+  errors**; the diagnostics are existing informational lints. Targeted Dart
+  formatting completed, and `git diff --check` passed after the documentation
+  update. No build, device reproduction, install, or runtime verification was
+  performed. Rebuild and physical-device verification remain necessary before
+  claiming this fixes the reported device symptom.
+
+### Audit finding classifications
+
+- **Confirmed:** `android/app/build.gradle` (`namespace` and `applicationId`),
+  `android/app/src/main/AndroidManifest.xml` (`.MainActivity`), and
+  `android/app/src/main/kotlin/com/everywear/app/MainActivity.kt` (`package
+  com.stylewise.app`) agree on `com.stylewise.app`.
+  The Kotlin file's directory path differs from the declared package but does
+  not change its compiled class package. Do not change application identity.
+- **Confirmed:** the loading image referenced in `lib/main.dart:390` exists in
+  the existing staging APK. `pubspec.yaml:75-77` bundles `assets/images/` and
+  `assets/icons/`; `assets/env.json` is neither listed as an asset nor loaded
+  from app source. The APK contains the startup image and not `assets/env.json`.
+- **Confirmed:** tracked `assets/env.json` has obsolete production-project
+  configuration and a Stripe test publishable value; source checks found no
+  runtime reference to it. Its provider-secret fields are empty. Do not use this
+  file for builds; staging configuration comes from
+  `scripts/build_uptodown_free_beta.sh` and its separate private config. The
+  publishable value is configuration, not a server
+  secret, but the file is stale and should be removed in a separately reviewed
+  cleanup once its ownership/use is confirmed.
+- **Confirmed:** `pubspec.yaml` has no Stripe SDK dependency and app source has
+  no Stripe client call; the `android/app/proguard-rules.pro` Stripe
+  keep/dontwarn entries are stale configuration. The legacy
+  `create-subscription-payment` function is a
+  separate deployed-backend retirement concern already documented in
+  `recovered-supabase-reconciliation.md`.
+- **Confirmed:** `lib/routes/app_routes.dart` registers the premium route and
+  profile/upgrade widgets link to it. In the free-beta build,
+  `lib/services/revenuecat_service.dart` and
+  `lib/services/revenuecat_web_checkout.dart` disable purchases; the Uptodown
+  card in `lib/presentation/premium_upgrade/premium_upgrade.dart` shows
+  the localized unavailable explanation and does not expose a checkout button.
+  This is an unavailable screen, not an absent premium route.
+- **Confirmed:** Monetag/AdMob are not initialized integrations. The beta
+  helper sets the free-beta gate and ads disabled;
+  `lib/services/ads/ad_service.dart` keeps the neutral ad service disabled. No
+  real or placeholder ad is shown.
+- **Partially correct:** manifest camera and location permissions correspond to
+  `outfit_capture_flow.dart`, `photo_capture_section.dart`, and
+  `services/weather_service.dart`. Notification boot receiver is registered in
+  the manifest, while `services/notification_service.dart:221` schedules with
+  `inexactAllowWhileIdle`; exact-alarm and old
+  external-storage declarations have no direct app-code request/use found and
+  need a separate manifest-minimization review. They do not explain startup.
+- **Confirmed:** `.github/workflows/android-ci.yml` runs Flutter analysis,
+  tests, an unsigned release AAB
+  compile, and Deno tests/lint/type checks. Its Android compile has no staging
+  Supabase defines and is compile-only, not a staging runtime check.
+- **Outdated:** `ENVIRONMENT_SETUP.md` (including its partial SQL setup block)
+  instructs creating a new Supabase project,
+  applying a partial hand-written schema, configuring client-side Gemini, and
+  setting up Codemagic. It is historical guidance and conflicts with the
+  recovered production/staging migration workflow. `docs/release-setup.md`
+  describes a future paid release path; it is not the free-beta build recipe.
+- **Unverified:** no physical-device logs, install/startup, permission prompt,
+  network outage, or account flow was observed in this pass. No production
+  behavior was tested or changed.
+
+### Preserved local changes
+
+The pre-existing generated changes remain untouched and unstaged:
+`linux/flutter/ephemeral/.plugin_symlinks/{connectivity_plus,package_info_plus,sentry_flutter,share_plus}`;
+untracked generated `linux/flutter/ephemeral/.plugin_symlinks/geolocator_linux`;
+and the two `macos/Flutter/ephemeral` generated configuration files. No
+platform directory was deleted or broadly ignored.
+
 Last updated: 2026-11-13
 
 ## Current classification
 
-Recovery is in progress on `recovery/android-v1`. The latest code checkpoint is
-`aeda62a`; it restricts the staging APK helper to the exact approved project
+Recovery is in progress on `main`. The reviewed code checkpoint is
+`b23a2e0`; it records the staging APK and is followed by the local startup
+first-frame fix above. The earlier `aeda62a` checkpoint restricts the staging APK helper to the exact approved project
 ref. The preceding `f71efd8` checkpoint records staging deployment/hosted
 checks and the visible staging banner. A sequential full Flutter suite passed
 **94/94** on a prior application checkpoint. A subsequent provider-test isolation change passed
