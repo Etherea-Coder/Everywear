@@ -107,6 +107,27 @@ verification remain pending. The source fix has not been verified on-device.
 - Open the transfer folder from the repository root with
   `xdg-open build/beta-artifacts`.
 
+## Engine-isolation APK
+
+- Path:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-ENGINE-ISOLATION-debug.apk`
+- This test target bypasses the normal app `main.dart`, service initialization,
+  providers, Sentry, Supabase, and startup diagnostic wrappers. It directly
+  renders a blue screen with **EVERYWEAR ENGINE TEST**. Its Android app label is
+  **Everywear Engine Test (STAGING)**, making the APK identifiable in Android
+  app info and the launcher. It retains package `com.stylewise.app` and the same
+  debug certificate so installing it as an update should preserve app data.
+- Size: **197,317,047 bytes**; SHA-256:
+  `5a51428a8f8793adfdd7afde71f54ec269dbbbccfccd5441f68180f80e4a119e`.
+  Archive and signature checks passed. It is a staging-only debug test, not a
+  release artifact.
+- If the blue screen appears, the platform can launch Flutter and draw a Dart
+  first frame; investigate the regular `main.dart` entrypoint and its startup
+  path next. If the label is installed but opening it still shows the native
+  logo/white screen, the failure is below the application services, though the
+  exact native/engine/first-frame cause still needs device logs. This test does
+  not exercise sign-in, staging backend access, or application features.
+
 A separate local-only compile was attempted with free-beta gates enabled and
 Supabase/provider defines explicitly empty. Flutter first selected Android
 Studio JBR 25.0.3 and stopped before compilation. A second attempt temporarily

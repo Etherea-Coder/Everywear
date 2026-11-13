@@ -147,6 +147,65 @@
 - Wireless ADB pairing remains unsuccessful per owner direction; no further
   pairing attempt was made. No physical device/runtime result is claimed.
 
+## Native launch / engine isolation (2026-11-13)
+
+- Owner reports the diagnostic APK still shows a centered Everywear logo on
+  white for over a minute, without diagnostic UI. No device logs are available.
+- Source evidence points to the Android launch screen, not the app's Flutter
+  loader: the manifest starts `.MainActivity` with `LaunchTheme`; its day-mode
+  drawable is a plain white layer with no image, while the Flutter app's
+  non-diagnostic loader is green and the diagnostic screen is navy/orange. The
+  launcher icon is the Android adaptive icon. Android's system launch screen
+  can show that icon centered over the launch background. This is a strong
+  match, not direct screenshot/runtime proof.
+- The manifest uses Flutter's `MainActivity` (`FlutterFragmentActivity`). App
+  source has no `deferFirstFrame`, `allowFirstFrame`, native splash preserve or
+  remove calls. In the diagnostic entrypoint, `WidgetsFlutterBinding` is
+  initialized inside the `runZonedGuarded` callback and `runApp` is called in
+  that same callback/zone. Essential services are started as a future, then
+  `runApp` is invoked without awaiting them; Sentry initialization occurs after
+  an async preference read. Source inspection therefore does not explain a
+  missing first Flutter frame.
+- The previous diagnostic build used the helper with
+  `EVERYWEAR_STARTUP_DIAGNOSTICS=true`; the helper writes that value as a Dart
+  define and its `STARTUP-DIAGNOSTIC` output suffix is selected from the same
+  flag. The archived APK contains the diagnostic screen strings. This confirms
+  the intended build configuration and code payload, not that the phone
+  executed that entrypoint or installed that exact file. The owner-observed
+  absence of the badge remains ambiguous without device logs.
+- Added an isolation entrypoint at `lib/startup_engine_test.dart`. It imports
+  only Flutter Material, calls `runApp` directly, and renders a blue screen with
+  `EVERYWEAR ENGINE TEST`; it does not import `main.dart`, providers, services,
+  Sentry, Supabase, or the diagnostic/startup wrappers. The staging helper has
+  an exclusive engine-test mode that selects this target and sets the Android
+  app label to `Everywear Engine Test (STAGING)`, while retaining application
+  ID `com.stylewise.app`, staging project validation, free-beta gates and the
+  debug signing key.
+- Focused isolation widget test passed **1/1**; targeted analysis reported no
+  issues. Targeted formatting, helper `bash -n`, and `git diff --check` passed.
+  The first Gradle attempt stopped at manifest merge because the new app-label
+  placeholder replaced Flutter's `applicationName` placeholder. This was
+  corrected by merging the placeholder into the existing map; the subsequent
+  build completed and produced the APK below.
+- Isolation APK:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-ENGINE-ISOLATION-debug.apk`;
+  size **197,317,047 bytes**; SHA-256
+  `5a51428a8f8793adfdd7afde71f54ec269dbbbccfccd5441f68180f80e4a119e`.
+  Archive integrity and APK Signature Scheme v2 verification passed. `aapt`
+  confirms label `Everywear Engine Test (STAGING)`, package
+  `com.stylewise.app`, version `1.0.0-beta.1` (code 2), target SDK 36, and the
+  same Android Debug certificate SHA-256 as the diagnostic build. Its kernel
+  contains the engine-test screen string and omits the normal startup/diagnostic
+  stage strings. No physical device was attached; this is not a runtime result.
+- Interpretation: if this APK reaches the blue screen, Android launch,
+  FlutterActivity/engine, the isolated Dart entrypoint, and a Flutter first
+  frame work; the failure is in the normal application entrypoint/startup path
+  or its dependencies. If it remains on the native launch screen, the fault is
+  before this minimal Dart UI: native Activity/plugin registration, engine or
+  Dart startup, first-frame rendering, or failure to install/launch this exact
+  labelled package remain candidates. Neither result alone proves a production
+  fix or tests backend behavior.
+
 ### Preserved local changes
 
 The pre-existing generated changes remain untouched and unstaged:

@@ -59,9 +59,13 @@ defines = {
     "EVERYWEAR_AD_PROVIDER": "disabled",
 }
 diagnostics = os.environ.get("EVERYWEAR_STARTUP_DIAGNOSTICS", "false").strip().lower()
-if diagnostics not in {"true", "false"}:
-    raise SystemExit("EVERYWEAR_STARTUP_DIAGNOSTICS must be true or false.")
+engine_test = os.environ.get("EVERYWEAR_STARTUP_ENGINE_TEST", "false").strip().lower()
+if diagnostics not in {"true", "false"} or engine_test not in {"true", "false"}:
+    raise SystemExit("Startup mode environment values must be true or false.")
+if diagnostics == "true" and engine_test == "true":
+    raise SystemExit("Startup diagnostics and engine isolation modes are exclusive.")
 defines["EVERYWEAR_STARTUP_DIAGNOSTICS"] = diagnostics == "true"
+defines["EVERYWEAR_STARTUP_ENGINE_TEST"] = engine_test == "true"
 pathlib.Path(output_path).write_text(json.dumps(defines))
 PY
 
@@ -74,13 +78,25 @@ artifact_dir="$repo_root/build/beta-artifacts"
 mkdir -p "$artifact_dir"
 diagnostics_enabled="${EVERYWEAR_STARTUP_DIAGNOSTICS:-false}"
 diagnostics_enabled="${diagnostics_enabled,,}"
+engine_test_enabled="${EVERYWEAR_STARTUP_ENGINE_TEST:-false}"
+engine_test_enabled="${engine_test_enabled,,}"
+flutter_args=(build apk --debug --no-pub --dart-define-from-file="$defines_file")
+if [[ "$engine_test_enabled" == "true" ]]; then
+  flutter_args+=(--target=lib/startup_engine_test.dart)
+fi
 (
   cd "$repo_root"
-  "$flutter_bin" build apk --debug --no-pub --dart-define-from-file="$defines_file"
+  if [[ "$engine_test_enabled" == "true" ]]; then
+    export ORG_GRADLE_PROJECT_everywearAppLabel="Everywear Engine Test (STAGING)"
+  fi
+  "$flutter_bin" "${flutter_args[@]}"
 )
 artifact="$artifact_dir/Everywear-Uptodown-Free-STAGING-Beta-${version}-${project_ref}-debug.apk"
 if [[ "$diagnostics_enabled" == "true" ]]; then
   artifact="${artifact%-debug.apk}-STARTUP-DIAGNOSTIC-debug.apk"
+fi
+if [[ "$engine_test_enabled" == "true" ]]; then
+  artifact="${artifact%-debug.apk}-ENGINE-ISOLATION-debug.apk"
 fi
 cp "$repo_root/build/app/outputs/flutter-apk/app-debug.apk" "$artifact"
 sha256sum "$artifact"
