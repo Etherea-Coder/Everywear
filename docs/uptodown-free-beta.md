@@ -139,15 +139,21 @@ unknown.
 
 The new diagnostic target paints its own orange shell before it loads the
 deferred application library. The app label is **Everywear Startup Probe
-(STAGING)**. Its button advances through: load app library; initialize
-reporting; initialize staging Supabase; initialize Hive; construct the
-ProviderScope/MyApp root; mount it and draw its first frame; observe the app
-startup stage for 30 seconds. The orange shell remains around the application
-while it loads. Any displayed failure is limited to an exception class and a
-safe `package:`/`dart:` source location; no raw exception, config or account
-data is shown. The final observation stage lets MyApp's preference loading,
-optional settings and initial AuthGate routing proceed while the probe shell
-continues to show the current internal startup stage.
+(STAGING)**. Its button advances through app-library loading, reporting,
+staging Supabase, Hive, root-widget construction, and root mounting. After the
+mounted app draws its first frame, a 30-second observation starts automatically.
+The shell shows once-per-second operation progress, the app's latest internal
+startup stage, and sanitized failures. It shows an explicit result when
+observation ends. Errors are limited to an exception class and a safe
+`package:`/`dart:` source location; no raw exception, config or account data is
+shown.
+
+The old probe displayed `Starting Flutter` as the app stage immediately after
+loading the deferred library. That was only the diagnostics object's default
+state, not evidence that the app root had mounted. The updated probe suppresses
+that default and shows actual stages beginning with `Waiting for core services`
+when `MyApp` mounts. The nested `ProviderScope`/`MyApp` remains inside the
+outer shell's `Expanded`, so MyApp's `MaterialApp` does not replace the shell.
 
 Install this artifact as an update over Everywear; do not uninstall or clear
 app data. It keeps package `com.stylewise.app` and the Android Debug certificate
@@ -160,8 +166,8 @@ logs, that result still does not identify the native/engine/entrypoint failure.
 
 - APK:
   `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-STARTUP-STAGE-PROBE-debug.apk`
-- Size: **235,145,437 bytes**; SHA-256:
-  `984b69066534a3c852a0efd9b204ff4424bc8bbc9bf16d3c7ede0aba2424a6b1`
+- Size: **235,148,141 bytes**; SHA-256:
+  `dfb21d2aa924a7360db860e98183a5bd2c3e31fd7cbd95174d428a1aa1fdf603`
 - ZIP integrity and APK Signature Scheme v2 passed. Package/version are
   `com.stylewise.app`, `1.0.0-beta.1` (code 2), target SDK 36. The app label is
   verified as above. Debug certificate SHA-256:
@@ -170,6 +176,14 @@ logs, that result still does not identify the native/engine/entrypoint failure.
   purchases and ads disabled, Java 21, one Gradle worker and a 2 GiB heap.
   Build archive/signature checks do not prove runtime behavior. This is a
   diagnostic staging APK, not suitable for public distribution.
+
+After installation, tap through until `Mounting ProviderScope and MyApp`.
+Watch whether its elapsed counter advances, whether the app stage changes
+through preferences and optional settings, and whether the 30-second summary
+appears. A frozen counter suggests the main isolate stopped making frame/timer
+progress at that boundary; a moving counter with a fixed internal stage narrows
+the failure to later startup. Neither result alone names a plugin or establishes
+a production issue.
 
 A separate local-only compile was attempted with free-beta gates enabled and
 Supabase/provider defines explicitly empty. Flutter first selected Android

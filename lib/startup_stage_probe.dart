@@ -87,6 +87,13 @@ class StartupProbeState extends ChangeNotifier {
   Widget? application;
   Widget? pendingApplication;
   String? applicationStage;
+  String? operationStarted;
+  Duration operationElapsed = Duration.zero;
+  bool observationComplete = false;
+  String? observationSummary;
+  bool _appLibraryLoaded = false;
+  Timer? _operationTimer;
+  DateTime? _operationStartedAt;
 
   String get stage =>
       stageIndex < 0 ? 'Flutter first frame visible' : stages[stageIndex];
@@ -104,11 +111,13 @@ class StartupProbeState extends ChangeNotifier {
     if (busy || stageIndex + 1 >= stages.length) return;
     busy = true;
     stageIndex += 1;
+    _startOperationTimer();
     notifyListeners();
     try {
       switch (stageIndex) {
         case 0:
           await app.loadLibrary().timeout(const Duration(seconds: 30));
+          _appLibraryLoaded = true;
           app.startupDiagnosticsForProbe.addListener(_syncAppFailures);
           _syncAppFailures();
         case 1:
@@ -126,25 +135,78 @@ class StartupProbeState extends ChangeNotifier {
         case 4:
           pendingApplication = app.createApplicationForStartupProbe();
         case 5:
+          _startOperationTimer(label: 'Mounting ProviderScope and MyApp');
           application = pendingApplication;
           notifyListeners();
           await WidgetsBinding.instance.endOfFrame.timeout(
             const Duration(seconds: 30),
           );
-        case 6:
-          await Future<void>.delayed(const Duration(seconds: 30));
-          _syncAppFailures();
+          stageIndex = 6;
+          _startOperationTimer(label: 'Observing application startup');
+          observationComplete = false;
+          observationSummary = null;
+          notifyListeners();
+          await observeApplicationStartup();
       }
     } catch (error, stackTrace) {
       record(stages[stageIndex], error, stackTrace);
     } finally {
+      _stopOperationTimer();
       busy = false;
       notifyListeners();
     }
   }
 
+  Future<void> observeApplicationStartup({
+    Duration duration = const Duration(seconds: 30),
+  }) async {
+    final start = DateTime.now();
+    while (DateTime.now().difference(start) < duration) {
+      final remaining = duration - DateTime.now().difference(start);
+      await Future<void>.delayed(
+        remaining < const Duration(seconds: 1)
+            ? remaining
+            : const Duration(seconds: 1),
+      );
+      operationElapsed = DateTime.now().difference(start);
+      if (_appLibraryLoaded) _syncAppFailures();
+      notifyListeners();
+    }
+    if (_appLibraryLoaded) _syncAppFailures();
+    observationComplete = true;
+    final internalStage = applicationStage ?? 'no app stage reported';
+    observationSummary = failures.isEmpty
+        ? 'Observation finished; no sanitized errors were reported. '
+              'Latest app stage: $internalStage.'
+        : 'Observation finished with ${failures.length} sanitized error(s). '
+              'Latest app stage: $internalStage.';
+    notifyListeners();
+  }
+
+  void _startOperationTimer({String? label}) {
+    _operationStartedAt = DateTime.now();
+    operationStarted = label ?? stages[stageIndex];
+    operationElapsed = Duration.zero;
+    _operationTimer?.cancel();
+    _operationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final startedAt = _operationStartedAt;
+      if (startedAt == null) return;
+      operationElapsed = DateTime.now().difference(startedAt);
+      notifyListeners();
+    });
+  }
+
+  void _stopOperationTimer() {
+    _operationTimer?.cancel();
+    _operationTimer = null;
+    operationStarted = null;
+    _operationStartedAt = null;
+  }
+
   void _syncAppFailures() {
-    applicationStage = app.startupDiagnosticsForProbe.value.stage;
+    final stage = app.startupDiagnosticsForProbe.value.stage;
+    // The library's default value predates mounting MyApp and is not progress.
+    if (stage != 'Starting Flutter') applicationStage = stage;
     for (final failure in app.startupFailuresForProbe) {
       if (!failures.contains(failure)) {
         failures.add(failure);
@@ -161,6 +223,12 @@ class StartupProbeState extends ChangeNotifier {
     application = null;
     pendingApplication = null;
     applicationStage = null;
+    operationStarted = null;
+    operationElapsed = Duration.zero;
+    observationComplete = false;
+    observationSummary = null;
+    _appLibraryLoaded = false;
+    _stopOperationTimer();
     failures.clear();
     notifyListeners();
   }
@@ -218,6 +286,18 @@ class StartupStageProbeApp extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (state.operationStarted != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      '${state.operationStarted}: '
+                      '${state.operationElapsed.inSeconds}s',
+                      key: const Key('probe-progress'),
+                    ),
+                  ),
                 if (state.applicationStage != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -236,6 +316,17 @@ class StartupStageProbeApp extends StatelessWidget {
                       state.failures.join('\n'),
                       key: const Key('probe-errors'),
                       style: const TextStyle(color: Color(0xFF9D2A1E)),
+                    ),
+                  ),
+                if (state.observationSummary != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      state.observationSummary!,
+                      key: const Key('probe-observation-result'),
                     ),
                   ),
                 Expanded(

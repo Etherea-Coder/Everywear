@@ -1,5 +1,64 @@
 # Android release status
 
+## Startup probe root-mount boundary (2026-11-13)
+
+- Owner reports the stage probe shows its orange shell and remains at
+  “Starting Flutter app” for over one minute. The repository at `a665131` has
+  **no literal** `Starting Flutter app`; the nearest source string is the
+  default `StartupDiagnosticState.stage == 'Starting Flutter'`. On the old
+  probe, deferred-library stage 0 attached the listener and immediately copied
+  that default into the shell. That label could appear after loading `main.dart`
+  and before the reporting, Supabase, Hive, provider or root-mount stages. It
+  was stale initial state, not proof that root mounting had begun.
+- The actual normal app operation begins in `_MyAppState.initState()` when it
+  calls `_initializeApp()`. That first sets `Waiting for core services`, then
+  awaits the already-completed `Future<void>.value()` passed by the probe,
+  attaches app-link/auth listeners, reads saved locale/theme (diagnostic-mode
+  two-second timeout), sets Riverpod locale/theme, and awaits optional
+  notification and reporting-preference restoration. Once preferences are
+  applied, `MyApp` rebuilds its nested `MaterialApp` with `AuthGate`; the gate
+  then resolves password-recovery, signed-out splash, onboarding, or home from
+  auth/profile providers. None of these source paths establishes which
+  operation is hanging on the phone.
+- The probe shell is the outer `MaterialApp`/`Scaffold`/`Column`; the
+  `ProviderScope` and `MyApp` are children of its `Expanded`. MyApp's nested
+  `MaterialApp` therefore does not replace the outer orange shell. At commit
+  `a665131`, the 30-second observation was a separately tapped final stage. It
+  waited silently, sampled existing state once, and had no completion message
+  or elapsed counter. If root mounting/`endOfFrame` was still pending, that
+  later observation stage had not begun; if it completed, the unchanged stage
+  label could still look like no result.
+- No specific plugin/provider cause is established. Updated only this boundary:
+  the probe now ignores the misleading default stage until MyApp emits a real
+  stage, shows a once-per-second operation timer, and automatically starts its
+  30-second observation after the nested app root's first frame. The outer
+  shell continues to show the app's latest startup stage and sanitized errors;
+  observation completion now produces an explicit summary. If the phone is
+  stuck synchronously during root mounting, the timer's last visible value
+  should stop changing; if startup is asynchronous, it should keep advancing
+  while the internal stage/errors update.
+- Focused probe and startup-diagnostic tests passed **6/6**. Targeted analysis
+  reported **zero warnings/errors** and four existing informational `main.dart`
+  lints. Targeted formatting and `git diff --check` passed.
+- One new APK was built with the approved staging helper/ref, purchases and ads
+  disabled, staging identity visible, Java 21, one Gradle worker and a 2 GiB
+  heap. ZIP integrity and APK v2 verification passed. Path:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-STARTUP-STAGE-PROBE-debug.apk`;
+  size **235,148,141 bytes**; SHA-256
+  `dfb21d2aa924a7360db860e98183a5bd2c3e31fd7cbd95174d428a1aa1fdf603`.
+  Package is `com.stylewise.app`, version `1.0.0-beta.1` (code 2), target 36;
+  its Android Debug certificate SHA-256 remains
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`.
+  Flutter's temporary JDK override was cleared. No installation or phone result
+  for this updated APK is claimed.
+- Next phone check: install this updated APK as an in-place update, confirm
+  **Everywear Startup Probe (STAGING)**, and tap through the stages to mount the
+  root. Observe whether the `Mounting ProviderScope and MyApp` timer advances,
+  whether `Application stage` changes from `Waiting for core services` through
+  preferences/settings, and whether the explicit 30-second result appears. If
+  the timer freezes, capture a screenshot showing its last value. Production
+  remains untouched.
+
 ## Controlled startup probe after engine-isolation result (2026-11-13)
 
 - Reviewed current local source at `7154b7b` on `main`. The owner reports the

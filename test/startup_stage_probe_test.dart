@@ -1,4 +1,5 @@
 import 'package:everywear/startup_stage_probe.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -16,6 +17,38 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Run next stage'), findsOneWidget);
+  });
+
+  testWidgets('probe shell stays visible around the mounted app root', (
+    tester,
+  ) async {
+    final state = StartupProbeState.instance;
+    state.applicationStage = 'Loading saved app preferences';
+    state.application = const MaterialApp(
+      home: Scaffold(body: Text('Nested application root')),
+    );
+
+    await tester.pumpWidget(const StartupStageProbeApp());
+
+    expect(find.text('EVERYWEAR STARTUP PROBE (STAGING)'), findsOneWidget);
+    expect(find.text('Nested application root'), findsOneWidget);
+    expect(
+      find.text('Application stage: Loading saved app preferences'),
+      findsOneWidget,
+    );
+  });
+
+  test('observation reports a visible completion result', () async {
+    final state = StartupProbeState.instance;
+    state.applicationStage = 'Loading saved app preferences';
+
+    await state.observeApplicationStartup(
+      duration: const Duration(milliseconds: 10),
+    );
+
+    expect(state.observationComplete, isTrue);
+    expect(state.observationSummary, contains('Observation finished'));
+    expect(state.observationSummary, contains('Loading saved app preferences'));
   });
 
   test('failure details expose only a safe type and package location', () {
