@@ -5,7 +5,7 @@
 - Reviewed source at `b23a2e0d71d4ec99f234a15d6e890313c35ad0dc` on `main`.
   `adb devices -l` reported no attached devices, so the logo-to-black-screen
   symptom could not be reproduced and no device logcat was captured. The
-  existing staging APK was not rebuilt or installed during this investigation.
+  startup source review preceded the separate APK rebuild recorded below.
 - Confirmed startup defect in the reviewed source: `main()` awaited orientation
   setup and essential service initialization before `runApp()`. That path
   awaited stored analytics preference, Sentry initialization (then unbounded),
@@ -25,9 +25,9 @@
   `lib/main.dart` completed with **five info diagnostics and no warnings or
   errors**; the diagnostics are existing informational lints. Targeted Dart
   formatting completed, and `git diff --check` passed after the documentation
-  update. No build, device reproduction, install, or runtime verification was
-  performed. Rebuild and physical-device verification remain necessary before
-  claiming this fixes the reported device symptom.
+  update. The later APK rebuild below verifies archive/signature only; no
+  device reproduction, install, or runtime verification was performed. The
+  startup fix is not confirmed on the reported device.
 
 ### Audit finding classifications
 
@@ -87,6 +87,30 @@
   network outage, or account flow was observed in this pass. No production
   behavior was tested or changed.
 
+## Corrected staging APK rebuild (2026-11-13)
+
+- Rebuilt current `main` after startup fix commit `0cbf2ff` with
+  `scripts/build_uptodown_free_beta.sh`, explicit approved project ref
+  `aftdbphdobfrshienple`, and the private mode-0600 staging config. The helper
+  forces purchases and ads off and enables the visible staging banner.
+- Used installed Java 21, the project's `org.gradle.jvmargs=-Xmx2G` and
+  `org.gradle.workers.max=1`. Build completed successfully in **31.2 seconds**.
+  Flutter's temporary JDK 21 override was cleared afterward; `flutter doctor`
+  again selected the pre-existing Android Studio JBR 25.0.3 default.
+- APK path:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`;
+  size **197,317,047 bytes**; SHA-256
+  `91a61c5226695a1a99def3de69350c7aed3292698f5de9c1adfb93453028dbaa`.
+- `unzip -t` passed. `aapt` confirms `com.stylewise.app`, version
+  `1.0.0-beta.1` (code 2), target SDK 36. `apksigner verify` passed APK
+  Signature Scheme v2 with the Android Debug certificate SHA-256
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`.
+  This is still a controlled staging test APK, not a public-release artifact.
+- The old same-path APK was preserved at ignored
+  `.tooling/recovery/Everywear-staging-before-startup-fix.apk`. No device was
+  attached, so startup, onboarding/sign-in, and the black-screen symptom remain
+  unverified. No production or hosted project was changed.
+
 ### Preserved local changes
 
 The pre-existing generated changes remain untouched and unstaged:
@@ -99,9 +123,10 @@ Last updated: 2026-11-13
 
 ## Current classification
 
-Recovery is in progress on `main`. The reviewed code checkpoint is
-`b23a2e0`; it records the staging APK and is followed by the local startup
-first-frame fix above. The earlier `aeda62a` checkpoint restricts the staging APK helper to the exact approved project
+Recovery is in progress on `main`. The reviewed startup-gate source was at
+`b23a2e0`; current source includes the first-frame fix in `0cbf2ff`, and the
+corrected staging APK evidence is recorded above. The earlier `aeda62a`
+checkpoint restricts the staging APK helper to the exact approved project
 ref. The preceding `f71efd8` checkpoint records staging deployment/hosted
 checks and the visible staging banner. A sequential full Flutter suite passed
 **94/94** on a prior application checkpoint. A subsequent provider-test isolation change passed
@@ -1165,7 +1190,7 @@ evidence above. The no-project/no-APK statements below describe the state on
   only to the isolated staging project; run synthetic Auth, PostgREST, Storage,
   quota, account-deletion, and Realtime checks.
 - [x] Build, archive-check, identify, and hash the staging APK.
-- [ ] Rebuild with the committed first-frame fix, then install and run it on a
+- [ ] Install the rebuilt APK with the committed first-frame fix and run it on a
   physical Android device. Capture sanitized logcat if the black screen remains.
 - [x] Add a widget regression test that proves the branded startup screen paints
   while startup services are still pending.

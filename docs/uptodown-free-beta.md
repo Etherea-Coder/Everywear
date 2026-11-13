@@ -58,19 +58,27 @@ was cleared after the build.
 
 - Path:
   `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`
+- Rebuilt from `main` after the first-frame startup fix in commit `0cbf2ff` on
+  2026-11-13 using the approved staging-only helper, project ref
+  `aftdbphdobfrshienple`, purchases/ads disabled, and staging banner enabled.
+- Build used Java 21, one Gradle worker and a 2 GiB Gradle heap. Flutter's
+  temporary Java override was cleared afterward; default Android Studio JDK
+  selection was restored.
 - Size: **197,317,047 bytes**
-- SHA-256: `63e279122694cea641dace7bb963e642b9ebb777d03fdc97e0ee402ec7f2f73e`
+- SHA-256: `91a61c5226695a1a99def3de69350c7aed3292698f5de9c1adfb93453028dbaa`
 - Identity: `com.stylewise.app`, version `1.0.0-beta.1`, code 2, target SDK 36
 - Signing: Android Debug certificate, SHA-256
   `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`;
   APK Signature Scheme v2 verified
 - Archive check: `unzip -t` passed; `aapt dump badging` confirmed manifest;
   `apksigner verify --verbose --print-certs` passed.
+- The superseded APK was preserved outside Git at ignored
+  `.tooling/recovery/Everywear-staging-before-startup-fix.apk`.
 
 This is a staging test APK for controlled installation only. It is not suitable
 for public distribution and does not establish signing continuity. No physical
 device is attached; install, cold-start, account isolation and core-flow
-verification remain pending.
+verification remain pending. The source fix has not been verified on-device.
 
 A separate local-only compile was attempted with free-beta gates enabled and
 Supabase/provider defines explicitly empty. Flutter first selected Android
