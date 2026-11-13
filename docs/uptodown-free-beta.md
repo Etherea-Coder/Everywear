@@ -2,7 +2,7 @@
 
 ## Current gate
 
-**Staging backend is verified; APK/device beta check remains.** The owner
+**Staging backend and APK archive are verified; device beta check remains.** The owner
 approved the isolated `Everywear-staging` project
 (`aftdbphdobfrshienple`) in the existing Everywear organization; authenticated
 CLI identity confirmed North EU/Stockholm and the owner confirmed Free-plan
@@ -50,7 +50,27 @@ It performs no `supabase link`, hosted write, deployment, purchase, or ad call.
 A debug APK is for controlled test devices only, not an Uptodown publication
 artifact or signing-continuity proof. The app now shows a visible `STAGING`
 banner when the helper's compile define is set. A private mode-0600 staging
-app config exists outside the checkout; the helper has not been run.
+app config exists outside the checkout. The helper was run successfully after
+selecting JDK 21 through Flutter's `jdk-dir` setting; that temporary setting
+was cleared after the build.
+
+## Built staging test APK
+
+- Path:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`
+- Size: **197,317,047 bytes**
+- SHA-256: `63e279122694cea641dace7bb963e642b9ebb777d03fdc97e0ee402ec7f2f73e`
+- Identity: `com.stylewise.app`, version `1.0.0-beta.1`, code 2, target SDK 36
+- Signing: Android Debug certificate, SHA-256
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`;
+  APK Signature Scheme v2 verified
+- Archive check: `unzip -t` passed; `aapt dump badging` confirmed manifest;
+  `apksigner verify --verbose --print-certs` passed.
+
+This is a staging test APK for controlled installation only. It is not suitable
+for public distribution and does not establish signing continuity. No physical
+device is attached; install, cold-start, account isolation and core-flow
+verification remain pending.
 
 A separate local-only compile was attempted with free-beta gates enabled and
 Supabase/provider defines explicitly empty. Flutter first selected Android
@@ -59,8 +79,12 @@ selected Java 21 and an isolated build directory, then was interrupted after
 available memory fell to about 4.4 GiB and swap filled. The temporary Flutter
 settings were restored, the build-owned Gradle daemon was stopped, and the old
 APK was preserved under ignored `build/beta-artifacts/`. No new APK was
-produced and no runtime behavior was tested. Do not retry the Android build
-until resource headroom is available.
+produced in those earlier attempts and no runtime behavior was tested then. A
+later staging-configured build succeeded after selecting Java 21 through
+Flutter's `jdk-dir` setting; its verified artifact is listed above. The
+temporary JDK setting was cleared after the successful build. Flutter selects
+Android Studio's JDK ahead of `JAVA_HOME` on this machine, so `JAVA_HOME` alone
+does not override its JDK selection.
 
 ## Android identity, version and signing
 
@@ -133,13 +157,9 @@ account label (never passwords/tokens).
 
 ## Exact next actions
 
-1. After memory/swap pressure clears, run the helper with
-   `EVERYWEAR_STAGE_PROJECT_REF=aftdbphdobfrshienple` and the existing private
-   `EVERYWEAR_STAGE_CONFIG_FILE`. Expected debug APK path:
-   `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`.
-   Verify hash/package identity, then install and run the physical-device
-   checklist. Do not retry the Android build while swap is exhausted; two
-   earlier attempts stopped on JDK selection and memory pressure.
+1. Install the built APK on an owner-provided physical Android device and run
+   the smoke checklist above. Record device model, OS version, tester label,
+   APK hash and staging ref. Do not use production accounts or data.
 2. The outside-repository service-role test config was removed after hosted
    checks. Keep only the mode-0600 staging URL/anon-key config for the helper;
    never commit it.

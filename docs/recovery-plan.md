@@ -1,6 +1,6 @@
 # Android v1 recovery plan
 
-Last updated: 2026-11-12
+Last updated: 2026-11-13
 
 ## Baseline
 
@@ -15,7 +15,7 @@ Last updated: 2026-11-12
 
 ## Milestones
 
-1. **Reproducible Flutter/Android build** — toolchain pinned and historical unsigned bundle built; current staging debug APK, device validation and upload signing remain pending. The staging APK helper and visible marker are committed. Two Android build attempts failed (JDK selection, then memory pressure); latest observed swap is full, so another build is deferred.
+1. **Reproducible Flutter/Android build** — toolchain pinned; historical unsigned bundle and current staging debug APK built. The staging APK passed archive, manifest, signature and SHA-256 checks. Physical-device validation and upload signing remain pending. Flutter selected Android Studio JBR 25.0.3 ahead of `JAVA_HOME`; configuring Flutter's JDK directory to Java 21 resolved the plugin-loader failure. The later one-worker staging build succeeded in 52.3 seconds with about 6.6 GiB available RAM while swap was full.
    - Pin Flutter 3.35.7 (Dart 3.9-compatible) in `.fvmrc`.
    - Track `pubspec.lock`; add the Flutter SDK `integration_test` dependency.
    - Resolve the duplicate Gradle DSL configuration without changing the active package identity (`com.stylewise.app`) until Play and RevenueCat registrations are confirmed.
@@ -32,7 +32,7 @@ Last updated: 2026-11-12
 4. **Uptodown RevenueCat Billing** — source is implemented, but payments are disabled for the free beta; provider setup and live paid verification remain pending
    - Release builds require the production hosted link, public Android SDK key, exact entitlement ID and production server environment. Google Play publishing is deferred. See `billing-readiness.md` for the exact historical/current price and quota findings.
    - Bind purchases to the Supabase UUID and harden server verification/webhooks.
-5. **Android free-beta candidate** — staging backend is verified for tested flows; connected debug APK and physical-device validation pending. Public signed distribution is not ready.
+5. **Android free-beta candidate** — staging backend is verified for tested flows and the connected debug APK is built. Physical-device validation is pending. Public signed distribution is not ready.
    - Accessibility, notifications/timezone, reporting opt-out and signing configuration.
    - Current AAB: `build/app/outputs/bundle/release/app-release.aab`, 76,959,486 bytes, SHA-256 `3797fdf52ccd8509a2d8a4ecec9bd35c7970553efdc2fdfe3d3078b1616ebb99`; archive integrity passed. It is unsigned and not device-tested. Private upload-signing inputs and app/provider configuration are also required.
 

@@ -11,7 +11,7 @@ This document records the authorized finish scope for branch `recovery/android-v
 - Inspect resources first. Run expensive checks sequentially with single-worker/conservative memory settings. After two failures of one expensive check, or observed resource pressure, defer it and continue independent work. Never kill unrelated processes or change system settings.
 - Stage explicit paths, checkpoint coherent changes locally, and keep this document and `docs/release-status.md` resumable.
 
-## Completion checklist (updated 2026-11-12; staging checkpoint `aeda62a`)
+## Completion checklist (updated 2026-11-13; staging checkpoint `aeda62a`)
 
 - [x] Establish current checkout, repository instructions, resources, and reproducible toolchain state.
 - [x] Reconcile the recovered Supabase schema read-only: relations/columns/types, constraints, indexes, FKs, RLS, grants, triggers, counters, privileged function definitions, Storage buckets/policies, Realtime, and deployed Edge Function source. Compare deployed code separately; do not replace local source.
@@ -28,7 +28,8 @@ This document records the authorized finish scope for branch `recovery/android-v
 - [x] On wardrobe replacement or deletion, clean up the prior owner-scoped Storage object; clean newly uploaded images when the initial row save fails. Cleanup failure can leave an orphan because Postgres and Storage operations are not transactional.
 - [x] Prepare Uptodown free-beta configuration: `EVERYWEAR_FREE_BETA` disables RevenueCat and ads, version is `1.0.0-beta.1+2`, package identity remains `com.stylewise.app`, and a staging-only debug APK helper accepts only the approved project ref and validates private config. Focused billing/ads/localization tests passed 26/26; `bash -n`, helper guards, targeted formatting, and `git diff --check` passed.
 - [x] Receive owner approval for the isolated Free Everywear staging project; verify exact identity through authenticated CLI before writes; deploy the reviewed nine-migration chain and eight required functions only there. Keep production read-only and Clameo untouched.
-- [ ] Build the connected staging debug APK after memory headroom recovers, verify its hash/package/ref, then install and run the physical-device smoke checks. The helper and visible staging marker are committed; there is no current staging APK. The last observed swap use was 511/511 MiB, and two earlier build attempts were stopped, so do not retry until headroom is available.
+- [x] Build and verify the connected staging debug APK. The helper used only approved ref `aftdbphdobfrshienple`; archive integrity, package/version, v2 debug signature, size, and SHA-256 are recorded in `uptodown-free-beta.md`. Full swap usage did not prevent the build with 6.6 GiB RAM available.
+- [ ] Install the staging APK on a physical Android device and run the account/core-flow smoke checklist. No device is attached; public distribution also remains gated on upload signing and owner release materials.
 
 ## Current known boundaries
 
@@ -37,6 +38,6 @@ This document records the authorized finish scope for branch `recovery/android-v
 - RevenueCat remains incompletely configured. Keep purchase unavailable until the exact public Android key and entitlement are supplied and verification path is ready.
 - Signing inputs, Play/RevenueCat dashboard configuration, privacy/deletion URLs, store materials, and tester evidence are not presumed to exist.
 - Edge Function source checks and earlier Deno tests/type checks are recorded in release status. Staging exercised JWT rejection and no-provider fail-closed responses, but did not exercise successful AI inference, RevenueCat verification/webhooks, or provider quality. Remote CI has not run.
-- The historical AAB and debug APK are not the current free-beta source and were not installed. The staging helper requires the private mode-0600 URL/anon-key config outside the checkout, which is present. No current beta APK exists. Android build remains deferred after two failures and resource pressure (swap fully used at the latest check); `adb` lists no attached devices. `android/key.properties` and an upload keystore are absent.
+- The historical AAB and pre-beta APK are not the current free-beta source. The staging debug APK is built and archive/signature verified, but not installed. The helper uses the private mode-0600 URL/anon-key config outside the checkout. `adb` lists no attached device. `android/key.properties` and an upload keystore are absent, so a public release-signed artifact is not available.
 - The owner confirmed the approved Everywear staging project is on the existing Free organization. It has already been used for synthetic checks. Do not create additional projects or request a paid upgrade.
 - The account-deletion function paginates outfit links and reports listing failures. Synthetic account deletion and Storage cleanup passed on isolated staging. Production deletion remains unverified and production was not mutated.

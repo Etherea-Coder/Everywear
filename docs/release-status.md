@@ -1,27 +1,29 @@
 # Android release status
 
-Last updated: 2026-11-12
+Last updated: 2026-11-13
 
 ## Current classification
 
 Recovery is in progress on `recovery/android-v1`. The latest code checkpoint is
 `aeda62a`; it restricts the staging APK helper to the exact approved project
 ref. The preceding `f71efd8` checkpoint records staging deployment/hosted
-checks and the visible staging banner. A sequential full Flutter suite passed **94/94** on a prior
-application checkpoint. A subsequent provider-test isolation change passed
+checks and the visible staging banner. A sequential full Flutter suite passed
+**94/94** on a prior application checkpoint. A subsequent provider-test isolation change passed
 its focused file **6/6**; the full suite was not repeated after that change.
 The earlier full run printed nonfatal binding/Supabase initialization
 diagnostics. A full project analysis completed with **248 info diagnostics and
 no warnings or errors** at that prior checkpoint. Previous local checks include
 Deno pure tests/lint/type checks and a JDK 21 unsigned release AAB build, but
 that AAB predates the Uptodown free-beta configuration and is not a beta
-artifact. No current beta APK has been built or run on a device.
+artifact. A staging-only debug APK is now built and verified; it has not been
+installed or run on a physical device.
 
 An owner-approved isolated Everywear staging project now has the reviewed
 migrations and eight Edge Functions. Synthetic hosted checks verified Auth,
 PostgREST isolation, private Storage, quota enforcement, account deletion, and
-user-filtered Realtime (details below). No staging APK has been built or run on
-a device. Production remains read-only and unsafe for the beta because its
+user-filtered Realtime (details below). A staging APK is built and archive/
+signature checked, but has not been run on a device. Production remains
+read-only and unsafe for the beta because its
 recovered RLS, public buckets, and deployed Edge Function versions remain
 unchanged. Upload signing, release URLs/artwork, and physical-device behavior
 also remain unresolved. Google Play publication is deferred.
@@ -98,9 +100,16 @@ also remain unresolved. Google Play publication is deferred.
   rerun as a single invocation.
 - Added a staging-only visible app banner and wired the private-config APK
   helper to set it. The focused banner widget test passes **2/2**. The helper
-  was syntax-checked but not run. APK build remains deferred after two earlier
-  Android build failures and full swap pressure; no physical Android device is
-  attached. No current staging APK exists.
+  was run against the exact staging project and private config. The resulting
+  APK is `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`, **197,317,047 bytes**, SHA-256
+  `63e279122694cea641dace7bb963e642b9ebb777d03fdc97e0ee402ec7f2f73e`.
+  `unzip -t` passed; `aapt` reports `com.stylewise.app`, version
+  `1.0.0-beta.1`, version code `2`, target SDK 36; `apksigner verify` passed
+  for APK Signature Scheme v2 with Android Debug certificate SHA-256
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`.
+  This is a staging test APK signed with the debug key, unsuitable for public
+  distribution or signing continuity. No physical Android device is attached,
+  so installation/runtime checks remain pending.
 - Main checkout linkage is unchanged; staging operations used the detached
   worktree and explicit ref. The synthetic test's service-role config was
   deleted after the checks. Only a mode-0600 URL/anon-key config remains
@@ -124,11 +133,17 @@ also remain unresolved. Google Play publication is deferred.
 - Tightened the APK helper to accept only the approved staging project ref.
   `bash -n` passed, and a no-build guard check with the unrelated Clameo ref
   exited 2 with the expected refusal. `git diff --check` passed.
-- The requested connected debug APK is not yet produced. The previous Android
-  build attempts stopped on JDK selection and then resource exhaustion; current
-  swap is fully used (511/511 MiB at the latest check), so the build helper must
-  wait for stable memory headroom. The exact helper output path is recorded in
-  [`uptodown-free-beta.md`](uptodown-free-beta.md).
+- Build retry diagnosis: this turn's first build attempt failed before
+  compilation because Flutter preferred Android Studio JBR 25.0.3 over the
+  shell's Java 21 `JAVA_HOME`. Flutter's own selection order confirmed that
+  Android Studio takes precedence. Setting `flutter config --jdk-dir` to the
+  installed Java 21 path made Flutter report Java 21; the one-worker build
+  then completed in **52.3 seconds**. Available RAM was about 6.6 GiB before
+  build and 4.7 GiB at peak observation; swap remained full, with no unsafe
+  memory pressure. The temporary JDK preference was cleared afterward.
+- The requested APK exists at the exact path/hash above. `adb devices -l`
+  still lists no physical device; do not claim runtime verification. See
+  [`uptodown-free-beta.md`](uptodown-free-beta.md) for install instructions.
 
 ## Uptodown billing checkpoint (2026-11-12)
 
@@ -943,6 +958,10 @@ checklist there with synthetic accounts/data and deploy nothing to production
 until the migration baseline and complete platform behaviors have been reviewed.
 
 ## Uptodown free-beta preparation (2026-11-12)
+
+Historical checkpoint, superseded by the 2026-11-13 staging APK artifact
+evidence above. The no-project/no-APK statements below describe the state on
+2026-11-12 only.
 
 - Local checkpoint: `ff4b58c` (`Prepare gated Uptodown free beta`).
 - Test cleanup/status checkpoint: `8a6abb5` (`Isolate provider tests from
