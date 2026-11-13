@@ -37,6 +37,7 @@ void main() {
       (error, stackTrace) => StartupDiagnostics.recordFailure(
         'Uncaught asynchronous startup',
         error,
+        stackTrace: stackTrace,
       ),
     );
   } else {
@@ -50,11 +51,17 @@ void _bootstrapAndRunApp() {
   StartupDiagnostics.setStage('Dart entrypoint reached');
 
   if (startupDiagnosticsEnabled) {
-    FlutterError.onError = (details) {
-      StartupDiagnostics.recordFailure('Flutter framework', details.exception);
-    };
+    FlutterError.onError = (details) => StartupDiagnostics.recordFailure(
+      'Flutter framework',
+      details.exception,
+      stackTrace: details.stack,
+    );
     PlatformDispatcher.instance.onError = (error, stackTrace) {
-      StartupDiagnostics.recordFailure('Uncaught platform error', error);
+      StartupDiagnostics.recordFailure(
+        'Uncaught platform error',
+        error,
+        stackTrace: stackTrace,
+      );
       return true;
     };
   }
@@ -66,6 +73,7 @@ void _bootstrapAndRunApp() {
       StartupDiagnostics.recordFailure(
         'Flutter error widget',
         details.exception,
+        stackTrace: details.stack,
       );
       return const StartupDiagnosticScreen();
     }
@@ -89,9 +97,13 @@ void _bootstrapAndRunApp() {
   unawaited(
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-    ]).catchError((Object error) {
+    ]).catchError((Object error, StackTrace stackTrace) {
       if (startupDiagnosticsEnabled) {
-        StartupDiagnostics.recordFailure('Screen orientation', error);
+        StartupDiagnostics.recordFailure(
+          'Screen orientation',
+          error,
+          stackTrace: stackTrace,
+        );
       } else if (kDebugMode) {
         debugPrint('Unable to set device orientation: $error');
       }
@@ -112,9 +124,14 @@ void _bootstrapAndRunApp() {
   // gates rendering. Free-beta builds short-circuit this service.
   essentialServices.then((_) => _initializeBackgroundServices()).catchError((
     Object error,
+    StackTrace stackTrace,
   ) {
     if (startupDiagnosticsEnabled) {
-      StartupDiagnostics.recordFailure('Background services', error);
+      StartupDiagnostics.recordFailure(
+        'Background services',
+        error,
+        stackTrace: stackTrace,
+      );
     } else if (kDebugMode) {
       debugPrint('⚠️ Background services init failed: $error');
     }
@@ -123,6 +140,12 @@ void _bootstrapAndRunApp() {
 
 // Essential services that the UI depends on immediately
 Future<void> _initializeEssentialServices() async {
+  await _initializeReportingServices();
+  await _initializeSupabaseService();
+  await _initializeLocalStorage();
+}
+
+Future<void> _initializeReportingServices() async {
   StartupDiagnostics.setStage('Loading reporting preference');
   // Sentry tracking first
   try {
@@ -139,15 +162,20 @@ Future<void> _initializeEssentialServices() async {
       options.beforeSendTransaction = (event, hint) =>
           AnalyticsService.instance.reportingEnabled ? event : null;
     }).timeout(const Duration(seconds: 5));
-  } catch (e) {
+  } catch (e, stackTrace) {
     if (startupDiagnosticsEnabled) {
-      StartupDiagnostics.recordFailure('Reporting initialization', e);
+      StartupDiagnostics.recordFailure(
+        'Reporting initialization',
+        e,
+        stackTrace: stackTrace,
+      );
     } else if (kDebugMode) {
       debugPrint('⚠️ Sentry failed to init: $e');
     }
   }
+}
 
-  // Initialize Supabase and Hive sequentially to ensure stability
+Future<void> _initializeSupabaseService() async {
   StartupDiagnostics.setStage('Connecting to staging backend');
   try {
     final initialized = await SupabaseService.initialize().timeout(
@@ -156,25 +184,54 @@ Future<void> _initializeEssentialServices() async {
     if (!initialized && startupDiagnosticsEnabled) {
       StartupDiagnostics.recordUnavailable('Backend initialization');
     }
-  } catch (e) {
+  } catch (e, stackTrace) {
     if (startupDiagnosticsEnabled) {
-      StartupDiagnostics.recordFailure('Backend initialization', e);
+      StartupDiagnostics.recordFailure(
+        'Backend initialization',
+        e,
+        stackTrace: stackTrace,
+      );
     } else if (kDebugMode) {
       debugPrint('⚠️ Essential service Supabase failed to init: $e');
     }
   }
+}
 
+Future<void> _initializeLocalStorage() async {
   StartupDiagnostics.setStage('Opening local storage');
   try {
     await Hive.initFlutter().timeout(const Duration(seconds: 5));
-  } catch (e) {
+  } catch (e, stackTrace) {
     if (startupDiagnosticsEnabled) {
-      StartupDiagnostics.recordFailure('Local storage initialization', e);
+      StartupDiagnostics.recordFailure(
+        'Local storage initialization',
+        e,
+        stackTrace: stackTrace,
+      );
     } else if (kDebugMode) {
       debugPrint('⚠️ Essential service Hive failed to init: $e');
     }
   }
 }
+
+Future<void> initializeReportingForStartupProbe() =>
+    _initializeReportingServices();
+
+Future<void> initializeSupabaseForStartupProbe() =>
+    _initializeSupabaseService();
+
+Future<void> initializeLocalStorageForStartupProbe() =>
+    _initializeLocalStorage();
+
+List<String> get startupFailuresForProbe =>
+    List.unmodifiable(StartupDiagnostics.state.value.failures);
+
+ValueListenable<StartupDiagnosticState> get startupDiagnosticsForProbe =>
+    StartupDiagnostics.state;
+
+Widget createApplicationForStartupProbe() => ProviderScope(
+  child: MyApp(startupServices: Future<void>.value(), diagnosticMode: true),
+);
 
 // Non-critical services that can load while splash screen is showing
 Future<void> _initializeBackgroundServices() async {
@@ -422,9 +479,13 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         await AnalyticsService.instance.applyStoredPreference();
         StartupDiagnostics.setStage('App ready');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (widget.diagnosticMode) {
-        StartupDiagnostics.recordFailure('Application startup', e);
+        StartupDiagnostics.recordFailure(
+          'Application startup',
+          e,
+          stackTrace: stackTrace,
+        );
         if (mounted) {
           setState(() {
             _startupFailed = true;

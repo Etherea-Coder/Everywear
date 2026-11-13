@@ -60,11 +60,12 @@ defines = {
 }
 diagnostics = os.environ.get("EVERYWEAR_STARTUP_DIAGNOSTICS", "false").strip().lower()
 engine_test = os.environ.get("EVERYWEAR_STARTUP_ENGINE_TEST", "false").strip().lower()
-if diagnostics not in {"true", "false"} or engine_test not in {"true", "false"}:
+stage_probe = os.environ.get("EVERYWEAR_STARTUP_STAGE_PROBE", "false").strip().lower()
+if diagnostics not in {"true", "false"} or engine_test not in {"true", "false"} or stage_probe not in {"true", "false"}:
     raise SystemExit("Startup mode environment values must be true or false.")
-if diagnostics == "true" and engine_test == "true":
-    raise SystemExit("Startup diagnostics and engine isolation modes are exclusive.")
-defines["EVERYWEAR_STARTUP_DIAGNOSTICS"] = diagnostics == "true"
+if sum(value == "true" for value in (diagnostics, engine_test, stage_probe)) > 1:
+    raise SystemExit("Startup diagnostics, stage probe, and engine isolation modes are exclusive.")
+defines["EVERYWEAR_STARTUP_DIAGNOSTICS"] = diagnostics == "true" or stage_probe == "true"
 defines["EVERYWEAR_STARTUP_ENGINE_TEST"] = engine_test == "true"
 pathlib.Path(output_path).write_text(json.dumps(defines))
 PY
@@ -80,14 +81,22 @@ diagnostics_enabled="${EVERYWEAR_STARTUP_DIAGNOSTICS:-false}"
 diagnostics_enabled="${diagnostics_enabled,,}"
 engine_test_enabled="${EVERYWEAR_STARTUP_ENGINE_TEST:-false}"
 engine_test_enabled="${engine_test_enabled,,}"
+stage_probe_enabled="${EVERYWEAR_STARTUP_STAGE_PROBE:-false}"
+stage_probe_enabled="${stage_probe_enabled,,}"
 flutter_args=(build apk --debug --no-pub --dart-define-from-file="$defines_file")
 if [[ "$engine_test_enabled" == "true" ]]; then
   flutter_args+=(--target=lib/startup_engine_test.dart)
+fi
+if [[ "$stage_probe_enabled" == "true" ]]; then
+  flutter_args+=(--target=lib/startup_stage_probe.dart)
 fi
 (
   cd "$repo_root"
   if [[ "$engine_test_enabled" == "true" ]]; then
     export ORG_GRADLE_PROJECT_everywearAppLabel="Everywear Engine Test (STAGING)"
+  fi
+  if [[ "$stage_probe_enabled" == "true" ]]; then
+    export ORG_GRADLE_PROJECT_everywearAppLabel="Everywear Startup Probe (STAGING)"
   fi
   "$flutter_bin" "${flutter_args[@]}"
 )
@@ -97,6 +106,9 @@ if [[ "$diagnostics_enabled" == "true" ]]; then
 fi
 if [[ "$engine_test_enabled" == "true" ]]; then
   artifact="${artifact%-debug.apk}-ENGINE-ISOLATION-debug.apk"
+fi
+if [[ "$stage_probe_enabled" == "true" ]]; then
+  artifact="${artifact%-debug.apk}-STARTUP-STAGE-PROBE-debug.apk"
 fi
 cp "$repo_root/build/app/outputs/flutter-apk/app-debug.apk" "$artifact"
 sha256sum "$artifact"

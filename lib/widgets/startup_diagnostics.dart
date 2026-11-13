@@ -35,13 +35,19 @@ class StartupDiagnostics {
     state.value = state.value.withStage(_safeLabel(stage));
   }
 
-  static void recordFailure(String stage, Object error) {
+  static void recordFailure(
+    String stage,
+    Object error, {
+    StackTrace? stackTrace,
+  }) {
     final type = error.runtimeType.toString().replaceAll(
       RegExp(r'[^A-Za-z0-9_]'),
       '',
     );
+    final location = _safeStackLocation(stackTrace ?? StackTrace.current);
     state.value = state.value.withFailure(
-      '${_safeLabel(stage)}: ${type.isEmpty ? 'UnknownError' : type}',
+      '${_safeLabel(stage)}: ${type.isEmpty ? 'UnknownError' : type}'
+      '${location == null ? '' : ' at $location'}',
     );
   }
 
@@ -54,6 +60,13 @@ class StartupDiagnostics {
   static String _safeLabel(String value) {
     final safe = value.replaceAll(RegExp(r'[^A-Za-z0-9 /_-]'), '').trim();
     return safe.length <= 48 ? safe : safe.substring(0, 48);
+  }
+
+  static String? _safeStackLocation(StackTrace stackTrace) {
+    final location = RegExp(
+      r'(?:package:[A-Za-z0-9_./-]+\.dart|dart:[A-Za-z0-9_./-]+):\d+:\d+',
+    ).firstMatch(stackTrace.toString());
+    return location?.group(0);
   }
 }
 

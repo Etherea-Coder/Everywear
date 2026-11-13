@@ -128,6 +128,49 @@ verification remain pending. The source fix has not been verified on-device.
   exact native/engine/first-frame cause still needs device logs. This test does
   not exercise sign-in, staging backend access, or application features.
 
+## Controlled startup-stage probe
+
+The owner reports that the engine-isolation APK displays its blue screen on the
+phone. That establishes that the minimal target reaches a Flutter first frame
+on this device. It does not establish which omitted normal-app component fails.
+The normal source calls `runApp` before awaiting service futures and keeps
+binding setup and `runApp` in the same guarded zone, so the exact cause remains
+unknown.
+
+The new diagnostic target paints its own orange shell before it loads the
+deferred application library. The app label is **Everywear Startup Probe
+(STAGING)**. Its button advances through: load app library; initialize
+reporting; initialize staging Supabase; initialize Hive; construct the
+ProviderScope/MyApp root; mount it and draw its first frame; observe the app
+startup stage for 30 seconds. The orange shell remains around the application
+while it loads. Any displayed failure is limited to an exception class and a
+safe `package:`/`dart:` source location; no raw exception, config or account
+data is shown. The final observation stage lets MyApp's preference loading,
+optional settings and initial AuthGate routing proceed while the probe shell
+continues to show the current internal startup stage.
+
+Install this artifact as an update over Everywear; do not uninstall or clear
+app data. It keeps package `com.stylewise.app` and the Android Debug certificate
+used by the engine-isolation APK. First confirm the Android app label says
+**Everywear Startup Probe (STAGING)**. On launch, the orange shell should
+appear before any stage runs. Tap `Run next stage` for each stage and record
+the last visible stage and any sanitized failure. If the shell does not appear,
+first verify that this labelled APK was installed and launched; without device
+logs, that result still does not identify the native/engine/entrypoint failure.
+
+- APK:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-STARTUP-STAGE-PROBE-debug.apk`
+- Size: **235,145,437 bytes**; SHA-256:
+  `984b69066534a3c852a0efd9b204ff4424bc8bbc9bf16d3c7ede0aba2424a6b1`
+- ZIP integrity and APK Signature Scheme v2 passed. Package/version are
+  `com.stylewise.app`, `1.0.0-beta.1` (code 2), target SDK 36. The app label is
+  verified as above. Debug certificate SHA-256:
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`.
+- Built once with the approved staging helper/ref, staging banner enabled,
+  purchases and ads disabled, Java 21, one Gradle worker and a 2 GiB heap.
+  Build archive/signature checks do not prove runtime behavior. This is a
+  diagnostic staging APK, not suitable for public distribution.
+
 A separate local-only compile was attempted with free-beta gates enabled and
 Supabase/provider defines explicitly empty. Flutter first selected Android
 Studio JBR 25.0.3 and stopped before compilation. A second attempt temporarily

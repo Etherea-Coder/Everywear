@@ -1,5 +1,62 @@
 # Android release status
 
+## Controlled startup probe after engine-isolation result (2026-11-13)
+
+- Reviewed current local source at `7154b7b` on `main`. The owner reports the
+  ENGINE-ISOLATION APK displayed its blue `EVERYWEAR ENGINE TEST` screen on the
+  phone. That confirms this phone can launch the installed Flutter activity,
+  run the minimal Dart entrypoint, and draw a Flutter first frame. It narrows
+  the fault to code/dependencies omitted by that minimal entrypoint; it does
+  not identify the exact failing component. No device logs are available.
+- The isolation target imports only Flutter Material and calls `runApp`
+  directly. Normal `main.dart` has a large eagerly imported app graph. Source
+  inspection shows the current diagnostic startup calls
+  `WidgetsFlutterBinding.ensureInitialized()` and `runApp()` in the same
+  `runZonedGuarded` callback; it does not defer the first frame, and service
+  futures are started but not awaited before `runApp`. This makes a service
+  wait less likely to explain a missing frame in the current source, but leaves
+  app-library loading/static initialization, root construction, providers,
+  global handlers and routing as hypotheses rather than confirmed causes.
+- Added `lib/startup_stage_probe.dart`. It imports the app library deferred,
+  paints an orange diagnostic shell first, and then exposes separate manual
+  stages for app-library loading, reporting, staging Supabase, Hive, root-widget
+  construction, root mounting/first frame, and a 30-second observation of
+  MyApp startup. The shell stays outside the nested application tree. Errors
+  show sanitized exception type and an allowlisted `package:`/`dart:` source
+  location; no exception message, configuration, token or user data is shown.
+  Binding initialization and `runApp` share the same guarded zone. The staging
+  helper gained an exclusive `EVERYWEAR_STARTUP_STAGE_PROBE=true` mode with a
+  distinct app label and artifact suffix. The helper still validates the exact
+  approved staging project, staging banner, purchases disabled and ads
+  disabled.
+- Focused tests passed **4/4** (probe first-frame shell/sanitizer and existing
+  diagnostic screen/timeout tests). Targeted analysis of five Dart files had
+  **zero warnings/errors** and four pre-existing informational lints in
+  `main.dart`. `dart format`, helper `bash -n`, and `git diff --check` passed.
+- One staging probe APK was built after those checks using Java 21, one Gradle
+  worker and a 2 GiB heap. The previous `app-debug.apk` was preserved in the
+  ignored `.tooling/recovery/` directory before the helper overwrote it.
+  Artifact:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-STARTUP-STAGE-PROBE-debug.apk`;
+  size **235,145,437 bytes**; SHA-256
+  `984b69066534a3c852a0efd9b204ff4424bc8bbc9bf16d3c7ede0aba2424a6b1`.
+  ZIP integrity and APK Signature Scheme v2 passed. `aapt` confirms app label
+  `Everywear Startup Probe (STAGING)`, package `com.stylewise.app`, version
+  `1.0.0-beta.1` (code 2), target SDK 36. Its debug certificate SHA-256 is
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`, the
+  same as the successful engine-isolation APK. The APK contains the probe
+  stage/badge strings; this verifies packaging, not execution on the phone.
+- Flutter's temporary JDK setting was cleared after the build. No production
+  service was contacted or changed, and no installation/runtime result is
+  claimed for this new APK. Next phone check: install this same-package,
+  same-certificate APK as an update without uninstalling or clearing data.
+  Confirm the launcher label, then confirm the orange
+  `EVERYWEAR STARTUP PROBE (STAGING)` shell appears before tapping any stage.
+  Tap `Run next stage` once per line in the displayed sequence and record the
+  last completed stage plus any sanitized error. If the orange shell never
+  appears, confirm the probe label/file was installed; a native launch screen
+  still requires device logs to localize the failure.
+
 ## Physical-device startup investigation (2026-11-13)
 
 - Reviewed source at `b23a2e0d71d4ec99f234a15d6e890313c35ad0dc` on `main`.
