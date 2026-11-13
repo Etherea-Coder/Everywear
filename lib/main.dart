@@ -21,6 +21,7 @@ import './services/notification_service.dart';
 import './services/analytics_service.dart';
 import './widgets/custom_error_widget.dart';
 import './widgets/staging_build_banner.dart';
+import './widgets/startup_diagnostics.dart';
 import './presentation/auth_gate.dart';
 import 'core/app_export.dart';
 
@@ -29,13 +30,45 @@ const _isStagingBuild = bool.fromEnvironment(
   defaultValue: false,
 );
 
-void main() async {
+void main() {
+  if (startupDiagnosticsEnabled) {
+    runZonedGuarded<void>(
+      _bootstrapAndRunApp,
+      (error, stackTrace) => StartupDiagnostics.recordFailure(
+        'Uncaught asynchronous startup',
+        error,
+      ),
+    );
+  } else {
+    _bootstrapAndRunApp();
+  }
+}
+
+void _bootstrapAndRunApp() {
   // Ensure widgets are initialized
   WidgetsFlutterBinding.ensureInitialized();
+  StartupDiagnostics.setStage('Dart entrypoint reached');
+
+  if (startupDiagnosticsEnabled) {
+    FlutterError.onError = (details) {
+      StartupDiagnostics.recordFailure('Flutter framework', details.exception);
+    };
+    PlatformDispatcher.instance.onError = (error, stackTrace) {
+      StartupDiagnostics.recordFailure('Uncaught platform error', error);
+      return true;
+    };
+  }
 
   // 🚨 CRITICAL: Custom error handling - DO NOT REMOVE
   bool _hasShownError = false;
   ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (startupDiagnosticsEnabled) {
+      StartupDiagnostics.recordFailure(
+        'Flutter error widget',
+        details.exception,
+      );
+      return const StartupDiagnosticScreen();
+    }
     if (!_hasShownError) {
       _hasShownError = true;
       if (AnalyticsService.instance.reportingEnabled) {
@@ -52,33 +85,51 @@ void main() async {
   // Keep the first Flutter frame independent of platform/service startup.
   // Android can otherwise remain on its native launch screen (or black) while
   // Sentry, Supabase, or Hive are still initializing.
+  StartupDiagnostics.setStage('Setting screen orientation');
   unawaited(
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]).catchError((Object error) {
-      if (kDebugMode) debugPrint('Unable to set device orientation: $error');
+      if (startupDiagnosticsEnabled) {
+        StartupDiagnostics.recordFailure('Screen orientation', error);
+      } else if (kDebugMode) {
+        debugPrint('Unable to set device orientation: $error');
+      }
     }),
   );
 
   final essentialServices = _initializeEssentialServices();
-  runApp(ProviderScope(child: MyApp(startupServices: essentialServices)));
+  runApp(
+    ProviderScope(
+      child: MyApp(
+        startupServices: essentialServices,
+        diagnosticMode: startupDiagnosticsEnabled,
+      ),
+    ),
+  );
 
   // Non-critical billing initialization follows essential bootstrap and never
   // gates rendering. Free-beta builds short-circuit this service.
   essentialServices.then((_) => _initializeBackgroundServices()).catchError((
     Object error,
   ) {
-    if (kDebugMode) debugPrint('⚠️ Background services init failed: $error');
+    if (startupDiagnosticsEnabled) {
+      StartupDiagnostics.recordFailure('Background services', error);
+    } else if (kDebugMode) {
+      debugPrint('⚠️ Background services init failed: $error');
+    }
   });
 }
 
 // Essential services that the UI depends on immediately
 Future<void> _initializeEssentialServices() async {
+  StartupDiagnostics.setStage('Loading reporting preference');
   // Sentry tracking first
   try {
     await AnalyticsService.instance.isAnalyticsEnabled().timeout(
       const Duration(seconds: 2),
     );
+    StartupDiagnostics.setStage('Starting error reporting');
     await SentryFlutter.init((options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
       options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
@@ -89,21 +140,39 @@ Future<void> _initializeEssentialServices() async {
           AnalyticsService.instance.reportingEnabled ? event : null;
     }).timeout(const Duration(seconds: 5));
   } catch (e) {
-    if (kDebugMode) debugPrint('⚠️ Sentry failed to init: $e');
+    if (startupDiagnosticsEnabled) {
+      StartupDiagnostics.recordFailure('Reporting initialization', e);
+    } else if (kDebugMode) {
+      debugPrint('⚠️ Sentry failed to init: $e');
+    }
   }
 
   // Initialize Supabase and Hive sequentially to ensure stability
+  StartupDiagnostics.setStage('Connecting to staging backend');
   try {
-    await SupabaseService.initialize().timeout(const Duration(seconds: 10));
+    final initialized = await SupabaseService.initialize().timeout(
+      const Duration(seconds: 10),
+    );
+    if (!initialized && startupDiagnosticsEnabled) {
+      StartupDiagnostics.recordUnavailable('Backend initialization');
+    }
   } catch (e) {
-    if (kDebugMode)
+    if (startupDiagnosticsEnabled) {
+      StartupDiagnostics.recordFailure('Backend initialization', e);
+    } else if (kDebugMode) {
       debugPrint('⚠️ Essential service Supabase failed to init: $e');
+    }
   }
 
+  StartupDiagnostics.setStage('Opening local storage');
   try {
     await Hive.initFlutter().timeout(const Duration(seconds: 5));
   } catch (e) {
-    if (kDebugMode) debugPrint('⚠️ Essential service Hive failed to init: $e');
+    if (startupDiagnosticsEnabled) {
+      StartupDiagnostics.recordFailure('Local storage initialization', e);
+    } else if (kDebugMode) {
+      debugPrint('⚠️ Essential service Hive failed to init: $e');
+    }
   }
 }
 
@@ -118,11 +187,18 @@ Future<void> _initializeBackgroundServices() async {
 }
 
 class MyApp extends ConsumerStatefulWidget {
-  MyApp({Key? key, Future<void>? startupServices})
-    : startupServices = startupServices ?? Future<void>.value(),
-      super(key: key);
+  MyApp({
+    Key? key,
+    Future<void>? startupServices,
+    bool? diagnosticMode,
+    this.startupTimeout = const Duration(seconds: 30),
+  }) : startupServices = startupServices ?? Future<void>.value(),
+       diagnosticMode = diagnosticMode ?? startupDiagnosticsEnabled,
+       super(key: key);
 
   final Future<void> startupServices;
+  final bool diagnosticMode;
+  final Duration startupTimeout;
 
   @override
   ConsumerState<MyApp> createState() => _MyAppState();
@@ -136,6 +212,8 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.light;
   bool _isInitialized = false;
+  bool _startupFailed = false;
+  bool _startupTimedOut = false;
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _appLinkSubscription;
   StreamSubscription<AuthState>? _authStateSubscription;
@@ -304,17 +382,29 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
   Future<void> _initializeApp() async {
     try {
-      await widget.startupServices;
+      StartupDiagnostics.setStage('Waiting for core services');
+      if (widget.diagnosticMode) {
+        await widget.startupServices.timeout(widget.startupTimeout);
+      } else {
+        await widget.startupServices;
+      }
       if (!mounted) return;
       // Attach listeners only after Supabase bootstrap, while checking the
       // current session handles an initial auth event emitted before listen.
       unawaited(_listenForBillingReturn());
       _listenForSubscriptionRefresh();
 
-      final results = await Future.wait([
+      StartupDiagnostics.setStage('Loading saved app preferences');
+      final preferenceReads = Future.wait([
         LocaleManager.getSavedLocale(),
         LocaleManager.getSavedThemeMode(),
-      ]).timeout(const Duration(seconds: 2), onTimeout: () => [null, 'light']);
+      ]);
+      final results = widget.diagnosticMode
+          ? await preferenceReads.timeout(const Duration(seconds: 2))
+          : await preferenceReads.timeout(
+              const Duration(seconds: 2),
+              onTimeout: () => [null, 'light'],
+            );
 
       final savedLocale = results[0] as Locale?;
       final savedTheme = results[1] as String;
@@ -327,10 +417,22 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         });
         ref.read(themeModeProvider.notifier).state = _themeMode;
         ref.read(localeProvider.notifier).state = _locale!;
+        StartupDiagnostics.setStage('Restoring optional settings');
         await NotificationService.instance.restoreIfEnabled();
         await AnalyticsService.instance.applyStoredPreference();
+        StartupDiagnostics.setStage('App ready');
       }
     } catch (e) {
+      if (widget.diagnosticMode) {
+        StartupDiagnostics.recordFailure('Application startup', e);
+        if (mounted) {
+          setState(() {
+            _startupFailed = true;
+            _startupTimedOut = e is TimeoutException;
+          });
+        }
+        return;
+      }
       if (kDebugMode) debugPrint('⚠️ App initialization failed: $e');
       if (mounted) {
         setState(() {
@@ -374,6 +476,17 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     // Show plain loader until locale is ready
     if (!_isInitialized || _locale == null) {
+      if (widget.diagnosticMode) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.dark(useMaterial3: true),
+          home: StartupDiagnosticScreen(
+            timedOut: _startupTimedOut,
+            startupFailed: _startupFailed,
+            timeoutDuration: widget.startupTimeout,
+          ),
+        );
+      }
       return MaterialApp(
         scaffoldMessengerKey: _scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
@@ -412,7 +525,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
           themeMode: _themeMode,
           // 🚨 CRITICAL: NEVER REMOVE OR MODIFY
           builder: (context, child) {
-            return MediaQuery(
+            Widget content = MediaQuery(
               // Preserve the system text scale so Android accessibility
               // settings are honored throughout the application.
               data: MediaQuery.of(context),
@@ -421,6 +534,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
                 child: child!,
               ),
             );
+            if (widget.diagnosticMode) {
+              content = StartupDiagnosticBanner(child: content);
+            }
+            return content;
           },
           // 🚨 END CRITICAL SECTION
           debugShowCheckedModeBanner: false,

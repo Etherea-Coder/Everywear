@@ -80,6 +80,33 @@ for public distribution and does not establish signing continuity. No physical
 device is attached; install, cold-start, account isolation and core-flow
 verification remain pending. The source fix has not been verified on-device.
 
+## Startup diagnostic APK
+
+- Artifact:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-STARTUP-DIAGNOSTIC-debug.apk`
+- Built once from current source using the same staging-only helper and staging
+  configuration. The diagnostic define is opt-in with
+  `EVERYWEAR_STARTUP_DIAGNOSTICS=true`; this diagnostic artifact keeps the
+  Uptodown staging banner and has purchases/ads disabled.
+- Size: **235,132,619 bytes**; SHA-256:
+  `7817112fc1f1d7380f04b4e5fa6be86b9b9063df4e639cfb773bbcb70d2b0451`.
+  ZIP integrity and APK Signature Scheme v2 verification passed. Package is
+  `com.stylewise.app`, version `1.0.0-beta.1` (code 2), target SDK 36, signed
+  with the Android Debug certificate whose SHA-256 is recorded above.
+- The app UI uses a dark navy panel with an orange `EVERYWEAR • STAGING
+  DIAGNOSTIC` badge. While starting it shows the current safe stage. Failures
+  show only fixed stage names and exception class names; no exception message,
+  configuration, token, or personal data is displayed. A 30-second startup
+  timeout produces a visible timeout panel. Flutter framework and uncaught
+  asynchronous errors are captured into the same sanitized state when possible.
+- If the badge/panel appears, Flutter has drawn its first frame. If Android's
+  launch logo is followed by black without the diagnostic badge, the failure is
+  before the diagnostic widget was painted; this alone cannot distinguish
+  Activity/plugin startup, Flutter engine/Dart entrypoint, or first-frame
+  rendering. Do not interpret this build as proof the startup defect is fixed.
+- Open the transfer folder from the repository root with
+  `xdg-open build/beta-artifacts`.
+
 A separate local-only compile was attempted with free-beta gates enabled and
 Supabase/provider defines explicitly empty. Flutter first selected Android
 Studio JBR 25.0.3 and stopped before compilation. A second attempt temporarily

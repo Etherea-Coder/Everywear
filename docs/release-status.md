@@ -111,6 +111,42 @@
   attached, so startup, onboarding/sign-in, and the black-screen symptom remain
   unverified. No production or hosted project was changed.
 
+## Startup diagnostic build (2026-11-13)
+
+- Added an opt-in `EVERYWEAR_STARTUP_DIAGNOSTICS` Dart define. The staging
+  helper accepts it only as `true`/`false`, always retains the approved staging
+  URL guard, and names diagnostic output separately. The diagnostic build has
+  its own orange badge, current startup-stage panel, sanitized initialization
+  failures, and a 30-second timeout screen. It captures Flutter framework,
+  platform-dispatcher and zone-unhandled failures by exception type only.
+- Reviewed Android launch configuration: manifest launches `.MainActivity` via
+  `LaunchTheme`; the day launch background is white, night launch uses the
+  system background, and `NormalTheme` uses the system background. No custom
+  native splash artwork is declared in the launch drawable. Android may show
+  its app icon in the OS splash before Flutter paints. The Flutter diagnostic
+  badge only proves the Dart widget frame was drawn; its absence cannot
+  distinguish native Activity/plugin, Flutter engine/Dart entrypoint, or
+  first-frame rendering failure.
+- Focused diagnostic/startup/import widget tests passed **4/4**. Targeted
+  analysis of five changed Dart files completed with **four info diagnostics
+  and no warnings/errors**. Targeted Dart formatting made zero changes; helper
+  `bash -n` and `git diff --check` passed.
+- One build completed with the approved helper and project ref
+  `aftdbphdobfrshienple`, Java 21, one Gradle worker, 2 GiB heap, staging banner
+  enabled, purchases and ads disabled. Flutter's JDK override was cleared and
+  the default Android Studio JDK selection was verified restored.
+- Diagnostic APK:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-STARTUP-DIAGNOSTIC-debug.apk`;
+  size **235,132,619 bytes**; SHA-256
+  `7817112fc1f1d7380f04b4e5fa6be86b9b9063df4e639cfb773bbcb70d2b0451`.
+  `unzip -t` and `apksigner verify` passed; `aapt` confirms
+  `com.stylewise.app`, version `1.0.0-beta.1` (code 2), target SDK 36, Android
+  Debug certificate SHA-256
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`. The
+  diagnostic banner and timeout strings are present in the compiled APK.
+- Wireless ADB pairing remains unsuccessful per owner direction; no further
+  pairing attempt was made. No physical device/runtime result is claimed.
+
 ### Preserved local changes
 
 The pre-existing generated changes remain untouched and unstaged:

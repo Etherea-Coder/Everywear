@@ -58,6 +58,10 @@ defines = {
     "EVERYWEAR_ADS_ENABLED": False,
     "EVERYWEAR_AD_PROVIDER": "disabled",
 }
+diagnostics = os.environ.get("EVERYWEAR_STARTUP_DIAGNOSTICS", "false").strip().lower()
+if diagnostics not in {"true", "false"}:
+    raise SystemExit("EVERYWEAR_STARTUP_DIAGNOSTICS must be true or false.")
+defines["EVERYWEAR_STARTUP_DIAGNOSTICS"] = diagnostics == "true"
 pathlib.Path(output_path).write_text(json.dumps(defines))
 PY
 
@@ -68,11 +72,16 @@ fi
 version="$(sed -n 's/^version:[[:space:]]*//p' "$repo_root/pubspec.yaml" | head -n 1 | tr '+' '-')"
 artifact_dir="$repo_root/build/beta-artifacts"
 mkdir -p "$artifact_dir"
+diagnostics_enabled="${EVERYWEAR_STARTUP_DIAGNOSTICS:-false}"
+diagnostics_enabled="${diagnostics_enabled,,}"
 (
   cd "$repo_root"
   "$flutter_bin" build apk --debug --no-pub --dart-define-from-file="$defines_file"
 )
 artifact="$artifact_dir/Everywear-Uptodown-Free-STAGING-Beta-${version}-${project_ref}-debug.apk"
+if [[ "$diagnostics_enabled" == "true" ]]; then
+  artifact="${artifact%-debug.apk}-STARTUP-DIAGNOSTIC-debug.apk"
+fi
 cp "$repo_root/build/app/outputs/flutter-apk/app-debug.apk" "$artifact"
 sha256sum "$artifact"
 printf 'Staging-only debug APK: %s\n' "$artifact"
