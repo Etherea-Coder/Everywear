@@ -128,9 +128,19 @@
   completion. Never send a token or account credentials in chat.
 - Targeted auth redirect and splash tests passed **7/7**. Targeted analysis
   found no errors or warnings (one existing `anonKey` deprecation info).
-  Targeted formatting passed. No APK build or email round-trip test has been
-  run for these new source changes because staging URL/template configuration
-  is still inaccessible.
+  Targeted formatting passed. Built and installed commit `4586cc4` with the
+  approved staging helper (project `aftdbphdobfrshienple`), Java 21.0.13, one
+  Gradle worker, and 2 GiB heap. APK:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`,
+  235,141,304 bytes, SHA-256
+  `84a4465f69f099f33222d4e02274d04f61f4045e87ff2f632e6a4c8ef8bb2e3b`,
+  Android debug certificate SHA-256
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`.
+  The APK was installed with `adb install -r`; user data was preserved. The
+  device's MainActivity is resumed, but the screen has returned to the lock
+  screen after dozing. No fresh email or confirmation round trip has yet been
+  run because staging URL/template configuration awaits the owner Dashboard
+  update.
 - Production requirements and the ordered staging email verification are in
   [`email-auth-readiness.md`](email-auth-readiness.md). Production settings
   remain untouched.

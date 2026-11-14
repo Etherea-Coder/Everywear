@@ -50,11 +50,14 @@ Before sending a fresh confirmation email, inspect and then set staging only:
    staging or configure a staging SMTP service. Do not infer SMTP readiness
    from the setting that enables email signup. See the
    [custom SMTP guide](https://supabase.com/docs/guides/auth/auth-smtp).
-5. Rebuild/install the staging APK containing explicit `emailRedirectTo`,
-   create a fresh synthetic account with an accessible test inbox, open the
-   new email on the phone, verify the link returns to Everywear, and confirm
-   the app reaches onboarding or home. Do not use an existing confirmation
-   email generated before these changes.
+5. The APK containing explicit `emailRedirectTo` is built and installed on the
+   connected A065. Artifact SHA-256:
+   `84a4465f69f099f33222d4e02274d04f61f4045e87ff2f632e6a4c8ef8bb2e3b`.
+   `adb install -r` preserved app data. After the owner confirms staging URL
+   and template settings, unlock the device, create a fresh synthetic account
+   with an accessible test inbox, open the new email on the phone, verify the
+   link returns to Everywear, and confirm the app reaches onboarding or home.
+   Do not use an existing confirmation email generated before these changes.
 
 The Management API read was blocked by HTTP 401. To let this agent inspect and
 configure staging, provide an existing token locally (never in chat) with
