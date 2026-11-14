@@ -105,8 +105,9 @@ class AppRoutes {
   // ROUTE MAP
   // ============================================
   static Map<String, WidgetBuilder> routes = {
-    // Entry point — use AuthGate for both root and home
-    initial: (context) => const AuthGate(),
+    // The app entry point is supplied with MaterialApp.home. Do not also
+    // register Navigator.defaultRouteName ("/") here: Flutter asserts when
+    // both `home` and a `/` route are configured.
     home: (context) => const AuthGate(),
 
     // Primary tabs

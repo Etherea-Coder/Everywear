@@ -270,9 +270,13 @@ account label (never passwords/tokens).
 
 ## Exact next actions
 
-1. Install the built APK on an owner-provided physical Android device and run
-   the smoke checklist above. Record device model, OS version, tester label,
-   APK hash and staging ref. Do not use production accounts or data.
+1. The corrected normal staging APK is installed over the earlier probe on the
+   connected A065 using `adb install -r`, preserving app data. Unlock the
+   device and confirm whether sign-in, onboarding, or home appears before
+   continuing the smoke checklist. APK SHA-256 is
+   `007bcee2a440d36ee04067d3877f30c65594ff51ef8bf7bd78aeb050b1365183`; the
+   build uses staging ref `aftdbphdobfrshienple`. Do not use production
+   accounts or data.
 2. The outside-repository service-role test config was removed after hosted
    checks. Keep only the mode-0600 staging URL/anon-key config for the helper;
    never commit it.

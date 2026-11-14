@@ -54,16 +54,49 @@ String sanitizedProbeFailure(
     RegExp(r'[^A-Za-z0-9_]'),
     '',
   );
-  final location = stackTrace == null
-      ? null
-      : RegExp(
-          r'(?:package:[A-Za-z0-9_./-]+\.dart|dart:[A-Za-z0-9_./-]+):\d+:\d+',
-        ).firstMatch(stackTrace.toString())?.group(0);
+  final appLocations = _safeApplicationStackLocations(stackTrace);
+  final assertionLocation = _safeAssertionLocation(error);
+  final locations = appLocations.isNotEmpty
+      ? appLocations
+      : assertionLocation != null
+      ? [assertionLocation]
+      : _safeFrameworkStackLocations(stackTrace);
   final label = safeStage.isEmpty
       ? 'Startup'
       : safeStage.substring(0, safeStage.length.clamp(0, 48));
   return '$label: ${type.isEmpty ? 'UnknownError' : type}'
-      '${location == null ? '' : ' at $location'}';
+      '${locations.isNotEmpty
+          ? ' at ${locations.join(' <- ')}'
+          : assertionLocation == null
+          ? ''
+          : ' at $assertionLocation'}';
+}
+
+List<String> _safeApplicationStackLocations(StackTrace? stackTrace) {
+  if (stackTrace == null) return const [];
+  final trace = stackTrace.toString();
+  return RegExp(
+    r'package:everywear/[A-Za-z0-9_./-]+\.dart:\d+:\d+',
+  ).allMatches(trace).map((match) => match.group(0)!).toSet().take(4).toList();
+}
+
+List<String> _safeFrameworkStackLocations(StackTrace? stackTrace) {
+  if (stackTrace == null) return const [];
+  final frameworkFrame = RegExp(
+    r'(?:package:flutter/[A-Za-z0-9_./-]+\.dart|dart:[A-Za-z0-9_./-]+):\d+:\d+',
+  ).firstMatch(stackTrace.toString())?.group(0);
+  return frameworkFrame == null ? const [] : [frameworkFrame];
+}
+
+String? _safeAssertionLocation(Object error) {
+  if (error is! AssertionError) return null;
+  final source = RegExp(
+    r"'(package:(?:everywear|flutter)/[A-Za-z0-9_./-]+\.dart)': Failed assertion: line (\d+)(?: pos (\d+))?:",
+  ).firstMatch(error.toString());
+  if (source == null) return null;
+  final position = source.group(3);
+  return '${source.group(1)}:${source.group(2)}'
+      '${position == null ? '' : ':$position'}';
 }
 
 class StartupProbeState extends ChangeNotifier {
@@ -92,6 +125,7 @@ class StartupProbeState extends ChangeNotifier {
   bool observationComplete = false;
   String? observationSummary;
   bool _appLibraryLoaded = false;
+  bool _shellRefreshQueued = false;
   Timer? _operationTimer;
   DateTime? _operationStartedAt;
 
@@ -103,7 +137,7 @@ class StartupProbeState extends ChangeNotifier {
     if (!failures.contains(failure)) {
       failures.add(failure);
       if (failures.length > 8) failures.removeAt(0);
-      notifyListeners();
+      _notifyShellAfterFrame();
     }
   }
 
@@ -204,16 +238,33 @@ class StartupProbeState extends ChangeNotifier {
   }
 
   void _syncAppFailures() {
-    final stage = app.startupDiagnosticsForProbe.value.stage;
+    updateApplicationDiagnostics(
+      app.startupDiagnosticsForProbe.value.stage,
+      app.startupFailuresForProbe,
+    );
+  }
+
+  void updateApplicationDiagnostics(String stage, Iterable<String> reports) {
     // The library's default value predates mounting MyApp and is not progress.
     if (stage != 'Starting Flutter') applicationStage = stage;
-    for (final failure in app.startupFailuresForProbe) {
+    for (final failure in reports) {
       if (!failures.contains(failure)) {
         failures.add(failure);
         if (failures.length > 8) failures.removeAt(0);
       }
     }
-    notifyListeners();
+    _notifyShellAfterFrame();
+  }
+
+  void _notifyShellAfterFrame() {
+    if (_shellRefreshQueued) return;
+    _shellRefreshQueued = true;
+    final binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((_) {
+      _shellRefreshQueued = false;
+      notifyListeners();
+    });
+    binding.scheduleFrame();
   }
 
   @visibleForTesting
@@ -228,6 +279,7 @@ class StartupProbeState extends ChangeNotifier {
     observationComplete = false;
     observationSummary = null;
     _appLibraryLoaded = false;
+    _shellRefreshQueued = false;
     _stopOperationTimer();
     failures.clear();
     notifyListeners();

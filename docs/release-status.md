@@ -1,5 +1,54 @@
 # Android release status
 
+## USB startup diagnosis and route fix (2026-11-14)
+
+- Reviewed `main` at `849c4587c9d74211fb4edcfcb0243007619307f1`; the starting
+  checkout had unrelated modified Linux/macOS generated files, which remain
+  unstaged and untouched.
+- Reproduced the route-construction failure with the staged startup probe on
+  the attached A065. Its sanitized on-device report identified
+  `_AssertionError` at `package:flutter/src/widgets/app.dart:375:10`.
+  Flutter asserts there when `MaterialApp` is given both a non-null `home` and
+  a `/` entry in `routes`. `MyApp` supplied `home: const AuthGate()` and
+  `AppRoutes.routes`; that map registered `AppRoutes.initial == '/'` as a
+  second `AuthGate`. This is the confirmed normal-app first-frame failure.
+- The probe also exposed a separate probe-only issue: synchronous diagnostics
+  notifications during the child app's build caused a mark-needs-build error.
+  Probe notifications are now deferred until after the frame. Focused widget
+  tests cover that behavior and safe source-location reporting.
+- Removed the duplicate `/` entry because the root is provided by `home`;
+  retained the `/home` named route used after authentication. The generic
+  error-screen root action now navigates to `/home`. Added a widget regression
+  test that mounts `MaterialApp(home: ..., routes: AppRoutes.routes)` and checks
+  there is no Flutter exception.
+- Focused route/startup tests passed **10/10**. Targeted analysis of the route
+  files and regression test reported no issues. Formatting and diff checks
+  passed.
+- Built the normal staging APK with the approved helper, staging ref
+  `aftdbphdobfrshienple`, free-beta gates on (purchases/ads disabled), Java
+  21.0.13, one Gradle worker and a 2 GiB heap. The first attempt stopped before
+  compilation because Flutter selected JDK 25; the retry temporarily set
+  Flutter's JDK to Java 21 and cleared the override at exit. APK:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`,
+  235,134,063 bytes, SHA-256
+  `007bcee2a440d36ee04067d3877f30c65594ff51ef8bf7bd78aeb050b1365183`,
+  Android debug certificate SHA-256
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`.
+  Package/version remain `com.stylewise.app`, `1.0.0-beta.1` code 2.
+- Installed with `adb install -r` over the probe, preserving application data.
+  `MainActivity` was resumed. Initial black screenshot coincided with the phone
+  being `Dozing`; waking it exposed the lock screen. Therefore the normal app
+  screen is **not yet verified**. The phone must be unlocked before reporting
+  whether sign-in, onboarding, or home appears. No fatal app Java exception
+  was observed in the captured launch interval; one sanitized
+  `TimeoutException` occurred during bounded startup initialization, and the
+  previous route assertion was not reported in the corrected launch log.
+- Raw logs and screenshots are retained privately under the ignored
+  `.tooling/recovery/device-startup-20261114/`; they are not staged.
+- Remaining: unlock the phone and verify the normal app screen, then perform
+  sign-in/onboarding interaction. This confirms the root-construction fix but
+  does not complete staging integration, account-isolation, or release checks.
+
 ## Startup probe root-mount boundary (2026-11-13)
 
 - Owner reports the stage probe shows its orange shell and remains at
@@ -1401,8 +1450,11 @@ evidence above. The no-project/no-APK statements below describe the state on
   only to the isolated staging project; run synthetic Auth, PostgREST, Storage,
   quota, account-deletion, and Realtime checks.
 - [x] Build, archive-check, identify, and hash the staging APK.
-- [ ] Install the rebuilt APK with the committed first-frame fix and run it on a
-  physical Android device. Capture sanitized logcat if the black screen remains.
+- [x] Install the corrected normal staging APK over the existing app with
+  `adb install -r`; no data was cleared or removed.
+- [ ] Unlock the connected phone and confirm sign-in, onboarding, or home is
+  visible; continue the physical-device smoke checklist and capture sanitized
+  logs only if startup still fails.
 - [x] Add a widget regression test that proves the branded startup screen paints
   while startup services are still pending.
 - [ ] Resolve legacy premium account evidence/transition and provide privacy,
