@@ -37,6 +37,7 @@ class WardrobeItemCardWidget extends StatelessWidget {
     final semanticLabel = item['semantic_label'] as String? ?? AppLocalizations.of(context).wardrobeItemSemantic;
 
     return GestureDetector(
+      key: ValueKey('wardrobe_card_${item['id']}'),
       onTap: onTap,
       onLongPress: onLongPress,
       child: Stack(
@@ -68,6 +69,7 @@ class WardrobeItemCardWidget extends StatelessWidget {
                     ),
                     child: imageUrl.isNotEmpty
                         ? CustomImageWidget(
+                            key: ValueKey('wardrobe_image_${item['id']}'),
                             imageUrl: imageUrl,
                             fit: BoxFit.cover,
                             width: double.infinity,

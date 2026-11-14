@@ -10,6 +10,7 @@ import '../../../core/app_export.dart';
 import '../../../widgets/custom_icon_widget.dart';
 import '../../../services/ai/vision_engine_service.dart';
 import '../../../core/utils/image_optimizer.dart';
+import '../../../core/ui_smoke_test_mode.dart';
 import 'dart:io';
 
 /// Photo capture section widget for adding clothing item photos
@@ -61,6 +62,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
+                key: const ValueKey('wardrobe_gallery_option'),
                 leading: CustomIconWidget(
                   iconName: 'camera_alt',
                   color: Theme.of(context).colorScheme.primary,
@@ -136,7 +138,9 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
         widget.onPhotosChanged(updatedPhotos);
 
         // Run AI analysis on the optimized photo
-        await _analyzePhoto(optimizedFile.path);
+        if (!everywearUiSmokeTestMode) {
+          await _analyzePhoto(optimizedFile.path);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -171,7 +175,9 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
         widget.onPhotosChanged(updatedPhotos);
 
         // Run AI analysis on the optimized photo
-        await _analyzePhoto(optimizedFile.path);
+        if (!everywearUiSmokeTestMode) {
+          await _analyzePhoto(optimizedFile.path);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -359,6 +365,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
 
   Widget _buildAddPhotoButton(ThemeData theme) {
     return GestureDetector(
+      key: const ValueKey('wardrobe_add_photo'),
       onTap: _showPhotoOptions,
       child: Container(
         width: 40.w,

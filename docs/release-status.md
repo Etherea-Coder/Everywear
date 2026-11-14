@@ -1780,3 +1780,59 @@ evidence above. The no-project/no-APK statements below describe the state on
   built or verified on the phone. The account created before the fix cannot
   recover its previously entered name from signup; the owner can set it via
   Profile → Edit Profile. No account data was changed remotely.
+
+## Guarded authenticated phone smoke test (2026-11-14)
+
+- Added `scripts/run_staging_ui_smoke.sh` and replaced the placeholder
+  integration test with a staging-only authenticated flow. It refuses to run
+  unless the explicit staging project, Uptodown/free-beta defines, ads disabled,
+  purchases unavailable, private config file, and a selected authorized device
+  are all present. It never reads a service-role key.
+- Every UI tap and text-entry action checks Flutter's resumed lifecycle and a
+  debug-only Android activity/window-focus channel before acting, and checks
+  again afterward. Tests use keyed controls and condition-based waits; there
+  are no coordinate taps or `pumpAndSettle` waits. If another activity takes
+  focus, the test throws immediately and makes no subsequent app action.
+- The integration test creates a uniquely named `SYNTHETIC UI SMOKE` wardrobe
+  row and outfit with a generated local image, exercises the actual staging
+  Storage upload and display, verifies outfit creation and the automatic Today
+  refresh, checks the profile display-name source, then signs out last. It does
+  not delete the account, synthetic records, Storage objects or existing data.
+  No records have been created by this test yet.
+- A test-only Dart define suppresses clothing-photo AI analysis, camera
+  permission requests and location/weather access during this flow. Normal beta
+  builds leave the define false. Purchases and ads remain disabled.
+- Profile display now chooses non-empty auth `full_name`, then the existing
+  profile row's `full_name`, then email. The provider already reads the same
+  profile row for account state; it now includes the name column. Added a pure
+  name-selection regression test. An existing account created with a build
+  that omitted signup metadata cannot prove the new-signup flow; that requires
+  a new confirmed signup with the corrected APK. The integration test prints
+  that check as skipped when the current authenticated session has no
+  `full_name`, without editing it.
+- `pubspec.yaml` advances Android version code from 2 to 3 so the approved
+  staging APK helper can produce a distinct in-place update artifact.
+- Checks performed: targeted Dart formatting; `bash -n` on the smoke runner;
+  `git diff --check`; offline dependency resolution; focused profile-name,
+  Quick Log navigation and outfit-preview tests passed **6/6**; targeted Dart
+  analysis of the modified Dart sources reported no errors or warnings (only
+  existing informational lints).
+- Device integration test, APK build/install and phone UI assertions are
+  **deferred**. ADB sees the authorized A065, but the phone was on another app
+  when inspected. No UI actions were taken. Its screen timeout was already
+  30 minutes; no device settings or app data were changed. The runner will keep
+  the phone awake over USB for its duration and restore the prior setting via
+  an exit trap.
+- The approved staging URL/key JSON file is not present in the checkout or
+  injected into the current shell. The exact next owner action is to place a
+  private mode-0600 JSON file outside the repository containing only
+  `SUPABASE_URL` for `https://aftdbphdobfrshienple.supabase.co` and
+  `SUPABASE_ANON_KEY`, then provide its local path through
+  `EVERYWEAR_STAGE_CONFIG_FILE` (do not send the key in chat). Run with
+  `EVERYWEAR_STAGE_PROJECT_REF=aftdbphdobfrshienple` and
+  `EVERYWEAR_UI_SMOKE_DEVICE_SERIAL=21471b75`. The run/build remains blocked
+  until that local input is available.
+- Fresh-signup name metadata check remains a separate owner-assisted case:
+  sign up with a new disposable staging identity on the corrected APK, enter
+  the name, confirm the email on the same phone, then verify Profile shows that
+  name. Do not reuse or delete the existing account to test signup.

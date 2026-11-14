@@ -46,6 +46,7 @@ class ConfirmationDialogWidget extends StatelessWidget {
           ),
         ),
         ElevatedButton(
+          key: const ValueKey('confirmation_dialog_confirm'),
           onPressed: () {
             Navigator.pop(context);
             onConfirm();

@@ -2091,6 +2091,7 @@ class _DailyLogState extends State<DailyLog> {
                 ),
                 SizedBox(height: 2.h),
                 _buildQuickOption(
+                  key: const ValueKey('today_quicklog_take_photo'),
                   icon: Icons.camera_alt,
                   title: photoTitle,
                   subtitle: photoSub,
@@ -2136,12 +2137,14 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   Widget _buildQuickOption({
+    Key? key,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
     return ListTile(
+      key: key,
       leading: Container(
         padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(

@@ -354,6 +354,7 @@ class _AddClothingItemState extends State<AddClothingItem> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
               child: TextButton(
+                key: const ValueKey('wardrobe_save_item'),
                 onPressed: _isFormValid() && !_isSaving ? _saveItem : null,
                 style: TextButton.styleFrom(
                   foregroundColor: _isFormValid() && !_isSaving

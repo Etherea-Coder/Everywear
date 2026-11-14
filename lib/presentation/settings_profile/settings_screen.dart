@@ -241,6 +241,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  key: const ValueKey('settings_logout'),
                   onPressed: () => _handleLogout(context, localizations),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.error,

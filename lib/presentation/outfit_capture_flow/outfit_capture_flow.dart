@@ -9,6 +9,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../core/utils/app_localizations.dart';
+import '../../core/ui_smoke_test_mode.dart';
 import '../../core/providers.dart';
 import '../../services/ai_suggestions_service.dart';
 import '../../services/outfit_log_service.dart';
@@ -58,7 +59,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
+    if (!everywearUiSmokeTestMode) _requestPermissions();
   }
 
   @override
@@ -222,7 +223,13 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
     try {
       setState(() => _isLoading = true);
 
-      final weatherContext = await _weatherService.getCurrentWeather();
+      final weatherContext = everywearUiSmokeTestMode
+          ? const {
+              'temperature': null,
+              'unit': '°C',
+              'condition': 'Synthetic test data',
+            }
+          : await _weatherService.getCurrentWeather();
       final itemIds = _selectedItems
           .map((item) => item['id'] as String)
           .toList();
@@ -540,6 +547,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildMethodCard(
+                    key: const ValueKey('outfit_take_photo'),
                     theme: theme,
                     icon: 'camera_alt',
                     title: localizations.takePhoto,
@@ -548,6 +556,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
                   ),
                   SizedBox(height: 3.h),
                   _buildMethodCard(
+                    key: const ValueKey('outfit_build_from_wardrobe'),
                     theme: theme,
                     icon: 'checkroom',
                     title: localizations.buildFromWardrobe,
@@ -565,6 +574,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
 
   /// Build method selection card
   Widget _buildMethodCard({
+    Key? key,
     required ThemeData theme,
     required String icon,
     required String title,
@@ -572,6 +582,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
     required VoidCallback onTap,
   }) {
     return InkWell(
+      key: key,
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(

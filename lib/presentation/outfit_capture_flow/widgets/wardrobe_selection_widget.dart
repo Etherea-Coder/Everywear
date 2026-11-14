@@ -254,6 +254,7 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
           ),
           child: SafeArea(
             child: ElevatedButton(
+              key: const ValueKey('outfit_continue'),
               onPressed: _selectedItems.isEmpty ? null : _handleContinue,
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 6.h),
@@ -329,6 +330,7 @@ class _WardrobeSelectionWidgetState extends State<WardrobeSelectionWidget> {
   ) {
     final itemId = item['id']?.toString() ?? '';
     return GestureDetector(
+      key: ValueKey('outfit_wardrobe_item_$itemId'),
       onTap: () => _toggleItemSelection(itemId),
       child: Container(
         width: 40.w,

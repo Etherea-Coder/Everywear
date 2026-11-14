@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/app_export.dart';
 import '../../core/utils/app_localizations.dart';
+import '../../core/utils/profile_display_name.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/custom_app_bar.dart';
 import './widgets/profile_header_widget.dart';
@@ -22,7 +23,11 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(supabaseAuthProvider);
     final profileAsync = ref.watch(userProfileProvider);
 
-    final displayName = user?.userMetadata?['full_name'] ?? user?.email ?? '';
+    final displayName = resolveProfileDisplayName(
+      authMetadataName: user?.userMetadata?['full_name'] as String?,
+      profileName: profileAsync.value?['full_name'] as String?,
+      email: user?.email,
+    );
     final email = user?.email ?? '';
     final avatarUrl = user?.userMetadata?['avatar_url'] ?? '';
     final membershipTier = profileAsync.value?['membership_tier'] ?? 'Free';
@@ -112,6 +117,7 @@ class ProfileScreen extends ConsumerWidget {
               title: '',
               children: [
                 SettingsTileWidget(
+                  key: const ValueKey('profile_settings_tile'),
                   icon: Icons.settings_outlined,
                   title: l10n.settings,
                   subtitle: l10n.settingsSubtitle,

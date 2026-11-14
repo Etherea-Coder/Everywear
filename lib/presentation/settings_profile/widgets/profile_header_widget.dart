@@ -92,6 +92,7 @@ class ProfileHeaderWidget extends StatelessWidget {
           SizedBox(height: 2.h),
           Text(
             name,
+            key: const ValueKey('profile_display_name'),
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w600,

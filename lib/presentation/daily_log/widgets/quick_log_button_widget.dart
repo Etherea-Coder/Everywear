@@ -19,6 +19,7 @@ class QuickLogButtonWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         FloatingActionButton(
+          key: const ValueKey('today_quick_log'),
           heroTag: 'quickLog',
           onPressed: onQuickLog,
           backgroundColor: AppTheme.primaryLight,

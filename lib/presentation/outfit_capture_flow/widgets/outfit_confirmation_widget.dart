@@ -254,6 +254,7 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
             child: Hero(
               tag: 'wardrobe_item_${item['id']}',
               child: CustomImageWidget(
+                key: ValueKey('outfit_confirmation_image_${item['id']}'),
                 imageUrl: imageUrl,
                 width: double.infinity,
                 height: 15.h,
@@ -312,6 +313,7 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
         ),
         SizedBox(height: 1.h),
         TextField(
+          key: const ValueKey('outfit_name'),
           controller: _outfitNameController,
           style: theme.textTheme.bodyMedium,
           decoration: InputDecoration(
@@ -393,6 +395,7 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
     final isSelected = _selectedRating == rating;
 
     return GestureDetector(
+      key: ValueKey('outfit_rating_$rating'),
       onTap: () => setState(() => _selectedRating = rating),
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 2.h),
@@ -448,6 +451,7 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
       ),
       child: SafeArea(
         child: ElevatedButton(
+          key: const ValueKey('outfit_save'),
           onPressed: _handleSave,
           style: ElevatedButton.styleFrom(
             minimumSize: Size(double.infinity, 6.h),

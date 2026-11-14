@@ -83,6 +83,7 @@ class ItemDetailsForm extends StatelessWidget {
 
           // Item name field
           TextFormField(
+            key: const ValueKey('wardrobe_item_name'),
             controller: itemNameController,
             decoration: InputDecoration(
               labelText: l10n.itemNameLabel,
@@ -151,6 +152,7 @@ class ItemDetailsForm extends StatelessWidget {
               final category = categories[index];
               final isSelected = selectedCategory == category;
               return GestureDetector(
+                key: ValueKey('wardrobe_category_$category'),
                 onTap: () => onCategoryChanged(category),
                 child: Container(
                   decoration: BoxDecoration(

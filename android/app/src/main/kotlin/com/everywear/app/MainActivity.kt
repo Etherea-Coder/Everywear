@@ -6,6 +6,24 @@ import io.flutter.plugin.common.MethodChannel
 import java.util.TimeZone
 
 class MainActivity: FlutterFragmentActivity() {
+    @Volatile private var activityResumed = false
+    @Volatile private var windowFocused = false
+
+    override fun onResume() {
+        super.onResume()
+        activityResumed = true
+    }
+
+    override fun onPause() {
+        activityResumed = false
+        super.onPause()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        windowFocused = hasFocus
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.everywear/system_timezone")
@@ -16,5 +34,15 @@ class MainActivity: FlutterFragmentActivity() {
                     result.notImplemented()
                 }
             }
+        if (BuildConfig.DEBUG) {
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.everywear/ui_smoke_test")
+                .setMethodCallHandler { call, result ->
+                    if (call.method == "isForeground") {
+                        result.success(activityResumed && windowFocused && !isFinishing)
+                    } else {
+                        result.notImplemented()
+                    }
+                }
+        }
     }
 }
