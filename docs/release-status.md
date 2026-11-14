@@ -52,6 +52,49 @@
   onboarding or home screen. This confirms first visible app UI but does not
   complete account-isolation, Storage, quota, or full release checks.
 
+## Staging sign-in verification (2026-11-14)
+
+- Supabase CLI project listing confirmed `Everywear-staging`, ref
+  `aftdbphdobfrshienple`, region `eu-north-1`, active/healthy. The CLI lists
+  production `qxsdwwdrxoyxmnapuqqv` as linked and staging as unlinked; no link
+  or hosted mutation was performed. The build's private public-config file
+  points exactly to `https://aftdbphdobfrshienple.supabase.co`.
+- A read-only GET of the staging Auth public settings returned HTTP 200 and
+  advertised only `email` as an external provider. Google is disabled; email
+  is enabled, signups are allowed, and `mailer_autoconfirm` is false. The
+  reported Google error (“Unsupported provider: provider is not enabled”) is
+  therefore confirmed as staging Auth configuration, not an Android startup
+  or callback failure.
+- The app calls Supabase `signInWithOAuth(google)` with
+  `io.supabase.everywear://login-callback` (`lib/presentation/splash_screen/
+  splash_screen.dart`). The Android manifest registers that scheme and host,
+  and the device's package resolver maps the URI to
+  `com.stylewise.app/.MainActivity`. This verifies local callback registration.
+  The staging Auth redirect allowlist and any stored Google client ID/secret
+  are not exposed by the public Auth settings response; they remain unverified.
+- Staging setup required to enable Google: use a Google OAuth Web client ID
+  and secret authorized for the staging Supabase callback
+  `https://aftdbphdobfrshienple.supabase.co/auth/v1/callback`; enable Google in
+  the staging Supabase Auth provider and store those credentials there; add
+  the exact app redirect `io.supabase.everywear://login-callback` to staging
+  Auth URL Configuration. If Google's consent screen is in Testing, add the
+  test Google account there. The repository has no Google client credentials,
+  and existing Google Cloud credentials/console access have not been supplied
+  or verified. Keep all values private. Supabase's current
+  [Google provider guide](https://supabase.com/docs/guides/auth/social-sign-in/auth-google)
+  describes the Web OAuth client and Supabase callback; the
+  [redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls)
+  covers the app deep-link allowlist.
+- Google OAuth failed on device with the provider-disabled 400 response. The
+  app returned to its sign-in flow; no Google identity was created. The email
+  sign-in form was opened on the phone, but no test account was created because
+  staging requires email confirmation and no accessible disposable test
+  mailbox was available. Next: owner enters a disposable staging email/password
+  on-device, confirms the email, and reports when the authenticated screen
+  appears. Do not share credentials in chat.
+- No provider settings, production settings, source code, or hosted data were
+  changed. Payments and ads remain disabled.
+
 ## Startup probe root-mount boundary (2026-11-13)
 
 - Owner reports the stage probe shows its orange shell and remains at
