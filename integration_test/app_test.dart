@@ -9,9 +9,9 @@ import 'package:integration_test/integration_test.dart';
 import 'package:everywear/main.dart' as app;
 import 'package:everywear/services/supabase_service.dart';
 import 'package:everywear/core/utils/profile_display_name.dart';
+import 'package:everywear/core/ui_smoke_test_mode.dart';
 
 const _foreground = MethodChannel('com.everywear/ui_smoke_test');
-const _smokeMode = bool.fromEnvironment('EVERYWEAR_UI_SMOKE_TEST');
 const _isStaging = bool.fromEnvironment('EVERYWEAR_STAGING');
 const _adsEnabled = bool.fromEnvironment('EVERYWEAR_ADS_ENABLED');
 const _distribution = String.fromEnvironment('APP_DISTRIBUTION');
@@ -22,10 +22,7 @@ void main() {
   testWidgets(
     'authenticated staging smoke: synthetic wardrobe, outfit, Today, profile, logout last',
     (tester) async {
-      if (!_smokeMode ||
-          !_isStaging ||
-          _adsEnabled ||
-          _distribution != 'uptodown') {
+      if (!_isStaging || _adsEnabled || _distribution != 'uptodown') {
         throw StateError(
           'Refusing to run without the approved staging-only UI smoke defines.',
         );
@@ -42,6 +39,8 @@ void main() {
       final originalPicker = ImagePickerPlatform.instance;
       ImagePickerPlatform.instance = _SyntheticImagePicker();
       addTearDown(() => ImagePickerPlatform.instance = originalPicker);
+      UiSmokeTestMode.setEnabledForDebugTest(true);
+      addTearDown(() => UiSmokeTestMode.setEnabledForDebugTest(false));
 
       app.main();
       await _waitFor(tester, find.byTooltip('Manage wardrobe items'));

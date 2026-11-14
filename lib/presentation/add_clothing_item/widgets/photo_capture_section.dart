@@ -138,7 +138,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
         widget.onPhotosChanged(updatedPhotos);
 
         // Run AI analysis on the optimized photo
-        if (!everywearUiSmokeTestMode) {
+        if (!UiSmokeTestMode.isEnabled) {
           await _analyzePhoto(optimizedFile.path);
         }
       }
@@ -175,7 +175,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
         widget.onPhotosChanged(updatedPhotos);
 
         // Run AI analysis on the optimized photo
-        if (!everywearUiSmokeTestMode) {
+        if (!UiSmokeTestMode.isEnabled) {
           await _analyzePhoto(optimizedFile.path);
         }
       }

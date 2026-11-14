@@ -1799,9 +1799,11 @@ evidence above. The no-project/no-APK statements below describe the state on
   refresh, checks the profile display-name source, then signs out last. It does
   not delete the account, synthetic records, Storage objects or existing data.
   No records have been created by this test yet.
-- A test-only Dart define suppresses clothing-photo AI analysis, camera
-  permission requests and location/weather access during this flow. Normal beta
-  builds leave the define false. Purchases and ads remain disabled.
+- The integration test enables a debug-only in-memory switch to suppress
+  clothing-photo AI analysis, camera permission requests and location/weather
+  access during this flow; teardown always turns it off. A normal launch leaves
+  it disabled, and release builds cannot enable it. Purchases and ads remain
+  disabled.
 - Profile display now chooses non-empty auth `full_name`, then the existing
   profile row's `full_name`, then email. The provider already reads the same
   profile row for account state; it now includes the name column. Added a pure
@@ -1814,11 +1816,13 @@ evidence above. The no-project/no-APK statements below describe the state on
   staging APK helper can produce a distinct in-place update artifact.
 - Checks performed: targeted Dart formatting; `bash -n` on the smoke runner;
   `git diff --check`; offline dependency resolution; focused profile-name,
-  Quick Log navigation and outfit-preview tests passed **6/6**; targeted Dart
+  smoke-mode, Quick Log navigation and outfit-preview tests passed **7/7**;
+  targeted Dart
   analysis of the modified Dart sources reported no errors or warnings (only
   existing informational lints).
 - Device integration test, APK build/install and phone UI assertions are
-  **deferred**. ADB sees the authorized A065, but the phone was on another app
+  **deferred**. The runner pins Java 21 and uses the checked-in Gradle limit of
+  one worker with a 2 GiB heap. ADB sees the authorized A065, but the phone was on another app
   when inspected. No UI actions were taken. Its screen timeout was already
   30 minutes; no device settings or app data were changed. The runner will keep
   the phone awake over USB for its duration and restore the prior setting via

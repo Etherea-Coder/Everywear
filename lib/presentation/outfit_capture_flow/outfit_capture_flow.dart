@@ -59,7 +59,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
   @override
   void initState() {
     super.initState();
-    if (!everywearUiSmokeTestMode) _requestPermissions();
+    if (!UiSmokeTestMode.isEnabled) _requestPermissions();
   }
 
   @override
@@ -223,7 +223,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
     try {
       setState(() => _isLoading = true);
 
-      final weatherContext = everywearUiSmokeTestMode
+      final weatherContext = UiSmokeTestMode.isEnabled
           ? const {
               'temperature': null,
               'unit': '°C',

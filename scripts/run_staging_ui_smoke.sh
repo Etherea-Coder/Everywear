@@ -20,6 +20,13 @@ fi
 
 flutter_bin="${FLUTTER_BIN:-$repo_root/.tooling/flutter/bin/flutter}"
 adb_bin="${ADB_BIN:-$HOME/Android/Sdk/platform-tools/adb}"
+java21_home="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk}"
+if [[ ! -x "$java21_home/bin/java" ]]; then
+  echo "Java 21 is required for the staging Android instrumentation build." >&2
+  exit 2
+fi
+export JAVA_HOME="$java21_home"
+export PATH="$JAVA_HOME/bin:$PATH"
 defines_file="$(mktemp "${TMPDIR:-/tmp}/everywear-ui-smoke.XXXXXX.json")"
 old_stay_on=""
 restore_stay_on=0
@@ -64,7 +71,6 @@ config.update({
     "REVENUECAT_BILLING_ENVIRONMENT": "unavailable",
     "EVERYWEAR_ADS_ENABLED": False,
     "EVERYWEAR_AD_PROVIDER": "disabled",
-    "EVERYWEAR_UI_SMOKE_TEST": True,
 })
 pathlib.Path(output_path).write_text(json.dumps(config))
 PY

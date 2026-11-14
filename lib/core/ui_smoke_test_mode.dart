@@ -1,8 +1,19 @@
-/// Test-only safeguards for authenticated staging UI smoke tests.
-///
-/// Enable only in an integration-test invocation with
-/// `--dart-define=EVERYWEAR_UI_SMOKE_TEST=true`. Never set this in beta builds.
-const bool everywearUiSmokeTestMode = bool.fromEnvironment(
-  'EVERYWEAR_UI_SMOKE_TEST',
-  defaultValue: false,
-);
+import 'package:flutter/foundation.dart';
+
+/// Runtime guard used only by the debug integration test for staging smoke
+/// flows. Normal launches leave it disabled; release builds cannot enable it.
+class UiSmokeTestMode {
+  UiSmokeTestMode._();
+
+  static bool _enabled = false;
+
+  static bool get isEnabled => kDebugMode && _enabled;
+
+  @visibleForTesting
+  static void setEnabledForDebugTest(bool enabled) {
+    if (enabled && !kDebugMode) {
+      throw StateError('UI smoke mode can only be enabled in a debug build.');
+    }
+    _enabled = enabled;
+  }
+}
