@@ -1723,3 +1723,25 @@ evidence above. The no-project/no-APK statements below describe the state on
   test its email link on the same phone. If a second-device behavior check is
   required, use a second device privately and report whether it has Everywear
   installed. Keep ads and purchases disabled.
+
+### Connected phone awake follow-up (2026-11-14)
+
+- The owner manually navigated on the connected A065. ADB inspection at
+  `2026-11-14 20:46 +02:00` found the device awake with Everywear foreground on
+  Today and the STAGING ribbon visible. The screen showed one saved outfit and
+  its synthetic shirt image in the history card. The timestamped screenshot is
+  retained locally at
+  `.tooling/recovery/device-startup-20261114/manual-navigation-20261114-204617+0200.png`.
+- An uncleared 5,000-line logcat snapshot is retained at
+  `.tooling/recovery/device-startup-20261114/manual-navigation-20261114-204617+0200.log`;
+  no exception/error entry was found for the Everywear process in that
+  snapshot. This confirms the home/history rendering at capture time. It does
+  **not** establish that the outfit confirmation preview rendered, that Today
+  refreshed automatically after Quick Log, or that the onboarding photo tile
+  has no overflow. Those three transition results remain pending owner report.
+- Fresh email confirmation remains pending. Use the current signed-in synthetic
+  account to finish the Quick Log/outfit checks first. Then sign out and create
+  a new synthetic staging account on this phone with an inbox the owner can
+  access privately; open the fresh confirmation email on the same phone. No
+  link or account credentials should be pasted into chat. A second-device
+  callback result remains untested.
