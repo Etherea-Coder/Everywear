@@ -1717,10 +1717,9 @@ evidence above. The no-project/no-APK statements below describe the state on
   custom-scheme callback can establish a session only on a device that has
   Everywear installed and registered to handle it. No confirmation link or
   credentials should be shared in chat.
-- Next owner actions: wake the A065; sign in to the existing synthetic
-  account; manually verify the outfit confirmation image, Quick Log return
-  refresh, and optional photo screen; then create a fresh staging signup and
-  test its email link on the same phone. If a second-device behavior check is
+- Next owner actions: sign in to the existing synthetic account; verify the
+  outfit confirmation image and optional photo screen; then create a fresh
+  staging signup and test its email link on the same phone. If a second-device behavior check is
   required, use a second device privately and report whether it has Everywear
   installed. Keep ads and purchases disabled.
 
@@ -1735,12 +1734,20 @@ evidence above. The no-project/no-APK statements below describe the state on
 - An uncleared 5,000-line logcat snapshot is retained at
   `.tooling/recovery/device-startup-20261114/manual-navigation-20261114-204617+0200.log`;
   no exception/error entry was found for the Everywear process in that
-  snapshot. This confirms the home/history rendering at capture time. It does
-  **not** establish that the outfit confirmation preview rendered, that Today
-  refreshed automatically after Quick Log, or that the onboarding photo tile
-  has no overflow. Those three transition results remain pending owner report.
+  snapshot. This confirms the home/history rendering at capture time.
+- The owner then selected **Build from Wardrobe** in Quick Log and reported
+  that Today updated after returning. The timestamped screenshot at
+  `.tooling/recovery/device-startup-20261114/quick-log-return-20261114-210213+0200.png`
+  shows two outfit entries (the prior capture showed one) with the synthetic
+  tee image on both; the owner had been instructed not to tap refresh. This
+  verifies the automatic Today refresh path on-device. The accompanying
+  uncleared log snapshot contains no matching exception/error entries for the
+  app process. Whether the tee was visible on the confirmation screen before
+  save is still awaiting the owner's explicit observation; the history card
+  alone does not prove the confirmation preview.
+- The optional photo onboarding overflow remains unverified on-device.
 - Fresh email confirmation remains pending. Use the current signed-in synthetic
-  account to finish the Quick Log/outfit checks first. Then sign out and create
+  account to finish the outfit preview check first. Then sign out and create
   a new synthetic staging account on this phone with an inbox the owner can
   access privately; open the fresh confirmation email on the same phone. No
   link or account credentials should be pasted into chat. A second-device
