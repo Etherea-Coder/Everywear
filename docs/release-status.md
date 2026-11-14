@@ -1847,3 +1847,35 @@ evidence above. The no-project/no-APK statements below describe the state on
   sign up with a new disposable staging identity on the corrected APK, enter
   the name, confirm the email on the same phone, then verify Profile shows that
   name. Do not reuse or delete the existing account to test signup.
+
+### Additional authorized smoke/build attempt (2026-11-15)
+
+- Reviewed `android/app/src/main/kotlin/com/everywear/app/MainActivity.kt` at
+  HEAD `2f3ce56e449355b966065c87fd54a60a7851227e`. The debug-only UI smoke
+  channel uses `ApplicationInfo.FLAG_DEBUGGABLE`; `BuildConfig` is absent from
+  the tracked Android source. This is the correct Android runtime flag check.
+- The approved staging runner was invoked once with project
+  `aftdbphdobfrshienple`, the mode-0600 private config, device serial
+  `21471b75`, one Gradle worker, and the repository's 2 GiB Gradle heap. Before
+  invocation, Flutter reported Java 21.0.13 at
+  `/usr/lib/jvm/java-21-openjdk/bin/java`, and `./gradlew --version` reported
+  Gradle 8.11.1 using the same Java 21 installation.
+- **Build failed** during `:app:compileDebugKotlin`, reporting an unresolved
+  `BuildConfig` reference at `MainActivity.kt:37`. This conflicts with the
+  source verified at the same HEAD: line 37 closes the preceding method-call
+  handler and line 38 uses `ApplicationInfo.FLAG_DEBUGGABLE`; repository-wide
+  `rg BuildConfig android` finds no remaining reference. The reported compiler
+  source therefore does not match the current checked-in file, and this one
+  authorized attempt is exhausted. No further build was run.
+- **Installation:** not attempted; the runner stopped at compilation. **Device
+  smoke test:** not executed; no test actions or staging writes occurred.
+  Existing app data and staging records were preserved.
+- Cleanup was checked: Flutter's global `jdk-dir` is unset as before, and A065
+  `stay_on_while_plugged_in` is restored to `0`. No source or app configuration
+  was changed during the attempt. `git diff --check` passed after recording the
+  result.
+- Next diagnostic step, before any separately authorized build: inspect the
+  exact Kotlin compiler task inputs/output and Gradle source-set mapping to
+  explain why the compiler reported a symbol absent from the checked-out
+  source. Then rerun only after that mismatch is understood and the build
+  attempt is authorized.
