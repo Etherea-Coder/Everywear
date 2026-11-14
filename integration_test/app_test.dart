@@ -10,6 +10,7 @@ import 'package:everywear/main.dart' as app;
 import 'package:everywear/services/supabase_service.dart';
 import 'package:everywear/core/utils/profile_display_name.dart';
 import 'package:everywear/core/ui_smoke_test_mode.dart';
+import 'package:everywear/widgets/staging_build_banner.dart';
 
 const _foreground = MethodChannel('com.everywear/ui_smoke_test');
 const _isStaging = bool.fromEnvironment('EVERYWEAR_STAGING');
@@ -45,7 +46,14 @@ void main() {
       app.main();
       await _waitFor(tester, find.byTooltip('Manage wardrobe items'));
       await _assertForeground(tester);
-      expect(find.textContaining('STAGING'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byType(StagingBuildBanner),
+          matching: find.byType(Banner),
+        ),
+        findsOneWidget,
+        reason: 'The staging define must enable the visible Flutter banner.',
+      );
 
       final client = SupabaseService.instance.client;
       final initialUser = client.auth.currentUser;

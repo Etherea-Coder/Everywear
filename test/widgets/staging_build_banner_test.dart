@@ -1,46 +1,32 @@
+import 'package:everywear/widgets/staging_build_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:everywear/widgets/staging_build_banner.dart';
 
 void main() {
-  testWidgets('staging builds show a persistent staging banner', (
+  testWidgets('shows the painted staging banner only when enabled', (
     tester,
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: StagingBuildBanner(
-          enabled: true,
-          child: Scaffold(body: Text('Everywear')),
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: StagingBuildBanner(enabled: true, child: Text('App')),
         ),
       ),
     );
 
-    final banner = tester.widget<Banner>(
-      find.byWidgetPredicate(
-        (widget) => widget is Banner && widget.message == 'STAGING',
-      ),
-    );
+    final banner = tester.widget<Banner>(find.byType(Banner));
     expect(banner.message, 'STAGING');
-  });
+    expect(find.text('STAGING'), findsNothing);
 
-  testWidgets('non-staging builds do not show a staging banner', (
-    tester,
-  ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: StagingBuildBanner(
-          enabled: false,
-          child: Scaffold(body: Text('Everywear')),
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: StagingBuildBanner(enabled: false, child: Text('App')),
         ),
       ),
     );
-
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget is Banner && widget.message == 'STAGING',
-      ),
-      findsNothing,
-    );
-    expect(find.text('Everywear'), findsOneWidget);
+    expect(find.byType(Banner), findsNothing);
   });
 }

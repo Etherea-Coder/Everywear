@@ -144,11 +144,11 @@ class _DailyLogState extends State<DailyLog> {
       if (user != null) {
         final response = await SupabaseService.instance.client
             .from('user_profiles')
-            .select('display_name')
+            .select('full_name')
             .eq('id', user.id)
             .maybeSingle();
-        if (response != null && response['display_name'] != null) {
-          _displayName = response['display_name'].toString();
+        if (response != null && response['full_name'] != null) {
+          _displayName = response['full_name'].toString();
         } else {
           final meta = user.userMetadata;
           _displayName =
