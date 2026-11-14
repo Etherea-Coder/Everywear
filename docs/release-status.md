@@ -1648,3 +1648,78 @@ evidence above. The no-project/no-APK statements below describe the state on
   sign-in screen was available; the UI could not be independently inspected
   until the device is awake. No failure or success for the three fixes is
   inferred from this black capture.
+
+### Free-beta validation follow-up (2026-11-14)
+
+- Current source reviewed from `main` at `a63a3c4717f7764d875ca9b36fdb5d048644f17b`.
+  The connected A065 is present, but remained in Doze with Everywear's activity
+  foreground. No automated navigation, app-data clearing, or new launch was
+  performed. Outfit preview, Quick Log return refresh, and the onboarding
+  photo-tile overflow remain **not verified on-device**; the owner must wake
+  the phone and navigate manually.
+- A new timestamped, uncleared 4,000-line logcat snapshot was retained at
+  `.tooling/recovery/device-startup-20261114/validation-logcat-20261114-202439+0200.txt`.
+  It contains no `TimeoutException` or `NotFoundException` for the current
+  Everywear process. The earlier `TimeoutException after 0:00:02` is emitted by
+  the catch around `AnalyticsService.isAnalyticsEnabled()` in `main.dart`; the
+  2-second deadline wraps `SharedPreferences.getInstance()` and is earlier
+  than the separate 5-second Sentry-init deadline. Supabase initialization
+  followed shortly afterward in the same older log. Its impact was a skipped
+  Sentry initialization and a two-second delay before Supabase/Hive bootstrap,
+  not a fatal startup failure. Reporting now runs outside required core
+  startup, its preference failure is identified separately, and Sentry is
+  skipped when the preference is unavailable or opted out. Focused startup
+  tests cover slow and failing reporting without blocking Supabase/storage.
+- The earlier `Resources$NotFoundException: String resource ID #0x0` stack is
+  entirely in `com.nothing.experience` (`NothingExperience.getAppName` called
+  by the Nothing Experience app-tracking worker); no Everywear frame appears in
+  the stack. It is an OEM/device tracking warning. No user-visible Everywear
+  failure was observed from it, and no app change is warranted. It did not
+  recur for the current process in the fresh snapshot.
+- Tracked-artifact inventory found Android's generated Gradle problems report,
+  Flutter Linux/macOS `ephemeral` outputs, and unreferenced `assets/env.json`.
+  Those paths are now ignored and removed from the Git index only; local files
+  and symlinks were verified to remain present. `assets/env.json` was not
+  bundled or read by source. Metadata-only inspection found its AI provider
+  secret fields empty; the remaining Supabase anon and Stripe publishable
+  values are public client configuration but stale/production-specific. Values
+  were not printed. Stripe-only ProGuard rules were removed after confirming
+  Gradle does not reference that file and release shrinking remains disabled.
+  Required generated platform sources were retained, including Linux's
+  `generated_plugin_registrant.cc`, `generated_plugin_registrant.h`, and
+  `generated_plugins.cmake`, iOS asset-catalog `Contents.json` metadata, and
+  the tracked Hive `local_wardrobe_item.g.dart` adapter. No platform source
+  directories were removed.
+- The staging helper now supports explicit `EVERYWEAR_BUILD_MODE=release`,
+  always targets `lib/main.dart`, rejects diagnostics/engine-test/probe flags,
+  refuses to use `android/key.properties`, labels the output
+  `release-unsigned.apk`, refuses to overwrite an existing artifact, and checks
+  that Gradle produced an APK. All three diagnostic-mode rejection checks and
+  `bash -n` passed. Shrinking settings were not changed.
+- One release-mode staging build was attempted with the approved staging
+  project/config, Java 21, one Gradle worker and the 2 GiB heap. Available RAM
+  fell from 2.4 GiB to 1.0 GiB while swap was full. The build was stopped for
+  resource safety; Gradle produced no release APK, and no release artifact is
+  claimed. The Flutter JDK override was restored. A retry is deferred until
+  the machine has materially more headroom.
+- Focused Flutter tests passed **3/3** for reporting-independent core startup
+  and first-frame loading. Targeted analysis found no warnings/errors; four
+  existing informational diagnostics remain in `main.dart`. Formatting,
+  `bash -n`, release diagnostic guards, and `git diff --check` passed. The four
+  previously recorded outfit/Quick Log/onboarding widget tests passed before
+  this follow-up; they were not re-run here.
+- Fresh same-phone email-confirmation testing is pending. The staging callback
+  allowlist was reported complete. Supabase's default confirmation template is
+  still in use, and the owner reports it cannot be edited until custom SMTP is
+  configured. No fresh confirmation email was sent in this pass. The owner
+  must create a fresh synthetic staging account on the A065 and open its link
+  on that same phone. A second-device link-open result has not been tested; the
+  custom-scheme callback can establish a session only on a device that has
+  Everywear installed and registered to handle it. No confirmation link or
+  credentials should be shared in chat.
+- Next owner actions: wake the A065; sign in to the existing synthetic
+  account; manually verify the outfit confirmation image, Quick Log return
+  refresh, and optional photo screen; then create a fresh staging signup and
+  test its email link on the same phone. If a second-device behavior check is
+  required, use a second device privately and report whether it has Everywear
+  installed. Keep ads and purchases disabled.

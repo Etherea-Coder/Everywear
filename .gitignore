@@ -37,6 +37,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+**/build/
 /web/
 
 # Symbolication related
@@ -101,6 +102,7 @@ service-account*.json
 
 **/macos/Flutter/GeneratedPluginRegistrant.swift
 **/macos/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
 
 # ─── COVERAGE & TESTING ────────────────────────────────────
 coverage/

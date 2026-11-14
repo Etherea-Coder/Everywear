@@ -19,6 +19,7 @@ import './services/subscription_service.dart';
 import './services/revenuecat_web_checkout.dart';
 import './services/notification_service.dart';
 import './services/analytics_service.dart';
+import './services/startup_service_orchestration.dart';
 import './widgets/custom_error_widget.dart';
 import './widgets/staging_build_banner.dart';
 import './widgets/startup_diagnostics.dart';
@@ -140,19 +141,42 @@ void _bootstrapAndRunApp() {
 
 // Essential services that the UI depends on immediately
 Future<void> _initializeEssentialServices() async {
-  await _initializeReportingServices();
-  await _initializeSupabaseService();
-  await _initializeLocalStorage();
+  await initializeCoreStartupServices(
+    initializeReporting: _initializeReportingServices,
+    initializeSupabase: _initializeSupabaseService,
+    initializeLocalStorage: _initializeLocalStorage,
+  );
 }
 
 Future<void> _initializeReportingServices() async {
   StartupDiagnostics.setStage('Loading reporting preference');
-  // Sentry tracking first
+  bool reportingEnabled;
   try {
-    await AnalyticsService.instance.isAnalyticsEnabled().timeout(
-      const Duration(seconds: 2),
-    );
-    StartupDiagnostics.setStage('Starting error reporting');
+    reportingEnabled = await AnalyticsService.instance
+        .isAnalyticsEnabled()
+        .timeout(const Duration(seconds: 2));
+  } catch (e, stackTrace) {
+    if (startupDiagnosticsEnabled) {
+      StartupDiagnostics.recordFailure(
+        'Reporting preference',
+        e,
+        stackTrace: stackTrace,
+      );
+    } else if (kDebugMode) {
+      debugPrint(
+        'Reporting preference unavailable; continuing without Sentry.',
+      );
+    }
+    return;
+  }
+
+  if (!reportingEnabled) {
+    StartupDiagnostics.setStage('Reporting disabled by user');
+    return;
+  }
+
+  StartupDiagnostics.setStage('Starting error reporting');
+  try {
     await SentryFlutter.init((options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
       options.tracesSampleRate = kDebugMode ? 0.0 : 1.0;
@@ -170,7 +194,7 @@ Future<void> _initializeReportingServices() async {
         stackTrace: stackTrace,
       );
     } else if (kDebugMode) {
-      debugPrint('⚠️ Sentry failed to init: $e');
+      debugPrint('⚠️ Sentry failed to initialize: $e');
     }
   }
 }
