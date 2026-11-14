@@ -1753,10 +1753,30 @@ evidence above. The no-project/no-APK statements below describe the state on
   `.tooling/recovery/device-startup-20261114/email-confirm-return-20261114-210842+0200.log`;
   it contains no matching exception/error entry for the app process.
 - The owner has not yet confirmed whether onboarding, including the optional
-  wardrobe-photo step, appeared before the Profile page. The physical-device
-  overflow check therefore remains pending.
+  wardrobe-photo step, appeared before the Profile page. The owner later
+  confirmed the onboarding path was fine and no overflow appeared, and that
+  they navigated to Profile manually. No second device is available, so the
+  other-device callback behavior cannot be tested in this pass.
 - The staging redirect allowlist was owner-confirmed and the default Supabase
   confirmation template remains in use because editing is gated on custom
   SMTP. This successful message confirms delivery for this staging test inbox
   only, not general email readiness. No other-device callback test has been
   performed; behavior on another device remains unverified.
+
+### Signup name propagation fix (2026-11-14)
+
+- The owner reported that email signup asks for a name but the authenticated
+  Profile page displayed the email. Source tracing confirmed the signup form
+  captured the name, while `signUpWithEmailRedirect` sent only email and
+  password. `ProfileScreen` reads `user_metadata.full_name` and falls back to
+  email, so the signup metadata was missing.
+- Signup now sends the trimmed entered name as `data.full_name` with the
+  existing explicit mobile confirmation redirect. The existing profile
+  display reads that auth metadata. A regression assertion inspects the
+  outgoing signup JSON and verifies `data.full_name` is present; the existing
+  redirect and Android intent tests remain covered.
+- Focused auth tests passed **3/3**. Targeted analysis found no issues, and
+  formatting and `git diff --check` passed. This source change has not yet been
+  built or verified on the phone. The account created before the fix cannot
+  recover its previously entered name from signup; the owner can set it via
+  Profile → Edit Profile. No account data was changed remotely.

@@ -702,6 +702,7 @@ class _SplashScreenState extends State<SplashScreen>
           auth: SupabaseService.instance.client.auth,
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
+          fullName: _nameController.text.trim(),
         );
         if (mounted) {
           _showSuccessSnackBar(l10n.confirmEmailMsg);

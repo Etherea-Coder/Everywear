@@ -16,10 +16,12 @@ Future<AuthResponse> signUpWithEmailRedirect({
   required GoTrueClient auth,
   required String email,
   required String password,
+  required String fullName,
 }) {
   return auth.signUp(
     email: email,
     password: password,
+    data: {'full_name': fullName.trim()},
     emailRedirectTo: appAuthCallbackUri,
   );
 }

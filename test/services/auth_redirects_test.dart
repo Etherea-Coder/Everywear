@@ -47,12 +47,19 @@ void main() {
         auth: client,
         email: 'staging@example.invalid',
         password: 'test-only-password',
+        fullName: 'Staging Tester',
       );
 
       expect(capturedRequest?.url.path, '/auth/v1/signup');
       expect(
         capturedRequest?.url.queryParameters['redirect_to'],
         appAuthCallbackUri,
+      );
+      final requestBody =
+          jsonDecode(capturedRequest!.body) as Map<String, dynamic>;
+      expect(
+        (requestBody['data'] as Map<String, dynamic>)['full_name'],
+        'Staging Tester',
       );
     },
   );
