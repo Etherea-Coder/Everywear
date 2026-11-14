@@ -271,9 +271,10 @@ account label (never passwords/tokens).
 ## Exact next actions
 
 1. The corrected normal staging APK is installed over the earlier probe on the
-   connected A065 using `adb install -r`, preserving app data. Unlock the
-   device and confirm whether sign-in, onboarding, or home appears before
-   continuing the smoke checklist. APK SHA-256 is
+   connected A065 using `adb install -r`, preserving app data. The unlocked
+   device visibly shows the branded sign-in screen and staging ribbon. Sign in
+   locally with a synthetic staging account and confirm onboarding or home;
+   do not share credentials. APK SHA-256 is
    `007bcee2a440d36ee04067d3877f30c65594ff51ef8bf7bd78aeb050b1365183`; the
    build uses staging ref `aftdbphdobfrshienple`. Do not use production
    accounts or data.

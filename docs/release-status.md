@@ -36,18 +36,21 @@
   `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`.
   Package/version remain `com.stylewise.app`, `1.0.0-beta.1` code 2.
 - Installed with `adb install -r` over the probe, preserving application data.
-  `MainActivity` was resumed. Initial black screenshot coincided with the phone
-  being `Dozing`; waking it exposed the lock screen. Therefore the normal app
-  screen is **not yet verified**. The phone must be unlocked before reporting
-  whether sign-in, onboarding, or home appears. No fatal app Java exception
-  was observed in the captured launch interval; one sanitized
-  `TimeoutException` occurred during bounded startup initialization, and the
-  previous route assertion was not reported in the corrected launch log.
+  After the owner unlocked the A065, the normal app visibly displayed the
+  branded sign-in page with Google and email options and the STAGING ribbon.
+  This verifies the corrected root now reaches app UI on this device; it does
+  not verify authentication or post-login navigation. The first black capture
+  coincided with the phone being `Dozing`, not a reproduced app black screen.
+  Captured app-process logs contain no route assertion or fatal app crash. One
+  `TimeoutException` and one `NotFoundException` warning remain in the log;
+  their source was not conclusively attributed. Renderer/allocator error tags
+  appeared while drawing, but the sign-in UI rendered. Do not claim all startup
+  or service warnings are resolved.
 - Raw logs and screenshots are retained privately under the ignored
   `.tooling/recovery/device-startup-20261114/`; they are not staged.
-- Remaining: unlock the phone and verify the normal app screen, then perform
-  sign-in/onboarding interaction. This confirms the root-construction fix but
-  does not complete staging integration, account-isolation, or release checks.
+- Remaining: sign in with a synthetic staging account and verify the resulting
+  onboarding or home screen. This confirms first visible app UI but does not
+  complete account-isolation, Storage, quota, or full release checks.
 
 ## Startup probe root-mount boundary (2026-11-13)
 
@@ -1452,9 +1455,11 @@ evidence above. The no-project/no-APK statements below describe the state on
 - [x] Build, archive-check, identify, and hash the staging APK.
 - [x] Install the corrected normal staging APK over the existing app with
   `adb install -r`; no data was cleared or removed.
-- [ ] Unlock the connected phone and confirm sign-in, onboarding, or home is
-  visible; continue the physical-device smoke checklist and capture sanitized
-  logs only if startup still fails.
+- [x] Unlock the connected A065; the corrected APK visibly shows the branded
+  sign-in screen and staging banner.
+- [ ] Sign in with a synthetic staging account and confirm onboarding/home;
+  continue the physical-device smoke checklist and capture sanitized logs if
+  startup or authentication fails.
 - [x] Add a widget regression test that proves the branded startup screen paints
   while startup services are still pending.
 - [ ] Resolve legacy premium account evidence/transition and provide privacy,
