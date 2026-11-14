@@ -1,5 +1,6 @@
 package com.stylewise.app
 
+import android.content.pm.ApplicationInfo
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -34,7 +35,7 @@ class MainActivity: FlutterFragmentActivity() {
                     result.notImplemented()
                 }
             }
-        if (BuildConfig.DEBUG) {
+        if ((applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.everywear/ui_smoke_test")
                 .setMethodCallHandler { call, result ->
                     if (call.method == "isForeground") {

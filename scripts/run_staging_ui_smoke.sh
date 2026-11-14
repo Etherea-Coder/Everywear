@@ -27,21 +27,32 @@ if [[ ! -x "$java21_home/bin/java" ]]; then
 fi
 export JAVA_HOME="$java21_home"
 export PATH="$JAVA_HOME/bin:$PATH"
+old_flutter_jdk="$("$flutter_bin" config --list | sed -n 's/^  jdk-dir: //p' | head -n 1)"
+restore_flutter_jdk=0
 defines_file="$(mktemp "${TMPDIR:-/tmp}/everywear-ui-smoke.XXXXXX.json")"
 old_stay_on=""
 restore_stay_on=0
 cleanup() {
+  cleanup_failed=0
+  if [[ "$restore_flutter_jdk" == "1" ]]; then
+    "$flutter_bin" config --jdk-dir="$old_flutter_jdk" >/dev/null || cleanup_failed=1
+  fi
   if [[ "$restore_stay_on" == "1" ]]; then
     if [[ -z "$old_stay_on" || "$old_stay_on" == "null" ]]; then
-      "$adb_bin" -s "$device_serial" shell settings delete global stay_on_while_plugged_in >/dev/null
+      "$adb_bin" -s "$device_serial" shell settings delete global stay_on_while_plugged_in >/dev/null || cleanup_failed=1
     else
-      "$adb_bin" -s "$device_serial" shell settings put global stay_on_while_plugged_in "$old_stay_on" >/dev/null
+      "$adb_bin" -s "$device_serial" shell settings put global stay_on_while_plugged_in "$old_stay_on" >/dev/null || cleanup_failed=1
     fi
   fi
   rm -f "$defines_file"
+  if [[ "$cleanup_failed" == "1" ]]; then
+    echo "Unable to restore one or more temporary Flutter/device settings." >&2
+  fi
 }
 trap cleanup EXIT
 chmod 600 "$defines_file"
+restore_flutter_jdk=1
+"$flutter_bin" config --jdk-dir="$JAVA_HOME" >/dev/null
 
 python3 - "$config_file" "$project_ref" "$repo_root" "$defines_file" <<'PY'
 import json, os, pathlib, stat, sys, urllib.parse
@@ -92,3 +103,14 @@ cd "$repo_root"
 "$flutter_bin" test integration_test/app_test.dart \
   --device-id "$device_serial" \
   --dart-define-from-file="$defines_file"
+
+available_kb="$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)"
+if [[ "$available_kb" -lt 2097152 ]]; then
+  echo "Integration passed, but APK install build deferred because available RAM is below 2 GiB." >&2
+  exit 0
+fi
+
+"$repo_root/scripts/build_uptodown_free_beta.sh"
+version="$(sed -n 's/^version:[[:space:]]*//p' "$repo_root/pubspec.yaml" | head -n 1 | tr '+' '-')"
+apk="$repo_root/build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-${version}-${project_ref}-debug.apk"
+"$adb_bin" -s "$device_serial" install -r "$apk"

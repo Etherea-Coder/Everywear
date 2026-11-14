@@ -1820,22 +1820,29 @@ evidence above. The no-project/no-APK statements below describe the state on
   targeted Dart
   analysis of the modified Dart sources reported no errors or warnings (only
   existing informational lints).
-- Device integration test, APK build/install and phone UI assertions are
-  **deferred**. The runner pins Java 21 and uses the checked-in Gradle limit of
-  one worker with a 2 GiB heap. ADB sees the authorized A065, but the phone was on another app
-  when inspected. No UI actions were taken. Its screen timeout was already
-  30 minutes; no device settings or app data were changed. The runner will keep
-  the phone awake over USB for its duration and restore the prior setting via
-  an exit trap.
-- The approved staging URL/key JSON file is not present in the checkout or
-  injected into the current shell. The exact next owner action is to place a
-  private mode-0600 JSON file outside the repository containing only
-  `SUPABASE_URL` for `https://aftdbphdobfrshienple.supabase.co` and
-  `SUPABASE_ANON_KEY`, then provide its local path through
-  `EVERYWEAR_STAGE_CONFIG_FILE` (do not send the key in chat). Run with
-  `EVERYWEAR_STAGE_PROJECT_REF=aftdbphdobfrshienple` and
-  `EVERYWEAR_UI_SMOKE_DEVICE_SERIAL=21471b75`. The run/build remains blocked
-  until that local input is available.
+- The approved local config was found at
+  `/tmp/everywear-staging-aftdbphdobfrshienple-private/app-config.json`, mode
+  `0600`. Its URL was validated against
+  `https://aftdbphdobfrshienple.supabase.co`; no key value was displayed.
+- Two integration-build attempts failed before the test code or any UI action
+  ran. Attempt 1: Flutter selected Android Studio JDK `25.0.3` and the Flutter
+  Gradle plugin loader failed. The runner now temporarily sets Flutter's JDK to
+  Java 21 and restores its previous unset value on exit. Attempt 2 reached
+  `compileDebugKotlin` and failed because `MainActivity.kt` referenced
+  `BuildConfig`, which this Android module does not generate. Replaced that
+  check with the app's Android `FLAG_DEBUGGABLE`; this source correction has
+  not been compiled or device-verified. Per recovery limits, no third Gradle
+  attempt was made.
+- ADB confirmed the authorized A065 was awake and Everywear foreground before
+  the second attempt. The build failed before APK installation, test execution,
+  authentication, taps or staging writes. It returned to the launcher. The
+  script restored `stay_on_while_plugged_in` to its original value `0`, and
+  Flutter's JDK setting remains unset. No account data or app settings were
+  changed. Zero synthetic rows/objects were created by the attempted run.
+- Updated staging APK build/install and phone-flow verification remain deferred
+  after the two Gradle failures. The approved config is available; no further
+  credential action is needed. The guarded command for a later allowed run is
+  `EVERYWEAR_STAGE_PROJECT_REF=aftdbphdobfrshienple EVERYWEAR_STAGE_CONFIG_FILE=/tmp/everywear-staging-aftdbphdobfrshienple-private/app-config.json EVERYWEAR_UI_SMOKE_DEVICE_SERIAL=21471b75 ./scripts/run_staging_ui_smoke.sh`.
 - Fresh-signup name metadata check remains a separate owner-assisted case:
   sign up with a new disposable staging identity on the corrected APK, enter
   the name, confirm the email on the same phone, then verify Profile shows that
