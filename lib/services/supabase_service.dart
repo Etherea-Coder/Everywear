@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_redirects.dart';
 
 class SupabaseService {
   static SupabaseService? _instance;
@@ -9,10 +10,17 @@ class SupabaseService {
   static bool _isInitialized = false;
   static bool get isInitialized => _isInitialized;
 
-  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
 
-  static String _clean(String value) => value.trim().replaceAll('"', '').replaceAll("'", "");
+  static String _clean(String value) =>
+      value.trim().replaceAll('"', '').replaceAll("'", "");
   static String get cleanSupabaseUrl => _clean(supabaseUrl);
   static String get cleanSupabaseAnonKey => _clean(supabaseAnonKey);
 
@@ -30,7 +38,12 @@ class SupabaseService {
       return false;
     }
     try {
-      await Supabase.initialize(url: url, anonKey: anonKey, debug: kDebugMode);
+      await Supabase.initialize(
+        url: url,
+        anonKey: anonKey,
+        debug: kDebugMode,
+        authOptions: everywearAuthClientOptions,
+      );
       _isInitialized = true;
       if (kDebugMode) debugPrint('✅ Supabase initialized successfully');
       return true;

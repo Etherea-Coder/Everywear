@@ -95,6 +95,46 @@
 - No provider settings, production settings, source code, or hosted data were
   changed. Payments and ads remain disabled.
 
+## Staging email confirmation callback (2026-11-14)
+
+- Signup previously omitted `emailRedirectTo`. A confirmation link resolving to
+  `localhost:3000` is consistent with Supabase Auth falling back to its Site
+  URL; the confirmation template could also construct a localhost link. The
+  exact Site URL and template remain unverified: the public Auth settings do
+  not include them and a read-only Management API GET to
+  `/v1/projects/aftdbphdobfrshienple/config/auth` returned **401**.
+- Added `signUpWithEmailRedirect`, which always sends
+  `io.supabase.everywear://login-callback`, and reused the URI for OAuth and
+  password recovery. `SupabaseService.initialize` now explicitly enables the
+  installed Supabase Flutter SDK's auth deep-link observer.
+- Source inspection of installed `supabase_flutter` 2.18.3 confirms its
+  AppLinks observer accepts callback codes/tokens and calls
+  `auth.getSessionFromUrl`. The Android resolver maps the custom URI to
+  `com.stylewise.app/.MainActivity`. `AuthGate` uses that session/profile to
+  select onboarding or home. A successful email confirmation round trip has
+  not yet been observed on-device.
+- Staging settings still need review/configuration: set the Site URL fallback
+  to the mobile callback, allow the exact redirect, and inspect the Confirm
+  signup template for `{{ .ConfirmationURL }}`. Keep confirmation enabled.
+  Email auth is enabled but auto-confirm is false. Default Supabase SMTP may
+  only send to pre-authorized organization team addresses; its documented
+  current limit is 2 messages/hour. Use an allowed staging test inbox or
+  configure staging SMTP. No SMTP or template readiness is claimed.
+- The email form was advanced to **Create Account**, but no account was
+  submitted and no fresh email was sent. Do not send one from the old
+  installed APK before the redirect/template settings are fixed. The owner
+  must provide local staging Management API access with `auth_config_read` and
+  `auth_config_write`, or make the changes in the staging Dashboard and report
+  completion. Never send a token or account credentials in chat.
+- Targeted auth redirect and splash tests passed **7/7**. Targeted analysis
+  found no errors or warnings (one existing `anonKey` deprecation info).
+  Targeted formatting passed. No APK build or email round-trip test has been
+  run for these new source changes because staging URL/template configuration
+  is still inaccessible.
+- Production requirements and the ordered staging email verification are in
+  [`email-auth-readiness.md`](email-auth-readiness.md). Production settings
+  remain untouched.
+
 ## Startup probe root-mount boundary (2026-11-13)
 
 - Owner reports the stage probe shows its orange shell and remains at

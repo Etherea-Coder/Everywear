@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../services/supabase_service.dart';
 import '../../services/revenuecat_service.dart';
+import '../../services/auth_redirects.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
@@ -577,7 +578,7 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       await SupabaseService.instance.client.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'io.supabase.everywear://login-callback',
+        redirectTo: appAuthCallbackUri,
       );
       _showSuccessSnackBar('Password reset email sent!');
     } catch (e) {
@@ -675,7 +676,7 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       await SupabaseService.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'io.supabase.everywear://login-callback',
+        redirectTo: appAuthCallbackUri,
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
     } catch (e) {
@@ -697,7 +698,8 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _isLoading = true);
     try {
       if (_isSignUp) {
-        await SupabaseService.instance.client.auth.signUp(
+        await signUpWithEmailRedirect(
+          auth: SupabaseService.instance.client.auth,
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
