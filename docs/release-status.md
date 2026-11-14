@@ -1860,22 +1860,32 @@ evidence above. The no-project/no-APK statements below describe the state on
   invocation, Flutter reported Java 21.0.13 at
   `/usr/lib/jvm/java-21-openjdk/bin/java`, and `./gradlew --version` reported
   Gradle 8.11.1 using the same Java 21 installation.
-- **Build failed** during `:app:compileDebugKotlin`, reporting an unresolved
-  `BuildConfig` reference at `MainActivity.kt:37`. This conflicts with the
-  source verified at the same HEAD: line 37 closes the preceding method-call
-  handler and line 38 uses `ApplicationInfo.FLAG_DEBUGGABLE`; repository-wide
-  `rg BuildConfig android` finds no remaining reference. The reported compiler
-  source therefore does not match the current checked-in file, and this one
-  authorized attempt is exhausted. No further build was run.
-- **Installation:** not attempted; the runner stopped at compilation. **Device
-  smoke test:** not executed; no test actions or staging writes occurred.
-  Existing app data and staging records were preserved.
+- A retained Kotlin daemon log contains an unresolved `BuildConfig` diagnostic
+  at `2026-11-14 23:24:45 +0200`. Its compiler arguments identify
+  `/home/theanarchitect/Projects/Everywear/android/app/src/main/kotlin/com/everywear/app/MainActivity.kt`;
+  that is the intended checkout, not a generated or duplicate activity. The
+  error is confirmed for that earlier compilation: the source at its parent
+  revision had `if (BuildConfig.DEBUG)` at line 37. The corrected source was
+  modified at `23:25:19` and committed at `23:26:14`, after that diagnostic.
+- No fresh compiler log or build-output timestamp was retained for the later
+  invocation described in the previous status entry. The `BuildConfig` message
+  therefore cannot establish whether that later invocation reached Gradle or
+  failed again; the earlier entry incorrectly attributed the stale diagnostic
+  to it. No new build success or failure is verified from retained evidence.
+- **Installation and device smoke test:** not verified by this attempt. The
+  existing app data and staging records were preserved. No evidence shows this
+  attempt reached installation, UI actions or staging writes.
 - Cleanup was checked: Flutter's global `jdk-dir` is unset as before, and A065
   `stay_on_while_plugged_in` is restored to `0`. No source or app configuration
   was changed during the attempt. `git diff --check` passed after recording the
   result.
-- Next diagnostic step, before any separately authorized build: inspect the
-  exact Kotlin compiler task inputs/output and Gradle source-set mapping to
-  explain why the compiler reported a symbol absent from the checked-out
-  source. Then rerun only after that mismatch is understood and the build
-  attempt is authorized.
+- Source reconciliation found no path or source-set defect. `android/app`
+  uses the default Android `src/main/kotlin` source root, with no custom source
+  sets or symlinks, and the current checkout has no duplicate activity. A
+  separate detached worktree at `/tmp/Everywear-staging-aftdbphdobfrshienple`
+  is at `fa162455`; it has no smoke runner and its older activity has no
+  `BuildConfig` reference, so it is not the source of this diagnostic. Before
+  another authorized build, capture that invocation's output to a uniquely
+  timestamped local log and verify it records the current checkout and a new
+  Gradle execution timestamp. Do not use or interpret the old daemon message as
+  evidence about a later build.
