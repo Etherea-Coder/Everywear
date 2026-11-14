@@ -1708,20 +1708,12 @@ evidence above. The no-project/no-APK statements below describe the state on
   `bash -n`, release diagnostic guards, and `git diff --check` passed. The four
   previously recorded outfit/Quick Log/onboarding widget tests passed before
   this follow-up; they were not re-run here.
-- Fresh same-phone email-confirmation testing is pending. The staging callback
-  allowlist was reported complete. Supabase's default confirmation template is
-  still in use, and the owner reports it cannot be edited until custom SMTP is
-  configured. No fresh confirmation email was sent in this pass. The owner
-  must create a fresh synthetic staging account on the A065 and open its link
-  on that same phone. A second-device link-open result has not been tested; the
-  custom-scheme callback can establish a session only on a device that has
-  Everywear installed and registered to handle it. No confirmation link or
-  credentials should be shared in chat.
-- Next owner actions: sign in to the existing synthetic account; verify the
-  outfit confirmation image and optional photo screen; then create a fresh
-  staging signup and test its email link on the same phone. If a second-device behavior check is
-  required, use a second device privately and report whether it has Everywear
-  installed. Keep ads and purchases disabled.
+- At this checkpoint, fresh same-phone email-confirmation testing had not yet
+  occurred. The callback allowlist was owner-confirmed; the default Supabase
+  confirmation template remained in use because editing is gated on custom
+  SMTP. Later same-phone results are recorded below. A second-device result
+  remains untested; no confirmation link or credentials should be shared in
+  chat.
 
 ### Connected phone awake follow-up (2026-11-14)
 
@@ -1747,9 +1739,24 @@ evidence above. The no-project/no-APK statements below describe the state on
   after screen evidence verify the image preview and automatic Today refresh on
   this device.
 - The optional photo onboarding overflow remains unverified on-device.
-- Fresh email confirmation remains pending. Use the current signed-in synthetic
-  account to finish the outfit preview check first. Then sign out and create
-  a new synthetic staging account on this phone with an inbox the owner can
-  access privately; open the fresh confirmation email on the same phone. No
-  link or account credentials should be pasted into chat. A second-device
-  callback result remains untested.
+- At the 20:46 capture, fresh email confirmation was still pending; see the
+  later same-phone result below.
+
+### Same-phone email confirmation (2026-11-14)
+
+- The owner reported creating a fresh staging account and verifying its email.
+  At `2026-11-14 21:08 +02:00`, ADB showed Everywear foreground on the
+  authenticated Profile page on the same A065. This verifies the confirmation
+  round trip returned to the installed app and an authenticated session was
+  available. No account identifier or confirmation link is recorded here.
+- The associated uncleared logcat snapshot is retained locally at
+  `.tooling/recovery/device-startup-20261114/email-confirm-return-20261114-210842+0200.log`;
+  it contains no matching exception/error entry for the app process.
+- The owner has not yet confirmed whether onboarding, including the optional
+  wardrobe-photo step, appeared before the Profile page. The physical-device
+  overflow check therefore remains pending.
+- The staging redirect allowlist was owner-confirmed and the default Supabase
+  confirmation template remains in use because editing is gated on custom
+  SMTP. This successful message confirms delivery for this staging test inbox
+  only, not general email readiness. No other-device callback test has been
+  performed; behavior on another device remains unverified.
