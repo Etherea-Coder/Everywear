@@ -1889,3 +1889,51 @@ evidence above. The no-project/no-APK statements below describe the state on
   timestamped local log and verify it records the current checkout and a new
   Gradle execution timestamp. Do not use or interpret the old daemon message as
   evidence about a later build.
+
+### Guarded A065 staging smoke (2026-11-15)
+
+- Preflight from `/home/theanarchitect/Projects/Everywear` confirmed branch
+  `main`, private config mode `0600` targeting only
+  `aftdbphdobfrshienple`, authorized A065 serial `21471b75`, Flutter Java
+  `/usr/lib/jvm/java-21-openjdk/bin/java` (21.0.13), Gradle 8.11.1 on the same
+  Java 21 runtime, one Gradle worker, `-Xmx2G`, and 3.81 GiB available RAM.
+  Purchases were passed as unavailable and ads disabled by the runner.
+- Invocation at HEAD `c6ceddee2e009829dbc9896900f2a8340fca064c` built and installed
+  the Flutter integration-test APK, initialized staging Supabase, and entered
+  the authenticated smoke test. It failed before any UI action because the
+  test looked for `STAGING` as a `Text`; Flutter's `Banner` paints its label.
+  The same fresh output exposed a Today query for nonexistent staging column
+  `user_profiles.display_name` and the expected unconfigured billing verifier
+  HTTP 503. No app writes occurred. Private log:
+  `/tmp/everywear-staging-smoke-20261115-002134.log` (mode `0600`, exit 1).
+- Fixed the banner check to assert the actual enabled `Banner` widget and
+  changed Today to select `user_profiles.full_name`, matching the app's
+  profile query. Added enabled/disabled banner widget coverage; the focused
+  test passed **1/1**. These source changes are in `45eacee`.
+- Invocation at HEAD `45eacee4c7eb61c2fd5adbd76e31876224131910` built/installed
+  the integration-test APK but timed out waiting for the initial wardrobe
+  navigation control. A device screenshot showed A065 at the charging lock
+  screen. No tap or staging write occurred. The owner unlocked the phone.
+  Private log: `/tmp/everywear-staging-smoke-20261115-002555.log` (mode
+  `0600`, exit 1).
+- After unlock, a third fresh invocation at the same HEAD again built and
+  installed the integration-test APK, but the initial navigation control did
+  not appear before timeout. During the wait, ADB reported
+  `com.nothing.launcher/com.android.searchlauncher.SearchLauncher` as the
+  resumed activity. The guarded test never reached its foreground assertion
+  or first tap, so this is not a passed device smoke test and no private sign-in
+  prompt was reached. No staging records were written. Private log:
+  `/tmp/everywear-staging-smoke-20261115-003211.log` (mode `0600`, exit 1).
+- **Build:** integration-test APK build passed on each invocation. **Install:**
+  the Flutter test runner installed/launched the integration target; no new
+  normal staging beta APK was produced because the guarded test failed before
+  the helper's beta-build step. **Device flow:** not passed; no wardrobe,
+  outfit, Today, profile, or logout action ran. No app data was cleared or
+  account removed.
+- Cleanup verified after the final run: Flutter `jdk-dir` is unset and A065's
+  `stay_on_while_plugged_in` is restored to `0`. The current resumed activity
+  is still the launcher. Next owner action: manually open Everywear and leave
+  it visibly foregrounded (sign in privately only if the app presents the
+  sign-in screen). Then resume with a fresh guarded run; do not tap through
+  other apps. Investigate why the integration runner leaves the launcher
+  resumed before attempting another UI run.
