@@ -24,7 +24,6 @@ class WardrobeUploadStep extends StatefulWidget {
 }
 
 class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
-
   Future<void> _addPhoto() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -50,10 +49,7 @@ class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
     if (source == null) return;
 
     final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: source,
-      imageQuality: 80,
-    );
+    final picked = await picker.pickImage(source: source, imageQuality: 80);
 
     if (picked != null) {
       final newPhotos = List<String>.from(widget.photos);
@@ -141,7 +137,8 @@ class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
                         borderRadius: BorderRadius.circular(8.0),
                         image: DecorationImage(
                           image: widget.photos[index].startsWith('assets/')
-                              ? AssetImage(widget.photos[index]) as ImageProvider
+                              ? AssetImage(widget.photos[index])
+                                    as ImageProvider
                               : FileImage(File(widget.photos[index])),
                           fit: BoxFit.cover,
                         ),
@@ -176,7 +173,8 @@ class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
           GestureDetector(
             onTap: () async => await _addPhoto(),
             child: Container(
-              height: 20.h,
+              constraints: BoxConstraints(minHeight: 20.h),
+              padding: EdgeInsets.symmetric(vertical: 2.h),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12.0),
@@ -187,6 +185,7 @@ class _WardrobeUploadStepState extends State<WardrobeUploadStep> {
                 ),
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(

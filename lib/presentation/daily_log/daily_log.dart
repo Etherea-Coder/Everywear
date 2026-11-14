@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +20,7 @@ import '../../widgets/upgrade_prompt_widget.dart';
 import './widgets/outfit_entry_card_widget.dart';
 import './widgets/quick_log_button_widget.dart';
 import './widgets/stats_summary_widget.dart';
+import './quick_log_navigation.dart';
 
 class DailyLog extends StatefulWidget {
   const DailyLog({Key? key}) : super(key: key);
@@ -2093,7 +2096,7 @@ class _DailyLogState extends State<DailyLog> {
                   subtitle: photoSub,
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    Navigator.pushNamed(context, AppRoutes.outfitCaptureFlow);
+                    _navigateToFullLog();
                   },
                 ),
                 _buildQuickOption(
@@ -2163,10 +2166,16 @@ class _DailyLogState extends State<DailyLog> {
   }
 
   void _navigateToFullLog() {
-    final navigator = Navigator.of(context);
-    navigator.pushNamed(AppRoutes.outfitCaptureFlow).then((_) {
-      _loadData();
-    });
+    unawaited(
+      pushRouteAndRefresh<Object?>(
+        pushRoute: () => Navigator.of(
+          context,
+        ).pushNamed<Object?>(AppRoutes.outfitCaptureFlow),
+        refresh: () async {
+          if (mounted) await _loadData();
+        },
+      ),
+    );
   }
 
   Future<void> _repeatLastOutfit() async {

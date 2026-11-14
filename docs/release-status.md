@@ -1550,12 +1550,101 @@ evidence above. The no-project/no-APK statements below describe the state on
   `adb install -r`; no data was cleared or removed.
 - [x] Unlock the connected A065; the corrected APK visibly shows the branded
   sign-in screen and staging banner.
-- [ ] Sign in with a synthetic staging account and confirm onboarding/home;
-  continue the physical-device smoke checklist and capture sanitized logs if
-  startup or authentication fails.
+- [x] Sign in with the staging email account, complete onboarding, and reach
+  Today/home on the connected A065.
+- [ ] Complete remaining physical-device smoke checks; no production or paid
+  provider checks are implied.
 - [x] Add a widget regression test that proves the branded startup screen paints
   while startup services are still pending.
 - [ ] Resolve legacy premium account evidence/transition and provide privacy,
   deletion, support, and data-retention URLs plus approved artwork.
 - [ ] Locate/validate the existing upload-signing key before any signed
   distributable; do not generate a replacement.
+
+### Connected-device smoke test (2026-11-14)
+
+- The owner completed email authentication on the staging APK and reported
+  reaching the authenticated welcome screen. This verifies email sign-in; it
+  does not verify a fresh confirmation-email link callback. Google sign-in
+  remains unverified because the staging provider is disabled.
+- On the connected A065 running `com.stylewise.app` version `1.0.0-beta.1`
+  (code 2), onboarding was completed with synthetic preferences. The profile
+  save succeeded and the app navigated to the Today home screen. This verifies
+  onboarding persistence and authenticated home navigation against staging.
+- Today and Wardrobe screens rendered. Wardrobe showed the empty state and
+  add-item entry point. The personalization upload step displayed a 22 px
+  bottom overflow on this device.
+- A synthetic vector shirt image was prepared and copied to the device's
+  `Pictures/EverywearSmokeTest` folder. The owner selected it for the synthetic
+  `Synthetic Olive Tee` item in category `Tops`; the item saved and the shirt
+  image visibly loaded in the Wardrobe grid. Two identical synthetic items are
+  now present after repeated form attempts; both were left intact. This is a
+  staging display check, not a private-bucket isolation or cross-account test.
+- A wardrobe-built outfit was saved to staging. After refresh, Today showed
+  one outfit and one linked item, and the outfit history card displayed the
+  synthetic shirt. AI returned the honest unavailable state; the manual path
+  remained usable. Ads and purchases stayed disabled.
+- The confirmation preview did not render the selected garment image even
+  though the Wardrobe grid and saved history card did. Source inspection
+  confirms `WardrobeService` supplies `image_ref`/`image_url`, while the
+  confirmation widget read only `item['image']`. The local fix and regression
+  test are recorded below; staging-device verification is pending.
+- Today initially stayed at zero after Quick Log returned. Source inspection
+  confirms the photo/wardrobe quick-log option pushes the capture route without
+  reloading `_loadData()` on return; the separate full-log route does reload.
+  Manually refreshing Today loaded the saved outfit. The quick route now uses
+  the same return-refresh path, with a focused regression test below.
+- The owner confirmed Logout. The app returned to its email/Google sign-in
+  screen, verifying local session sign-out; the staging account and synthetic
+  records were not deleted. Google remains unavailable because its staging
+  Auth provider is disabled.
+- The focused app-process log captures contained no fatal exception or
+  error-class entry during outfit save and sign-out. They do not establish
+  backend health beyond the UI results above.
+- During the gallery-picker attempt, a system notification intercepted a
+  touch and opened another app. No message was sent. The test returned to the
+  Everywear add-item form without selecting personal media.
+- Staging only; ads and purchases remain disabled. No production changes were
+  made. Generated Linux/macOS working-tree changes remain unstaged.
+
+### Smoke-test fixes and staging rebuild (2026-11-14)
+
+- Outfit confirmation now resolves the wardrobe image from `image_ref`, then
+  `image_url`, with legacy `image` compatibility. The shared
+  `CustomImageWidget` resolver remains responsible for stable private Storage
+  references. A test injects a resolver and verifies the selected reference is
+  routed without contacting hosted Storage.
+- The Quick Log photo/wardrobe action now shares the full-log route helper,
+  which reloads Today after the capture route returns. A focused test verifies
+  refresh occurs after a dismissed route returns.
+- The optional personalization photo tile now uses a minimum height and
+  vertical padding so its content can grow with text scaling. A widget test at
+  a phone-sized viewport and 1.5 text scale reports no layout exception.
+- Focused Flutter tests: **4 passed** across outfit image routing, Quick Log
+  route-return refresh, and the optional photo-tile layout. Targeted Dart
+  analysis of the changed files completed with **no warnings or errors**; 13
+  existing informational lints remain. Targeted formatting and
+  `git diff --check` passed.
+- Built once with `scripts/build_uptodown_free_beta.sh`, approved staging ref
+  `aftdbphdobfrshienple`, the private mode-0600 staging config, Java 21, one
+  Gradle worker and the configured 2 GiB heap. Ads and purchases are disabled;
+  the build includes the STAGING banner. Temporary Flutter JDK selection was
+  cleared after the build.
+- APK:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`;
+  **235,141,130 bytes**, SHA-256
+  `f636a3a5ba5e80dca9532f0f2cc18ba9bccfa8c557cd37a9978721758f57e265`.
+  `unzip -t` passed; `aapt` confirmed `com.stylewise.app` version
+  `1.0.0-beta.1` code `2`. `apksigner` verified the Android debug certificate
+  SHA-256 `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`,
+  matching the prior installed staging APK. Installed with `adb install -r`;
+  staging records were preserved.
+- Post-install device check is pending: the phone entered Doze before a
+  visible frame could be observed. No on-device claim is made yet for the
+  confirmation preview, route-return refresh, or photo-tile layout. The owner
+  must unlock and sign in, then manually navigate to verify those screens.
+- Follow-up ADB inspection found the app activity still foreground, but Android
+  was in Doze and the captured framebuffer was black. The owner reported the
+  sign-in screen was available; the UI could not be independently inspected
+  until the device is awake. No failure or success for the three fixes is
+  inferred from this black capture.

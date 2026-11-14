@@ -8,7 +8,6 @@ import 'package:sizer/sizer.dart';
 import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
 
-
 /// Outfit confirmation widget for final review and rating
 /// Implements outfit preview with rating system and optional notes
 class OutfitConfirmationWidget extends StatefulWidget {
@@ -17,6 +16,7 @@ class OutfitConfirmationWidget extends StatefulWidget {
   final String captureMethod;
   final Function(String, int) onConfirm;
   final VoidCallback onRetake;
+  final Future<String?> Function(String reference)? storageUrlResolver;
 
   const OutfitConfirmationWidget({
     Key? key,
@@ -25,6 +25,7 @@ class OutfitConfirmationWidget extends StatefulWidget {
     required this.captureMethod,
     required this.onConfirm,
     required this.onRetake,
+    this.storageUrlResolver,
   }) : super(key: key);
 
   @override
@@ -184,7 +185,10 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
   }
 
   /// Build wardrobe preview
-  Widget _buildWardrobePreview(ThemeData theme, AppLocalizations localizations) {
+  Widget _buildWardrobePreview(
+    ThemeData theme,
+    AppLocalizations localizations,
+  ) {
     return Container(
       padding: EdgeInsets.all(3.w),
       decoration: BoxDecoration(
@@ -224,10 +228,15 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
 
   /// Build item preview card
   Widget _buildItemPreviewCard(ThemeData theme, Map<String, dynamic> item) {
-    final imageUrl = item['image'] as String? ?? '';
+    final imageUrl =
+        item['image_ref'] as String? ??
+        item['image_url'] as String? ??
+        item['image'] as String? ??
+        '';
     final name = item['name'] as String? ?? 'Unnamed item';
     final category = item['category'] as String? ?? 'Uncategorized';
-    final semanticLabel = item['semanticLabel'] as String?;
+    final semanticLabel =
+        item['semanticLabel'] as String? ?? item['semantic_label'] as String?;
 
     return Container(
       decoration: BoxDecoration(
@@ -250,6 +259,7 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
                 height: 15.h,
                 fit: BoxFit.cover,
                 semanticLabel: semanticLabel,
+                storageUrlResolver: widget.storageUrlResolver,
               ),
             ),
           ),
@@ -286,7 +296,10 @@ class _OutfitConfirmationWidgetState extends State<OutfitConfirmationWidget> {
   }
 
   /// Build outfit name field
-  Widget _buildOutfitNameField(ThemeData theme, AppLocalizations localizations) {
+  Widget _buildOutfitNameField(
+    ThemeData theme,
+    AppLocalizations localizations,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
