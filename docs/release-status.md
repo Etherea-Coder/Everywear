@@ -1742,9 +1742,10 @@ evidence above. The no-project/no-APK statements below describe the state on
   tee image on both; the owner had been instructed not to tap refresh. This
   verifies the automatic Today refresh path on-device. The accompanying
   uncleared log snapshot contains no matching exception/error entries for the
-  app process. Whether the tee was visible on the confirmation screen before
-  save is still awaiting the owner's explicit observation; the history card
-  alone does not prove the confirmation preview.
+  app process. The owner also confirmed the tee image was visible on the
+  confirmation screen before saving. Together, the owner report and before/
+  after screen evidence verify the image preview and automatic Today refresh on
+  this device.
 - The optional photo onboarding overflow remains unverified on-device.
 - Fresh email confirmation remains pending. Use the current signed-in synthetic
   account to finish the outfit preview check first. Then sign out and create
