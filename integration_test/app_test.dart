@@ -57,13 +57,15 @@ void main() {
         // authenticate privately in this test-only app before any writes.
         // ignore: avoid_print
         print(
-          'SIGN_IN_REQUIRED: sign in to the staging-test app on this phone; '
-          'the test is waiting and will not write test records yet.',
+          'SIGN_IN_REQUIRED: sign in privately in the app labeled '
+          '"Everywear UI Smoke Test (STAGING)" '
+          '(package com.stylewise.app.stagingtest). The test remains active '
+          'while waiting and will not write test records yet.',
         );
         await _waitForPredicate(
           tester,
           () => client.auth.currentUser != null,
-          timeout: const Duration(minutes: 5),
+          timeout: const Duration(minutes: 15),
         );
       }
       await _waitFor(tester, find.byTooltip('Manage wardrobe items'));
@@ -259,7 +261,7 @@ void main() {
       // ignore: avoid_print
       print('PASS: sign-out completed as the final account action');
     },
-    timeout: const Timeout(Duration(minutes: 8)),
+    timeout: const Timeout(Duration(minutes: 25)),
   );
 }
 

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
+source "$repo_root/scripts/lib/android_package_path.sh"
 project_ref="${EVERYWEAR_STAGE_PROJECT_REF:-}"
 config_file="${EVERYWEAR_STAGE_CONFIG_FILE:-}"
 device_serial="${EVERYWEAR_UI_SMOKE_DEVICE_SERIAL:-}"
@@ -49,6 +50,7 @@ logcat_file=""
 logcat_pid=""
 base_install_time=""
 base_version_code=""
+base_last_update_time=""
 cleanup() {
   cleanup_failed=0
   if [[ -n "$logcat_pid" ]]; then
@@ -118,7 +120,10 @@ if [[ "$matches" != "1" ]]; then
   echo "The selected Android device is not uniquely connected and authorized." >&2
   exit 2
 fi
-normal_package_path="$("$adb_bin" -s "$device_serial" shell pm path "$normal_application_id" | tr -d '\r')"
+if ! normal_package_path="$(read_android_package_path "$adb_bin" "$device_serial" "$normal_application_id")"; then
+  echo "Cannot query the normal app package; refusing the test." >&2
+  exit 2
+fi
 if [[ -z "$normal_package_path" ]]; then
   echo "Install the normal Everywear staging app before running its isolated UI test." >&2
   exit 2
@@ -126,7 +131,8 @@ fi
 package_dump="$("$adb_bin" -s "$device_serial" shell dumpsys package "$normal_application_id")"
 base_install_time="$(printf '%s\n' "$package_dump" | sed -n 's/^ *firstInstallTime=//p' | head -n 1)"
 base_version_code="$(printf '%s\n' "$package_dump" | sed -n 's/^ *versionCode=\([^ ]*\).*/\1/p' | head -n 1)"
-if [[ -z "$base_install_time" || -z "$base_version_code" ]]; then
+base_last_update_time="$(printf '%s\n' "$package_dump" | sed -n 's/^ *lastUpdateTime=//p' | head -n 1)"
+if [[ -z "$base_install_time" || -z "$base_version_code" || -z "$base_last_update_time" ]]; then
   echo "Cannot record the normal app installation identity; refusing the test." >&2
   exit 2
 fi
@@ -160,15 +166,28 @@ ORG_GRADLE_PROJECT_everywearStagingTestApplication=true \
 test_status=$?
 set -e
 
-normal_package_path_after="$("$adb_bin" -s "$device_serial" shell pm path "$normal_application_id" | tr -d '\r')"
+if ! normal_package_path_after="$(read_android_package_path "$adb_bin" "$device_serial" "$normal_application_id")"; then
+  echo "Could not verify the normal app package after the isolated smoke test." >&2
+  exit 1
+fi
 package_dump_after="$("$adb_bin" -s "$device_serial" shell dumpsys package "$normal_application_id" 2>&1 || true)"
 base_install_time_after="$(printf '%s\n' "$package_dump_after" | sed -n 's/^ *firstInstallTime=//p' | head -n 1)"
 base_version_code_after="$(printf '%s\n' "$package_dump_after" | sed -n 's/^ *versionCode=\([^ ]*\).*/\1/p' | head -n 1)"
-if [[ -z "$normal_package_path_after" || "$base_install_time_after" != "$base_install_time" || "$base_version_code_after" != "$base_version_code" ]]; then
+base_last_update_time_after="$(printf '%s\n' "$package_dump_after" | sed -n 's/^ *lastUpdateTime=//p' | head -n 1)"
+if [[ -z "$normal_package_path_after" || "$base_install_time_after" != "$base_install_time" || "$base_version_code_after" != "$base_version_code" || "$base_last_update_time_after" != "$base_last_update_time" ]]; then
   echo "FAIL: normal Everywear package was removed or changed during the isolated smoke test." >&2
   exit 1
 fi
-echo "Verified normal app install identity unchanged: $normal_application_id ($base_version_code)."
+if ! test_package_path_after="$(read_android_package_path "$adb_bin" "$device_serial" "$test_application_id")"; then
+  echo "Could not verify cleanup of the isolated test package." >&2
+  exit 1
+fi
+if [[ -n "$test_package_path_after" ]]; then
+  echo "FAIL: Flutter did not uninstall the isolated test package after the smoke test." >&2
+  exit 1
+fi
+echo "Verified normal app package unchanged: $normal_application_id ($base_version_code; install $base_install_time; update $base_last_update_time)."
+echo "Verified Flutter cleanup removed the isolated test package: $test_application_id."
 if [[ "$test_status" != "0" ]]; then
   exit "$test_status"
 fi

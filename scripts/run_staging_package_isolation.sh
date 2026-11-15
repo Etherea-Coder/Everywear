@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
+source "$repo_root/scripts/lib/android_package_path.sh"
 project_ref="${EVERYWEAR_STAGE_PROJECT_REF:-}"
 device_serial="${EVERYWEAR_UI_SMOKE_DEVICE_SERIAL:-}"
 if [[ "$project_ref" != "aftdbphdobfrshienple" ]]; then
@@ -78,7 +79,10 @@ if [[ "$device_count" != "1" ]]; then
   exit 2
 fi
 
-normal_apk_path="$("$adb_bin" -s "$device_serial" shell pm path "$normal_application_id" | tr -d '\r')"
+if ! normal_apk_path="$(read_android_package_path "$adb_bin" "$device_serial" "$normal_application_id")"; then
+  echo "Cannot query the normal app package; refusing the isolation test." >&2
+  exit 2
+fi
 if [[ -z "$normal_apk_path" ]]; then
   echo "Normal app is not installed; refusing the isolation test." >&2
   exit 2
@@ -86,7 +90,8 @@ fi
 normal_package_dump="$("$adb_bin" -s "$device_serial" shell dumpsys package "$normal_application_id")"
 normal_first_install="$(printf '%s\n' "$normal_package_dump" | sed -n 's/^ *firstInstallTime=//p' | head -n 1)"
 normal_version="$(printf '%s\n' "$normal_package_dump" | sed -n 's/^ *versionCode=\([^ ]*\).*/\1/p' | head -n 1)"
-if [[ -z "$normal_first_install" || -z "$normal_version" ]]; then
+normal_last_update="$(printf '%s\n' "$normal_package_dump" | sed -n 's/^ *lastUpdateTime=//p' | head -n 1)"
+if [[ -z "$normal_first_install" || -z "$normal_version" || -z "$normal_last_update" ]]; then
   echo "Cannot record normal app package identity; refusing the isolation test." >&2
   exit 2
 fi
@@ -128,13 +133,25 @@ set -e
 echo "Private Flutter runner log: $run_log"
 echo "Flutter CLI exit status: $test_status"
 
-normal_apk_path_after="$("$adb_bin" -s "$device_serial" shell pm path "$normal_application_id" | tr -d '\r')"
+device_count_after="$("$adb_bin" devices | awk -v serial="$device_serial" '$1 == serial && $2 == "device" { n++ } END { print n+0 }')"
+if [[ "$device_count_after" != "1" ]]; then
+  echo "The selected device disconnected during the isolation test." >&2
+  exit 1
+fi
+if ! normal_apk_path_after="$(read_android_package_path "$adb_bin" "$device_serial" "$normal_application_id")"; then
+  echo "Could not verify the normal app package after the isolation test." >&2
+  exit 1
+fi
 normal_package_dump_after="$("$adb_bin" -s "$device_serial" shell dumpsys package "$normal_application_id" 2>&1 || true)"
 normal_first_install_after="$(printf '%s\n' "$normal_package_dump_after" | sed -n 's/^ *firstInstallTime=//p' | head -n 1)"
 normal_version_after="$(printf '%s\n' "$normal_package_dump_after" | sed -n 's/^ *versionCode=\([^ ]*\).*/\1/p' | head -n 1)"
-test_apk_path_after="$("$adb_bin" -s "$device_serial" shell pm path "$test_application_id" | tr -d '\r')"
+normal_last_update_after="$(printf '%s\n' "$normal_package_dump_after" | sed -n 's/^ *lastUpdateTime=//p' | head -n 1)"
+if ! test_apk_path_after="$(read_android_package_path "$adb_bin" "$device_serial" "$test_application_id")"; then
+  echo "Could not verify isolated test package cleanup." >&2
+  exit 1
+fi
 
-if [[ -z "$normal_apk_path_after" || "$normal_first_install_after" != "$normal_first_install" || "$normal_version_after" != "$normal_version" ]]; then
+if [[ -z "$normal_apk_path_after" || "$normal_first_install_after" != "$normal_first_install" || "$normal_version_after" != "$normal_version" || "$normal_last_update_after" != "$normal_last_update" ]]; then
   echo "FAIL: normal app package changed during the package-isolation test." >&2
   exit 1
 fi
@@ -156,4 +173,4 @@ if [[ "$test_status" != "0" ]]; then
 fi
 
 echo "PASS: minimal integration test launched; Flutter cleanup left $normal_application_id installed and removed $test_application_id."
-echo "Normal baseline: version=$normal_version firstInstallTime=$normal_first_install"
+echo "Normal baseline: version=$normal_version firstInstallTime=$normal_first_install lastUpdateTime=$normal_last_update"

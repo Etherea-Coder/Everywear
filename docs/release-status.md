@@ -2011,7 +2011,7 @@ evidence above. The no-project/no-APK statements below describe the state on
   The normal APK helper explicitly forces the normal package ID.
 - The first native foreground check now happens immediately after the Dart
   entrypoint, before app-widget waits. The harness prints
-  `SIGN_IN_REQUIRED` and waits up to five minutes for private sign-in to the
+  `SIGN_IN_REQUIRED` and waits up to fifteen minutes for private sign-in to the
   test-only app before any synthetic writes. The test app has separate secure
   storage and will not inherit the normal app's login; the owner will need to
   authenticate in that test app too.
@@ -2049,13 +2049,14 @@ evidence above. The no-project/no-APK statements below describe the state on
 - The normal package is currently signed out because of the earlier uninstall;
   its prior session was not retained. Google sign-in and email confirmation
   were not exercised by either package-isolation attempt.
-- **Next owner action:** sign back into the restored normal staging app. Only
-  after this runner fix passes its Gradle package/namespace preflight should a
-  new isolated test app be launched. Authenticate privately in the app labeled
-  `Everywear UI Smoke Test (STAGING)` when prompted. After the run, verify the
-  normal app is still installed and visibly authenticated; package metadata
-  alone cannot prove session preservation. Do not run integration tests
-  against `com.stylewise.app`.
+- **Next owner action:** sign back into the restored normal staging app before
+  starting the full smoke. The full runner preflights both the Gradle package
+  ID and namespace as `.stagingtest`, then launches the isolated app. When its
+  active test prints `SIGN_IN_REQUIRED`, authenticate privately in
+  `Everywear UI Smoke Test (STAGING)` on the connected phone. After the run,
+  verify the normal app is still installed and visibly authenticated; package
+  metadata alone cannot prove session preservation. Do not run integration
+  tests against `com.stylewise.app`.
 
 ### Minimal Flutter package-isolation verification (2026-11-15)
 
@@ -2094,13 +2095,36 @@ evidence above. The no-project/no-APK statements below describe the state on
   so authenticated-session retention was not testable.
 - The first wrapper run used the full existing logcat buffer and found the
   earlier, pre-run uninstall event; that was a stale-log false positive. The
-  second run used `logcat -T 1` to monitor only current events. The test itself
-  and observed package operations passed, but the wrapper returned exit status
-  1 despite the Flutter test reporting success and unchanged post-run package
-  metadata. The run script now prints the Flutter CLI status explicitly; the
-  outer exit-status discrepancy remains unresolved. Do not treat the wrapper
-  as fully green or start the full smoke test until that discrepancy is
-  resolved.
+  second run used `logcat -T 1` and the Flutter widget test passed, but the
+  wrapper returned 1. Retained source plus a direct ADB check identified the
+  exact cause: after Flutter correctly uninstalled `.stagingtest`,
+  `adb shell pm path com.stylewise.app.stagingtest` returned status 1 with
+  empty output. Under `set -euo pipefail`, the command substitution exited
+  before the wrapper could recognize the expected absence. This was a
+  post-cleanup reporting/control-flow bug, not a normal-package operation.
+- Added `read_android_package_path()`. It treats only exit 1 with empty output
+  as “package not installed”; nonempty ADB errors remain failures. Its focused
+  shell regression covers installed path, expected absence and device-offline
+  error cases. Both package runners now use it, check device connectivity,
+  verify normal version/install/update timestamps, and explicitly verify the
+  isolated package was cleaned up. `logcat -T 1` ensures prior ring-buffer
+  events cannot be confused with operations during the run.
+- The full test’s private-auth wait is now 15 minutes, within an explicit
+  25-minute widget-test timeout. At `SIGN_IN_REQUIRED`, the process remains
+  connected and pumps the test while waiting; no synthetic records are written
+  until `currentUser` exists. Flutter only runs its stop/uninstall teardown
+  after the test completes or times out, so the test app stays available for
+  sign-in during the wait. Cleanup then intentionally removes only
+  `com.stylewise.app.stagingtest`.
+- The full smoke has not been started. The normal app remains installed but is
+  signed out from the earlier uninstall; its metadata was unchanged during the
+  minimal isolation check. The test app was removed by expected teardown.
+  Before the full run, the owner must sign in privately to the normal app. When
+  the active integration test prints `SIGN_IN_REQUIRED`, sign in to the
+  foreground app labeled `Everywear UI Smoke Test (STAGING)`; it stays active
+  while waiting (up to 15 minutes). Afterward, package metadata is checked
+  automatically and the normal app will be brought to the foreground for a
+  private screenshot check of its authenticated screen.
 - Private evidence files are
   `/tmp/everywear-package-isolation-run-20261115-225128-1712513.log` and
   `/tmp/everywear-a065-package-isolation-20261115-225128-1712513.log` (mode
