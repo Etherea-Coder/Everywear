@@ -2109,6 +2109,17 @@ evidence above. The no-project/no-APK statements below describe the state on
   verify normal version/install/update timestamps, and explicitly verify the
   isolated package was cleaned up. `logcat -T 1` ensures prior ring-buffer
   events cannot be confused with operations during the run.
+- Re-ran the minimal device isolation check after this fix. Flutter integration
+  test: **1/1 passed**; Flutter CLI exit status: **0**; wrapper exit status:
+  **0**. Run-scoped verbose output again shows install/launch/stop/uninstall
+  only for `com.stylewise.app.stagingtest`; the isolated package is absent
+  afterward. Normal `com.stylewise.app` remains installed, version 3, with
+  first-install and last-update timestamps both unchanged at
+  `2026-11-15 22:31:24`. The run-scoped logcat contains no normal-package
+  stop/removal operation. No login or backend write occurred. Evidence logs
+  (mode `0600`):
+  `/tmp/everywear-package-isolation-run-20261115-230825-1718207.log` and
+  `/tmp/everywear-a065-package-isolation-20261115-230825-1718207.log`.
 - The full test’s private-auth wait is now 15 minutes, within an explicit
   25-minute widget-test timeout. At `SIGN_IN_REQUIRED`, the process remains
   connected and pumps the test while waiting; no synthetic records are written
