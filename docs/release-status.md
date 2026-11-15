@@ -1925,11 +1925,10 @@ evidence above. The no-project/no-APK statements below describe the state on
   prompt was reached. No staging records were written. Private log:
   `/tmp/everywear-staging-smoke-20261115-003211.log` (mode `0600`, exit 1).
 - **Build:** integration-test APK build passed on each invocation. **Install:**
-  the Flutter test runner installed/launched the integration target; no new
-  normal staging beta APK was produced because the guarded test failed before
-  the helper's beta-build step. **Device flow:** not passed; no wardrobe,
-  outfit, Today, profile, or logout action ran. No app data was cleared or
-  account removed.
+  Flutter installed the integration target; no new normal staging beta APK was
+  produced because the guarded test failed before the helper's beta-build
+  step. **Device flow:** not passed; no wardrobe, outfit, Today, profile, or
+  logout action ran. No staging records were written.
 - Cleanup verified after the final run: Flutter `jdk-dir` is unset and A065's
   `stay_on_while_plugged_in` is restored to `0`. The current resumed activity
   is still the launcher. Next owner action: manually open Everywear and leave
@@ -1937,3 +1936,46 @@ evidence above. The no-project/no-APK statements below describe the state on
   sign-in screen). Then resume with a fresh guarded run; do not tap through
   other apps. Investigate why the integration runner leaves the launcher
   resumed before attempting another UI run.
+
+### Integration runner cleanup and launch follow-up (2026-11-15)
+
+- Checked the runner process before considering a resume: no
+  `flutter_tools.snapshot test integration_test/app_test.dart`, Dart test
+  process, or `run_staging_ui_smoke.sh` process remained. A manually opened app
+  cannot resume that completed test.
+- ADB currently reports `com.nothing.launcher` as both resumed activity and
+  focused window; `pidof com.stylewise.app` and `pm path com.stylewise.app`
+  return no app process/package. This conflicts with the owner's report that
+  Everywear is foregrounded. No launch or test action was taken to resolve the
+  discrepancy.
+- Flutter's pinned integration-test runner source explains the post-test
+  launcher state: `IntegrationTestTestDevice.kill()` calls `stopApp()` and
+  then `uninstallApp()` for its integration application
+  (`.tooling/flutter/packages/flutter_tools/lib/src/test/integration_test_device.dart:138-147`).
+  The app's `applicationId` is `com.stylewise.app`. The test target therefore
+  uninstalls the app on test cleanup; Android uninstall removes app-local
+  data, including the local session/cache. The earlier claim that app data was
+  preserved by these failed integration runs was incorrect. No remote staging
+  rows were written by these runs; production was untouched. Do not run this
+  integration target against a package whose local data must be preserved.
+- The timeout location is established: `integration_test/app_test.dart` calls
+  `app.main()`, then waits up to 30 seconds for the wardrobe tooltip before it
+  calls `_assertForeground()`. When no matching widget is mounted, the wait
+  times out and the first foreground check is never reached. The test checks
+  process/window foreground only after this widget wait, so it does not
+  distinguish an unmounted app tree from an activity that is not foregrounded.
+- The exact native launch/instrumentation reason is **not established**. The
+  runner logs show the Dart test timeout, but no logcat snapshot was saved for
+  the 00:32-00:34 local invocation. A later read-only `adb logcat -d` capture
+  (raw private file `/tmp/everywear-a065-smoke-20261115.raw.log`, mode `0600`)
+  had no entries in that window; the retained activity records began around
+  21:41 local, after the test. Thus there is no surviving native launch, crash,
+  or instrumentation event evidence to separate failure to launch from an
+  activity leaving foreground. Do not attribute this to sign-in or a plugin.
+- No integration test is running now. The current device observation is not
+  consistent with a foreground Everywear install, so another test/install was
+  not started. Before any next UI run, change the harness so its test
+  application uses a separate package identity and checks native foreground
+  immediately after startup, before waiting for app widgets. This avoids
+  uninstalling the owner's app and makes startup-vs-foreground failure
+  actionable. Then collect a private timestamped logcat window before launch.
