@@ -2017,18 +2017,46 @@ evidence above. The no-project/no-APK statements below describe the state on
   authenticate in that test app too.
 - The runner now captures continuous timestamped `adb logcat -v epoch` output
   to a mode-0600 file under `/tmp`, without clearing device logs. Flutter's
-  teardown may uninstall only `.stagingtest`; the normal package's install
-  identity is checked afterward. A deliberate production-ref guard returned
-  exit 2 before device or config access.
-- Checks performed: focused staging-banner widget test passed **1/1**;
-  targeted integration-test analysis reported no issues; `bash -n` for both
-  staging scripts and `git diff --check` passed; Gradle identity task returned
-  both expected package IDs. No isolated integration run has been performed
-  yet. Normal app restoration is verified separately; preservation across the
-  isolated test remains pending.
-- **Next owner action:** sign in privately to the foreground normal staging
-  app. After confirmation, run the isolated harness; when it prints
-  `SIGN_IN_REQUIRED`, sign in privately to `Everywear UI Smoke Test (STAGING)`.
-  Then verify the normal package is still installed with unchanged install
-  time/version and the expected normal app screen. Do not run integration
-  tests against `com.stylewise.app`.
+  teardown did **not** honor the distinct APK ID. The test ran under Flutter
+  and reached its five-minute `SIGN_IN_REQUIRED` wait, then failed before any
+  UI action or staging write. Its APK was
+  `com.stylewise.app.stagingtest`, but Flutter's device log proves teardown
+  ran `am force-stop com.stylewise.app` and `cmd package uninstall
+  com.stylewise.app` at 2026-11-15 22:28:09 +02. The normal package was absent
+  afterward while `.stagingtest` remained installed. Flutter's pinned
+  `AndroidApk.fromAndroidProject` source falls back to `AndroidProject.namespace`
+  when it cannot read a built APK, and its integration-test teardown stops and
+  uninstalls the package object it selected. The recorded package mismatch is
+  confirmed; whether this invocation took that fallback because its expected
+  APK path was unavailable at lookup time was not separately logged.
+- The test therefore **did not preserve** the normal app installation or local
+  authenticated session. The original normal app was reinstalled from the
+  existing staging artifact (same APK SHA/certificate, version code 3), and
+  its sign-in screen appeared. Its install timestamp is now
+  `2026-11-15 22:31:24`, not the prior `22:07:32`; the prior local session did
+  not survive. No attempt was made to clear app data. Server-side staging
+  records were not changed by this timed-out test. The normal app is currently
+  installed but signed out; the owner must authenticate again.
+- Corrective source change: the test variant now sets both Gradle
+  `applicationId` and `namespace` to `com.stylewise.app.stagingtest`, matching
+  Flutter's observed fallback. The activity is named by its absolute class
+  `com.stylewise.app.MainActivity`, so changing the test namespace does not
+  change the Kotlin activity class. The runner now refuses to start unless
+  Gradle confirms both identities and the pinned Flutter package source still
+  contains the namespace fallback. Its post-run package inspection also handles
+  a missing normal package explicitly instead of exiting before reporting the
+  mismatch.
+- Harness correction has not yet been re-run on device. Earlier checks before
+  discovering the teardown defect were: focused banner widget **1/1**, targeted
+  integration-test analysis clean, script syntax and diff checks clean, and the
+  Gradle `applicationId` task returned `.stagingtest`/normal IDs. These checks
+  did not detect the namespace mismatch and are not evidence the corrected
+  guard works. No test action or synthetic record was made; Google sign-in and
+  email confirmation were not exercised by this run.
+- **Next owner action:** sign back into the restored normal staging app. Only
+  after this runner fix passes its Gradle package/namespace preflight should a
+  new isolated test app be launched. Authenticate privately in the app labeled
+  `Everywear UI Smoke Test (STAGING)` when prompted. After the run, verify the
+  normal app is still installed and visibly authenticated; package metadata
+  alone cannot prove session preservation. Do not run integration tests
+  against `com.stylewise.app`.

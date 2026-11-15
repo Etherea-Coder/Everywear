@@ -27,6 +27,13 @@ if [[ "$test_application_id" == "$normal_application_id" ]]; then
   echo "Refusing to run UI smoke against the normal application identity." >&2
   exit 2
 fi
+flutter_root="$(cd "$(dirname "$flutter_bin")/.." && pwd)"
+flutter_android_package_source="$flutter_root/packages/flutter_tools/lib/src/android/application_package.dart"
+if [[ ! -f "$flutter_android_package_source" ]] || \
+  ! rg -q "androidProject\.namespace" "$flutter_android_package_source"; then
+  echo "Cannot verify the pinned Flutter runner's Android package fallback; refusing the test." >&2
+  exit 2
+fi
 if [[ ! -x "$java21_home/bin/java" ]]; then
   echo "Java 21 is required for the staging Android instrumentation build." >&2
   exit 2
@@ -128,8 +135,9 @@ test_application_identity="$(
   ORG_GRADLE_PROJECT_everywearStagingTestApplication=true \
     ./gradlew --quiet :app:printEverywearApplicationId
 )"
-if [[ "$test_application_identity" != "EVERYWEAR_APPLICATION_ID=$test_application_id" ]]; then
-  echo "Gradle resolved an unexpected integration-test package; refusing to install it." >&2
+if ! printf '%s\n' "$test_application_identity" | rg -qx "EVERYWEAR_APPLICATION_ID=$test_application_id" || \
+  ! printf '%s\n' "$test_application_identity" | rg -qx "EVERYWEAR_NAMESPACE=$test_application_id"; then
+  echo "Gradle resolved an unsafe integration-test package or namespace; refusing to run Flutter's installer/teardown." >&2
   exit 2
 fi
 old_stay_on="$("$adb_bin" -s "$device_serial" shell settings get global stay_on_while_plugged_in | tr -d '\r')"
@@ -153,11 +161,11 @@ test_status=$?
 set -e
 
 normal_package_path_after="$("$adb_bin" -s "$device_serial" shell pm path "$normal_application_id" | tr -d '\r')"
-package_dump_after="$("$adb_bin" -s "$device_serial" shell dumpsys package "$normal_application_id")"
+package_dump_after="$("$adb_bin" -s "$device_serial" shell dumpsys package "$normal_application_id" 2>&1 || true)"
 base_install_time_after="$(printf '%s\n' "$package_dump_after" | sed -n 's/^ *firstInstallTime=//p' | head -n 1)"
 base_version_code_after="$(printf '%s\n' "$package_dump_after" | sed -n 's/^ *versionCode=\([^ ]*\).*/\1/p' | head -n 1)"
 if [[ -z "$normal_package_path_after" || "$base_install_time_after" != "$base_install_time" || "$base_version_code_after" != "$base_version_code" ]]; then
-  echo "Normal Everywear installation changed during the isolated smoke test." >&2
+  echo "FAIL: normal Everywear package was removed or changed during the isolated smoke test." >&2
   exit 1
 fi
 echo "Verified normal app install identity unchanged: $normal_application_id ($base_version_code)."
