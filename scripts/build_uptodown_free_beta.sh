@@ -135,6 +135,8 @@ fi
   if [[ "$stage_probe_enabled" == "true" ]]; then
     export ORG_GRADLE_PROJECT_everywearAppLabel="Everywear Startup Probe (STAGING)"
   fi
+  # A normal beta artifact must never inherit the isolated integration-test ID.
+  export ORG_GRADLE_PROJECT_everywearStagingTestApplication=false
   "$flutter_bin" "${flutter_args[@]}"
 )
 if [[ ! -s "$build_output" ]]; then

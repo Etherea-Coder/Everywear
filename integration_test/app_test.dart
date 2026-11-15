@@ -44,6 +44,28 @@ void main() {
       addTearDown(() => UiSmokeTestMode.setEnabledForDebugTest(false));
 
       app.main();
+      await _waitForForeground(tester);
+      await _waitForPredicate(
+        tester,
+        () => SupabaseService.isInitialized,
+        timeout: const Duration(seconds: 30),
+      );
+      final client = SupabaseService.instance.client;
+      if (client.auth.currentUser == null) {
+        // The isolated test application has its own secure storage and does
+        // not inherit the normal app's Supabase session. Let the owner
+        // authenticate privately in this test-only app before any writes.
+        // ignore: avoid_print
+        print(
+          'SIGN_IN_REQUIRED: sign in to the staging-test app on this phone; '
+          'the test is waiting and will not write test records yet.',
+        );
+        await _waitForPredicate(
+          tester,
+          () => client.auth.currentUser != null,
+          timeout: const Duration(minutes: 5),
+        );
+      }
       await _waitFor(tester, find.byTooltip('Manage wardrobe items'));
       await _assertForeground(tester);
       expect(
@@ -55,7 +77,6 @@ void main() {
         reason: 'The staging define must enable the visible Flutter banner.',
       );
 
-      final client = SupabaseService.instance.client;
       final initialUser = client.auth.currentUser;
       expect(
         initialUser,
@@ -277,6 +298,32 @@ Future<void> _assertForeground(WidgetTester tester) async {
   if (isForeground != true) {
     throw StateError('Smoke test stopped: Everywear is not foregrounded.');
   }
+}
+
+Future<void> _waitForForeground(
+  WidgetTester tester, {
+  Duration timeout = const Duration(seconds: 15),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(deadline)) {
+    if (tester.binding.lifecycleState == AppLifecycleState.resumed) {
+      try {
+        if (await _foreground.invokeMethod<bool>('isForeground') == true) {
+          return;
+        }
+      } on MissingPluginException {
+        throw StateError(
+          'Smoke test stopped before UI waits: native foreground probe is '
+          'unavailable in the isolated Android test app.',
+        );
+      }
+    }
+    await tester.pump(const Duration(milliseconds: 250));
+  }
+  throw TestFailure(
+    'Smoke test stopped before UI waits: isolated Everywear activity did '
+    'not become resumed and foregrounded.',
+  );
 }
 
 Future<void> _waitFor(

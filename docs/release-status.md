@@ -1979,3 +1979,56 @@ evidence above. The no-project/no-APK statements below describe the state on
   immediately after startup, before waiting for app widgets. This avoids
   uninstalling the owner's app and makes startup-vs-foreground failure
   actionable. Then collect a private timestamped logcat window before launch.
+
+### Staging app restoration and isolated test harness (2026-11-15)
+
+- Device identity was rechecked: serial `21471b75`, Nothing A065 / device
+  `Pong`, Android user `0` only. Before restoration,
+  `com.stylewise.app` was absent. The prior Flutter integration-test teardown
+  uninstalled it, so its local session/cache may have been lost. The old claim
+  that those runs preserved app data is withdrawn. No smoke-test UI action or
+  staging row write was reached, and production was untouched.
+- The normal staging APK was built using the approved helper/config and Java
+  21. Flutter and Gradle use Java 21; Gradle remains one worker with a 2 GiB
+  heap. Purchases are unavailable and ads are disabled. The artifact is
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-3-aftdbphdobfrshienple-debug.apk`,
+  SHA-256 `5f457c1b105c0ca902d583f5711eb2fed398ccfd5e144f5b5ab5c4e4c6fe826b`,
+  size 205,559,105 bytes. APK metadata confirms package
+  `com.stylewise.app`, version code 3. Its debug certificate matches the
+  previous staging APK.
+- Installed on A065 user 0 and launched. ADB confirms package path, version
+  code 3, and `com.stylewise.app/.MainActivity` resumed. This is a fresh app
+  installation after the earlier uninstall; the owner must sign in again.
+  Server-side records were not changed by the failed UI test. The install
+  timestamp `2026-11-15 22:07:32` is the baseline for the isolated test's
+  post-run package-preservation check.
+- The harness now builds its integration target as the distinct package
+  `com.stylewise.app.stagingtest`, labeled `Everywear UI Smoke Test (STAGING)`.
+  Gradle's non-compiling identity task verified the true property resolves to
+  `.stagingtest` and false resolves to the normal `com.stylewise.app`; the
+  smoke runner refuses to start if the normal package is absent, records its
+  version/install time, and checks those values after the test even on failure.
+  The normal APK helper explicitly forces the normal package ID.
+- The first native foreground check now happens immediately after the Dart
+  entrypoint, before app-widget waits. The harness prints
+  `SIGN_IN_REQUIRED` and waits up to five minutes for private sign-in to the
+  test-only app before any synthetic writes. The test app has separate secure
+  storage and will not inherit the normal app's login; the owner will need to
+  authenticate in that test app too.
+- The runner now captures continuous timestamped `adb logcat -v epoch` output
+  to a mode-0600 file under `/tmp`, without clearing device logs. Flutter's
+  teardown may uninstall only `.stagingtest`; the normal package's install
+  identity is checked afterward. A deliberate production-ref guard returned
+  exit 2 before device or config access.
+- Checks performed: focused staging-banner widget test passed **1/1**;
+  targeted integration-test analysis reported no issues; `bash -n` for both
+  staging scripts and `git diff --check` passed; Gradle identity task returned
+  both expected package IDs. No isolated integration run has been performed
+  yet. Normal app restoration is verified separately; preservation across the
+  isolated test remains pending.
+- **Next owner action:** sign in privately to the foreground normal staging
+  app. After confirmation, run the isolated harness; when it prints
+  `SIGN_IN_REQUIRED`, sign in privately to `Everywear UI Smoke Test (STAGING)`.
+  Then verify the normal package is still installed with unchanged install
+  time/version and the expected normal app screen. Do not run integration
+  tests against `com.stylewise.app`.
