@@ -2046,13 +2046,9 @@ evidence above. The no-project/no-APK statements below describe the state on
   contains the namespace fallback. Its post-run package inspection also handles
   a missing normal package explicitly instead of exiting before reporting the
   mismatch.
-- Harness correction has not yet been re-run on device. Earlier checks before
-  discovering the teardown defect were: focused banner widget **1/1**, targeted
-  integration-test analysis clean, script syntax and diff checks clean, and the
-  Gradle `applicationId` task returned `.stagingtest`/normal IDs. These checks
-  did not detect the namespace mismatch and are not evidence the corrected
-  guard works. No test action or synthetic record was made; Google sign-in and
-  email confirmation were not exercised by this run.
+- The normal package is currently signed out because of the earlier uninstall;
+  its prior session was not retained. Google sign-in and email confirmation
+  were not exercised by either package-isolation attempt.
 - **Next owner action:** sign back into the restored normal staging app. Only
   after this runner fix passes its Gradle package/namespace preflight should a
   new isolated test app be launched. Authenticate privately in the app labeled
@@ -2060,3 +2056,57 @@ evidence above. The no-project/no-APK statements below describe the state on
   normal app is still installed and visibly authenticated; package metadata
   alone cannot prove session preservation. Do not run integration tests
   against `com.stylewise.app`.
+
+### Minimal Flutter package-isolation verification (2026-11-15)
+
+- The full authenticated smoke test remains paused. Added
+  `integration_test/package_isolation_test.dart`, which imports only Flutter
+  Material, Flutter test, and `integration_test`; it directly renders a single
+  fixed message and makes no Supabase/auth/provider calls. Added a separate
+  runner script that requires the approved staging project ref, checks the
+  runner source paths and Gradle test ID/namespace, records normal package
+  metadata, captures new logcat entries without clearing the existing buffer,
+  then verifies the normal package and test-package cleanup afterward.
+- Source trace for the pinned Flutter runner:
+  `IntegrationTestTestDevice.start()` obtains one `ApplicationPackage` and
+  passes it to `AndroidDevice.startApp()`. `AndroidApk.fromAndroidProject()`
+  reads the APK manifest package when its selected APK path exists; otherwise
+  it falls back to the manifest package or Gradle namespace. Android install
+  uses the built APK path, Android launch uses the refreshed APK's
+  `launchActivity`, and `stopApp`/`uninstallApp` use `ApplicationPackage.id`.
+  Integration-test teardown uses the original package object's ID. The test
+  variant now aligns both application ID and namespace with
+  `com.stylewise.app.stagingtest`; its absolute activity class is
+  `com.stylewise.app.MainActivity`. Thus both APK-derived and namespace-fallback
+  identities map package operations to `.stagingtest`.
+- On A065 user 0, the minimal Flutter integration test rendered its fixed
+  marker and reported **1/1 passed**. Verbose Flutter output records the APK
+  manifest package as `com.stylewise.app.stagingtest`, then shows install of
+  that APK, launch of
+  `com.stylewise.app.stagingtest/com.stylewise.app.MainActivity`, and cleanup
+  via `force-stop` and `uninstall com.stylewise.app.stagingtest` (uninstall
+  succeeded). The run-scoped logcat contains no normal-package stop/removal
+  operation. Afterward, `com.stylewise.app` remained installed at version 3
+  with the same first-install and last-update timestamps recorded before the
+  test (`2026-11-15 22:31:24`); `.stagingtest` was absent as expected. No normal
+  package install, launch, force-stop, uninstall or settings operation was
+  issued by this check. The normal app was already signed out before the check,
+  so authenticated-session retention was not testable.
+- The first wrapper run used the full existing logcat buffer and found the
+  earlier, pre-run uninstall event; that was a stale-log false positive. The
+  second run used `logcat -T 1` to monitor only current events. The test itself
+  and observed package operations passed, but the wrapper returned exit status
+  1 despite the Flutter test reporting success and unchanged post-run package
+  metadata. The run script now prints the Flutter CLI status explicitly; the
+  outer exit-status discrepancy remains unresolved. Do not treat the wrapper
+  as fully green or start the full smoke test until that discrepancy is
+  resolved.
+- Private evidence files are
+  `/tmp/everywear-package-isolation-run-20261115-225128-1712513.log` and
+  `/tmp/everywear-a065-package-isolation-20261115-225128-1712513.log` (mode
+  `0600`). They contain runner/Android logs and must remain private.
+- **Next owner action:** sign into the normal staging app again. The test app
+  was removed by its expected Flutter teardown; prepare/launch the separately
+  labeled staging-test app for private sign-in only after resolving the wrapper
+  exit status. Keep the full authenticated smoke paused until both app sessions
+  are established.
