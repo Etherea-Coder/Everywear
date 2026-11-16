@@ -2186,3 +2186,14 @@ evidence above. The no-project/no-APK statements below describe the state on
   Everywear session remains unverified. The owner should bring the normal app
   to the foreground for a session check before another isolated run is
   considered.
+
+### Profile-name source verification (2026-11-16)
+
+- Signup passes the trimmed name as `raw_user_meta_data.full_name`; the
+  existing Auth trigger copies that value into `user_profiles.full_name`; the
+  Profile screen resolves auth metadata first, then profile data, and only then
+  falls back to email. The current normal-app APK has not been brought to the
+  foreground to verify the rendered result after the fresh signup.
+- Focused local tests for the display-name resolver and signup request passed
+  **6/6**. These confirm request construction and fallback precedence, not a
+  live confirmation callback, database trigger execution, or device display.
