@@ -2651,3 +2651,30 @@ evidence above. The no-project/no-APK statements below describe the state on
   committed separately; targeted tests and another staging run are pending.
   The next run requires private sign-in again because cleanup uninstalled the
   isolated package. Production was untouched; ads and purchases remained off.
+
+### Successful isolated auth-session check (2026-11-16)
+
+- On A065, the isolated `com.stylewise.app.stagingtest` build launched and
+  accepted the owner's private sign-in. Sanitized auth events showed
+  `initialSession; session=absent`, then `signedIn; session=present`.
+- At the first native checkpoint, the owner checked normal Everywear and
+  confirmed its authenticated Today page was still visible. The isolated test
+  then performed explicit local sign-out and logged
+  `signedOut; session=absent`. At the second native checkpoint, the owner
+  confirmed normal Everywear remained on Today. No profile or wardrobe writes
+  were made.
+- The integration test completed **1/1 passed** and the runner exited 0. Its
+  package guard confirmed cleanup removed only
+  `com.stylewise.app.stagingtest`; it did not uninstall or clear the normal
+  app. The normal app's post-cleanup restart emitted
+  `initialSession; session=present`. Package metadata remained version code 4,
+  first installed `2026-11-16 13:21:52`, last updated
+  `2026-11-16 14:21:09`; its resumed activity was
+  `com.stylewise.app/.MainActivity`.
+- This verifies auth-session isolation for this staging test and normal-app
+  process restart. It does not verify profile-name display, wardrobe upload,
+  outfit creation, Today refresh, broad smoke flows, or another-device email
+  confirmation. Those checks remain not run. Google sign-in and a fresh
+  confirmation-link return also remain unverified. RevenueCat verification
+  remains unconfigured (staging returned the expected 503); purchases and ads
+  stayed disabled. Production and Clameo were untouched.
