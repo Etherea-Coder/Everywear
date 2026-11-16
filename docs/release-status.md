@@ -88,6 +88,48 @@
   immediately at `SIGN_IN_REQUIRED` while `Everywear UI Smoke Test (STAGING)`
   (`com.stylewise.app.stagingtest`) remains active for the owner's response.
 
+## Full isolated staging smoke result (2026-11-16)
+
+- Before launch, the normal beta-4 app showed its authenticated Today screen;
+  the isolated package was absent. Baseline screenshot is private at
+  `/tmp/everywear-normal-auth-baseline-20261116.png` (mode 0600). Package
+  version/install metadata was recorded as version 4 with both timestamps
+  `2026-11-16 13:21:52`.
+- The corrected full runner prebuilt the isolated APK, verified its manifest,
+  and recorded Flutter's prelaunch package as
+  `com.stylewise.app.stagingtest`. It emitted `SIGN_IN_REQUIRED` immediately
+  with the labeled app and remained active. The owner signed in privately; the
+  test detected the session and passed its staging project/account guard.
+- Passed: authenticated test-app session, approved staging project guard,
+  synthetic wardrobe image upload and row display, authorized Storage image
+  rendering, outfit confirmation image rendering (the test proceeded through
+  it), and saving/querying the synthetic outfit row for the expected user and
+  local date. These are staging-only records; they were preserved.
+- Today refresh: the screen's fetch marker changed from **3** rows before the
+  new outfit to **4** after route return. The direct query found the saved row
+  for the current user/date. However, the row-specific card finder found no
+  widget and timed out (`cardsBefore=0`, `cardsNow=0`,
+  `savedCardVisible=false`). This assertion **failed**; it is not reported as
+  passed. Source inspection shows the outfit cards are in a nested, lazily built
+  list far below the top of the long Today `ListView`; the test never scrolled
+  to that section. The evidence points to a test visibility gap rather than a
+  failed data refresh, but a scroll-to-row assertion still needs device
+  verification before calling Today complete.
+- Not run because the Today assertion failed first: profile-name check and the
+  test's final sign-out. The runner did clean up `.stagingtest` and reported
+  that the normal package's version/install timestamps were unchanged.
+- Post-run normal-app auth check: `com.stylewise.app` remained installed at
+  version 4 with first/last install time unchanged, but the foreground screen
+  was the sign-in page. Thus **the normal package-preservation check passed;
+  the authenticated-session check failed**. The test log contains no stop or
+  uninstall targeting the normal package. The reason its screen became signed
+  out is unconfirmed. Screenshot is private at
+  `/tmp/everywear-normal-auth-post-smoke-20261116.png` (mode 0600); do not
+  infer that the normal app's session survived merely from package metadata.
+- Fresh private logs: `/tmp/everywear-full-isolated-smoke-20261116-134412-1956155.log`
+  and `/tmp/everywear-a065-ui-smoke-20261116-134412-1956155.log` (mode 0600).
+  Staging remains the only backend contacted; no production changes occurred.
+
 ## Staging APK update/install and authenticated-session check (2026-11-16)
 
 - The old Gradle daemon was verified idle and associated with this checkout,
