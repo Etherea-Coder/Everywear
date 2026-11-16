@@ -1,5 +1,57 @@
 # Android release status
 
+## Isolated UI smoke runner package-identity failure (2026-11-16)
+
+- The corrected run built the isolated APK and launched the activity under
+  `com.stylewise.app.stagingtest`. It reached `SIGN_IN_REQUIRED` and waited
+  through the configured 15-minute period. No synthetic wardrobe/outfit writes
+  occurred; therefore the visible-tab, row-specific Today assertion was **not
+  run**.
+- The current invocation's Flutter output ended with a timeout at
+  `integration_test/app_test.dart:74`, the wait for the isolated test app's
+  authenticated user. The runner then reported normal-package preservation
+  failure. Fresh ADB inspection found `com.stylewise.app` absent and
+  `com.stylewise.app.stagingtest` still installed. The normal authenticated
+  session is consequently **not verified and cannot be restored by reinstalling
+  an APK**; reinstall would create a fresh local app data area. Do not reinstall
+  without the owner's decision and private sign-in.
+- Diagnosis: the pinned Flutter runner's
+  `IntegrationTestTestDevice.start()` captures the package from the existing
+  APK before calling `AndroidDevice.startApp()`. `startApp()` builds the
+  isolated variant and resolves its new package ID locally, but the test
+  device retains the earlier package object. Its `kill()` later stops and
+  uninstalls that stale object. The current device log records the package
+  manager uninstall command for `com.stylewise.app`; immediately afterward,
+  `.stagingtest` remained installed. This matches the source-level stale
+  package object and the observed package state. Do not treat this as a normal
+  app failure or infer that the test APK had the wrong application ID: the
+  produced `app-debug.apk` manifest is `.stagingtest`.
+- Harness fix prepared in `scripts/run_staging_ui_smoke.sh`: build the
+  staging-test APK before invoking Flutter's integration runner, inspect its
+  manifest with Android `aapt`, and refuse to continue unless it is exactly
+  `com.stylewise.app.stagingtest`. Flutter's initial cached package resolution
+  and later teardown should then use the same test-only identity. The runner
+  now captures run-scoped logs from `logcat -T 1` and checks that no normal
+  package stop/removal appears.
+- No second smoke run was started: the required normal app is absent, so its
+  preservation baseline cannot pass, and the test account has not signed into
+  the isolated package. Required owner actions before retry: privately
+  reinstall the retained normal staging APK if desired and sign in again, then
+  sign in to the isolated app (which currently remains installed) or confirm a
+  new test run may install it. Preserve staging data; production remains
+  untouched.
+- After the test process finished, five obsolete debug APKs were moved (not
+  deleted) to `/home/theanarchitect/Projects/Everywear-apk-archive-2026-11-16`.
+  The archive `MANIFEST.txt` records each artifact's purpose, version, build
+  timestamp, SHA-256 and the retained artifacts. All seven inventoried APKs
+  were signed by the Android Debug certificate; the beta-artifacts directory
+  contained no release-signed file, signing material, or checksum/report
+  sidecar. Archived hashes were rechecked successfully. Kept under ignored
+  `build/beta-artifacts/`: version-code-4 latest normal staging APK (previously
+  installed before the runner removed its package) and version-code-3 known-good
+  rollback APK. The active `.stagingtest` APK remains at
+  `build/app/outputs/flutter-apk/app-debug.apk`, outside the archive.
+
 ## Staging APK update/install and authenticated-session check (2026-11-16)
 
 - The old Gradle daemon was verified idle and associated with this checkout,

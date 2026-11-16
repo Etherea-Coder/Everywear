@@ -22,6 +22,7 @@ fi
 flutter_bin="${FLUTTER_BIN:-$repo_root/.tooling/flutter/bin/flutter}"
 adb_bin="${ADB_BIN:-$HOME/Android/Sdk/platform-tools/adb}"
 java21_home="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk}"
+aapt_bin="${AAPT_BIN:-}"
 normal_application_id="com.stylewise.app"
 test_application_id="com.stylewise.app.stagingtest"
 if [[ "$test_application_id" == "$normal_application_id" ]]; then
@@ -48,6 +49,7 @@ old_stay_on=""
 restore_stay_on=0
 logcat_file=""
 logcat_pid=""
+run_log=""
 base_install_time=""
 base_version_code=""
 base_last_update_time=""
@@ -58,6 +60,9 @@ cleanup() {
     wait "$logcat_pid" 2>/dev/null || true
     logcat_pid=""
     echo "Private device logcat saved at: $logcat_file"
+    if [[ -n "$run_log" ]]; then
+      echo "Private Flutter runner log saved at: $run_log"
+    fi
   fi
   if [[ "$restore_flutter_jdk" == "1" ]]; then
     "$flutter_bin" config --jdk-dir="$old_flutter_jdk" >/dev/null || cleanup_failed=1
@@ -146,24 +151,59 @@ if ! printf '%s\n' "$test_application_identity" | rg -qx "EVERYWEAR_APPLICATION_
   echo "Gradle resolved an unsafe integration-test package or namespace; refusing to run Flutter's installer/teardown." >&2
   exit 2
 fi
+
+# Flutter's pinned IntegrationTestTestDevice captures the APK package ID
+# before AndroidDevice.startApp builds it, then uses that captured package
+# object for teardown. If the output APK is still the normal app, Flutter can
+# correctly launch .stagingtest and later uninstall the normal package. Build
+# the isolated APK first so package resolution and teardown see the same ID.
+if [[ -z "$aapt_bin" ]]; then
+  android_sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Android/Sdk}}"
+  aapt_bin="$(find "$android_sdk_root/build-tools" -mindepth 2 -maxdepth 2 -type f -name aapt -print 2>/dev/null | sort -V | tail -n 1)"
+fi
+if [[ ! -x "$aapt_bin" ]]; then
+  echo "Cannot verify the built Android APK package ID; set AAPT_BIN to Android build-tools aapt." >&2
+  exit 2
+fi
+echo "Building the isolated APK before Flutter resolves its cleanup package."
+(
+  cd "$repo_root"
+  ORG_GRADLE_PROJECT_everywearStagingTestApplication=true \
+  ORG_GRADLE_PROJECT_everywearAppLabel="Everywear UI Smoke Test (STAGING)" \
+    "$flutter_bin" build apk --debug --no-pub --dart-define-from-file="$defines_file"
+)
+app_apk="$repo_root/build/app/outputs/flutter-apk/app-debug.apk"
+if [[ ! -f "$app_apk" ]]; then
+  echo "Flutter did not produce the isolated app APK." >&2
+  exit 2
+fi
+apk_package_id="$("$aapt_bin" dump badging "$app_apk" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -n 1)"
+if [[ "$apk_package_id" != "$test_application_id" ]]; then
+  echo "APK identity is unsafe ('$apk_package_id'); expected only '$test_application_id'." >&2
+  exit 2
+fi
+echo "Verified prebuilt app APK identity: $apk_package_id."
 old_stay_on="$("$adb_bin" -s "$device_serial" shell settings get global stay_on_while_plugged_in | tr -d '\r')"
 restore_stay_on=1
 "$adb_bin" -s "$device_serial" shell svc power stayon usb
 
 umask 077
 logcat_file="/tmp/everywear-a065-ui-smoke-$(date +%Y%m%d-%H%M%S)-$$.log"
+run_log="/tmp/everywear-full-isolated-smoke-$(date +%Y%m%d-%H%M%S)-$$.log"
 : > "$logcat_file"
+: > "$run_log"
 chmod 600 "$logcat_file"
-"$adb_bin" -s "$device_serial" logcat -v epoch >"$logcat_file" 2>&1 &
+chmod 600 "$run_log"
+"$adb_bin" -s "$device_serial" logcat -T 1 -v epoch >"$logcat_file" 2>&1 &
 logcat_pid=$!
 
 cd "$repo_root"
 set +e
 ORG_GRADLE_PROJECT_everywearStagingTestApplication=true \
-  "$flutter_bin" test integration_test/app_test.dart \
+  "$flutter_bin" test --no-pub integration_test/app_test.dart \
   --device-id "$device_serial" \
-  --dart-define-from-file="$defines_file"
-test_status=$?
+  --dart-define-from-file="$defines_file" 2>&1 | tee "$run_log"
+test_status=${PIPESTATUS[0]}
 set -e
 
 if ! normal_package_path_after="$(read_android_package_path "$adb_bin" "$device_serial" "$normal_application_id")"; then
@@ -188,6 +228,10 @@ if [[ -n "$test_package_path_after" ]]; then
 fi
 echo "Verified normal app package unchanged: $normal_application_id ($base_version_code; install $base_install_time; update $base_last_update_time)."
 echo "Verified Flutter cleanup removed the isolated test package: $test_application_id."
+if rg -n "force-stop ['\"]?$normal_application_id(['\"[:space:]]|$)|Force stopping $normal_application_id([[:space:]]|$)|package ['\"]uninstall['\"] ['\"]?$normal_application_id(['\"[:space:]]|$)|handlePackageRemove: removing $normal_application_id([[:space:]]|$)|ACTION_PACKAGE_FULLY_REMOVED pkg=$normal_application_id([[:space:]]|$)" "$logcat_file"; then
+  echo "FAIL: device log shows a stop/removal operation for the normal app." >&2
+  exit 1
+fi
 if [[ "$test_status" != "0" ]]; then
   exit "$test_status"
 fi
