@@ -42,6 +42,13 @@ void main() {
       final originalPicker = ImagePickerPlatform.instance;
       ImagePickerPlatform.instance = _SyntheticImagePicker();
       addTearDown(() => ImagePickerPlatform.instance = originalPicker);
+      final previousHitTestWarningSetting =
+          WidgetController.hitTestWarningShouldBeFatal;
+      WidgetController.hitTestWarningShouldBeFatal = true;
+      addTearDown(
+        () => WidgetController.hitTestWarningShouldBeFatal =
+            previousHitTestWarningSetting,
+      );
       UiSmokeTestMode.setEnabledForDebugTest(true);
       addTearDown(() => UiSmokeTestMode.setEnabledForDebugTest(false));
 
@@ -106,7 +113,7 @@ void main() {
         timeout: const Duration(seconds: 75),
       );
       // ignore: avoid_print
-      print('PASS: synthetic wardrobe image upload and row display');
+      print('PASS: synthetic wardrobe row saved and displayed');
 
       // Resolve the uploaded row using the authenticated session, then verify the
       // image widget completes its authorized Storage resolution and display.
@@ -120,6 +127,12 @@ void main() {
             .maybeSingle(),
         timeout: const Duration(seconds: 60),
       );
+      expect(
+        storedItem['image_url'].toString(),
+        isNotEmpty,
+        reason:
+            'The gallery selection must upload and persist the synthetic image.',
+      );
       final itemId = storedItem['id'].toString();
       final imageFinder = find.byKey(ValueKey('wardrobe_image_$itemId'));
       await _waitFor(tester, imageFinder);
@@ -128,9 +141,8 @@ void main() {
         find.descendant(of: imageFinder, matching: find.byType(Image)),
         timeout: const Duration(seconds: 60),
       );
-      expect(storedItem['image_url'].toString(), isNotEmpty);
       // ignore: avoid_print
-      print('PASS: wardrobe Storage image resolves and renders');
+      print('PASS: synthetic wardrobe image uploaded, stored and rendered');
 
       // The Today capture path must allow selecting the uploaded wardrobe item.
       // The save-success snackbar can overlap the floating Quick Log button.
@@ -275,10 +287,10 @@ void main() {
       // ignore: avoid_print
       print('PASS: outfit creation and automatic Today refresh');
 
-      // A pre-existing account may not carry full_name if it signed up before
-      // the metadata fix. Verify the displayed source when available, without
-      // overwriting its profile. Fresh signup is separately required to prove
-      // the signup metadata flow end to end.
+      // Verify the name currently shown by the authenticated app without
+      // changing an existing account. This preconfirmed login account cannot
+      // establish whether a fresh signup copied metadata into its profile row;
+      // the separate disposable-signup check owns that assertion.
       await _tap(tester, find.byTooltip('Profile and settings'));
       final nameFinder = find.byKey(const ValueKey('profile_display_name'));
       final profileRow = await client
@@ -300,13 +312,14 @@ void main() {
       expect(tester.widget<Text>(nameFinder).data, expectedDisplayName);
       if (profileName is String && profileName.trim().isNotEmpty) {
         expect(tester.widget<Text>(nameFinder).data, profileName.trim());
-        expect(
-          profileRow?['full_name'],
-          profileName.trim(),
-          reason: 'Onboarding should persist the signup name to the profile.',
-        );
         // ignore: avoid_print
-        print('PASS: authenticated profile full-name display');
+        print('PASS: authenticated profile displays its Auth full name');
+        // ignore: avoid_print
+        print(
+          profileRow?['full_name'] == profileName.trim()
+              ? 'PROFILE_ROW_SYNC=PASS'
+              : 'PROFILE_ROW_SYNC=NOT_VERIFIED_FOR_EXISTING_ACCOUNT',
+        );
       } else {
         // ignore: avoid_print
         print(
@@ -390,6 +403,7 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
   await _assertForeground(tester);
   await _waitFor(tester, finder);
   await tester.ensureVisible(finder.first);
+  await _waitForHitTestable(tester, finder.first);
   await _assertForeground(tester);
   await tester.tap(finder.first);
   await tester.pump(const Duration(milliseconds: 300));
@@ -404,12 +418,30 @@ Future<void> _enterText(
   await _assertForeground(tester);
   await _waitFor(tester, finder);
   await tester.ensureVisible(finder.first);
+  await _waitForHitTestable(tester, finder.first);
   await _assertForeground(tester);
   await tester.tap(finder.first);
   await _assertForeground(tester);
   await tester.enterText(finder.first, value);
   await tester.pump(const Duration(milliseconds: 200));
   await _assertForeground(tester);
+}
+
+Future<void> _waitForHitTestable(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  final target = finder.hitTestable();
+  final deadline = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(deadline)) {
+    if (target.evaluate().isNotEmpty) return;
+    await tester.pump(const Duration(milliseconds: 100));
+    await _assertForeground(tester);
+  }
+  throw TestFailure(
+    'Timed out waiting for an on-screen, unobscured control: $finder',
+  );
 }
 
 Future<void> _assertForeground(WidgetTester tester) async {

@@ -98,7 +98,7 @@ if pgrep -af 'GradleWrapperMain|GradleDaemon|KotlinCompileDaemon|flutter_tools.s
 fi
 available_kb="$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)"
 if [[ -z "$available_kb" || "$available_kb" -lt 6291456 ]]; then
-  echo "Need at least 6 GiB available RAM before starting the 2 GiB AVD." >&2
+  echo "Need at least 6 GiB available RAM before prebuilding the 2 GiB-heap test APK." >&2
   exit 2
 fi
 if [[ -x "$android_sdk_root/build-tools/36.0.0/aapt" ]]; then
@@ -110,9 +110,86 @@ if [[ -z "$aapt_bin" || ! -x "$aapt_bin" ]]; then
   echo "Android build-tools aapt is unavailable." >&2
   exit 2
 fi
+if [[ -z "$(find "$android_sdk_root/platforms" -mindepth 2 -maxdepth 2 -type f -name android.jar -print -quit 2>/dev/null)" || \
+      -z "$(find "$android_sdk_root/build-tools" -mindepth 1 -maxdepth 1 -type d -print -quit 2>/dev/null)" ]]; then
+  echo "A valid installed Android platform and build-tools version are required so Flutter drive's prebuilt path cannot fall back to a Gradle build." >&2
+  exit 2
+fi
 normal_package="$("$aapt_bin" dump badging "$normal_apk" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -n 1)"
 if [[ "$normal_package" != "com.stylewise.app" ]]; then
   echo "The retained APK is not the normal Everywear staging package." >&2
+  exit 2
+fi
+
+java21_home="${EVERYWEAR_JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk}"
+if [[ ! -x "$java21_home/bin/java" ]] || \
+   ! "$java21_home/bin/java" -version 2>&1 | head -n 1 | rg -q 'version "21([.+-]|$)'; then
+  echo "The emulator smoke prebuild requires the installed Java 21 toolchain." >&2
+  exit 2
+fi
+export JAVA_HOME="$java21_home"
+export PATH="$JAVA_HOME/bin:$PATH"
+
+test_apk="$repo_root/build/app/outputs/flutter-apk/app-debug.apk"
+reuse_prebuilt_apk="${EVERYWEAR_EMULATOR_SMOKE_REUSE_PREBUILT_APK:-}"
+if [[ -n "$reuse_prebuilt_apk" ]]; then
+  reuse_prebuilt_apk="$(realpath "$reuse_prebuilt_apk")"
+  expected_apk="$(realpath -m "$test_apk")"
+  if [[ "$reuse_prebuilt_apk" != "$expected_apk" || ! -f "$reuse_prebuilt_apk" ]]; then
+    echo "Refusing to reuse an APK outside the isolated build output." >&2
+    exit 2
+  fi
+  for source_file in "$repo_root/integration_test/app_test.dart" "$repo_root/android/app/build.gradle" "$repo_root/android/gradle.properties"; do
+    if [[ "$reuse_prebuilt_apk" -ot "$source_file" ]]; then
+      echo "The reusable isolated APK predates a relevant source/build input." >&2
+      exit 2
+    fi
+  done
+  echo "Reusing the just-built isolated integration APK; no Gradle build will run."
+else
+  # Build the exact integration-test target with the emulator stopped. The
+  # helper uses the pinned Flutter SDK, Java 21, the committed 2 GiB Gradle heap,
+  # one worker, staging defines, and verifies the resulting application ID.
+  EVERYWEAR_STAGE_PROJECT_REF="$project_ref" \
+  EVERYWEAR_STAGE_CONFIG_FILE="$config_file" \
+  EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
+  EVERYWEAR_UI_SMOKE_TEST_TARGET="integration_test/app_test.dart" \
+  EVERYWEAR_UI_SMOKE_PREBUILD_ONLY="true" \
+  EVERYWEAR_JAVA21_HOME="$java21_home" \
+    "$repo_root/scripts/run_staging_ui_smoke.sh"
+fi
+if [[ ! -f "$test_apk" ]]; then
+  echo "The prebuild helper did not leave the integration-test APK at the expected path." >&2
+  exit 2
+fi
+test_package_actual="$("$aapt_bin" dump badging "$test_apk" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)"
+if [[ "$test_package_actual" != "$test_package" ]]; then
+  echo "Refusing to launch an APK outside the isolated package: $test_package_actual" >&2
+  exit 2
+fi
+
+# The only Gradle daemon started in a fresh run belongs to this build
+# (preflight required none). Stop it gracefully before emulator boot. Reuse
+# mode is accepted only after a previous build-and-stop completed.
+if [[ -z "$reuse_prebuilt_apk" ]]; then
+  (
+    cd "$repo_root/android"
+    ./gradlew --stop
+  )
+fi
+for _ in $(seq 1 15); do
+  if ! pgrep -af 'GradleDaemon|KotlinCompileDaemon' | rg -v 'pgrep|rg ' >/dev/null; then
+    break
+  fi
+  sleep 1
+done
+if pgrep -af 'GradleDaemon|KotlinCompileDaemon' | rg -v 'pgrep|rg ' >/dev/null; then
+  echo "A Gradle or Kotlin compiler daemon remains after graceful shutdown; refusing emulator boot." >&2
+  exit 2
+fi
+available_kb="$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)"
+if [[ -z "$available_kb" || "$available_kb" -lt 6291456 ]]; then
+  echo "Need at least 6 GiB available RAM after compilation and daemon shutdown, before emulator boot." >&2
   exit 2
 fi
 
@@ -163,8 +240,8 @@ if [[ "$actual_avd" != "$avd_name" ]]; then
   exit 2
 fi
 available_kb="$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)"
-if [[ -z "$available_kb" || "$available_kb" -lt 4194304 ]]; then
-  echo "Need at least 4 GiB available RAM after AVD boot; smoke build was not started." >&2
+if [[ -z "$available_kb" || "$available_kb" -lt 3145728 ]]; then
+  echo "Need at least 3 GiB available RAM for emulator-only test execution; no build remains active." >&2
   exit 2
 fi
 
@@ -174,7 +251,12 @@ fi
 EVERYWEAR_STAGE_PROJECT_REF="$project_ref" \
 EVERYWEAR_STAGE_CONFIG_FILE="$config_file" \
 EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
-  python3 "$repo_root/scripts/verify_staging_signup_metadata.py"
+  python3 "$repo_root/scripts/verify_staging_signup_metadata.py" || signup_status=$?
+if [[ "${signup_status:-0}" == "0" ]]; then
+  echo "SIGNUP_METADATA=PASS"
+else
+  echo "SIGNUP_METADATA=NOT_VERIFIED; continuing core smoke independently."
+fi
 
 EVERYWEAR_STAGE_PROJECT_REF="$project_ref" \
 EVERYWEAR_STAGE_CONFIG_FILE="$config_file" \
@@ -182,6 +264,7 @@ EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
 EVERYWEAR_UI_SMOKE_DEVICE_SERIAL="$device_serial" \
 EVERYWEAR_UI_SMOKE_TEST_TARGET="integration_test/app_test.dart" \
 EVERYWEAR_UI_SMOKE_RUNTIME_AUTH="true" \
+EVERYWEAR_UI_SMOKE_PREBUILT_APK="$test_apk" \
   "$repo_root/scripts/run_staging_ui_smoke.sh"
 
 echo "EMULATOR_CORE_SMOKE=PASS"

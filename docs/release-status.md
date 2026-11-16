@@ -1,5 +1,69 @@
 # Android release status
 
+## Unattended emulator smoke: prebuilt staging test APK (2026-11-16)
+
+- Updated the unattended runner to build the isolated
+  `com.stylewise.app.stagingtest` APK while the AVD is stopped, select Java 21,
+  retain the 2 GiB Gradle heap/one worker, stop Gradle daemons after compile,
+  and require at least 6 GiB available RAM before build and before boot. After
+  boot it checks a separate 3 GiB runtime threshold and invokes the pinned
+  Flutter `drive --no-build --use-application-binary` route. The pinned Flutter
+  3.35.7 source was inspected: drive resolves the provided APK package and
+  passes the same package identity to install, launch, stop and teardown; the
+  installed Android SDK platform prevents the runner's fallback build branch.
+  No Gradle process ran after emulator boot in the successful run.
+- The fresh integration APK build succeeded with Java 21, one worker and a
+  2 GiB heap while the emulator was stopped. The Gradle daemon was gracefully
+  stopped before boot. The emulator then installed and ran the already-built
+  artifact. No phone was used. The runtime preconfirmed staging login was
+  supplied from the existing private credential file; credential values were
+  not logged or included in the APK.
+- Fixed the gallery test tap to wait for a control to become hit-testable and
+  made hit-test warnings fatal. The first run proved the prior false success:
+  its bottom-sheet option was offscreen during tap and no image reference was
+  saved. It also exposed that the Today test tried to scroll while Today was
+  still showing its load spinner. The runner now waits, with a finite bound,
+  for the refreshed scrollable to mount before scrolling to the exact saved
+  outfit row. A later preconfirmed-account name assertion was corrected to
+  distinguish displayed Auth metadata from profile-row synchronization; this
+  account is not a fresh signup fixture.
+- Latest bounded emulator run: **passed**. Authenticated staging login and
+  project guard passed; a synthetic wardrobe row was saved, its image uploaded
+  and rendered; outfit confirmation rendered that image; a synthetic outfit
+  was saved; Today completed its refreshed fetch (`cardsNow=7`) and displayed
+  the exact saved outfit row; profile displayed the authenticated Auth full
+  name; final test-app sign-out completed. Flutter reported `All tests
+  passed.` The test package was removed at teardown. The normal package on the
+  emulator remained installed with version/install/update metadata unchanged.
+- The separate disposable-signup metadata check was **not run** because its
+  configured signup address is already registered (`SIGNUP_ADDRESS_UNUSED=
+  FAIL`). Signup metadata persistence and confirmation-email delivery remain
+  unverified. The existing account's `user_profiles.full_name` did not match
+  its Auth `full_name`; the UI nevertheless displayed the Auth name. This
+  existing-account row mismatch is recorded, not repaired by changing account
+  data, and is not evidence about fresh-signup persistence.
+- AI-backed tips and purchase verification returned configured-unavailable
+  errors from staging; no successful model inference or billing validation is
+  claimed. Ads and purchases remained disabled. These errors did not block the
+  core smoke flow.
+- Checks performed: pinned Flutter prebuilt-drive source inspection; targeted
+  Dart formatting; shell syntax checks; `git diff --check`; three isolated APK
+  prebuilds during this diagnostic sequence, each with the emulator stopped;
+  and the final end-to-end emulator run. The first two runs failed on test
+  interaction timing and a premature Today scroll respectively; their causes
+  were fixed before the passing run. No project-wide analyzer or unrelated test
+  suite was run. Temporary Flutter Java selection was restored; the AVD was
+  shut down and no emulator/build daemon remains active.
+- Private latest Flutter log:
+  `/tmp/everywear-full-isolated-smoke-20261116-231608-2123970.log` (mode 0600).
+  Private emulator boot log:
+  `/tmp/everywear-emulator-boot-20261116-231534-2122708.log` (mode 0600).
+- Next: use a fresh, disposable staging signup address (or provision another
+  confirmed synthetic account) to verify Auth metadata and trigger-created
+  profile persistence independently. Keep any existing-account profile-row
+  discrepancy under review without altering the account. Do not rerun the
+  already passing core flow without a relevant code change.
+
 ## Emulator image installed; guarded run stopped for memory (2026-11-16)
 
 - Installed the exact available SDK package `system-images;android-37.0;google_apis_playstore;x86_64` into `/home/theanarchitect/Android/Sdk` using the existing SDK Manager. The AVD's `system.img` is now present; no AVD configuration or other system image was changed.
