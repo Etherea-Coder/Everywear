@@ -6,6 +6,7 @@ source "$repo_root/scripts/lib/android_package_path.sh"
 project_ref="${EVERYWEAR_STAGE_PROJECT_REF:-}"
 config_file="${EVERYWEAR_STAGE_CONFIG_FILE:-}"
 device_serial="${EVERYWEAR_UI_SMOKE_DEVICE_SERIAL:-}"
+test_target="${EVERYWEAR_UI_SMOKE_TEST_TARGET:-integration_test/app_test.dart}"
 if [[ "$project_ref" != "aftdbphdobfrshienple" ]]; then
   echo "Set EVERYWEAR_STAGE_PROJECT_REF to the approved staging project." >&2
   exit 2
@@ -16,6 +17,11 @@ if [[ -z "$config_file" || ! -f "$config_file" ]]; then
 fi
 if [[ -z "$device_serial" ]]; then
   echo "Set EVERYWEAR_UI_SMOKE_DEVICE_SERIAL to the intended connected Android device serial." >&2
+  exit 2
+fi
+if [[ "$test_target" != "integration_test/app_test.dart" && \
+      "$test_target" != "integration_test/package_isolation_test.dart" ]]; then
+  echo "Refusing an unreviewed UI smoke target." >&2
   exit 2
 fi
 
@@ -182,7 +188,8 @@ if [[ "$apk_package_id" != "$test_application_id" ]]; then
   echo "APK identity is unsafe ('$apk_package_id'); expected only '$test_application_id'." >&2
   exit 2
 fi
-echo "Verified prebuilt app APK identity: $apk_package_id."
+echo "FLUTTER_RESOLVED_PACKAGE_ID_BEFORE_LAUNCH=$apk_package_id"
+echo "Flutter resolves this prebuilt APK package before launch and retains it for teardown."
 old_stay_on="$("$adb_bin" -s "$device_serial" shell settings get global stay_on_while_plugged_in | tr -d '\r')"
 restore_stay_on=1
 "$adb_bin" -s "$device_serial" shell svc power stayon usb
@@ -194,15 +201,16 @@ run_log="/tmp/everywear-full-isolated-smoke-$(date +%Y%m%d-%H%M%S)-$$.log"
 : > "$run_log"
 chmod 600 "$logcat_file"
 chmod 600 "$run_log"
+printf 'FLUTTER_RESOLVED_PACKAGE_ID_BEFORE_LAUNCH=%s\n' "$apk_package_id" >> "$run_log"
 "$adb_bin" -s "$device_serial" logcat -T 1 -v epoch >"$logcat_file" 2>&1 &
 logcat_pid=$!
 
 cd "$repo_root"
 set +e
 ORG_GRADLE_PROJECT_everywearStagingTestApplication=true \
-  "$flutter_bin" test --no-pub integration_test/app_test.dart \
+  "$flutter_bin" test --no-pub "$test_target" \
   --device-id "$device_serial" \
-  --dart-define-from-file="$defines_file" 2>&1 | tee "$run_log"
+  --dart-define-from-file="$defines_file" 2>&1 | tee -a "$run_log"
 test_status=${PIPESTATUS[0]}
 set -e
 
@@ -231,6 +239,20 @@ echo "Verified Flutter cleanup removed the isolated test package: $test_applicat
 if rg -n "force-stop ['\"]?$normal_application_id(['\"[:space:]]|$)|Force stopping $normal_application_id([[:space:]]|$)|package ['\"]uninstall['\"] ['\"]?$normal_application_id(['\"[:space:]]|$)|handlePackageRemove: removing $normal_application_id([[:space:]]|$)|ACTION_PACKAGE_FULLY_REMOVED pkg=$normal_application_id([[:space:]]|$)" "$logcat_file"; then
   echo "FAIL: device log shows a stop/removal operation for the normal app." >&2
   exit 1
+fi
+if [[ "$test_target" == "integration_test/package_isolation_test.dart" ]]; then
+  if ! rg -q -F "FLUTTER_RESOLVED_PACKAGE_ID_BEFORE_LAUNCH=$test_application_id" "$run_log"; then
+    echo "FAIL: the test log lacks the pre-launch package identity evidence." >&2
+    exit 1
+  fi
+  if ! rg -q "cmd package .*uninstall.*$test_application_id|adb uninstall .*${test_application_id}" "$logcat_file" "$run_log"; then
+    echo "FAIL: no teardown uninstall for the isolated package was observed." >&2
+    exit 1
+  fi
+  if rg -n "(force-stop|uninstall)[^\n]*$normal_application_id(['\"[:space:]]|$)" "$run_log" "$logcat_file"; then
+    echo "FAIL: runner logs show a package operation targeting the normal app." >&2
+    exit 1
+  fi
 fi
 if [[ "$test_status" != "0" ]]; then
   exit "$test_status"

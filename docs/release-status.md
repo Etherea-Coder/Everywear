@@ -33,13 +33,33 @@
   and later teardown should then use the same test-only identity. The runner
   now captures run-scoped logs from `logcat -T 1` and checks that no normal
   package stop/removal appears.
-- No second smoke run was started: the required normal app is absent, so its
-  preservation baseline cannot pass, and the test account has not signed into
-  the isolated package. Required owner actions before retry: privately
-  reinstall the retained normal staging APK if desired and sign in again, then
-  sign in to the isolated app (which currently remains installed) or confirm a
-  new test run may install it. Preserve staging data; production remains
-  untouched.
+- After that failure, the owner-directed beta-4 restoration was performed as a
+  fresh install. It is version code 4 with first/last install time
+  `2026-11-16 13:21:52`; its previous local session is lost and was not called
+  recoverable. No sign-in was performed.
+- The runner was fixed to prebuild and verify the isolated APK before Flutter
+  resolves its package object. A login-free test target was then run through
+  the same `scripts/run_staging_ui_smoke.sh` runner/artifact path. Its prelaunch
+  record was `FLUTTER_RESOLVED_PACKAGE_ID_BEFORE_LAUNCH=
+  com.stylewise.app.stagingtest`; the built APK manifest matched. The minimal
+  integration test passed **1/1** and made no app/backend requests. Fresh
+  device logs show every Everywear force-stop and uninstall operation targeted
+  `.stagingtest`; teardown removed `.stagingtest`. Normal package version and
+  first/last install timestamps stayed `4` / `2026-11-16 13:21:52`. This
+  verifies package isolation and cleanup, not an authenticated app session.
+- The test's sanitized runner and device logs are retained privately at
+  `/tmp/everywear-full-isolated-smoke-20261116-132344-1949676.log` and
+  `/tmp/everywear-a065-ui-smoke-20261116-132344-1949676.log` (mode 0600). The
+  initial diagnostic run used Flutter verbose output, which prints build
+  defines; those fields were redacted in the private runner log and verbose
+  output was removed from the helper. No configuration value is included in
+  this document.
+- No authenticated smoke run was started after this correction. The normal
+  package is installed fresh but signed out, and the isolated test package was
+  removed by its expected cleanup. The owner asked not to start another
+  authenticated run or request sign-in yet. The corrected harness now has
+  demonstrated package isolation; the row-specific Today assertion remains
+  unverified. Production remains untouched.
 - After the test process finished, five obsolete debug APKs were moved (not
   deleted) to `/home/theanarchitect/Projects/Everywear-apk-archive-2026-11-16`.
   The archive `MANIFEST.txt` records each artifact's purpose, version, build
