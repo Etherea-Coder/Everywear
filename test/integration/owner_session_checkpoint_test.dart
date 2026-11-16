@@ -1,44 +1,48 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../integration_test/support/owner_session_checkpoint.dart';
 
 void main() {
-  testWidgets('checkpoint requires explicit confirmation and returns true', (
-    tester,
-  ) async {
-    Future<bool>? result;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => TextButton(
-              onPressed: () {
-                result = showOwnerSessionCheckpoint(
-                  context,
-                  title: 'Normal app session',
-                  message: 'Check the normal app before continuing.',
-                );
-              },
-              child: const Text('Open checkpoint'),
-            ),
-          ),
-        ),
-      ),
-    );
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('com.everywear/ui_smoke_test');
 
-    await tester.tap(find.text('Open checkpoint'));
-    await tester.pumpAndSettle();
-    expect(find.text('Normal app session'), findsOneWidget);
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+
+  test(
+    'asks native UI for the sign-in checkpoint and returns confirmation',
+    () async {
+      MethodCall? received;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            received = call;
+            return true;
+          });
+
+      final confirmed = await requestOwnerSessionCheckpoint(
+        channel,
+        checkpoint: 'after_test_sign_in',
+      );
+
+      expect(confirmed, isTrue);
+      expect(received?.method, 'confirmOwnerSessionCheckpoint');
+      expect(received?.arguments, {'checkpoint': 'after_test_sign_in'});
+    },
+  );
+
+  test('does not treat a rejected native checkpoint as confirmation', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) async => false);
+
     expect(
-      find.text('Check the normal app before continuing.'),
-      findsOneWidget,
+      await requestOwnerSessionCheckpoint(
+        channel,
+        checkpoint: 'after_test_local_sign_out',
+      ),
+      isFalse,
     );
-
-    await tester.tap(
-      find.byKey(const ValueKey('confirm_normal_session_checkpoint')),
-    );
-    await tester.pumpAndSettle();
-    expect(await result, isTrue);
   });
 }

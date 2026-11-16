@@ -1,5 +1,6 @@
 package com.stylewise.app
 
+import android.app.AlertDialog
 import android.content.pm.ApplicationInfo
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -38,10 +39,40 @@ class MainActivity: FlutterFragmentActivity() {
         if ((applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.everywear/ui_smoke_test")
                 .setMethodCallHandler { call, result ->
-                    if (call.method == "isForeground") {
-                        result.success(activityResumed && windowFocused && !isFinishing)
-                    } else {
-                        result.notImplemented()
+                    when (call.method) {
+                        "isForeground" -> {
+                            result.success(activityResumed && windowFocused && !isFinishing)
+                        }
+                        "confirmOwnerSessionCheckpoint" -> {
+                            val checkpoint = call.argument<String>("checkpoint")
+                            val content = when (checkpoint) {
+                                "after_test_sign_in" -> Pair(
+                                    "Normal Everywear check",
+                                    "The isolated test app is signed in. Confirm normal Everywear still shows your signed-in screen before continuing."
+                                )
+                                "after_test_local_sign_out" -> Pair(
+                                    "Local test sign-out check",
+                                    "The isolated test app has signed out locally. Confirm normal Everywear still shows your signed-in screen before cleanup."
+                                )
+                                else -> null
+                            }
+                            if (content == null) {
+                                result.error("INVALID_CHECKPOINT", "Unknown auth checkpoint.", null)
+                            } else if (!activityResumed || !windowFocused || isFinishing) {
+                                result.error("ACTIVITY_NOT_FOREGROUND", "Return to the test app before confirming.", null)
+                            } else {
+                                AlertDialog.Builder(this)
+                                    .setTitle(content.first)
+                                    .setMessage(content.second)
+                                    .setPositiveButton("I checked — continue") { dialog, _ ->
+                                        dialog.dismiss()
+                                        result.success(true)
+                                    }
+                                    .setCancelable(false)
+                                    .show()
+                            }
+                        }
+                        else -> result.notImplemented()
                     }
                 }
         }

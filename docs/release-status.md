@@ -2588,3 +2588,38 @@ evidence above. The no-project/no-APK statements below describe the state on
   performed after this correction. The dialog and fixed-height header remain
   unverified on the phone; profile/wardrobe writes and test-app local sign-out
   were not run.
+
+### Auth checkpoint input failure and native confirmation (2026-11-16)
+
+- On the next A065 run, the native app label and full-width test banner were
+  visible. The test requested private sign-in; the app emitted
+  `signedIn; session=present`. The owner switched to normal Everywear and
+  reported its Today page remained visible with only the normal small staging
+  ribbon. The normal auth diagnostic had recorded `initialSession; session=present`.
+- The test then emitted `signedOut; session=absent` after its local test-app
+  sign-out. The owner returned to the test app, but reported the Flutter
+  confirmation button did not respond after two taps. A fresh screen capture
+  showed a visually enabled Flutter button. One targeted `adb input tap` at
+  the button center also produced no state change. The runner remained blocked
+  in the confirmation gate; no final normal-session-after-sign-out result was
+  accepted.
+- The runner was interrupted deliberately. Its guard reported the normal app
+  unchanged and correctly failed because the isolated test package remained
+  installed after interruption. The normal app was not uninstalled or cleared.
+  No profile/wardrobe writes occurred. The test app had already signed out
+  locally; no remote session was revoked.
+- The failure is isolated to interactive confirmation under Flutter's live
+  integration-test pointer handling; the precise low-level event loss is not
+  proven. Replaced the Flutter dialog with a native Android `AlertDialog` on
+  the debug-only smoke-test method channel, restricted to two fixed checkpoint
+  names. The Dart test waits for an explicit native positive-button response;
+  invalid checkpoints fail closed. This should bypass Flutter pointer
+  interception, but native behavior is not yet built or device-verified.
+- Focused banner and native-channel helper tests passed **4/4**; targeted Dart
+  analysis found no issues; formatting and `git diff --check` passed. Kotlin
+  compilation is pending a staging build. Next run must use the connected A065,
+  preserve the normal package, and require private sign-in because interrupted
+  test cleanup left its package installed but locally signed out. At each
+  checkpoint, the owner must inspect normal Everywear and tap the native
+  **I checked — continue** button. Profile-name, wardrobe and final normal-app
+  session checks remain unverified.

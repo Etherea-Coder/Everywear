@@ -80,14 +80,7 @@ void main() {
         auth,
         expectedTestSession: true,
       );
-      await _waitForOwnerConfirmation(
-        tester,
-        binding,
-        title: 'Normal Everywear check',
-        message:
-            'The isolated test app is signed in. Confirm the normal app still '
-            'shows your signed-in screen before allowing this test to continue.',
-      );
+      await _waitForOwnerConfirmation('after_test_sign_in');
       expect(auth.currentUser, isNotNull);
 
       await auth.signOut(scope: SignOutScope.local);
@@ -110,14 +103,7 @@ void main() {
         auth,
         expectedTestSession: false,
       );
-      await _waitForOwnerConfirmation(
-        tester,
-        binding,
-        title: 'Local test sign-out check',
-        message:
-            'The isolated test app has signed out locally. Confirm the normal '
-            'app still shows your signed-in screen before cleanup continues.',
-      );
+      await _waitForOwnerConfirmation('after_test_local_sign_out');
       expect(auth.currentUser, isNull);
       // ignore: avoid_print
       print('PASS: test app sign-in and explicit local sign-out completed');
@@ -126,32 +112,13 @@ void main() {
   );
 }
 
-Future<void> _waitForOwnerConfirmation(
-  WidgetTester tester,
-  IntegrationTestWidgetsFlutterBinding binding, {
-  required String title,
-  required String message,
-}) async {
-  final priorPointerPropagation = binding.shouldPropagateDevicePointerEvents;
-  binding.shouldPropagateDevicePointerEvents = true;
-  try {
-    final context = tester.element(find.byType(Scaffold).first);
-    var confirmed = false;
-    unawaited(
-      showOwnerSessionCheckpoint(context, title: title, message: message).then((
-        result,
-      ) {
-        confirmed = result;
-      }),
-    );
-    await tester.pump();
-    await _waitForPredicate(
-      tester,
-      () => confirmed,
-      timeout: const Duration(minutes: 10),
-    );
-  } finally {
-    binding.shouldPropagateDevicePointerEvents = priorPointerPropagation;
+Future<void> _waitForOwnerConfirmation(String checkpoint) async {
+  final confirmed = await requestOwnerSessionCheckpoint(
+    _foreground,
+    checkpoint: checkpoint,
+  ).timeout(const Duration(minutes: 10));
+  if (!confirmed) {
+    throw TestFailure('Owner did not confirm auth checkpoint: $checkpoint.');
   }
 }
 
