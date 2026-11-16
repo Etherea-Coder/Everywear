@@ -1,5 +1,12 @@
 # Android release status
 
+## Emulator image installed; guarded run stopped for memory (2026-11-16)
+
+- Installed the exact available SDK package `system-images;android-37.0;google_apis_playstore;x86_64` into `/home/theanarchitect/Android/Sdk` using the existing SDK Manager. The AVD's `system.img` is now present; no AVD configuration or other system image was changed.
+- Reran `scripts/run_staging_emulator_smoke.sh` with the saved, mode-0600 private credentials and approved staging config. The Android 37.0 AVD booted and passed its identity check, then the script stopped at its safety threshold: available RAM during the booted-AVD check was about 3.1 GiB, below the required 4 GiB for starting the build. The wrapper shut down the emulator on exit.
+- No APK build/install, signup metadata request, authenticated test login, UI test, or hosted request occurred. Existing staging records and the physical phone were untouched. No test passed or failed; emulator application checks were not run.
+- After shutdown, 7.9 GiB RAM was available and 383 GiB disk remained free. No emulator/build process remains active. The SDK image installation itself completed successfully. Avoid bypassing the 4 GiB guard; a future attempt needs safer resource headroom or a separately provisioned lower-memory test AVD whose boot and app-test viability are verified first.
+
 ## Bounded unattended emulator attempt (2026-11-16)
 
 - Current local checkout: `main`, HEAD `8a6329457634e40071000bc8e6f9509f86e354b0` before this checkpoint. Credentials and the private staging config passed the helper's outside-repository, mode-0600, schema and staging-project checks; values were not printed.
