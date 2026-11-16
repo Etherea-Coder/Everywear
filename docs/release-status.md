@@ -2623,3 +2623,31 @@ evidence above. The no-project/no-APK statements below describe the state on
   checkpoint, the owner must inspect normal Everywear and tap the native
   **I checked — continue** button. Profile-name, wardrobe and final normal-app
   session checks remain unverified.
+
+### Native checkpoint build and inspection timeout (2026-11-16)
+
+- The staging helper and integration runner both built the Android app
+  successfully with the native checkpoint bridge; Gradle package preflight
+  confirmed `com.stylewise.app.stagingtest`. The owner signed in privately and
+  the test logged `signedIn; session=present`. It then waited at the first
+  normal-app inspection checkpoint.
+- The owner later confirmed normal Everywear displayed its authenticated
+  Today page, but the test had already exceeded its ten-minute background/
+  return window before the owner returned to the test app. It failed at
+  `_waitForNormalAppInspection` before showing the native dialog; there was no
+  test-app local sign-out. Flutter cleanup removed `.stagingtest`, which is why
+  the test app disappeared. The normal package stayed installed with version
+  and install/update timestamps unchanged; the owner still had normal Today.
+  The isolated package's local sign-in was lost with cleanup. No profile or
+  wardrobe writes occurred.
+- Kotlin/native dialog compilation is verified by the successful APK build,
+  but native confirmation taps are **not device-verified**. The runner did not
+  reach either native dialog. The check's authenticated-session retention
+  after test sign-in remains based on the normal app's prior sanitized
+  `initialSession; session=present` and the owner's Today observation; the
+  post-test-sign-out check remains not run.
+- Extended each normal-app round-trip and native confirmation wait to 20
+  minutes and the overall integration-test timeout to 65 minutes. This is
+  committed separately; targeted tests and another staging run are pending.
+  The next run requires private sign-in again because cleanup uninstalled the
+  isolated package. Production was untouched; ads and purchases remained off.

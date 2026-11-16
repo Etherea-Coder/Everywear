@@ -108,7 +108,7 @@ void main() {
       // ignore: avoid_print
       print('PASS: test app sign-in and explicit local sign-out completed');
     },
-    timeout: const Timeout(Duration(minutes: 45)),
+    timeout: const Timeout(Duration(minutes: 65)),
   );
 }
 
@@ -116,7 +116,7 @@ Future<void> _waitForOwnerConfirmation(String checkpoint) async {
   final confirmed = await requestOwnerSessionCheckpoint(
     _foreground,
     checkpoint: checkpoint,
-  ).timeout(const Duration(minutes: 10));
+  ).timeout(const Duration(minutes: 20));
   if (!confirmed) {
     throw TestFailure('Owner did not confirm auth checkpoint: $checkpoint.');
   }
@@ -138,7 +138,7 @@ Future<void> _waitForNormalAppInspection(
   required bool expectedTestSession,
 }) async {
   var leftTestApp = false;
-  final deadline = DateTime.now().add(const Duration(minutes: 10));
+  final deadline = DateTime.now().add(const Duration(minutes: 20));
   final priorPointerPropagation = binding.shouldPropagateDevicePointerEvents;
   final roundTrip = ForegroundRoundTripGate();
   binding.shouldPropagateDevicePointerEvents = true;
