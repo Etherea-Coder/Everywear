@@ -2,6 +2,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:everywear/core/utils/profile_display_name.dart';
 
 void main() {
+  group('normalizeProfileName', () {
+    test('trims a provided name', () {
+      expect(normalizeProfileName('  Ada Lovelace  '), 'Ada Lovelace');
+    });
+
+    test('ignores empty or whitespace-only values', () {
+      expect(normalizeProfileName(null), isNull);
+      expect(normalizeProfileName('   '), isNull);
+    });
+  });
+
   group('resolveProfileDisplayName', () {
     test('prefers a non-empty authentication name', () {
       expect(

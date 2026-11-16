@@ -300,6 +300,11 @@ void main() {
       expect(tester.widget<Text>(nameFinder).data, expectedDisplayName);
       if (profileName is String && profileName.trim().isNotEmpty) {
         expect(tester.widget<Text>(nameFinder).data, profileName.trim());
+        expect(
+          profileRow?['full_name'],
+          profileName.trim(),
+          reason: 'Onboarding should persist the signup name to the profile.',
+        );
         // ignore: avoid_print
         print('PASS: authenticated profile full-name display');
       } else {

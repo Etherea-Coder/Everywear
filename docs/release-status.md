@@ -2197,3 +2197,11 @@ evidence above. The no-project/no-APK statements below describe the state on
 - Focused local tests for the display-name resolver and signup request passed
   **6/6**. These confirm request construction and fallback precedence, not a
   live confirmation callback, database trigger execution, or device display.
+- Follow-up implementation: onboarding now also copies a non-empty trimmed
+  `full_name` from the authenticated signup metadata into the signed-in user's
+  `user_profiles` row. Empty metadata leaves the existing profile value
+  untouched. The isolated UI smoke now checks that the profile row contains
+  the same name when auth metadata is available. The focused name, signup, and
+  optional-onboarding-photo tests passed **9/9**; targeted analysis found 3
+  informational import/key lints and no errors. This does not replace the
+  pending fresh-account device verification.

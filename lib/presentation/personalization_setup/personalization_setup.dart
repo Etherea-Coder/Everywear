@@ -5,6 +5,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../core/providers.dart';
+import '../../core/utils/profile_display_name.dart';
 import '../../routes/app_routes.dart';
 import '../../services/supabase_service.dart';
 import './widgets/lifestyle_context_step.dart';
@@ -118,20 +119,26 @@ class _PersonalizationSetupState extends ConsumerState<PersonalizationSetup> {
 
     try {
       final client = SupabaseService.instance.client;
-      final userId = client.auth.currentUser?.id;
+      final currentUser = client.auth.currentUser;
+      final userId = currentUser?.id;
       if (userId == null) throw StateError('User is not authenticated');
+      final profileUpdate = <String, dynamic>{
+        'style_preferences': _selectedStyles,
+        'work_environment': _workEnvironment,
+        'social_frequency': _socialFrequency,
+        'climate': _climate,
+        'purchase_frequency': _purchaseFrequency,
+        'budget_consciousness': _budgetConsciousness,
+        'environmental_impact': _environmentalImpact,
+        'onboarding_completed': true,
+      };
+      final fullName = normalizeProfileName(
+        currentUser?.userMetadata?['full_name'] as String?,
+      );
+      if (fullName != null) profileUpdate['full_name'] = fullName;
       final savedProfile = await client
           .from('user_profiles')
-          .update({
-            'style_preferences': _selectedStyles,
-            'work_environment': _workEnvironment,
-            'social_frequency': _socialFrequency,
-            'climate': _climate,
-            'purchase_frequency': _purchaseFrequency,
-            'budget_consciousness': _budgetConsciousness,
-            'environmental_impact': _environmentalImpact,
-            'onboarding_completed': true,
-          })
+          .update(profileUpdate)
           .eq('id', userId)
           .select('id')
           .maybeSingle();
