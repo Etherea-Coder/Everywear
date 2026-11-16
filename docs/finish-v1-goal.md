@@ -1,17 +1,23 @@
 # Everywear Android v1 finish contract
 
-This document records the authorized finish scope for branch `recovery/android-v1`. It supersedes earlier restrictions that prohibited tests, analysis, and builds. Work continues through local implementation and checkpoints until each item is verified or specifically blocked.
+This document records the authorized finish scope. Work began on
+`recovery/android-v1` and now continues on `main`; the current branch and
+checkpoint are recorded in the dated addendum below. It supersedes earlier
+restrictions that prohibited tests, analysis, and builds. Work continues until
+each item is verified or specifically blocked.
 
 ## Safety and operating contract
 
 - Preserve current source and generated Linux/macOS platform changes. Do not reset, clean, reclone, overwrite working source with downloaded source, or rewrite history.
 - Production Supabase project `qxsdwwdrxoyxmnapuqqv` is read-only for this effort. Do not mutate hosted data, schema, buckets, policies, settings, migration history, Edge Functions, RevenueCat, Play services, or publish artifacts.
-- Do not push, merge `main`, publish, or claim unexecuted validation, provider configuration, or purchases.
+- Do not rewrite history, push, or publish without current explicit
+  authorization; do not claim unexecuted validation, provider configuration,
+  or purchases.
 - Tests must not touch production or spend live AI/billing quota. Use local fakes/mocks or pure tests. No emulator, Docker, or local Supabase stack.
 - Inspect resources first. Run expensive checks sequentially with single-worker/conservative memory settings. After two failures of one expensive check, or observed resource pressure, defer it and continue independent work. Never kill unrelated processes or change system settings.
 - Stage explicit paths, checkpoint coherent changes locally, and keep this document and `docs/release-status.md` resumable.
 
-## Completion checklist (updated 2026-11-13; staging checkpoint `aeda62a`)
+## Completion checklist (historical baseline 2026-11-13; see current addendum)
 
 - [x] Establish current checkout, repository instructions, resources, and reproducible toolchain state.
 - [x] Reconcile the recovered Supabase schema read-only: relations/columns/types, constraints, indexes, FKs, RLS, grants, triggers, counters, privileged function definitions, Storage buckets/policies, Realtime, and deployed Edge Function source. Compare deployed code separately; do not replace local source.
@@ -29,7 +35,11 @@ This document records the authorized finish scope for branch `recovery/android-v
 - [x] Prepare Uptodown free-beta configuration: `EVERYWEAR_FREE_BETA` disables RevenueCat and ads, version is `1.0.0-beta.1+2`, package identity remains `com.stylewise.app`, and a staging-only debug APK helper accepts only the approved project ref and validates private config. Focused billing/ads/localization tests passed 26/26; `bash -n`, helper guards, targeted formatting, and `git diff --check` passed.
 - [x] Receive owner approval for the isolated Free Everywear staging project; verify exact identity through authenticated CLI before writes; deploy the reviewed nine-migration chain and eight required functions only there. Keep production read-only and Clameo untouched.
 - [x] Build and verify the connected staging debug APK. The helper used only approved ref `aftdbphdobfrshienple`; archive integrity, package/version, v2 debug signature, size, and SHA-256 are recorded in `uptodown-free-beta.md`. Full swap usage did not prevent the build with 6.6 GiB RAM available.
-- [ ] Install the staging APK on a physical Android device and run the account/core-flow smoke checklist. No device is attached; public distribution also remains gated on upload signing and owner release materials.
+- [ ] Complete the remaining connected-device smoke checks using the latest
+  source build. The A065 is now connected and an earlier staging build has
+  received partial manual and automated checks; see the current addendum for
+  exact passes and failures. Public distribution remains gated on upload
+  signing and owner release materials.
 
 ## Current known boundaries
 
@@ -38,6 +48,51 @@ This document records the authorized finish scope for branch `recovery/android-v
 - RevenueCat remains incompletely configured. Keep purchase unavailable until the exact public Android key and entitlement are supplied and verification path is ready.
 - Signing inputs, Play/RevenueCat dashboard configuration, privacy/deletion URLs, store materials, and tester evidence are not presumed to exist.
 - Edge Function source checks and earlier Deno tests/type checks are recorded in release status. Staging exercised JWT rejection and no-provider fail-closed responses, but did not exercise successful AI inference, RevenueCat verification/webhooks, or provider quality. Remote CI has not run.
-- The historical AAB and pre-beta APK are not the current free-beta source. The staging debug APK is built and archive/signature verified, but not installed. The helper uses the private mode-0600 URL/anon-key config outside the checkout. `adb` lists no attached device. `android/key.properties` and an upload keystore are absent, so a public release-signed artifact is not available.
+- The historical AAB and pre-beta APK are not the current free-beta source. A
+  staging debug build is installed as `com.stylewise.app`, but it predates
+  source commit `71e1dc9`; its install does not verify that commit. The helper
+  uses the private mode-0600 URL/anon-key config outside the checkout.
+  `android/key.properties` and an upload keystore are absent, so a public
+  release-signed artifact is not available.
 - The owner confirmed the approved Everywear staging project is on the existing Free organization. It has already been used for synthetic checks. Do not create additional projects or request a paid upgrade.
 - The account-deletion function paginates outfit links and reports listing failures. Synthetic account deletion and Storage cleanup passed on isolated staging. Production deletion remains unverified and production was not mutated.
+
+## Current status addendum (2026-11-16; `main` at `71e1dc9`)
+
+- The A065 (`21471b75`) is connected. Read-only ADB confirms normal package
+  `com.stylewise.app` is installed at version code 3; its first-install and
+  last-update times are `2026-11-15 22:31:24`. The isolated test package
+  `com.stylewise.app.stagingtest` is absent after expected Flutter test
+  cleanup. At the latest check, the launcher was foregrounded, so the normal
+  app's authenticated session is **not verified**. No app was launched and no
+  local or hosted data was changed by that check.
+- The owner previously reported manual staging checks for email sign-in,
+  onboarding, Today/Wardrobe navigation, synthetic wardrobe image display,
+  outfit logging, profile navigation, and sign-out. Those checks used an older
+  installed APK; they do not validate the latest source commit. Same-phone
+  email confirmation succeeded on an earlier build. Google sign-in,
+  cross-device confirmation, a fresh confirmation flow on the latest source,
+  and the signup-name display fix remain unverified on-device.
+- The isolated automated run reached an authenticated staging session and
+  passed synthetic wardrobe upload/display and Storage image rendering. It
+  found the newly created outfit row for the current user/date but failed its
+  Today-card assertion (`cardsBefore=0`, `cardsNow=0`). That run did not prove
+  an app refresh defect because its baseline was captured while Today was
+  offstage and it did not establish that Today was visible after route return.
+  Commit `48324a9` strengthens the check with a visible Today key and a
+  row-specific outfit-card key. This assertion has not been rerun.
+- Commit `71e1dc9` persists a non-empty signup `full_name` into the user's
+  profile during onboarding and checks profile-row agreement in the smoke test.
+  Focused name/signup/onboarding tests passed 9/9 and targeted analysis had no
+  errors. This code has not been built or installed on the phone.
+- A build was deferred after inspection found 1.7–1.8 GiB available RAM,
+  fully used 511 MiB swap, an existing Gradle daemon at about 2.3 GiB RSS, and
+  low-but-nonzero memory pressure. Do not start another build until resource
+  conditions are rechecked. Do not kill the existing daemon as a shortcut.
+- **Next action:** the owner brings the normal app to the foreground; inspect
+  only whether its authenticated screen is present. After that, wait for safer
+  memory conditions, build the current staging source with the approved helper
+  and gates, install over the normal app without clearing data, and resume the
+  isolated smoke only after proving package isolation and allowing a fresh
+  private sign-in to `.stagingtest`. Keep the staging backend and production
+  separate; no production mutations, push, or publication are authorized.
