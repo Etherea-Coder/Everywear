@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:everywear/core/utils/app_localizations.dart';
+import 'package:everywear/core/ui_smoke_test_mode.dart';
 import '../../core/app_export.dart';
 
 import '../../services/outfit_log_service.dart';
@@ -136,6 +137,10 @@ class _DailyLogState extends State<DailyLog> {
   // ─── DATA LOADING ─────────────────────────────────────────────────────────
 
   Future<void> _loadData() async {
+    if (UiSmokeTestMode.isEnabled && kDebugMode) {
+      // ignore: avoid_print
+      print('SMOKE_TODAY_LOAD_BEGIN: date=${_selectedDate.toIso8601String()}');
+    }
     setState(() => _isLoading = true);
 
     // Load user's display name
@@ -178,8 +183,10 @@ class _DailyLogState extends State<DailyLog> {
               onTimeout: () => <String, dynamic>{},
             )
             .catchError((_) => <String, dynamic>{}),
-        _weatherService
-            .getCurrentWeather()
+        // Keep the automated smoke flow independent of OS location dialogs.
+        (UiSmokeTestMode.allowsAutomaticWeatherLocation
+                ? _weatherService.getCurrentWeather()
+                : Future<Map<String, dynamic>>.value({}))
             .timeout(
               const Duration(seconds: 12),
               onTimeout: () => <String, dynamic>{},
@@ -206,6 +213,13 @@ class _DailyLogState extends State<DailyLog> {
       ]);
 
       if (mounted) {
+        if (UiSmokeTestMode.isEnabled && kDebugMode) {
+          // ignore: avoid_print
+          print(
+            'SMOKE_TODAY_LOAD: date=${_selectedDate.toIso8601String()} '
+            'rows=${(results[0] as List<Map<String, dynamic>>).length}',
+          );
+        }
         setState(() {
           _todayEntries = results[0] as List<Map<String, dynamic>>;
           _monthlyStats = results[1] as Map<String, dynamic>;
@@ -1852,6 +1866,7 @@ class _DailyLogState extends State<DailyLog> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      key: const ValueKey('today_screen'),
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: loc.today,
@@ -1940,6 +1955,7 @@ class _DailyLogState extends State<DailyLog> {
                           itemBuilder: (context, index) {
                             final entry = _todayEntries[index];
                             return OutfitEntryCardWidget(
+                              key: ValueKey('today_outfit_${entry['id']}'),
                               entry: _formatEntry(entry),
                               onEdit: () => _editEntry(entry),
                               onDelete: () => _deleteEntry(entry['id']),

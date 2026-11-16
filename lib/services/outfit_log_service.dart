@@ -281,7 +281,7 @@ class OutfitLogService {
             worn_date, occasion, rating, outfit_name,
             outfit_items (
               wardrobe_items (
-                name, category, color
+                name, category
               )
             )
           ''')
@@ -294,10 +294,7 @@ class OutfitLogService {
         final items = (log['outfit_items'] as List? ?? [])
             .map((oi) => oi['wardrobe_items'] as Map<String, dynamic>?)
             .where((w) => w != null)
-            .map(
-              (w) =>
-                  '${w!['name']} (${w['category'] ?? 'unknown'}${w['color'] != null ? ', ${w['color']}' : ''})',
-            )
+            .map((w) => '${w!['name']} (${w['category'] ?? 'unknown'})')
             .toList();
 
         return {

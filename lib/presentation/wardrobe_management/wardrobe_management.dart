@@ -551,6 +551,7 @@ class _WardrobeManagementState extends ConsumerState<WardrobeManagement> {
       backgroundColor: theme.scaffoldBackgroundColor,
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('wardrobe_add_item'),
+        heroTag: 'wardrobeAddItem',
         onPressed: () {
           Navigator.of(context, rootNavigator: true)
               .pushNamed('/add-clothing-item')

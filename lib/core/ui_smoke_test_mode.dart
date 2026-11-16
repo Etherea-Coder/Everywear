@@ -9,6 +9,9 @@ class UiSmokeTestMode {
 
   static bool get isEnabled => kDebugMode && _enabled;
 
+  /// Avoid OS location prompts while the automated smoke flow is running.
+  static bool get allowsAutomaticWeatherLocation => !isEnabled;
+
   @visibleForTesting
   static void setEnabledForDebugTest(bool enabled) {
     if (enabled && !kDebugMode) {

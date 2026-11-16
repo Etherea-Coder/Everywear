@@ -107,6 +107,7 @@ class _PurchaseTrackingState extends State<PurchaseTracking>
               ],
             ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'purchaseAddItem',
         onPressed: () {
           if (_tabController.index == 2) {
             _showAddWishlistDialog();

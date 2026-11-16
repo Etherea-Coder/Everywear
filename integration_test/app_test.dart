@@ -10,6 +10,7 @@ import 'package:everywear/main.dart' as app;
 import 'package:everywear/services/supabase_service.dart';
 import 'package:everywear/core/utils/profile_display_name.dart';
 import 'package:everywear/core/ui_smoke_test_mode.dart';
+import 'package:everywear/presentation/daily_log/widgets/outfit_entry_card_widget.dart';
 import 'package:everywear/widgets/staging_build_banner.dart';
 
 const _foreground = MethodChannel('com.everywear/ui_smoke_test');
@@ -18,7 +19,7 @@ const _adsEnabled = bool.fromEnvironment('EVERYWEAR_ADS_ENABLED');
 const _distribution = String.fromEnvironment('APP_DISTRIBUTION');
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets(
     'authenticated staging smoke: synthetic wardrobe, outfit, Today, profile, logout last',
@@ -62,11 +63,23 @@ void main() {
           '(package com.stylewise.app.stagingtest). The test remains active '
           'while waiting and will not write test records yet.',
         );
-        await _waitForPredicate(
-          tester,
-          () => client.auth.currentUser != null,
-          timeout: const Duration(minutes: 15),
-        );
+        // LiveTestWidgetsFlutterBinding drops physical device pointer events
+        // by default and reports them only as finder hints. Let the owner use
+        // the isolated app's sign-in UI while this test is waiting, then
+        // restore the default before any automated smoke-test actions run.
+        final shouldPropagateBeforeAuth =
+            binding.shouldPropagateDevicePointerEvents;
+        binding.shouldPropagateDevicePointerEvents = true;
+        try {
+          await _waitForPredicate(
+            tester,
+            () => client.auth.currentUser != null,
+            timeout: const Duration(minutes: 15),
+          );
+        } finally {
+          binding.shouldPropagateDevicePointerEvents =
+              shouldPropagateBeforeAuth;
+        }
       }
       await _waitFor(tester, find.byTooltip('Manage wardrobe items'));
       await _assertForeground(tester);
@@ -145,7 +158,18 @@ void main() {
       print('PASS: wardrobe Storage image resolves and renders');
 
       // The Today capture path must allow selecting the uploaded wardrobe item.
+      // The save-success snackbar can overlap the floating Quick Log button.
+      await _waitForPredicate(
+        tester,
+        () => find.byType(SnackBar).evaluate().isEmpty,
+        timeout: const Duration(seconds: 10),
+      );
       await _tap(tester, find.byTooltip('Daily outfit log'));
+      await _waitFor(tester, find.byKey(const ValueKey('today_screen')));
+      final todayCardCountBeforeOutfit = find
+          .byType(OutfitEntryCardWidget)
+          .evaluate()
+          .length;
       await _tap(tester, find.byKey(const ValueKey('today_quick_log')));
       await _tap(
         tester,
@@ -187,25 +211,67 @@ void main() {
       );
       await _tap(tester, find.byKey(const ValueKey('outfit_rating_3')));
       await _tap(tester, find.byKey(const ValueKey('outfit_save')));
-      await _waitFor(
-        tester,
-        find.text(outfitName),
-        timeout: const Duration(seconds: 75),
-      );
 
       // Verify the route-return refresh shows the newly saved synthetic outfit.
       final refreshedOutfit = await _waitForStagingRow(
         tester,
         () async => await client
             .from('outfit_logs')
-            .select('id')
+            .select('id,worn_date')
             .eq('user_id', initialUser!.id)
             .eq('outfit_name', outfitName)
             .maybeSingle(),
         timeout: const Duration(seconds: 60),
       );
       expect(refreshedOutfit['id'], isNotEmpty);
-      expect(find.text(outfitName), findsWidgets);
+      final today = DateTime.now();
+      final startOfToday = DateTime(today.year, today.month, today.day);
+      final endOfToday = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        23,
+        59,
+        59,
+      );
+      final todayOutfit = await client
+          .from('outfit_logs')
+          .select('''
+            id, outfit_name, worn_date,
+            outfit_items (
+              item_id,
+              wardrobe_items (id, name, category, image_url)
+            )
+          ''')
+          .eq('user_id', initialUser!.id)
+          .eq('outfit_name', outfitName)
+          .gte('worn_date', startOfToday.toIso8601String())
+          .lte('worn_date', endOfToday.toIso8601String())
+          .maybeSingle();
+      expect(todayOutfit?['id'], refreshedOutfit['id']);
+      // The Today screen key distinguishes an actual return to the visible
+      // tab from a dismissed capture form over an offstage IndexedStack child.
+      await _waitFor(tester, find.byKey(const ValueKey('today_screen')));
+      final savedTodayCard = find.byKey(
+        ValueKey('today_outfit_${refreshedOutfit['id']}'),
+      );
+      // ignore: avoid_print
+      print(
+        'SMOKE_TODAY_REFRESH: row=${todayOutfit?['id'] != null} '
+        'cardsBefore=$todayCardCountBeforeOutfit '
+        'cardsNow=${find.byType(OutfitEntryCardWidget).evaluate().length} '
+        'savedCardVisible=${savedTodayCard.evaluate().isNotEmpty} '
+        'captureFormVisible=${find.byKey(const ValueKey('outfit_name')).evaluate().isNotEmpty}',
+      );
+      await _waitFor(
+        tester,
+        savedTodayCard,
+        timeout: const Duration(seconds: 30),
+      );
+      expect(
+        find.byType(OutfitEntryCardWidget).evaluate().length,
+        greaterThan(todayCardCountBeforeOutfit),
+      );
       // ignore: avoid_print
       print('PASS: outfit creation and automatic Today refresh');
 
@@ -218,7 +284,7 @@ void main() {
       final profileRow = await client
           .from('user_profiles')
           .select('full_name')
-          .eq('id', initialUser!.id)
+          .eq('id', initialUser.id)
           .maybeSingle();
       final profileName = client.auth.currentUser?.userMetadata?['full_name'];
       final expectedDisplayName = resolveProfileDisplayName(

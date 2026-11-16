@@ -2145,3 +2145,41 @@ evidence above. The no-project/no-APK statements below describe the state on
   labeled staging-test app for private sign-in only after resolving the wrapper
   exit status. Keep the full authenticated smoke paused until both app sessions
   are established.
+
+### Full isolated UI smoke: Today refresh assertion review (2026-11-16)
+
+- The latest full run reached the authenticated staging account, uploaded and
+  displayed the synthetic wardrobe image, and created an `outfit_logs` row
+  that the smoke test found for the current user and current local date. The
+  failing assertion expected a `DailyLog` outfit card, but observed
+  `cardsBefore=0` and `cardsNow=0`; `captureFormVisible=false` only showed that
+  the outfit form was gone.
+- This failure does **not yet prove** a product refresh defect. The test
+  measured `cardsBefore` while the Wardrobe tab was active, where Today is an
+  offstage `IndexedStack` child, and did not assert that the visible route had
+  returned to Today. The item-card finder excludes offstage widgets. The
+  staging row/date check is valid, but the UI assertion did not distinguish a
+  failed refresh from a stale/offstage test observation. No fresh device run
+  was started during this review.
+- The smoke test now waits for the Today screen after selecting its tab and
+  records its card baseline there. Each rendered Today card has a stable
+  test-facing key derived from its outfit row ID, and the return assertion
+  waits for the exact saved row's card. Smoke-only load markers record the
+  selected date and fetch row count, so a future run can distinguish route
+  return, refresh invocation and rendered data without weakening the check.
+  `pushRouteAndRefresh` already has a focused regression test that verifies a
+  dismissed route still triggers one refresh.
+- Focused checks performed: `flutter test
+  test/presentation/daily_log/quick_log_navigation_test.dart
+  test/core/ui_smoke_test_mode_test.dart` passed (2 tests); targeted Dart
+  analysis completed with 10 existing informational lints and no errors;
+  `git diff --check` passed. No full device test, build or new staging write
+  was performed in this review. Existing synthetic staging rows and uploaded
+  images were preserved.
+- The integration runner exited 1 after the assertion and its expected
+  teardown removed only `com.stylewise.app.stagingtest`. `com.stylewise.app`
+  remained installed with unchanged package metadata, but that does not prove
+  its authenticated session. At the last read-only foreground check, TikTok
+  was foregrounded; the normal Everywear session therefore remains
+  unverified. The owner should bring the normal Everywear app to the
+  foreground for a session check before another isolated run is considered.

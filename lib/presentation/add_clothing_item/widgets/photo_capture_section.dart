@@ -62,7 +62,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                key: const ValueKey('wardrobe_gallery_option'),
+                key: const ValueKey('wardrobe_camera_option'),
                 leading: CustomIconWidget(
                   iconName: 'camera_alt',
                   color: Theme.of(context).colorScheme.primary,
@@ -75,6 +75,7 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
                 },
               ),
               ListTile(
+                key: const ValueKey('wardrobe_gallery_option'),
                 leading: CustomIconWidget(
                   iconName: 'photo_library',
                   color: Theme.of(context).colorScheme.primary,
