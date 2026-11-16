@@ -2678,3 +2678,46 @@ evidence above. The no-project/no-APK statements below describe the state on
   confirmation-link return also remain unverified. RevenueCat verification
   remains unconfigured (staging returned the expected 503); purchases and ads
   stayed disabled. Production and Clameo were untouched.
+
+### Latest normal staging APK: manual core checks (2026-11-16)
+
+- Current normal install on A065 is `com.stylewise.app`, version code 4,
+  version `1.0.0-beta.1`, installed in place at `2026-11-16 14:21:09`.
+  The APK is
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-4-aftdbphdobfrshienple-debug-AUTH-EVENTS-20261116.apk`,
+  SHA-256 `52650bfb199d4be4ce238fff543db4cd51651bda0aa9f41e68590b5abd4773c9`.
+  The relevant source includes outfit/Quick Log fix `a63a3c4` and profile-name
+  persistence fix `71e1dc9`; there are no later application-source edits to
+  the outfit-preview or Quick Log return-refresh implementations.
+- **Profile name: failed on the latest APK.** The owner confirmed the profile
+  label is the email handle rather than the name entered at signup. The screen
+  renders a distinct label above the email, but it is the wrong label. Current
+  source passes the signup name as Auth `full_name`, copies non-empty metadata
+  to `user_profiles.full_name` during onboarding, and resolves auth metadata
+  before the profile row. This evidence establishes the displayed-value
+  failure; it does not establish whether the value was wrong at form
+  submission, stored by Auth, or returned by the profile query. No account
+  record was changed. Fix requires tracing the value at those boundaries
+  without logging personal data.
+- The owner navigated to Today and then wardrobe selection using an existing
+  synthetic tee. The manual session paused on the selection screen before
+  confirmation; **latest-build outfit preview and Quick Log automatic Today
+  refresh are not yet checked in this pass**. Earlier device evidence remains
+  valid history: on version-code-2 staging build, the owner saw the tee on the
+  confirmation preview and Today updated from one to two entries after
+  Quick Log returned without manual refresh. That build included fix `a63a3c4`;
+  no later app-source change touched those two behaviors, but this pass has not
+  repeated them on version code 4.
+- A PID-scoped, private app log was captured during this manual session at
+  `/tmp/everywear-manual-app-7435-20261116-200331.log` (mode `0600`). No
+  exception class or app error entry was found in its captured 480 bytes. The
+  device remained on `com.stylewise.app/.MainActivity`; no automated taps,
+  new outfit saves, or account changes occurred. A broader initial logcat
+  capture was also kept locally with mode `0600`; it includes other device
+  processes and is not used as Everywear evidence.
+- No builds, test suites, analyzers, production operations, or isolated smoke
+  runs were performed for this checkpoint. Next: finish the latest-build
+  confirmation-preview and Quick Log checks using the existing synthetic tee,
+  then trace the profile-name value without exposing account data. Google
+  OAuth provider setup, a fresh email-confirmation return, AI inference/model
+  validation, and release-mode validation remain separate blockers.
