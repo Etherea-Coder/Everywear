@@ -2179,7 +2179,10 @@ evidence above. The no-project/no-APK statements below describe the state on
 - The integration runner exited 1 after the assertion and its expected
   teardown removed only `com.stylewise.app.stagingtest`. `com.stylewise.app`
   remained installed with unchanged package metadata, but that does not prove
-  its authenticated session. At the last read-only foreground check, TikTok
-  was foregrounded; the normal Everywear session therefore remains
-  unverified. The owner should bring the normal Everywear app to the
-  foreground for a session check before another isolated run is considered.
+  its authenticated session. A follow-up read-only device check at
+  `2026-11-16 12:17 +02` found the launcher foregrounded, normal package
+  version code 3 installed (first install and last update remain
+  `2026-11-15 22:31:24`), and the isolated test package absent. The normal
+  Everywear session remains unverified. The owner should bring the normal app
+  to the foreground for a session check before another isolated run is
+  considered.
