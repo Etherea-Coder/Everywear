@@ -2721,3 +2721,63 @@ evidence above. The no-project/no-APK statements below describe the state on
   then trace the profile-name value without exposing account data. Google
   OAuth provider setup, a fresh email-confirmation return, AI inference/model
   validation, and release-mode validation remain separate blockers.
+
+### Unattended test direction and profile-name evidence (2026-11-16)
+
+- The personal A065 is released from testing. All task-started logcat sessions
+  were stopped, files were retained privately with mode `0600`, and the ADB
+  server was stopped to release its USB connection. This task changed no phone
+  settings, app data, installed packages, auth session, or account records.
+- Host inspection: x86_64, 12 CPUs, AMD-V; `/dev/kvm` is accessible. Android
+  Emulator and an existing `Medium_Phone` AVD are installed, using an
+  x86_64 Android 37 Play Store image, hardware GPU, and 2 GiB guest RAM. At
+  inspection, 3.9–4.2 GiB RAM was available and the 512 MiB swap was fully
+  occupied. Existing Gradle/Kotlin daemons held about 2.9 GiB RSS combined.
+  The host supports a hardware-accelerated emulator, but emulator + build
+  should wait until daemon/build memory is available; no emulator was started.
+  CI is not required for hardware support. If local capacity remains unstable,
+  the fallback is an ephemeral GitHub Actions Android emulator job, requiring
+  owner-approved runner minutes/secrets and no upload of test APKs or logs.
+- A focused local run passed **8/8** tests:
+  `.tooling/flutter/bin/flutter test --no-pub --concurrency=1
+  test/core/profile_display_name_test.dart test/services/auth_redirects_test.dart`.
+  It validates trimming/name precedence and that the signup helper sends its
+  supplied name in `data.full_name`; it does not exercise the physical signup
+  form or a live Auth request. The initial bare `flutter` invocation failed
+  because Flutter is project-local; it was rerun successfully using the pinned
+  `.tooling/flutter` SDK.
+- Read-only staging metadata query, explicitly targeting
+  `aftdbphdobfrshienple`, returned aggregate-only results for the last seven
+  days: **2** Auth accounts, **0** with `raw_user_meta_data.full_name`, and
+  **2** profile rows whose `full_name` matches the email local part. No email,
+  name, UUID, token, or individual row was returned. The aggregate cannot
+  uniquely associate either row with the owner's account.
+- Read-only deployed trigger inspection confirms
+  `public.handle_new_user()` sets `user_profiles.full_name` to
+  `raw_user_meta_data.full_name`, falling back to `split_part(NEW.email,'@',1)`
+  when the metadata name is absent. This explains how the observed handle can
+  appear. Local signup code passes the separate name controller into the
+  helper, onboarding mirrors metadata to the profile, and the focused helper
+  test passes. The live signup request/body for the owner's account was not
+  captured, and the aggregate rows were not individually correlated; therefore
+  the evidence does **not** establish why the name metadata was absent or
+  prove which row is the owner's. No signup was repeated and no account was
+  changed. Preserve this as a confirmed display defect with this precise
+  source/backend evidence gap; do not infer the submitted name or retrieve
+  private account values.
+- Unattended device strategy: use the existing local AVD, not a personal
+  device; authenticate only a dedicated, confirmed synthetic staging account;
+  load its credentials from a private host-side file (mode `0600`, outside
+  Git) at test runtime, never a Dart define or APK; prepare uniquely tagged
+  synthetic records through the signed-in staging client and clean only those
+  records/objects. Current integration tests still wait for owner sign-in and
+  therefore are not unattended. Do not run them until this host-side login and
+  test-data setup is implemented and credential values are supplied privately.
+  Keep the existing fixed staging project guard, ads disabled, billing
+  unavailable, isolated package identity, and teardown safeguards.
+- Latest manual pass status: Profile name failed as owner-confirmed; latest
+  APK outfit preview and Quick Log refresh were left pending before selecting
+  the existing synthetic tee. Earlier version-code-2 visual passes remain
+  recorded and were not invalidated by later edits to those code paths. No
+  personal-phone tests, builds, production changes, pushes, or publication
+  occurred in this checkpoint.
