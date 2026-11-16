@@ -6,13 +6,19 @@ project_ref="${EVERYWEAR_STAGE_PROJECT_REF:-aftdbphdobfrshienple}"
 config_file="${EVERYWEAR_STAGE_CONFIG_FILE:-/tmp/everywear-staging-aftdbphdobfrshienple-private/app-config.json}"
 credentials_file="${EVERYWEAR_SMOKE_CREDENTIALS_FILE:-$HOME/.config/everywear/staging-smoke-credentials.json}"
 normal_apk="${EVERYWEAR_NORMAL_STAGING_APK:-$repo_root/build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-4-aftdbphdobfrshienple-debug-AUTH-EVENTS-20261116.apk}"
-avd_name="Medium_Phone"
+avd_name="Medium_Phone_API_37.0"
+avd_config="$HOME/.android/avd/Medium_Phone.avd/config.ini"
+android_sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Android/Sdk}}"
+export ANDROID_SDK_ROOT="$android_sdk_root"
+export ANDROID_HOME="$android_sdk_root"
+export ANDROID_AVD_HOME="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
 device_serial="emulator-5554"
 test_package="com.stylewise.app.stagingtest"
 adb_bin="${ADB_BIN:-$HOME/Android/Sdk/platform-tools/adb}"
 emulator_bin="${EMULATOR_BIN:-$HOME/Android/Sdk/emulator/emulator}"
 aapt_bin=""
 emulator_started=0
+emulator_pid=""
 boot_log=""
 
 if [[ "$project_ref" != "aftdbphdobfrshienple" ]]; then
@@ -67,13 +73,23 @@ if [[ ! -e /dev/kvm || ! -r /dev/kvm || ! -w /dev/kvm ]]; then
   echo "Hardware acceleration through /dev/kvm is unavailable." >&2
   exit 2
 fi
-if [[ ! -f "$HOME/.android/avd/$avd_name.avd/config.ini" ]]; then
-  echo "The existing Medium_Phone AVD is unavailable." >&2
+if [[ ! -f "$HOME/.android/avd/Medium_Phone_API_37.0.ini" || ! -f "$avd_config" ]]; then
+  echo "The registered Medium_Phone_API_37.0 AVD or its data directory is unavailable." >&2
   exit 2
 fi
-if ! rg -qx 'abi.type=x86_64' "$HOME/.android/avd/$avd_name.avd/config.ini" || \
-   ! rg -qx 'hw.ramSize=2048' "$HOME/.android/avd/$avd_name.avd/config.ini"; then
+avd_list="$("$emulator_bin" -list-avds 2>/dev/null)"
+if ! printf '%s\n' "$avd_list" | rg -qx "$avd_name"; then
+  echo "The configured AVD name is not registered with Android Emulator." >&2
+  exit 2
+fi
+if ! rg -qx 'abi.type=x86_64' "$avd_config" || \
+   ! rg -qx 'hw.ramSize=2048' "$avd_config"; then
   echo "The existing AVD does not match the inspected x86_64/2 GiB configuration." >&2
+  exit 2
+fi
+system_image_rel="$(sed -n 's/^image\.sysdir\.1=//p' "$avd_config" | head -n 1)"
+if [[ -z "$system_image_rel" || ! -d "$android_sdk_root/$system_image_rel" ]]; then
+  echo "The existing AVD system image is missing: ${system_image_rel:-image.sysdir.1 is unset}. Install system-images;android-37.0;google_apis_playstore;x86_64 before retrying." >&2
   exit 2
 fi
 if pgrep -af 'GradleWrapperMain|GradleDaemon|KotlinCompileDaemon|flutter_tools.snapshot (build|test)|emulator.*-avd|qemu-system' | rg -v 'pgrep|rg ' >/dev/null; then
@@ -85,10 +101,10 @@ if [[ -z "$available_kb" || "$available_kb" -lt 6291456 ]]; then
   echo "Need at least 6 GiB available RAM before starting the 2 GiB AVD." >&2
   exit 2
 fi
-if [[ -x "$HOME/Android/Sdk/build-tools/36.0.0/aapt" ]]; then
-  aapt_bin="$HOME/Android/Sdk/build-tools/36.0.0/aapt"
+if [[ -x "$android_sdk_root/build-tools/36.0.0/aapt" ]]; then
+  aapt_bin="$android_sdk_root/build-tools/36.0.0/aapt"
 else
-  aapt_bin="$(find "$HOME/Android/Sdk/build-tools" -mindepth 2 -maxdepth 2 -type f -name aapt -print 2>/dev/null | sort -V | tail -n 1)"
+  aapt_bin="$(find "$android_sdk_root/build-tools" -mindepth 2 -maxdepth 2 -type f -name aapt -print 2>/dev/null | sort -V | tail -n 1)"
 fi
 if [[ -z "$aapt_bin" || ! -x "$aapt_bin" ]]; then
   echo "Android build-tools aapt is unavailable." >&2
@@ -106,7 +122,11 @@ umask 077
 chmod 600 "$boot_log"
 cleanup() {
   if [[ "$emulator_started" == "1" ]]; then
-    "$adb_bin" -s "$device_serial" emu kill >/dev/null 2>&1 || true
+    if "$adb_bin" -s "$device_serial" get-state >/dev/null 2>&1; then
+      "$adb_bin" -s "$device_serial" emu kill >/dev/null 2>&1 || true
+    elif [[ -n "$emulator_pid" ]] && kill -0 "$emulator_pid" 2>/dev/null; then
+      kill -TERM "$emulator_pid" 2>/dev/null || true
+    fi
   fi
   if [[ -n "$boot_log" ]]; then
     echo "Private emulator boot log: $boot_log"
@@ -116,9 +136,14 @@ trap cleanup EXIT
 
 "$emulator_bin" -avd "$avd_name" -port 5554 -no-snapshot -no-boot-anim \
   -no-window -no-audio -gpu swiftshader_indirect -memory 2048 >"$boot_log" 2>&1 &
+emulator_pid=$!
 emulator_started=1
 for _ in $(seq 1 120); do
   if "$adb_bin" -s "$device_serial" get-state >/dev/null 2>&1; then break; fi
+  if ! kill -0 "$emulator_pid" 2>/dev/null; then
+    echo "Android Emulator exited before registering its device; inspect the private boot log." >&2
+    exit 1
+  fi
   sleep 1
 done
 "$adb_bin" -s "$device_serial" wait-for-device

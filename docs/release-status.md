@@ -1,5 +1,14 @@
 # Android release status
 
+## Bounded unattended emulator attempt (2026-11-16)
+
+- Current local checkout: `main`, HEAD `8a6329457634e40071000bc8e6f9509f86e354b0` before this checkpoint. Credentials and the private staging config passed the helper's outside-repository, mode-0600, schema and staging-project checks; values were not printed.
+- Resource preflight passed: 7.3 GiB available RAM, `/dev/kvm` accessible, no active build/compiler/emulator, existing registered AVD `Medium_Phone_API_37.0` configured x86_64/2 GiB. No phone was used.
+- Emulator launch failed before device registration. Fresh private log `/tmp/everywear-emulator-boot-20261116-214143-2090146.log` (mode 0600) reports the configured SDK root is valid but the AVD's required image directory is absent: `system-images/android-37.0/google_apis_playstore/x86_64/`. The AVD config explicitly requests Android 37 Google Play Store x86_64. A local search found no installed `system.img` under the inspected SDK roots.
+- Consequently no APK build/install, controlled signup metadata request, test-account login, UI test, or staging record write occurred. There are no test passes or failures to report; all emulator checks were not run because the AVD could not boot. Existing application records and the phone were untouched.
+- The runner now exports the discovered SDK/AVD roots and checks the AVD's registered name, configuration and system-image directory before launch. Its emulator boot failure is detected promptly. `bash -n` and `git diff --check` passed after this guard; no build or test suite was run.
+- Blocker / next step: install the licensed SDK package `system-images;android-37.0;google_apis_playstore;x86_64` into `/home/theanarchitect/Android/Sdk` using the installed `sdkmanager`, then rerun `scripts/run_staging_emulator_smoke.sh` once after resource preflight. Do not create a replacement AVD or change the pinned AVD configuration for this retry.
+
 ## Isolated UI smoke runner package-identity failure (2026-11-16)
 
 - The corrected run built the isolated APK and launched the activity under
