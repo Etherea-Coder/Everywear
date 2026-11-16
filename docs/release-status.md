@@ -2781,3 +2781,51 @@ evidence above. The no-project/no-APK statements below describe the state on
   recorded and were not invalidated by later edits to those code paths. No
   personal-phone tests, builds, production changes, pushes, or publication
   occurred in this checkpoint.
+
+### Emulator smoke preflight and signup-name reconciliation (2026-11-16)
+
+- No build/test/emulator was active. `./gradlew --status` showed the sole
+  Gradle 8.11.1 daemon idle; `./gradlew --stop` stopped it, and the idle
+  project Kotlin compiler daemon received `SIGTERM`. Available RAM increased
+  from about 4.0 GiB to **6.8 GiB**; swap remained nearly full. No unrelated
+  processes were stopped.
+- Hardware is available: AMD-V, accessible `/dev/kvm`, installed Android 37
+  x86_64 Play Store emulator, and existing `Medium_Phone` AVD configured for
+  2 GiB guest RAM. The emulator was not started because the required private
+  test-account credential file is missing. Start it only after that
+  prerequisite is supplied; current post-daemon headroom is otherwise adequate
+  for this AVD. The physical phone remains released and untouched.
+- The existing private Supabase app config is present at
+  `/tmp/everywear-staging-aftdbphdobfrshienple-private/app-config.json`
+  (mode `0600`). No dedicated smoke-account credential file was found in the
+  checked Everywear config locations. The existing integration test has a
+  15-minute manual `SIGN_IN_REQUIRED` wait and no host-side authentication;
+  it is not safe to run as an unattended test yet. Do not launch until the
+  owner supplies the one private credential bundle: a preconfirmed dedicated
+  staging login email/password plus a separate disposable signup inbox
+  address/access for the controlled signup check. Keep it outside Git and
+  never pass credentials as Dart defines or bundle them in the APK. Ads stay
+  disabled and RevenueCat billing unavailable.
+- Source and focused tests: the signup form's separate name controller is
+  passed to `signUpWithEmailRedirect(fullName: ...)`, which puts its trimmed
+  value in Auth `data.full_name`; the helper test checks that request body.
+  The Profile screen uses auth metadata before `user_profiles.full_name`, and
+  onboarding mirrors a non-empty metadata value into that row. Focused tests
+  passed **8/8** using `.tooling/flutter/bin/flutter` for profile-name
+  normalization/precedence and signup redirect/request metadata.
+- Read-only staging inspection confirms the deployed `handle_new_user()`
+  trigger populates `user_profiles.full_name` from Auth metadata, falling
+  back to the email local part when `raw_user_meta_data.full_name` is absent.
+  Aggregate-only metadata for the last seven days showed two accounts, no
+  `full_name` in either Auth metadata row, and both profile names matching the
+  respective email local parts. No individual names, emails, UUIDs or account
+  rows were returned. This aligns with the observed profile display defect.
+  It does not identify either aggregate row as the owner's account or show
+  why the actual signup request failed to preserve its supplied value.
+- The controlled signup/login verification remains **not run**. It must use
+  separate identities: authenticate core smoke with the preconfirmed account;
+  create one uniquely tagged synthetic account via the signup UI/request;
+  compare only the synthetic request name, Auth metadata and trigger-created
+  profile value; then clean up only that synthetic account. Do not alter the
+  owner's account, reuse manual phone flows, or infer success from the local
+  helper test alone.
