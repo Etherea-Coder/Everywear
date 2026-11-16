@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image_lib;
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:everywear/main.dart' as app;
 import 'package:everywear/services/supabase_service.dart';
 import 'package:everywear/core/utils/profile_display_name.dart';
@@ -19,7 +20,7 @@ const _adsEnabled = bool.fromEnvironment('EVERYWEAR_ADS_ENABLED');
 const _distribution = String.fromEnvironment('APP_DISTRIBUTION');
 
 void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets(
     'authenticated staging smoke: synthetic wardrobe, outfit, Today, profile, logout last',
@@ -52,35 +53,12 @@ void main() {
         timeout: const Duration(seconds: 30),
       );
       final client = SupabaseService.instance.client;
-      if (client.auth.currentUser == null) {
-        // The isolated test application has its own secure storage and does
-        // not inherit the normal app's Supabase session. Let the owner
-        // authenticate privately in this test-only app before any writes.
-        // ignore: avoid_print
-        print(
-          'SIGN_IN_REQUIRED: sign in privately in the app labeled '
-          '"Everywear UI Smoke Test (STAGING)" '
-          '(package com.stylewise.app.stagingtest). The test remains active '
-          'while waiting and will not write test records yet.',
-        );
-        // LiveTestWidgetsFlutterBinding drops physical device pointer events
-        // by default and reports them only as finder hints. Let the owner use
-        // the isolated app's sign-in UI while this test is waiting, then
-        // restore the default before any automated smoke-test actions run.
-        final shouldPropagateBeforeAuth =
-            binding.shouldPropagateDevicePointerEvents;
-        binding.shouldPropagateDevicePointerEvents = true;
-        try {
-          await _waitForPredicate(
-            tester,
-            () => client.auth.currentUser != null,
-            timeout: const Duration(minutes: 15),
-          );
-        } finally {
-          binding.shouldPropagateDevicePointerEvents =
-              shouldPropagateBeforeAuth;
-        }
-      }
+      expect(
+        client.auth.currentUser,
+        isNull,
+        reason: 'The isolated emulator app must start without a stale session.',
+      );
+      await _signInUsingRuntimeCredentials(client);
       await _waitFor(tester, find.byTooltip('Manage wardrobe items'));
       await _assertForeground(tester);
       expect(
@@ -356,6 +334,56 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 25)),
   );
+}
+
+Future<void> _signInUsingRuntimeCredentials(SupabaseClient client) async {
+  final credentials = await _consumeRuntimeLoginCredentials();
+  try {
+    await client.auth
+        .signInWithPassword(
+          email: credentials.email,
+          password: credentials.password,
+        )
+        .timeout(const Duration(seconds: 30));
+  } catch (error) {
+    throw TestFailure(
+      'Automated staging login failed (${error.runtimeType}); '
+      'verify the dedicated preconfirmed test account privately.',
+    );
+  }
+  expect(
+    client.auth.currentUser?.email?.toLowerCase(),
+    credentials.email.toLowerCase(),
+    reason: 'The emulator must authenticate only the dedicated test user.',
+  );
+  // ignore: avoid_print
+  print('PASS: automated preconfirmed staging-account login');
+}
+
+Future<({String email, String password})>
+_consumeRuntimeLoginCredentials() async {
+  try {
+    final values = await _foreground.invokeMapMethod<String, dynamic>(
+      'consumeStagingSmokeLoginCredentials',
+    );
+    final email = values?['email'];
+    final password = values?['password'];
+    if (email is! String ||
+        email.isEmpty ||
+        password is! String ||
+        password.isEmpty) {
+      throw TestFailure('Private runtime staging credentials are unavailable.');
+    }
+    return (email: email, password: password);
+  } on MissingPluginException {
+    throw TestFailure(
+      'Runtime staging authentication bridge is unavailable in this Android build.',
+    );
+  } on PlatformException catch (error) {
+    throw TestFailure(
+      'Runtime staging authentication bridge failed (${error.code}).',
+    );
+  }
 }
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {

@@ -2829,3 +2829,61 @@ evidence above. The no-project/no-APK statements below describe the state on
   profile value; then clean up only that synthetic account. Do not alter the
   owner's account, reuse manual phone flows, or infer success from the local
   helper test alone.
+
+### Emulator-only unattended smoke preparation (2026-11-16)
+
+- Added `scripts/create_staging_smoke_credentials.py`. It privately prompts
+  for (1) the email/password of a **dedicated, preconfirmed staging login
+  account** and (2) a **different disposable staging signup inbox address**.
+  Password input is hidden and confirmed twice. It writes only
+  `$HOME/.config/everywear/staging-smoke-credentials.json`, mode `0600`, and
+  refuses to overwrite an existing file. The signup check generates a random
+  one-use password in memory; it never shares the preconfirmed login account.
+- The isolated debug-only Android MethodChannel accepts runtime credentials
+  only when `packageName` is exactly `com.stylewise.app.stagingtest`. The host
+  runner transfers just the login email/password through `adb exec-in` stdin
+  into the test package's private files; values are absent from command
+  arguments, shell history, Dart defines and the APK. The app consumes and
+  deletes the file before calling Supabase Auth. Runtime-auth runs disable
+  device logcat capture to prevent accidental credential persistence. Login
+  failures report only an error type, never Auth response text or values.
+- Added `scripts/run_staging_emulator_smoke.sh`, which requires the private
+  config and credential file before starting anything, pins project
+  `aftdbphdobfrshienple`, checks the existing x86_64/2 GiB `Medium_Phone` AVD,
+  KVM and at least 6 GiB available RAM, and uses only `emulator-5554`. It
+  installs the retained normal staging APK only as a package-preservation
+  sentinel and never launches it. The existing guarded core smoke targets
+  only `com.stylewise.app.stagingtest`; its cleanup removes only that package.
+  Ads remain disabled and RevenueCat billing unavailable.
+- Added `scripts/verify_staging_signup_metadata.py` for one separate synthetic
+  signup before the login smoke. It refuses an already-used signup address,
+  posts a synthetic `data.full_name` to the approved staging Auth endpoint,
+  checks the Auth response, then issues a read-only metadata query to compare
+  `auth.users.raw_user_meta_data.full_name` and trigger-created
+  `user_profiles.full_name`. It emits only pass/fail status. The synthetic
+  random password is not persisted or logged; the synthetic Auth record is
+  retained. `EMAIL_CONFIRMATION=NOT_TESTED` is always reported: an unconfirmed
+  signup does not prove email delivery, link confirmation or app callback.
+- Lightweight checks actually performed: private credential-helper unit tests
+  **2/2 passed**; auth redirect/signup-request Flutter tests **3/3 passed**;
+  targeted Dart analysis of `integration_test/app_test.dart` reported no
+  issues; Python syntax compilation, both shell syntax checks, Dart formatting,
+  and `git diff --check` passed. The emulator script was invoked once without
+  credentials and exited **2** at its private-file preflight; process inspection
+  confirmed no AVD/emulator started. The local test confirms the app helper
+  builds the request name field, while the controlled hosted signup has not run.
+- Not run: no AVD start, Gradle/Android compile, APK install, emulator core
+  smoke, staging signup, hosted metadata verification, full Flutter suite,
+  production operation, phone interaction, push or publication. Kotlin
+  compilation and actual secure credential handoff remain unverified. RAM
+  after graceful daemon shutdown was about **6.8 GiB available**; swap was
+  nearly full. The preconfirmed staging login credentials and separate
+  disposable signup address are absent from checked private locations, so the
+  runner correctly remains blocked before emulator launch.
+- Exact owner action: from the repository run
+  `python3 scripts/create_staging_smoke_credentials.py` in a private terminal.
+  Enter only a dedicated preconfirmed staging login account and a distinct
+  disposable staging signup inbox; do not paste either value into chat. Reply
+  only when the helper reports it saved the file. Then the emulator runner can
+  perform the single bounded signup-metadata check and core smoke without phone
+  interaction. No owner account will be used or changed.

@@ -25,6 +25,37 @@ if [[ "$test_target" != "integration_test/app_test.dart" && \
   echo "Refusing an unreviewed UI smoke target." >&2
   exit 2
 fi
+runtime_auth="${EVERYWEAR_UI_SMOKE_RUNTIME_AUTH:-false}"
+credentials_file="${EVERYWEAR_SMOKE_CREDENTIALS_FILE:-$HOME/.config/everywear/staging-smoke-credentials.json}"
+if [[ "$runtime_auth" != "true" && "$runtime_auth" != "false" ]]; then
+  echo "EVERYWEAR_UI_SMOKE_RUNTIME_AUTH must be true or false." >&2
+  exit 2
+fi
+if [[ "$runtime_auth" == "true" && "$test_target" != "integration_test/app_test.dart" ]]; then
+  echo "Runtime credentials are accepted only by the guarded core smoke target." >&2
+  exit 2
+fi
+if [[ "$runtime_auth" == "true" ]]; then
+  python3 - "$credentials_file" "$repo_root" <<'PY'
+import json, os, pathlib, stat, sys
+path = pathlib.Path(sys.argv[1]).resolve(strict=True)
+repo = pathlib.Path(sys.argv[2]).resolve()
+if os.path.commonpath((str(path), str(repo))) == str(repo):
+    raise SystemExit("Keep smoke credentials outside Git.")
+if stat.S_IMODE(path.stat().st_mode) != 0o600:
+    raise SystemExit("Smoke credentials must have mode 0600.")
+try:
+    value = json.loads(path.read_text())
+except (OSError, json.JSONDecodeError):
+    raise SystemExit("Smoke credentials are unreadable or malformed.")
+if not isinstance(value, dict) or set(value) != {"login_email", "login_password", "signup_email"}:
+    raise SystemExit("Smoke credentials have an unexpected field set.")
+if not all(isinstance(value[key], str) and value[key] for key in value):
+    raise SystemExit("Smoke credentials have an empty or invalid field.")
+if value["login_email"].casefold() == value["signup_email"].casefold():
+    raise SystemExit("Login and disposable signup accounts must differ.")
+PY
+fi
 
 flutter_bin="${FLUTTER_BIN:-$repo_root/.tooling/flutter/bin/flutter}"
 adb_bin="${ADB_BIN:-$HOME/Android/Sdk/platform-tools/adb}"
@@ -192,6 +223,46 @@ if [[ "$apk_package_id" != "$test_application_id" ]]; then
 fi
 echo "FLUTTER_RESOLVED_PACKAGE_ID_BEFORE_LAUNCH=$apk_package_id"
 echo "Flutter resolves this prebuilt APK package before launch and retains it for teardown."
+if [[ "$runtime_auth" == "true" ]]; then
+  # Install the exact debug-signed APK before Flutter starts so credentials
+  # enter only the isolated package's private files. The later Flutter install
+  # is -r with the same signature; teardown removes only the test package.
+  "$adb_bin" -s "$device_serial" uninstall "$test_application_id" >/dev/null 2>&1 || true
+  "$adb_bin" -s "$device_serial" install "$app_apk" >/dev/null
+  EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
+  EVERYWEAR_SMOKE_PACKAGE="$test_application_id" \
+  EVERYWEAR_ADB_BIN="$adb_bin" \
+  EVERYWEAR_EMULATOR_SERIAL="$device_serial" \
+    python3 - <<'PY'
+import json, os, subprocess
+with open(os.environ['EVERYWEAR_SMOKE_CREDENTIALS_FILE'], encoding='utf-8') as source:
+    credentials = json.load(source)
+payload = json.dumps({
+    'login_email': credentials['login_email'],
+    'login_password': credentials['login_password'],
+}, separators=(',', ':')).encode('utf-8')
+package = os.environ['EVERYWEAR_SMOKE_PACKAGE']
+command = (
+    f"run-as {package} sh -c "
+    "'umask 077; cat > no_backup/everywear_smoke_login_credentials.json; "
+    "chmod 600 no_backup/everywear_smoke_login_credentials.json'"
+)
+try:
+    result = subprocess.run(
+        [os.environ['EVERYWEAR_ADB_BIN'], '-s',
+         os.environ['EVERYWEAR_EMULATOR_SERIAL'], 'exec-in', command],
+        input=payload,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        timeout=20,
+        check=False,
+    )
+except (OSError, subprocess.SubprocessError):
+    raise SystemExit('Could not provision private credentials to the isolated emulator app.')
+if result.returncode != 0:
+    raise SystemExit('Could not provision private credentials to the isolated emulator app.')
+PY
+fi
 old_stay_on="$("$adb_bin" -s "$device_serial" shell settings get global stay_on_while_plugged_in | tr -d '\r')"
 restore_stay_on=1
 "$adb_bin" -s "$device_serial" shell svc power stayon usb
@@ -199,13 +270,19 @@ restore_stay_on=1
 umask 077
 logcat_file="/tmp/everywear-a065-ui-smoke-$(date +%Y%m%d-%H%M%S)-$$.log"
 run_log="/tmp/everywear-full-isolated-smoke-$(date +%Y%m%d-%H%M%S)-$$.log"
-: > "$logcat_file"
 : > "$run_log"
-chmod 600 "$logcat_file"
 chmod 600 "$run_log"
 printf 'FLUTTER_RESOLVED_PACKAGE_ID_BEFORE_LAUNCH=%s\n' "$apk_package_id" >> "$run_log"
-"$adb_bin" -s "$device_serial" logcat -T 1 -v epoch >"$logcat_file" 2>&1 &
-logcat_pid=$!
+if [[ "$runtime_auth" == "true" ]]; then
+  # Runtime auth is deliberately excluded from device log capture so a
+  # platform/library diagnostic cannot accidentally persist a password.
+  logcat_file=""
+else
+  : > "$logcat_file"
+  chmod 600 "$logcat_file"
+  "$adb_bin" -s "$device_serial" logcat -T 1 -v epoch >"$logcat_file" 2>&1 &
+  logcat_pid=$!
+fi
 
 cd "$repo_root"
 set +e

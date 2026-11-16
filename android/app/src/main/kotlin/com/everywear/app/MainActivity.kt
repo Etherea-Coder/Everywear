@@ -5,7 +5,9 @@ import android.content.pm.ApplicationInfo
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 import java.util.TimeZone
+import org.json.JSONObject
 
 class MainActivity: FlutterFragmentActivity() {
     @Volatile private var activityResumed = false
@@ -40,6 +42,62 @@ class MainActivity: FlutterFragmentActivity() {
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.everywear/ui_smoke_test")
                 .setMethodCallHandler { call, result ->
                     when (call.method) {
+                        "consumeStagingSmokeLoginCredentials" -> {
+                            if (packageName != "com.stylewise.app.stagingtest") {
+                                result.error(
+                                    "WRONG_PACKAGE",
+                                    "Runtime smoke credentials are restricted to the isolated staging-test package.",
+                                    null
+                                )
+                                return@setMethodCallHandler
+                            }
+
+                            val credentialFile = File(
+                                noBackupFilesDir,
+                                "everywear_smoke_login_credentials.json"
+                            )
+                            try {
+                                if (!credentialFile.isFile) {
+                                    result.error(
+                                        "CREDENTIALS_UNAVAILABLE",
+                                        "Private staging smoke credentials were not provisioned.",
+                                        null
+                                    )
+                                    return@setMethodCallHandler
+                                }
+                                val data = JSONObject(
+                                    credentialFile.readText(Charsets.UTF_8)
+                                )
+                                val email = data.optString("login_email").trim()
+                                val password = data.optString("login_password")
+                                if (!credentialFile.delete()) {
+                                    result.error(
+                                        "CREDENTIALS_CLEANUP_FAILED",
+                                        "Private staging smoke credentials could not be cleared.",
+                                        null
+                                    )
+                                    return@setMethodCallHandler
+                                }
+                                if (email.isEmpty() || password.isEmpty() || data.length() != 2) {
+                                    result.error(
+                                        "CREDENTIALS_INVALID",
+                                        "Private staging smoke credentials are invalid.",
+                                        null
+                                    )
+                                } else {
+                                    result.success(
+                                        mapOf("email" to email, "password" to password)
+                                    )
+                                }
+                            } catch (_: Exception) {
+                                credentialFile.delete()
+                                result.error(
+                                    "CREDENTIALS_INVALID",
+                                    "Private staging smoke credentials are invalid.",
+                                    null
+                                )
+                            }
+                        }
                         "isForeground" -> {
                             result.success(activityResumed && windowFocused && !isFinishing)
                         }
