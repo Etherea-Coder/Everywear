@@ -2528,3 +2528,43 @@ evidence above. The no-project/no-APK statements below describe the state on
   app, and press **I checked — continue**. If normal Everywear shows sign-in,
   do not authenticate it; stop and preserve the session evidence. Then verify
   normal session state after test cleanup/restart as a separate check.
+
+### Updated isolated auth run and loading-screen identity (2026-11-16)
+
+- Commit `a33c6dc97a6bce63c2984b1ee9b2cd4601cff9a5` added the first full-width
+  test identity overlay, confirmation gates, and a test-only guard around
+  `ErrorWidget.builder`. The focused widget tests and targeted analysis passed
+  before this device attempt.
+- The staging helper built the isolated APK twice successfully (prebuild and
+  integration-runner build), confirmed package
+  `com.stylewise.app.stagingtest` before launch, and kept the normal package
+  installed. On A065, the sign-in screen showed the large orange identity bar.
+  After the owner signed in, the screen changed to the green AuthGate profile
+  loader (“Aligning your style…”), where the identity overlay was reduced to a
+  thin orange strip with no readable label. The owner had previously reported
+  that this made the app impossible to distinguish. A private screenshot is
+  retained at `/tmp/everywear-current-test-screen-KZxXFD.png` (mode `0600`).
+- Sanitized runner output confirms `initialSession; session=absent`, then
+  `signedIn; session=present`, and the normal-session checkpoint. The process
+  did not reach the new confirmation dialog or sign-out marker. The runner
+  stopped without a captured final test result or exit status; the isolated
+  package remained installed and foregrounded on the loader. This run is
+  **incomplete**, and no reason for the runner exit is established. A staging
+  subscription-verification request also returned the expected `503` because
+  RevenueCat verification is unconfigured; it is not established as the cause
+  of the runner stopping. Ads and purchases remained disabled.
+- After test-app sign-in, the normal package was force-stopped and restarted
+  without clearing data. Its sanitized auth log emitted
+  `initialSession; session=present`; version code and install/update metadata
+  were unchanged. This confirms normal-session retention after test-app
+  sign-in and normal-app process restart. No normal-app screen was manually
+  confirmed at the intermediate checkpoint, so visual verification remains
+  pending. No profile or wardrobe writes occurred.
+- The overlay-only identity implementation was replaced with a reserved,
+  full-width header row. This avoids allowing app content to paint over the
+  label during AuthGate loading. A widget regression now checks the reserved
+  header height and visible label. This source change is included in the
+  current local checkpoint, but it has not been built or verified on the
+  phone. The currently foregrounded isolated APK is still the earlier overlay
+  version. The owner should wait for a rebuilt APK before relying on the
+  test-app label again.

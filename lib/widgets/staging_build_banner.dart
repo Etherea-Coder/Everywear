@@ -16,35 +16,29 @@ class StagingBuildBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!enabled) return child;
     if (testBuild) {
-      return Stack(
-        fit: StackFit.expand,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          child,
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: SafeArea(
-                bottom: false,
-                child: Container(
-                  height: 44,
-                  color: const Color(0xFFD84315),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'AUTOMATED TEST APP  •  STAGING',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+          SafeArea(
+            bottom: false,
+            child: Container(
+              key: const ValueKey('automated_staging_test_identity'),
+              height: 44,
+              color: const Color(0xFFD84315),
+              alignment: Alignment.center,
+              child: const Text(
+                'AUTOMATED TEST APP  •  STAGING',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
           ),
+          Expanded(child: child),
         ],
       );
     }

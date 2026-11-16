@@ -48,6 +48,14 @@ void main() {
       find.text('AUTOMATED TEST APP  •  STAGING'),
     );
     expect(marker.style?.fontSize, 15);
+    expect(
+      tester
+          .getSize(
+            find.byKey(const ValueKey('automated_staging_test_identity')),
+          )
+          .height,
+      44,
+    );
     expect(find.byType(Banner), findsNothing);
     expect(find.text('App'), findsOneWidget);
   });
