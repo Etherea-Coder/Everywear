@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import './account_state_service.dart';
 import './analytics_service.dart';
@@ -30,7 +31,9 @@ class AuthSessionService {
 
     // RevenueCat must observe the Supabase signed-out state before logging out;
     // otherwise its guard re-binds the still-current user.
-    await client.auth.signOut();
+    // Only end this app's local session. In particular, this must not revoke
+    // another signed-in device or the separate staging-test Android package.
+    await client.auth.signOut(scope: SignOutScope.local);
     await RevenueCatService.logOut();
   }
 }

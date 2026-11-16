@@ -11,7 +11,7 @@ import 'package:everywear/services/supabase_service.dart';
 import 'package:everywear/core/utils/profile_display_name.dart';
 import 'package:everywear/core/ui_smoke_test_mode.dart';
 import 'package:everywear/presentation/daily_log/widgets/outfit_entry_card_widget.dart';
-import 'package:everywear/widgets/staging_build_banner.dart';
+import 'support/today_outfit_scroll.dart';
 
 const _foreground = MethodChannel('com.everywear/ui_smoke_test');
 const _isStaging = bool.fromEnvironment('EVERYWEAR_STAGING');
@@ -84,12 +84,9 @@ void main() {
       await _waitFor(tester, find.byTooltip('Manage wardrobe items'));
       await _assertForeground(tester);
       expect(
-        find.descendant(
-          of: find.byType(StagingBuildBanner),
-          matching: find.byType(Banner),
-        ),
+        find.text('AUTOMATED TEST APP  •  STAGING'),
         findsOneWidget,
-        reason: 'The staging define must enable the visible Flutter banner.',
+        reason: 'The test app must have a persistent, unmistakable identity.',
       );
 
       final initialUser = client.auth.currentUser;
@@ -252,8 +249,9 @@ void main() {
       // The Today screen key distinguishes an actual return to the visible
       // tab from a dismissed capture form over an offstage IndexedStack child.
       await _waitFor(tester, find.byKey(const ValueKey('today_screen')));
-      final savedTodayCard = find.byKey(
-        ValueKey('today_outfit_${refreshedOutfit['id']}'),
+      final savedTodayCard = await scrollToTodayOutfitRow(
+        tester,
+        refreshedOutfit['id'].toString(),
       );
       // ignore: avoid_print
       print(
@@ -263,14 +261,38 @@ void main() {
         'savedCardVisible=${savedTodayCard.evaluate().isNotEmpty} '
         'captureFormVisible=${find.byKey(const ValueKey('outfit_name')).evaluate().isNotEmpty}',
       );
-      await _waitFor(
-        tester,
-        savedTodayCard,
-        timeout: const Duration(seconds: 30),
-      );
+      expect(savedTodayCard, findsOneWidget);
       expect(
         find.byType(OutfitEntryCardWidget).evaluate().length,
         greaterThan(todayCardCountBeforeOutfit),
+        reason:
+            'Today must render the newly fetched outfit after route return.',
+      );
+      final todayListView = find
+          .descendant(
+            of: find.byKey(const ValueKey('today_screen')),
+            matching: find.byType(ListView),
+          )
+          .first;
+      final renderedTodayCard = tester.widget<OutfitEntryCardWidget>(
+        savedTodayCard,
+      );
+      expect(renderedTodayCard.entry['semanticLabel'], outfitName);
+      final renderedItemNames = (renderedTodayCard.entry['items'] as List)
+          .map((item) => (item as Map)['name'])
+          .toList();
+      expect(renderedItemNames, contains(itemName));
+      expect(
+        find.descendant(of: savedTodayCard, matching: find.byTooltip(itemName)),
+        findsOneWidget,
+        reason:
+            'The visible saved card must display its expected wardrobe item.',
+      );
+      expect(
+        tester.getRect(savedTodayCard).overlaps(tester.getRect(todayListView)),
+        isTrue,
+        reason:
+            'The exact saved Today card must be inside the visible scroll viewport.',
       );
       // ignore: avoid_print
       print('PASS: outfit creation and automatic Today refresh');

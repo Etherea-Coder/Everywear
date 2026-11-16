@@ -42,24 +42,37 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
     if (Supabase.instance.client.auth.currentUser?.id != user.id) return null;
     return {...data, 'membership_tier': tier};
   } catch (e) {
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint('Unable to load profile for user ${user.id}: $e');
+    }
     rethrow;
   }
 });
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!SupabaseService.isInitialized) {
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint(
         '⚠️ authStateProvider: Supabase not initialized, returning signedOut state',
       );
+    }
     // Return a stream that immediately emits signedOut so the UI shows the Splash/Login
     return Stream.value(const AuthState(AuthChangeEvent.signedOut, null));
   }
-  if (kDebugMode)
+  if (kDebugMode) {
     debugPrint('✅ authStateProvider: Listening to auth state changes');
-  return SupabaseService.instance.client.auth.onAuthStateChange;
+  }
+  return SupabaseService.instance.client.auth.onAuthStateChange.map((state) {
+    if (kDebugMode) {
+      // Diagnostic only: never include an email, user ID, access token, or
+      // refresh token in auth lifecycle logs.
+      debugPrint(
+        'Everywear auth event: ${state.event.name}; '
+        'session=${state.session == null ? 'absent' : 'present'}',
+      );
+    }
+    return state;
+  });
 });
 
 final currentUserProvider = Provider<User?>((ref) {

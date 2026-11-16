@@ -20,6 +20,7 @@ if [[ -z "$device_serial" ]]; then
   exit 2
 fi
 if [[ "$test_target" != "integration_test/app_test.dart" && \
+      "$test_target" != "integration_test/auth_session_isolation_test.dart" && \
       "$test_target" != "integration_test/package_isolation_test.dart" ]]; then
   echo "Refusing an unreviewed UI smoke target." >&2
   exit 2
@@ -113,6 +114,7 @@ if not isinstance(config["SUPABASE_ANON_KEY"], str) or not config["SUPABASE_ANON
     raise SystemExit("Staging anon key is missing.")
 config.update({
     "EVERYWEAR_STAGING": True,
+    "EVERYWEAR_STAGING_TEST": True,
     "EVERYWEAR_FREE_BETA": True,
     "APP_DISTRIBUTION": "uptodown",
     "REVENUECAT_BILLING_ENVIRONMENT": "unavailable",

@@ -30,6 +30,10 @@ const _isStagingBuild = bool.fromEnvironment(
   'EVERYWEAR_STAGING',
   defaultValue: false,
 );
+const _isAutomatedStagingTest = bool.fromEnvironment(
+  'EVERYWEAR_STAGING_TEST',
+  defaultValue: false,
+);
 
 void main() {
   if (startupDiagnosticsEnabled) {
@@ -68,28 +72,39 @@ void _bootstrapAndRunApp() {
   }
 
   // 🚨 CRITICAL: Custom error handling - DO NOT REMOVE
-  bool _hasShownError = false;
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    if (startupDiagnosticsEnabled) {
-      StartupDiagnostics.recordFailure(
-        'Flutter error widget',
-        details.exception,
-        stackTrace: details.stack,
-      );
-      return const StartupDiagnosticScreen();
-    }
-    if (!_hasShownError) {
-      _hasShownError = true;
-      if (AnalyticsService.instance.reportingEnabled) {
-        unawaited(
-          Sentry.captureException(details.exception, stackTrace: details.stack),
+  // Flutter's widget-test binding treats changes to this process-global
+  // builder as leaked test state. Isolated integration tests keep Flutter's
+  // default builder so the test binding can reliably verify its invariants.
+  if (!_isAutomatedStagingTest) {
+    bool _hasShownError = false;
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      if (startupDiagnosticsEnabled) {
+        StartupDiagnostics.recordFailure(
+          'Flutter error widget',
+          details.exception,
+          stackTrace: details.stack,
         );
+        return const StartupDiagnosticScreen();
       }
-      Future.delayed(const Duration(seconds: 5), () => _hasShownError = false);
-      return CustomErrorWidget(errorDetails: details);
-    }
-    return const SizedBox.shrink();
-  };
+      if (!_hasShownError) {
+        _hasShownError = true;
+        if (AnalyticsService.instance.reportingEnabled) {
+          unawaited(
+            Sentry.captureException(
+              details.exception,
+              stackTrace: details.stack,
+            ),
+          );
+        }
+        Future.delayed(
+          const Duration(seconds: 5),
+          () => _hasShownError = false,
+        );
+        return CustomErrorWidget(errorDetails: details);
+      }
+      return const SizedBox.shrink();
+    };
+  }
 
   // Keep the first Flutter frame independent of platform/service startup.
   // Android can otherwise remain on its native launch screen (or black) while
@@ -565,10 +580,14 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: ThemeData.dark(useMaterial3: true),
-          home: StartupDiagnosticScreen(
-            timedOut: _startupTimedOut,
-            startupFailed: _startupFailed,
-            timeoutDuration: widget.startupTimeout,
+          home: StagingBuildBanner(
+            enabled: _isStagingBuild,
+            testBuild: _isAutomatedStagingTest,
+            child: StartupDiagnosticScreen(
+              timedOut: _startupTimedOut,
+              startupFailed: _startupFailed,
+              timeoutDuration: widget.startupTimeout,
+            ),
           ),
         );
       }
@@ -576,23 +595,27 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         scaffoldMessengerKey: _scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: Scaffold(
-          backgroundColor: const Color(0xFF2D5A27),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(25),
-                  child: Image.asset(
-                    'assets/images/icon-1768225114910.png',
-                    width: 120,
-                    height: 120,
+        home: StagingBuildBanner(
+          enabled: _isStagingBuild,
+          testBuild: _isAutomatedStagingTest,
+          child: Scaffold(
+            backgroundColor: const Color(0xFF2D5A27),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: Image.asset(
+                      'assets/images/icon-1768225114910.png',
+                      width: 120,
+                      height: 120,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                const CircularProgressIndicator(color: Colors.white),
-              ],
+                  const SizedBox(height: 24),
+                  const CircularProgressIndicator(color: Colors.white),
+                ],
+              ),
             ),
           ),
         ),
@@ -616,6 +639,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
               data: MediaQuery.of(context),
               child: StagingBuildBanner(
                 enabled: _isStagingBuild,
+                testBuild: _isAutomatedStagingTest,
                 child: child!,
               ),
             );

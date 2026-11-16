@@ -2376,3 +2376,155 @@ evidence above. The no-project/no-APK statements below describe the state on
   optional-onboarding-photo tests passed **9/9**; targeted analysis found 3
   informational import/key lints and no errors. This does not replace the
   pending fresh-account device verification.
+
+### Today row visibility and auth-session investigation (2026-11-16)
+
+- The failed smoke assertion expected the exact saved outfit card
+  (`today_outfit_<saved row id>`) to be visible immediately after route return.
+  The run recorded the Today fetch changing from 3 to 4 rows, the authenticated
+  query returning the exact newly saved outfit ID, and `cardsBefore=0` /
+  `cardsNow=0`; it then timed out looking for the card. The test had not scrolled
+  the long Today page. This supports a test observation gap around the lazy,
+  offscreen list, not a demonstrated failure to refresh. It is not a device
+  verification that the revised assertion passes.
+- Added a finite, 20-scroll search for the exact saved row ID. The smoke now
+  retains its row query and rendered-card-count refresh assertion, and also
+  requires the exact keyed card to overlap the Today viewport and contain the
+  expected outfit label and wardrobe item tooltip. Added a widget regression
+  for bounded scroll-to-row behavior. Profile-name and final sign-out checks
+  remain **not run** because the prior integration stopped at Today.
+- Auth findings: the test called `signInWithPassword` in
+  `com.stylewise.app.stagingtest`. Its explicit final logout is after the
+  failing Today assertion and was not reached. Flutter teardown stopped and
+  removed only that test package; the normal package's install/update metadata
+  was unchanged. The normal app later rendered sign-in, so session preservation
+  failed at the UI level even though package metadata was unchanged. No normal
+  process auth-event trace was captured, so the reason its UI was signed out is
+  **unresolved**.
+- Local source evidence rules out shared Android preference files between the
+  two package IDs: Android app data is package-private. Both app variants use
+  the same staging Supabase project and can authenticate the same account, but
+  their persisted sessions are local to each package. `AuthSessionService`
+  was the only app sign-out path; the pinned GoTrue default is local scope, and
+  the app now requests `SignOutScope.local` explicitly. Account cleanup only
+  removes this package's app caches/preferences and does not clear the Supabase
+  auth storage key. Debug auth-state subscription now records only event name
+  and session presence, never user IDs or credentials.
+- These checks do not establish whether Supabase invalidated/expired the normal
+  session, whether normal-app token refresh failed, or whether the prior sign-in
+  screen was a transient UI state. A targeted device run must first record the
+  normal app's authenticated screen, sign into the isolated app as needed, then
+  inspect the isolated app's sanitized auth events and then the normal app's
+  authenticated UI after the isolated run. The normal app would need the new
+  diagnostic build to expose its own auth events. Added an auth-only isolated
+  integration target and restricted
+  the existing runner allowlist to accept it; this target only initializes the
+  staging app and confirms its session, with no profile or wardrobe writes. It
+  retains the immediate `SIGN_IN_REQUIRED` handoff. The device target was not
+  built or run in this checkpoint.
+- Focused checks: the bounded-scroll widget regression plus Quick Log refresh
+  and smoke-mode tests passed **3/3**. Targeted Dart analysis of changed files
+  completed with no errors after removing the new warning. `dart format` and
+  `git diff --check` passed. No Android build, authenticated device run,
+  backend write, profile-name check, or final sign-out check was performed.
+- Staging data and the normal app were not modified during this investigation.
+  The two unrelated Linux/macOS formatting changes remain unstaged.
+
+### Auth-only isolated device check (2026-11-16)
+
+- Built and installed the normal staging app with the new sanitized auth
+  diagnostics before relying on them. APK:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-4-aftdbphdobfrshienple-debug-AUTH-EVENTS-20261116.apk`;
+  SHA-256 `52650bfb199d4be4ce238fff543db4cd51651bda0aa9f41e68590b5abd4773c9`.
+  It remains package `com.stylewise.app`, version code 4, and its signing
+  certificate matches the retained beta-4 APK. Installed with `adb install -r`;
+  `firstInstallTime` stayed `2026-11-16 13:21:52`, confirming an in-place
+  update. No app data was cleared.
+- On A065, the installed normal app emitted `initialSession; session=present`
+  at `14:23:02 +02` before the isolated run. During the isolated runner wait it
+  emitted `tokenRefreshed; session=present` at `14:36:13 +02`. After test
+  cleanup, I force-stopped and relaunched the normal app without clearing data;
+  it emitted `initialSession; session=present` at `14:57:19 +02`. These events
+  verify that the persisted normal session survived runner installation,
+  execution, cleanup, and a process restart in this run. The sanitized event
+  record is retained at `/tmp/everywear-auth-isolation-20261116-142246/normal-events.log`
+  with mode `0600`. Each event appeared twice at the same timestamp; whether
+  that reflects duplicate stream delivery or duplicate logging is unresolved.
+- The isolated package identity was `com.stylewise.app.stagingtest` and was
+  foregrounded while waiting. Its initial auth state was
+  `initialSession; session=absent`. The owner did not complete private sign-in
+  before the test's 15-minute authentication wait expired, so the auth-only test
+  exited with `Timed out waiting for isolated auth state`. The runner then
+  removed the isolated package and confirmed the normal package remained at
+  version 4 with unchanged install/update metadata. No profile or wardrobe
+  writes occurred.
+- Since isolated sign-in did not happen, retention **after test-app sign-in**
+  is not tested. This auth-only target performs no logout, so retention after
+  test-app logout is also **not run**. The normal session was verified after
+  cleanup as described above. The earlier report of the normal app showing
+  sign-in after a different full smoke run remains unexplained and was not
+  reproduced without test-app sign-in.
+- Payments/ads stayed disabled; only approved staging was used. No production
+  changes or publication occurred. Profile-name, Today UI, and final sign-out
+  checks remain not run in this auth-only attempt. Before another auth-only
+  attempt, coordinate a time when the owner can complete sign-in promptly; do
+  not silently sign the normal app back in if any later check reports an absent
+  session.
+
+### Auth-only run and test-app identity follow-up (2026-11-16)
+
+- The owner reported seeing a green screen, then black, followed by the app
+  closing/display going dark, and could not tell the test app from normal
+  Everywear. Source confirms the test package had a distinct Android ID and
+  launcher label, but reused normal app screens with only the small corner
+  `STAGING` ribbon. The test build had no prominent in-app identity marker.
+- The retained auth-only runner output shows the test package began with
+  `initialSession; session=absent`, then emitted `signedIn; session=present`
+  after private sign-in. The test proceeded to its normal-app inspection
+  checkpoint, called `signOut(scope: SignOutScope.local)`, emitted
+  `signedOut; session=absent`, and reached its completion marker. The
+  foreground round-trip detector accepted a return after any sustained
+  background period; it did not require the owner to confirm what the normal
+  app displayed. This explains why the test could proceed to sign-out and
+  teardown without an explicit visual confirmation.
+- The Flutter runner then force-stopped and uninstalled only
+  `com.stylewise.app.stagingtest`. Its test process reported a teardown
+  invariant failure because `app.main()` changed the process-global
+  `ErrorWidget.builder`. This is a confirmed test-harness cleanup failure,
+  separate from auth failure. No raw device log showed an app crash as the
+  cause of cleanup. The phone's earlier display-off moment was not captured;
+  at follow-up it was awake on the launcher.
+- Follow-up on the connected A065 launched the normal app without changing or
+  clearing data. It emitted only sanitized `initialSession; session=present`
+  events (duplicated at the same timestamp), and was foregrounded afterward.
+  Version code 4 and first/last install timestamps remained `13:21:52` /
+  `14:21:09`. This verifies the normal session **after test cleanup and app
+  restart**. Normal-app session state was not directly observed at the two
+  intermediate checkpoints, so retention specifically after test sign-in and
+  after test-app sign-out remains unverified.
+- Implemented for the next isolated run: the runner supplies a test-only Dart
+  define; the app displays a fixed, full-width orange
+  `AUTOMATED TEST APP • STAGING` identity bar on every app screen; and both
+  normal-session checkpoints now require a visible owner confirmation button
+  before local test sign-out or cleanup can continue. Automated test builds
+  leave Flutter's global `ErrorWidget.builder` unchanged to avoid the binding
+  teardown invariant. The normal staging app retains its existing subtle
+  staging ribbon; no production behavior changes.
+- Verification performed: focused staging-banner widget tests passed **2/2**;
+  targeted Dart analysis completed with no errors (four pre-existing
+  informational lints in `lib/main.dart`); targeted formatting and
+  `git diff --check` passed. No build or integration test was run for this
+  follow-up. Therefore the new identity bar, confirmation pauses and teardown
+  behavior have not yet been verified on-device. The auth-only run itself did
+  not write profile/wardrobe data; its explicit logout affected only the test
+  package's local session. Normal package remained installed and its session
+  was present after cleanup/restart. Ads/purchases remained unavailable; only
+  staging was used.
+- Next device step: rebuild through `scripts/run_staging_ui_smoke.sh` with
+  `EVERYWEAR_UI_SMOKE_TEST_TARGET=integration_test/auth_session_isolation_test.dart`.
+  At the emitted `SIGN_IN_REQUIRED`, sign in only to the app with the large
+  orange automated-test bar. At each modal confirmation, switch to normal
+  Everywear, inspect its signed-in screen, return to the visibly labeled test
+  app, and press **I checked — continue**. If normal Everywear shows sign-in,
+  do not authenticate it; stop and preserve the session evidence. Then verify
+  normal session state after test cleanup/restart as a separate check.
