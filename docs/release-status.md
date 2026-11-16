@@ -1,5 +1,46 @@
 # Android release status
 
+## Staging APK update/install and authenticated-session check (2026-11-16)
+
+- The old Gradle daemon was verified idle and associated with this checkout,
+  then stopped gracefully. Available memory was reassessed at 3.6 GiB with
+  zero measured pressure PSI. One staging helper build succeeded (exit 0)
+  using Java 21, one Gradle worker, a 2 GiB heap, staging ref
+  `aftdbphdobfrshienple`, visible staging identification, and ads/purchases
+  disabled. No emulator, production endpoint, or hosted mutation was used.
+- APK archive and v2 signature verification passed. Artifact:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-4-aftdbphdobfrshienple-debug.apk`,
+  197,334,955 bytes, SHA-256
+  `97f6a2e4d18ab8a70bddcec0f4eb33eeb48072467a5bfebbe01aebe7435fc4ce`.
+  Package is `com.stylewise.app`, version code 4; the debug certificate
+  matches the installed app. This staging APK is not for public distribution.
+- Before the update, the phone showed the normal app's authenticated Today
+  screen. `adb install -r` succeeded without uninstalling or clearing data.
+  First-install time remained `2026-11-15 22:31:24`; after update, the phone
+  remained on Today with the staging banner and an authenticated session.
+  This is an actual session restoration check for that existing account; no
+  account data was intentionally modified by this build/install check.
+- The old Today-card assertion is **inconclusive test observation**, not a
+  demonstrated product refresh defect: its baseline was captured while Today
+  was offstage, and it did not prove Today was visible after route return. The
+  staging row was present for the expected account/date. Commit `48324a9`
+  strengthens the test with a visible-tab baseline, row-specific card finder
+  and smoke-only load markers. The revised assertion has not run on-device;
+  it is not reported as fixed or passed.
+- No full UI smoke was started. The isolated test package requires its own
+  private sign-in. Keep the runner confined to
+  `com.stylewise.app.stagingtest`; normal `com.stylewise.app` remains installed
+  and signed in.
+- Checks performed: daemon ownership/status, Java 21 selection, RAM/PSI
+  reassessment, one staging APK build, archive integrity, package/version,
+  certificate match, SHA-256, successful in-place install and visible
+  post-install authenticated screen. No tests, analyzer, full smoke, or
+  production operation was run for this update.
+- Two unrelated formatting-only working-tree changes remain in
+  `lib/presentation/purchase_tracking/purchase_tracking.dart` and
+  `lib/presentation/wardrobe_management/wardrobe_management.dart`; preserve
+  them unstaged.
+
 ## USB startup diagnosis and route fix (2026-11-14)
 
 - Reviewed `main` at `849c4587c9d74211fb4edcfcb0243007619307f1`; the starting

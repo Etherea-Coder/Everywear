@@ -96,3 +96,16 @@ each item is verified or specifically blocked.
   isolated smoke only after proving package isolation and allowing a fresh
   private sign-in to `.stagingtest`. Keep the staging backend and production
   separate; no production mutations, push, or publication are authorized.
+
+## Checkpoint after authenticated install (2026-11-16)
+
+- The previous “Next action” is superseded: the normal staging app was already
+  foregrounded and authenticated, then updated in place to version code 4.
+  Session restoration was visibly confirmed afterward on the Today screen.
+- The newly built staging APK and its hash, signature, install evidence, and
+  limits are recorded in `release-status.md` and `uptodown-free-beta.md`.
+- The prior Today assertion is still inconclusive until the revised visible-tab
+  and row-specific assertion is run on the isolated test package. Do not claim
+  it as an app fix or successful device check. Before any full run, obtain the
+  owner's private sign-in to `com.stylewise.app.stagingtest`, keep the normal
+  package out of runner install/cleanup operations, and preserve its session.

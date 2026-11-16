@@ -284,3 +284,39 @@ account label (never passwords/tokens).
 3. Owner supplies existing upload-signing key access, privacy/deletion/support
    URLs, and approved listing artwork before public distribution. Keep the
    existing application ID and signing continuity intact.
+
+## Staging APK update (2026-11-16)
+
+This section supersedes the earlier device/install description above. The
+artifact below is a staging test build, not a public release artifact.
+
+- The approved `scripts/build_uptodown_free_beta.sh` helper built with staging
+  ref `aftdbphdobfrshienple`, Java 21, one Gradle worker and a 2 GiB Gradle
+  heap. Purchases and ads were disabled, staging identification was enabled,
+  and diagnostic/probe entrypoints were disabled.
+- Build exit status: **0**. Archive integrity and APK v2 signature checks
+  passed. Package `com.stylewise.app`, version `1.0.0-beta.1`, version code
+  `4`; size **197,334,955 bytes**. SHA-256:
+  `97f6a2e4d18ab8a70bddcec0f4eb33eeb48072467a5bfebbe01aebe7435fc4ce`.
+- APK path:
+  `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-4-aftdbphdobfrshienple-debug.apk`.
+  Debug certificate SHA-256 is
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97` and
+  matches the certificate on the installed app.
+- Installation over the existing app succeeded with `adb install -r`; no
+  uninstall or data clear occurred. `firstInstallTime` stayed
+  `2026-11-15 22:31:24`; version code is now 4. The app remained foregrounded
+  on the authenticated Today screen with the staging ribbon after install.
+  This is a session restoration check for the existing account at that moment,
+  not verification of all sign-in or onboarding flows.
+- Before building, the project Gradle daemon (PID 1899504) was confirmed idle
+  with its last project path in this checkout's `android/` directory, then
+  stopped gracefully. Available RAM measured 3.6 GiB and pressure PSI was
+  zero. No caches were cleared.
+- The separate isolated full UI smoke was **not** rerun. Its old Today
+  assertion is inconclusive: it measured zero cards while Today was an offstage
+  `IndexedStack` tab and did not establish that the tab was visible after
+  returning from outfit logging. Commit `48324a9` improves visibility and
+  row-specific assertions, but those changes remain unverified on-device. A
+  new full run requires private sign-in to `com.stylewise.app.stagingtest` and
+  must not target the normal package.
