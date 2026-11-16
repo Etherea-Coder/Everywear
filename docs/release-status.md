@@ -72,6 +72,22 @@
   rollback APK. The active `.stagingtest` APK remains at
   `build/app/outputs/flutter-apk/app-debug.apk`, outside the archive.
 
+## Full smoke preflight after beta-4 restoration (2026-11-16)
+
+- The owner requested a new authenticated baseline before the full smoke. The
+  normal package is installed as beta-4, with fresh first/last install time
+  `2026-11-16 13:21:52`. Launching it read-only showed the sign-in screen, not
+  Today; this confirms the previous session did not survive uninstall and the
+  fresh install is not authenticated. A private screenshot of the sign-in
+  screen is kept at `/tmp/everywear-normal-auth-baseline-20261116.png` (mode
+  0600).
+- No full smoke process was started, no sign-in was performed, and no staging
+  rows or images were written. The owner was asked to sign in privately to the
+  normal app and confirm that Today is visible. After that baseline is
+  confirmed, the full runner will start; its live output must be surfaced
+  immediately at `SIGN_IN_REQUIRED` while `Everywear UI Smoke Test (STAGING)`
+  (`com.stylewise.app.stagingtest`) remains active for the owner's response.
+
 ## Staging APK update/install and authenticated-session check (2026-11-16)
 
 - The old Gradle daemon was verified idle and associated with this checkout,
