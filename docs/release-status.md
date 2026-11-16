@@ -2564,7 +2564,27 @@ evidence above. The no-project/no-APK statements below describe the state on
   full-width header row. This avoids allowing app content to paint over the
   label during AuthGate loading. A widget regression now checks the reserved
   header height and visible label. This source change is included in the
-  current local checkpoint, but it has not been built or verified on the
-  phone. The currently foregrounded isolated APK is still the earlier overlay
-  version. The owner should wait for a rebuilt APK before relying on the
-  test-app label again.
+  local checkpoint, but its persistence through AuthGate loading has not been
+  confirmed by a clear on-device capture.
+- The owner switched to normal Everywear during the updated run and confirmed
+  its Today page remained visible with only the small corner staging ribbon.
+  The test runner had reached `NORMAL_SESSION_CHECK_REQUIRED_AFTER_TEST_SIGNIN`
+  and was alive during this inspection. The isolated app itself was clearly
+  identified by the full-width header on its earlier sign-in screen, but the
+  post-authentication identity display still needs a clear device check.
+- That run then reached the manual checkpoint and failed with
+  `No MaterialLocalizations found`: the dialog was opened using a context from
+  above the `MaterialApp` localization scope. The runner exited with status 1
+  and confirmed that cleanup removed only `.stagingtest`. This is the exact
+  test-harness failure; it is not an auth or normal-app failure. Since cleanup
+  removed the isolated package, its local session is gone and the next run
+  needs private test-app sign-in again. The normal app remains installed and
+  the owner confirmed it still showed Today; no data was cleared.
+- Fixed the dialog call to use a `Scaffold` context under `MaterialLocalizations`
+  and extracted the checkpoint dialog. The new focused regression verifies it
+  requires the explicit button and returns success only after the tap. Focused
+  banner/dialog tests passed **3/3**, targeted Dart analysis reported no issues,
+  formatting and `git diff --check` passed. No build or device rerun has been
+  performed after this correction. The dialog and fixed-height header remain
+  unverified on the phone; profile/wardrobe writes and test-app local sign-out
+  were not run.

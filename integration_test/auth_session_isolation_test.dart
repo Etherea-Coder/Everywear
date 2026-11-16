@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:everywear/main.dart' as app;
 import 'package:everywear/services/supabase_service.dart';
 import 'support/foreground_round_trip_gate.dart';
+import 'support/owner_session_checkpoint.dart';
 
 const _foreground = MethodChannel('com.everywear/ui_smoke_test');
 
@@ -133,26 +134,15 @@ Future<void> _waitForOwnerConfirmation(
 }) async {
   final priorPointerPropagation = binding.shouldPropagateDevicePointerEvents;
   binding.shouldPropagateDevicePointerEvents = true;
-  var confirmed = false;
   try {
-    final context = tester.element(find.byType(MaterialApp).first);
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          FilledButton(
-            key: const ValueKey('confirm_normal_session_checkpoint'),
-            onPressed: () {
-              confirmed = true;
-              Navigator.of(dialogContext).pop();
-            },
-            child: const Text('I checked — continue'),
-          ),
-        ],
-      ),
+    final context = tester.element(find.byType(Scaffold).first);
+    var confirmed = false;
+    unawaited(
+      showOwnerSessionCheckpoint(context, title: title, message: message).then((
+        result,
+      ) {
+        confirmed = result;
+      }),
     );
     await tester.pump();
     await _waitForPredicate(
