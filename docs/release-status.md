@@ -31,6 +31,15 @@
   `generate-ai-insights`, and `today-suggestion` handlers. No hosted operation
   or deployment was performed.
 
+## Project-wide Flutter analysis (2026-11-17)
+
+- `.tooling/flutter/bin/flutter analyze --no-pub` completed in 4.4 seconds and
+  reported **245 info-level diagnostics, 0 warnings, and 0 errors**. Flutter
+  returned exit code 1 because the info-level findings are still emitted as
+  analyzer issues. The findings include existing style and deprecation lints;
+  this is not a clean project-wide analyzer pass. The focused analyzer run for
+  the locale/font files was previously recorded separately.
+
 ## Full Flutter test suite after locale/font checkpoint (2026-11-17)
 
 - Ran `.tooling/flutter/bin/flutter test --no-pub --concurrency=1
