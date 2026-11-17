@@ -1,5 +1,46 @@
 # Android release status
 
+## Staging Google OAuth recheck after Google Cloud callback update (2026-11-17)
+
+- The owner reports adding
+  `https://aftdbphdobfrshienple.supabase.co/auth/v1/callback` to the existing
+  Everywear Google OAuth **Web** client while preserving the production
+  callback. This is owner-reported Google Cloud configuration; it does not
+  enable Supabase Auth for the staging project.
+- Read-only `https://aftdbphdobfrshienple.supabase.co/auth/v1/settings` still
+  returns HTTP 200 with `external.google=false` and `external.email=true`.
+  Consequently the app would still receive `unsupported provider` if OAuth
+  were attempted, so no browser flow or emulator launch was started.
+- Staging Google provider client-ID/secret presence cannot be inspected through
+  the available interfaces. The public Auth settings omit those fields; the
+  Management API Auth-config GET previously returned HTTP 401, and the current
+  authenticated CLI has project/function/secret-name read access but no Auth
+  config read command. No secret values were accessed.
+- **Next owner action:** in Supabase Dashboard, open project
+  `aftdbphdobfrshienple` → Authentication → Sign In / Providers → Google.
+  If the existing Everywear Web client ID and secret are already populated,
+  enable Google and save. If either is empty, enter the ID and secret for the
+  existing Web client whose callback was just updated; do not create a new
+  client. In Authentication → URL Configuration, confirm
+  `io.supabase.everywear://login-callback` remains allowlisted (the owner
+  previously reported it was added). If Google's consent screen is in Testing,
+  allow the intended test account there. Do not send credentials in chat.
+- After the owner confirms that save, run only an isolated staging-app Google
+  OAuth test on the emulator. At the Google account/consent step, pause with the
+  process alive for private interaction, then verify that the callback returns
+  to Everywear and produces a Supabase session and authenticated screen. No
+  phone, app data, or production setting is involved.
+- A new read-only staging secret-name listing still shows
+  `GOOGLE_AI_API_KEY` and `OPENROUTER_API_KEY` absent. If Google sign-in passes,
+  bounded AI validation will additionally require those values entered into
+  staging Edge Function Secrets from the providers; no production key can be
+  reused without explicit authorization. No AI call was made.
+- Checks actually performed: staging identity via CLI, staging public Auth
+  settings GET, staging Edge Function secret-name listing, local callback and
+  package source inspection. No build, OAuth flow, test, inference, hosted
+  mutation, or production operation was performed. Existing core smoke result
+  at `87f33baf` remains valid and was not repeated.
+
 ## Staging Google OAuth and AI provider preflight (2026-11-17)
 
 - Baseline preserved: `main` at successful core-smoke checkpoint
