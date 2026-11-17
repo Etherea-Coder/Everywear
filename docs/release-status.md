@@ -1,5 +1,55 @@
 # Android release status
 
+## Bounded staging Gemini validation (2026-11-17)
+
+- The owner reports saving `GOOGLE_AI_API_KEY` to staging project
+  `aftdbphdobfrshienple`. Read-only project identity and Edge Function secret
+  name checks confirmed `Everywear-staging` is active/healthy and the Gemini
+  key name is present. `OPENROUTER_API_KEY` remains absent by design. No secret
+  values were read.
+- The AVD used for the pending OAuth attempt was shut down with `adb emu kill`;
+  the OAuth log capture was already stopped. No device or core smoke test was
+  run for this AI check.
+- The existing mode-0600 staging app config and dedicated mode-0600 smoke
+  credentials were validated by file shape and location. A password-grant
+  login for that dedicated staging account succeeded. An unauthenticated
+  `style-coach` request returned HTTP 401. The authenticated
+  `get_ai_allowance` RPC reported free tier with 20 monthly, 3 daily, and 1
+  burst action remaining before inference.
+- One bounded synthetic `style-coach` request reached the deployed function
+  and failed with HTTP 502 / `AI_PROVIDER_REJECTED`. The post-request allowance
+  was 19 monthly and 2 daily; the burst allowance was consumed. This confirms
+  the deployed reservation is charged for the failed provider attempt. The
+  staged response envelope was `{ "success": false, "error": "AI provider
+  rejected the request.", "code": "AI_PROVIDER_REJECTED" }`; Gemini returned
+  no coach text, so no model-response example was fabricated for prompt
+  review.
+- Read-only staging Edge Function logs confirmed the expected unauthenticated
+  401 and authenticated 502, plus a generic `provider_rejected` event after
+  336 ms. The deployed handler does not record the upstream Gemini HTTP
+  status, so the exact provider rejection cause (key restrictions/project/API
+  access/model request) remains **unverified**. A local source-only telemetry
+  change records that numeric status without logging provider bodies, prompts,
+  or credentials. Deploying this diagnostic change to staging was blocked by
+  the CLI's hosted-mutation consent guard; no deployment occurred. To identify
+  the cause, approve a staging-only `style-coach` redeploy, then make one new
+  synthetic request after the quota burst window resets and inspect only the
+  status-only function log.
+- Other Gemini-backed endpoints were not called after the shared provider
+  failure, avoiding unnecessary quota consumption. The OpenRouter-backed
+  `ai-suggestions` outfit-photo advice feature remains unavailable until
+  `OPENROUTER_API_KEY` is intentionally configured in staging. No successful
+  Gemini inference has been verified. The coach prompt remains unchanged.
+- Google OAuth callback verification remains pending; this AI validation did
+  not use the emulator or personal phone. No production project, provider
+  settings, or production data was changed.
+- Checks actually performed: authenticated staging password grant; unauth-
+  enticated and authenticated function calls; authenticated allowance reads
+  before and after the request; staging function/secret-name inventory; and
+  read-only function logs. `deno` is unavailable, so no Deno test/type-check
+  was run. No build, analyzer, core smoke, production operation, or model
+  success is claimed.
+
 ## Staging Google OAuth recheck after Google Cloud callback update (2026-11-17)
 
 - The owner reports adding

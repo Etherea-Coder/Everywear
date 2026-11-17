@@ -468,6 +468,7 @@ Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "pr
           model: GEMINI_MODEL,
           latency_ms: Math.round(performance.now() - startedAt),
           error: "provider_rejected",
+          provider_status: geminiResponse.status,
         }),
       );
       return new Response(
