@@ -1,5 +1,26 @@
 # Android release status
 
+## Locale/font staging APK build (2026-11-17)
+
+- Built the current source with `scripts/build_uptodown_free_beta.sh`, explicit
+  staging ref `aftdbphdobfrshienple`, the existing private mode-0600 staging
+  config, Java 21, one Gradle worker and a 2 GiB Gradle heap. The helper forces
+  free-beta mode, Uptodown distribution, purchases unavailable, ads disabled,
+  and the staging marker enabled. No device was connected or used.
+- APK: `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-4-aftdbphdobfrshienple-debug-LOCALE-FONTS-20261117.apk`;
+  size **198,715,418 bytes**; SHA-256
+  `0a200a1a55364240557369d76ae4a63547d93065b9c7684a1a79f36062b2575b`.
+  ZIP integrity passed. `aapt` confirmed `com.stylewise.app`, version
+  `1.0.0-beta.1` / code 4, and target SDK 36. APK Signature Scheme v2
+  verification passed with the Android Debug certificate (SHA-256
+  `76fec71b0c4b3d72fd43231330967da1c9fd8d04a985c7aade7430ecb45d2d97`).
+- All four bundled font files and their OFL/trademark notices are present in
+  the APK asset bundle. This proves packaging and compilation, not runtime font
+  rendering on a device. The artifact is a staging debug test APK, unsuitable
+  for public distribution. Installation and physical-device checks remain
+  pending. Gradle emitted an Android SDK XML v4/tooling-version warning but
+  completed successfully.
+
 ## Full Flutter test suite after locale/font checkpoint (2026-11-17)
 
 - Ran `.tooling/flutter/bin/flutter test --no-pub --concurrency=1
