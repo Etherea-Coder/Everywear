@@ -38,7 +38,8 @@
   project that owns the staging key; do not change billing or purchase credits
   without the owner's separate decision. See
   [Gemini API billing](https://aistudio.google.com/docs/billing).
-- After both failed provider attempts, allowance was 18 monthly and 1 daily;
+- Immediately after the two failed provider attempts, allowance was 18 monthly
+  and 1 daily;
   the burst action was consumed by the retry. This matches the documented
   backend policy: reservation is charged before provider execution and is not
   refunded after provider errors because the provider may already have incurred
@@ -46,14 +47,22 @@
   occurred before a model response; whether this failed attempt incurred any
   provider charge was not independently measured.
 - The deployed `style-coach` telemetry code and status classifier are present
-  locally. The coach prompt remains unchanged. No successful Gemini inference
-  or model-response example was produced, so none was fabricated for the
-  upcoming prompt review.
+  locally. The coach prompt remains unchanged. The later synthetic success
+  below is the only model-response sample; no real-user response was requested.
 - Other Gemini-backed endpoints were not called after the 402, avoiding
   unnecessary requests while this shared key/project billing issue remains.
   The OpenRouter-backed `ai-suggestions` outfit-photo advice feature remains
   unavailable until `OPENROUTER_API_KEY` is intentionally configured in
   staging. Its failure path was not invoked.
+- After the owner reported adding Gemini credit, I checked the allowance
+  before making another request: free tier, 18 monthly, 1 daily, and 1 burst
+  action remained. One synthetic active-mode `style-coach` request then
+  succeeded with HTTP 200 and a validated `answer` plus concrete `next_step`.
+  The allowance became 17 monthly, 0 daily, and 0 burst. The deployed
+  function log reported `gemini-2.5-flash-lite` as both requested and served
+  model, 1,184 ms latency, 316 input tokens, and 102 output tokens. No further
+  AI requests were made. A sanitized example is recorded in
+  [coach-prompt-review.md](coach-prompt-review.md).
 - A fresh public Auth settings GET returned HTTP 200 with Google and email
   providers enabled. The isolated emulator OAuth flow had previously reached
   Google's account sign-in page, but no private account interaction or
@@ -62,13 +71,13 @@
   production project, provider settings, or production data was changed.
 - Checks actually performed: authenticated staging password grant; unauth-
   enticated and authenticated function calls; authenticated allowance reads
-  before and after both requests; read-only staging function/secret inventory
+  before and after each request; read-only staging function/secret inventory
   and Edge Function logs; and one-function staging deployment. The CLI's
   server-side bundler initially failed because it was not given the Deno import
   map; the deployment succeeded after explicitly passing
   `supabase/functions/deno.json`. `deno` is unavailable, so no Deno
   test/type-check was run. `git diff --check` passed. No build, analyzer, core
-  smoke, production operation, or model success is claimed.
+  smoke, or production operation was performed.
 
 ## Staging Google OAuth recheck after Google Cloud callback update (2026-11-17)
 

@@ -6,8 +6,9 @@ This is a review copy of the deployed staging `style-coach` source inspected on
 2026-11-17 and the matching local source at `supabase/functions/style-coach/`.
 The deployed copy is retained only in the ignored
 `.tooling/recovery/staging-functions-aftdbphdobfrshienple-20261117/` directory.
-No request containing user data was sent to a model. Dynamic user values below
-are represented as placeholders.
+No real-user data was sent to a model. A separate bounded synthetic staging
+request was made on 2026-11-17; its sanitized output is recorded below.
+Dynamic prompt inputs elsewhere in this review are represented as placeholders.
 
 The earlier ignored 2026-11-11 source snapshot contains the same three prompt
 templates. Its only rendered-text difference is quote style around event-field
@@ -132,6 +133,29 @@ Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "pr
 - The current Gemini request does not set a JSON response MIME type/schema.
   Application parsing and response validation remain the enforcement boundary
   for JSON modes.
+
+## Synthetic staging response sample (2026-11-17)
+
+One authenticated active-mode request to staging `style-coach` succeeded with
+`gemini-2.5-flash-lite`. It used only synthetic context: a casual/practical
+style profile and a navy knit top, dark denim, and white sneakers. The response
+passed the app's `answer` / `next_step` parser. The synthetic-name greeting was
+omitted from this sanitized copy:
+
+```text
+For a relaxed weekday, let's keep it effortlessly chic. Your navy knit top and
+dark denim are a classic pairing. Add your white sneakers for a comfortable and
+stylish finish. This combination is perfect for a streamlined, casual look.
+It's simple, clean, and totally you!
+
+Next step: Try wearing your navy knit top with dark denim and white sneakers
+for your next weekday.
+```
+
+Staging telemetry recorded 316 input tokens, 102 output tokens, 1,184 ms
+latency, and `gemini-2.5-flash-lite` as the served model. This single synthetic
+response confirms request/response plumbing and schema parsing; it is not a
+model-quality evaluation. The prompt itself was not changed.
 
 ## Review candidates for our later discussion
 
