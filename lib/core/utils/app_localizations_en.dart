@@ -28,6 +28,9 @@ const Map<String, String> appLocalizationsEn = {
   'signin_failed': 'Sign in failed. Check your credentials.',
   'auth_service_unavailable':
       'Account services are unavailable right now. Please try again later.',
+  'refresh_advice': 'Refresh advice',
+  'coach_tip_needs_refresh':
+      'Your language changed. Refresh to get advice in this language.',
 
   // Common UI
   'continue': 'Continue',

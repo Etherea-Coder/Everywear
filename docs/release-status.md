@@ -1,5 +1,43 @@
 # Android release status
 
+## Client locale consistency (2026-11-17)
+
+- The active UI locale is now the source for every client AI call:
+  `style-coach`, `today-suggestion`, `generate-ai-insights`, and
+  `analyze-clothing` receive normalized `responseLocale`; `ai-suggestions`
+  receives its uppercase `language` contract. The insights cache includes the
+  locale in its cache key. No client AI service rereads only the saved locale
+  or substitutes English when the device fallback is active.
+- Startup precedence remains explicit saved choice, supported device
+  language, then English. An explicit saved Spanish choice therefore wins
+  over a French device locale; a fresh French device resolves to French.
+- The signed-in passive coach tip was cached after first load. It now clears
+  when the app locale changes and offers a localized **Refresh advice**
+  action. Changing locale alone does not start another AI request. The
+  explicit refresh uses the current locale, and the controller ignores late
+  responses from older locales. Other inspected signed-in screens resolve
+  localized strings during build rather than caching them in `initState`.
+- On the passive-coach screen, locale changes do not initiate a replacement
+  request. The old tip is cleared; localized refresh copy and a **Refresh
+  advice** action are shown. Failed requests retain that retry action, and
+  request sequencing prevents a previous-language response from replacing
+  fresh advice.
+- Focused Flutter tests passed (13 tests): device fallback, saved-choice
+  precedence, welcome/picker language, next-request locale changes, passive
+  locale changes without automatic calls, explicit refresh with the new
+  locale, stale-response rejection, and loading Inter/Google Sans assets with
+  runtime fetching disabled. Targeted Dart analysis found no errors and 37
+  info-level lint/deprecation findings across the touched files. Formatting
+  and `git diff --check` passed. Deno is unavailable here, so no Edge Function
+  type-check/test was run. No live AI, device, or hosted checks were run.
+- `google_fonts` is pinned to 8.1.0. Bundled official Google Fonts CDN files
+  match that package's expected hashes for Inter Regular/Medium/SemiBold and
+  Google Sans Medium; `pubspec.yaml` includes `assets/fonts/`. The two OFL 1.1
+  notices and Google Sans trademark notice are retained beside the font files.
+  `main()` disables runtime font fetching. A focused widget test cleared the
+  Google Fonts in-memory cache, disabled fetching and loaded all four variants
+  from the asset bundle.
+
 ## Staging coach deployment and bounded evaluation gate (2026-11-17)
 
 - Before deployment, authenticated only with the dedicated staging smoke
@@ -47,8 +85,10 @@
   mode now allows useful general guidance or one relevant question in `answer`
   when item context is unusable, while retaining a concrete non-question
   `next_step`.
-- All existing client callers send the saved app locale (`en`, `fr`, or `es`);
-  the function normalizes unsupported values to English. Coach context is JSON
+- At the time of the original prompt update, client callers sent the saved app
+  locale. The later client-locale consistency checkpoint above supersedes that
+  detail: callers now pass the resolved, current UI locale. The function
+  normalizes unsupported values to English. Coach context is JSON
   data, capped at 8,000 UTF-8 bytes, with a 16,000-byte total prompt ceiling.
   Questions, wardrobe descriptors, profile values, event details, and history
   are explicitly marked untrusted reference data. The static safety and mode

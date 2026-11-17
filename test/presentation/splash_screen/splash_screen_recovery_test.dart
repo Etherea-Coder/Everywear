@@ -9,6 +9,7 @@ import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:everywear/core/providers.dart';
 import 'package:everywear/core/utils/locale_manager.dart';
+import 'package:everywear/services/ai_locale_context.dart';
 
 const _unavailableMessage =
     'Account services are unavailable right now. Please try again later.';
@@ -55,6 +56,83 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  testWidgets('French device fallback reaches the welcome UI and AI request', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final initialLocale = LocaleManager.resolveInitialLocale(
+      await LocaleManager.getSavedLocale(),
+      const Locale('fr', 'FR'),
+    );
+    await _pumpSplash(tester, initialLocale: initialLocale);
+
+    expect(find.text('Comprenez votre style'), findsOneWidget);
+    expect(find.text('Continuer avec Google'), findsOneWidget);
+    final visibleLocale = Localizations.localeOf(
+      tester.element(find.byType(SplashScreen)),
+    );
+    expect(AiLocaleContext.styleCoach(visibleLocale)['responseLocale'], 'fr');
+    expect(AiLocaleContext.suggestions(visibleLocale)['language'], 'FR');
+    expect(
+      AiLocaleContext.proseResponse(visibleLocale)['responseLocale'],
+      'fr',
+    );
+
+    await tester.tap(find.byKey(const Key('welcome-language-selector')));
+    await tester.pumpAndSettle();
+    expect(find.text('Français'), findsWidgets);
+  });
+
+  testWidgets('saved Spanish beats French device for UI and AI requests', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'app_locale': 'es'});
+    final initialLocale = LocaleManager.resolveInitialLocale(
+      await LocaleManager.getSavedLocale(),
+      const Locale('fr', 'FR'),
+    );
+    await _pumpSplash(tester, initialLocale: initialLocale);
+
+    expect(find.text('Entiende Tu Estilo'), findsOneWidget);
+    final visibleLocale = Localizations.localeOf(
+      tester.element(find.byType(SplashScreen)),
+    );
+    expect(AiLocaleContext.styleCoach(visibleLocale)['responseLocale'], 'es');
+    expect(AiLocaleContext.suggestions(visibleLocale)['language'], 'ES');
+    expect(
+      AiLocaleContext.proseResponse(visibleLocale)['responseLocale'],
+      'es',
+    );
+
+    await tester.tap(find.byKey(const Key('welcome-language-selector')));
+    await tester.pumpAndSettle();
+    expect(find.text('Español'), findsWidgets);
+  });
+
+  testWidgets('changing language changes later AI request locale immediately', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'app_locale': 'fr'});
+    await _pumpSplash(tester, initialLocale: const Locale('fr'));
+
+    Locale requestLocale() =>
+        Localizations.localeOf(tester.element(find.byType(SplashScreen)));
+
+    expect(AiLocaleContext.styleCoach(requestLocale())['responseLocale'], 'fr');
+    await tester.tap(find.byKey(const Key('welcome-language-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Español').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entiende Tu Estilo'), findsOneWidget);
+    expect(AiLocaleContext.styleCoach(requestLocale())['responseLocale'], 'es');
+    expect(AiLocaleContext.suggestions(requestLocale())['language'], 'ES');
+    expect(
+      AiLocaleContext.proseResponse(requestLocale())['responseLocale'],
+      'es',
+    );
+  });
+
   testWidgets('language can change before login and persists for restart', (
     tester,
   ) async {

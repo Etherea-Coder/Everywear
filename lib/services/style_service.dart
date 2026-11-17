@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_request_id.dart';
 import './supabase_service.dart';
 import './outfit_log_service.dart';
-import '../core/utils/locale_manager.dart';
+import 'ai_locale_context.dart';
 
 class StyleService {
   final OutfitLogService _outfitLogService = OutfitLogService();
@@ -266,6 +267,7 @@ class StyleService {
   // ── COACH ───────────────────────────────────────────────
   Future<String?> fetchPassiveCoachTip({
     required Map<String, dynamic> insights,
+    required Locale locale,
     Map<String, dynamic>? quizResult,
   }) async {
     try {
@@ -293,8 +295,7 @@ class StyleService {
           'userName': userName,
           'localHour': DateTime.now().hour,
           'mode': 'passive',
-          'responseLocale':
-              (await LocaleManager.getSavedLocale())?.languageCode ?? 'en',
+          ...AiLocaleContext.styleCoach(locale),
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': wardrobeSummary,
@@ -318,6 +319,7 @@ class StyleService {
   Future<Map<String, dynamic>> askCoach({
     required String question,
     required Map<String, dynamic> insights,
+    required Locale locale,
     Map<String, dynamic>? quizResult,
   }) async {
     try {
@@ -343,8 +345,7 @@ class StyleService {
           'requestId': newAiRequestId(),
           'userName': userName,
           'mode': 'active',
-          'responseLocale':
-              (await LocaleManager.getSavedLocale())?.languageCode ?? 'en',
+          ...AiLocaleContext.styleCoach(locale),
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': _buildWardrobeSummary(insights),
@@ -381,6 +382,7 @@ class StyleService {
   Future<Map<String, dynamic>> fetchEventCoaching({
     required Map<String, dynamic> event,
     required Map<String, dynamic> insights,
+    required Locale locale,
     Map<String, dynamic>? quizResult,
   }) async {
     try {
@@ -408,8 +410,7 @@ class StyleService {
           'requestId': newAiRequestId(),
           'userName': userName,
           'mode': 'event',
-          'responseLocale':
-              (await LocaleManager.getSavedLocale())?.languageCode ?? 'en',
+          ...AiLocaleContext.styleCoach(locale),
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': _buildWardrobeSummary(insights),

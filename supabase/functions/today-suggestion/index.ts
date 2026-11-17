@@ -16,6 +16,10 @@ import {
   withProviderTimeout,
 } from "../_shared/ai_action.ts";
 import { parseTodaySuggestion } from "./suggestion_response.ts";
+import {
+  normalizeResponseLocale,
+  responseLanguageName,
+} from "../_shared/response_locale.ts";
 
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
 
@@ -112,6 +116,8 @@ Deno.serve(async (req) => {
       );
     }
     const requestId = body.requestId;
+    const responseLocale = normalizeResponseLocale(body.responseLocale);
+    const responseLanguage = responseLanguageName(responseLocale);
     const userName = boundedString(body.userName, 80);
     const localHour = typeof body.localHour === "number" &&
         Number.isInteger(body.localHour) && body.localHour >= 0 &&
@@ -265,7 +271,15 @@ Deno.serve(async (req) => {
       : "none";
 
     const nameLine = userName ? ` for ${userName}` : "";
-    const titleName = userName
+    const titleName = responseLocale === "fr"
+      ? userName
+        ? `Idée de style du jour de ${userName}`
+        : "Idée de style du jour"
+      : responseLocale === "es"
+      ? userName
+        ? `Idea de estilo de hoy de ${userName}`
+        : "Idea de estilo de hoy"
+      : userName
       ? `${userName}'s Style Idea for Today`
       : "Today's Style Idea";
 
@@ -282,6 +296,7 @@ Deno.serve(async (req) => {
 
     const prompt = `You are a personal stylist${nameLine} inside a wardrobe app.
 Your task is to create one realistic outfit suggestion for today using ONLY items from the user's actual wardrobe list below.
+Write the title, description, and styling_note in ${responseLanguage}. Preserve wardrobe item names and fixed category/slot values exactly as supplied.
 
 USER PROFILE:
 ${userName ? `- Name: ${userName}` : ""}

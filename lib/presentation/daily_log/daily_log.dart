@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:everywear/core/utils/app_localizations.dart';
 import 'package:everywear/core/ui_smoke_test_mode.dart';
 import '../../core/app_export.dart';
+import '../../core/providers.dart';
 
 import '../../services/outfit_log_service.dart';
 import '../home_screen/home_screen.dart';
@@ -23,14 +25,14 @@ import './widgets/quick_log_button_widget.dart';
 import './widgets/stats_summary_widget.dart';
 import './quick_log_navigation.dart';
 
-class DailyLog extends StatefulWidget {
+class DailyLog extends ConsumerStatefulWidget {
   const DailyLog({Key? key}) : super(key: key);
 
   @override
-  State<DailyLog> createState() => _DailyLogState();
+  ConsumerState<DailyLog> createState() => _DailyLogState();
 }
 
-class _DailyLogState extends State<DailyLog> {
+class _DailyLogState extends ConsumerState<DailyLog> {
   /// Shorthand so all methods can use `loc.xxx` without repeating
   /// AppLocalizations.of(context) on every line.
   AppLocalizations get loc => AppLocalizations.of(context);
@@ -425,6 +427,7 @@ class _DailyLogState extends State<DailyLog> {
             weather: _weather,
             quizResult: _quizResult,
             nextEvent: nextEvent,
+            locale: ref.read(localeProvider),
             occasion: _selectedOccasion,
             mood: _selectedMood,
           )

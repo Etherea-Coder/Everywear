@@ -77,6 +77,8 @@ class AppLocalizations {
       translate('ai_allowance_remaining').replaceAll('{count}', '$count');
   String get aiAllowanceExhausted => translate('ai_allowance_exhausted');
   String get aiServiceUnavailable => translate('ai_service_unavailable');
+  String get refreshAdvice => translate('refresh_advice');
+  String get coachTipNeedsRefresh => translate('coach_tip_needs_refresh');
 
   String aiStatusMessage(String? code, {int? remaining}) {
     if (code != null && code.startsWith('AI_LIMIT_')) {

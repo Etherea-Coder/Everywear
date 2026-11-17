@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizer/sizer.dart';
 import 'package:everywear/core/utils/app_localizations.dart';
 import '../../core/app_export.dart';
+import '../../core/providers.dart';
 
 import '../../services/ai_intelligence_service.dart';
 
@@ -13,14 +15,14 @@ import './widgets/recommendations_card_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/custom_app_bar.dart';
 
-class AIIntelligence extends StatefulWidget {
+class AIIntelligence extends ConsumerStatefulWidget {
   const AIIntelligence({Key? key}) : super(key: key);
 
   @override
-  State<AIIntelligence> createState() => _AIIntelligenceState();
+  ConsumerState<AIIntelligence> createState() => _AIIntelligenceState();
 }
 
-class _AIIntelligenceState extends State<AIIntelligence> {
+class _AIIntelligenceState extends ConsumerState<AIIntelligence> {
   // ── State ────────────────────────────────────────────────────────────────
   int _selectedTimeRange = 1; // 0=week 1=month 2=season
   bool _isGenerating = false;
@@ -58,6 +60,7 @@ class _AIIntelligenceState extends State<AIIntelligence> {
 
     try {
       final data = await AIIntelligenceService.instance.getInsights(
+        locale: ref.read(localeProvider),
         timeRange: _currentTimeRange,
         category: _selectedCategory,
         forceRefresh: forceRefresh,

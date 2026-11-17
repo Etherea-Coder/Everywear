@@ -36,6 +36,7 @@ const _isAutomatedStagingTest = bool.fromEnvironment(
 );
 
 void main() {
+  GoogleFonts.config.allowRuntimeFetching = false;
   if (startupDiagnosticsEnabled) {
     runZonedGuarded<void>(
       _bootstrapAndRunApp,

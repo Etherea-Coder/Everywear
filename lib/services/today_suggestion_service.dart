@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_request_id.dart';
 import './supabase_service.dart';
 import './wardrobe_service.dart';
 import './outfit_log_service.dart';
+import './ai_locale_context.dart';
 
 class TodaySuggestionService {
   SupabaseClient get _client => SupabaseService.instance.client;
@@ -15,6 +17,7 @@ class TodaySuggestionService {
     required Map<String, dynamic> weather,
     required Map<String, dynamic>? quizResult,
     required Map<String, dynamic>? nextEvent,
+    required Locale locale,
     String? occasion,
     String? mood,
   }) async {
@@ -92,6 +95,7 @@ class TodaySuggestionService {
         'today-suggestion',
         body: {
           'requestId': newAiRequestId(),
+          ...AiLocaleContext.proseResponse(locale),
           'userName': userName,
           'localHour': DateTime.now().hour,
           'userProfile': profile,

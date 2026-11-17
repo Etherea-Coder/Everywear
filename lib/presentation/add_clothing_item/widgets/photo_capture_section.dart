@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:everywear/core/utils/app_localizations.dart';
 import '../../../core/app_export.dart';
+import '../../../core/providers.dart';
 
 import '../../../widgets/custom_icon_widget.dart';
 import '../../../services/ai/vision_engine_service.dart';
@@ -15,7 +17,7 @@ import 'dart:io';
 
 /// Photo capture section widget for adding clothing item photos
 /// Supports up to 3 photos with camera and gallery options
-class PhotoCaptureSection extends StatefulWidget {
+class PhotoCaptureSection extends ConsumerStatefulWidget {
   final List<String> photos;
   final Function(List<String>) onPhotosChanged;
   final Function(Map<String, dynamic>)? onAIAnalysisComplete;
@@ -28,10 +30,11 @@ class PhotoCaptureSection extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<PhotoCaptureSection> createState() => _PhotoCaptureSectionState();
+  ConsumerState<PhotoCaptureSection> createState() =>
+      _PhotoCaptureSectionState();
 }
 
-class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
+class _PhotoCaptureSectionState extends ConsumerState<PhotoCaptureSection> {
   final ImagePicker _picker = ImagePicker();
   final int _maxPhotos = 3;
   final VisionEngineService _visionEngine = VisionEngineService();
@@ -200,7 +203,10 @@ class _PhotoCaptureSectionState extends State<PhotoCaptureSection> {
 
     try {
       // Run AI analysis (cloud-based via Gemini)
-      final result = await _visionEngine.analyzeClothing(imagePath);
+      final result = await _visionEngine.analyzeClothing(
+        imagePath,
+        locale: ref.read(localeProvider),
+      );
 
       setState(() {
         _aiAnalysisResult = result;

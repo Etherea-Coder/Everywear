@@ -31,6 +31,9 @@ const Map<String, String> appLocalizationsEs = {
   'signin_failed': 'Error al iniciar sesión. Comprueba tus credenciales.',
   'auth_service_unavailable':
       'Los servicios de cuenta no están disponibles ahora. Inténtalo de nuevo más tarde.',
+  'refresh_advice': 'Actualizar consejos',
+  'coach_tip_needs_refresh':
+      'Cambió el idioma. Actualiza para recibir consejos en este idioma.',
 
   // Common UI
   'continue': 'Continuar',

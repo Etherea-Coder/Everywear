@@ -2,6 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import { extractGeminiText, parseAiInsights } from "./ai_response.ts";
 import { createGeminiRequest } from "../_shared/gemini_request.ts";
 import {
+  normalizeResponseLocale,
+  responseLanguageName,
+} from "../_shared/response_locale.ts";
+import {
   cancelProviderResponse,
   finalizeAiAction,
   isRecord,
@@ -124,6 +128,10 @@ Deno.serve(async (req) => {
       );
     }
     const requestId = (body as Record<string, unknown>).requestId as string;
+    const responseLocale = normalizeResponseLocale(
+      (body as Record<string, unknown>).responseLocale,
+    );
+    const responseLanguage = responseLanguageName(responseLocale);
     const timeRangeInput = (body as Record<string, unknown>).timeRange ??
       "month";
     const categoryInput = (body as Record<string, unknown>).category ?? null;
@@ -401,6 +409,7 @@ Deno.serve(async (req) => {
 
     const prompt =
       `You are a fashion AI analyst. Analyze this wardrobe and return ONLY a raw JSON object — no markdown, no explanation, no code block.
+Write user-facing prose fields (styleProfile, emergingStyles, titles, descriptions, reasoning) in ${responseLanguage}. Preserve fixed response keys and type values exactly as specified.
 
 WARDROBE SUMMARY:
 - Total items: ${items.length}

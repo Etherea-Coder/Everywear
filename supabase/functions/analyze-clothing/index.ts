@@ -1,8 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { createGeminiRequest } from "../_shared/gemini_request.ts";
 import {
+  normalizeResponseLocale,
+  responseLanguageName,
+} from "../_shared/response_locale.ts";
+import {
   cancelProviderResponse,
   finalizeAiAction,
+  isRecord,
   quotaDeniedResponse,
   readBoundedJson,
   readBoundedResponseJson,
@@ -75,6 +80,11 @@ Deno.serve(async (req) => {
       });
     }
     const { imageBase64, requestId } = validated;
+    const requestBodyRecord = isRecord(requestBody) ? requestBody : {};
+    const responseLocale = normalizeResponseLocale(
+      requestBodyRecord.responseLocale,
+    );
+    const responseLanguage = responseLanguageName(responseLocale);
 
     const googleAiApiKey = Deno.env.get("GOOGLE_AI_API_KEY");
     if (!googleAiApiKey) {
@@ -102,7 +112,8 @@ Deno.serve(async (req) => {
     pendingRequestId = requestId;
 
     const prompt =
-      `Analyze this clothing item image and respond ONLY with a JSON object in this exact format:
+      `Analyze this clothing item image and respond ONLY with a JSON object in this exact format.
+Write color and material in ${responseLanguage}. Keep category and style_vibe values in the fixed English enums below:
 {
   "category": one of ["Tops", "Bottoms", "Shoes", "Outerwear", "Accessories", "Dresses", "Activewear"],
   "color": main color as a single word,

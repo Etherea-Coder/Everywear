@@ -329,7 +329,7 @@ class _OutfitCaptureFlowState extends ConsumerState<OutfitCaptureFlow> {
 
     final result = await _aiSuggestionsService.generateSuggestions(
       imageFile: imageFile,
-      language: ref.read(localeProvider).languageCode.toUpperCase(),
+      locale: ref.read(localeProvider),
       weatherContext: weatherContext,
       itemHistory: itemsContext,
     );

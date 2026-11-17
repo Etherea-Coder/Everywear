@@ -1,21 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
+import '../../core/providers.dart';
 import '../../services/style_service.dart';
 import '../../services/user_tier_service.dart';
 import '../../core/utils/app_localizations.dart';
+import 'passive_coach_tip_controller.dart';
 import './widgets/challenges_card.dart';
 
-class SmartSuggestions extends StatefulWidget {
+class SmartSuggestions extends ConsumerStatefulWidget {
   const SmartSuggestions({Key? key}) : super(key: key);
 
   @override
-  State<SmartSuggestions> createState() => _SmartSuggestionsState();
+  ConsumerState<SmartSuggestions> createState() => _SmartSuggestionsState();
 }
 
-class _SmartSuggestionsState extends State<SmartSuggestions> {
+class _SmartSuggestionsState extends ConsumerState<SmartSuggestions> {
   final StyleService _styleService = StyleService();
   final UserTierService _tierService = UserTierService();
+  late final PassiveCoachTipController _coachTipController;
   bool _isPremium = false;
   Map<String, dynamic> _coachingQuota = {
     'used': 0,
@@ -28,14 +34,31 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
   Map<String, dynamic> _insights = {};
   Map<String, dynamic>? _quizResult;
   bool _isLoading = true;
-  String _coachTip = '';
-  bool _isCoachTipLoading = false;
-
   @override
   void initState() {
     super.initState();
+    _coachTipController = PassiveCoachTipController(
+      locale: ref.read(localeProvider),
+      requestTip: (locale) => _styleService.fetchPassiveCoachTip(
+        insights: _insights,
+        locale: locale,
+        quizResult: _quizResult,
+      ),
+    )..addListener(_onCoachTipChanged);
     _loadData();
     _loadTierInfo();
+  }
+
+  void _onCoachTipChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _coachTipController
+      ..removeListener(_onCoachTipChanged)
+      ..dispose();
+    super.dispose();
   }
 
   Future<void> _loadTierInfo() async {
@@ -65,32 +88,20 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
         _quizResult = results[2] as Map<String, dynamic>?;
         _isLoading = false;
       });
-      // Auto-load the passive coach tip once data is ready
-      _loadCoachTip();
-    }
-  }
-
-  Future<void> _loadCoachTip() async {
-    if (_isCoachTipLoading) return;
-    setState(() => _isCoachTipLoading = true);
-
-    final tip = await _styleService.fetchPassiveCoachTip(
-      insights: _insights,
-      quizResult: _quizResult,
-    );
-
-    if (mounted) {
-      setState(() {
-        _isCoachTipLoading = false;
-        if (tip != null && tip.isNotEmpty) {
-          _coachTip = tip;
-        }
-      });
+      // Preserve the existing initial tip request. Later locale changes only
+      // invalidate it; the user explicitly chooses when to request new advice.
+      unawaited(_coachTipController.loadInitial());
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<Locale>(localeProvider, (previous, next) {
+      if (previous?.languageCode != next.languageCode) {
+        _coachTipController.updateLocale(next);
+      }
+    });
+
     final theme = Theme.of(context);
     final localizations = AppLocalizations.of(context);
     return Scaffold(
@@ -501,7 +512,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 ],
               ),
               SizedBox(height: 2.h),
-              _isCoachTipLoading
+              _coachTipController.isLoading
                   ? Row(
                       children: [
                         const SizedBox(
@@ -520,11 +531,27 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                       ],
                     )
                   : Text(
-                      _coachTip.isNotEmpty
-                          ? _coachTip
-                          : localizations.coachIsPreparingTip,
+                      _coachTipController.tip ??
+                          (_coachTipController.hasError
+                              ? localizations.aiServiceUnavailable
+                              : _coachTipController.needsRefresh
+                              ? localizations.coachTipNeedsRefresh
+                              : localizations.coachIsPreparingTip),
                       style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                     ),
+              if (_coachTipController.needsRefresh &&
+                  !_coachTipController.isLoading) ...[
+                SizedBox(height: 1.h),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: const Key('refresh-coach-advice'),
+                    onPressed: _coachTipController.refresh,
+                    icon: const Icon(Icons.refresh),
+                    label: Text(localizations.refreshAdvice),
+                  ),
+                ),
+              ],
               SizedBox(height: 2.h),
               SizedBox(
                 width: double.infinity,
@@ -830,6 +857,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 .fetchEventCoaching(
                   event: event,
                   insights: _insights,
+                  locale: ref.read(localeProvider),
                   quizResult: _quizResult,
                 )
                 .then((data) {
@@ -992,6 +1020,7 @@ class _SmartSuggestionsState extends State<SmartSuggestions> {
                 .askCoach(
                   question: question,
                   insights: _insights,
+                  locale: ref.read(localeProvider),
                   quizResult: _quizResult,
                 )
                 .then((data) {

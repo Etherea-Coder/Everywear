@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_request_id.dart';
 import 'ai_allowance_service.dart';
+import 'ai_locale_context.dart';
 
 /// Handles all data fetching for the AI Intelligence screen.
 /// Pure wardrobe stats are computed server-side (Edge Function).
@@ -17,14 +19,22 @@ class AIIntelligenceService {
   String? _cachedUserId;
   String? _cachedTimeRange;
   String? _cachedCategory;
+  String? _cachedResponseLocale;
   DateTime? _cacheTime;
 
   static const _cacheDuration = Duration(minutes: 30);
 
-  bool _isValid(String userId, String timeRange, String? category) {
+  bool _isValid(
+    String userId,
+    String timeRange,
+    String? category,
+    String responseLocale,
+  ) {
     if (_cache == null || _cacheTime == null) return false;
     if (_cachedUserId != userId) return false;
-    if (_cachedTimeRange != timeRange || _cachedCategory != category)
+    if (_cachedTimeRange != timeRange ||
+        _cachedCategory != category ||
+        _cachedResponseLocale != responseLocale)
       return false;
     return DateTime.now().difference(_cacheTime!) < _cacheDuration;
   }
@@ -32,6 +42,7 @@ class AIIntelligenceService {
   /// Returns AI insights. Uses cache unless [forceRefresh] is true or
   /// the time range / category changed.
   Future<Map<String, dynamic>> getInsights({
+    required Locale locale,
     String timeRange = 'month',
     String? category,
     bool forceRefresh = false,
@@ -40,7 +51,9 @@ class AIIntelligenceService {
     final session = _supabase.auth.currentSession;
     if (session == null) throw Exception('Not authenticated');
     final userId = session.user.id;
-    if (!forceRefresh && _isValid(userId, timeRange, category)) {
+    final responseLocale = AiLocaleContext.responseLocale(locale);
+    if (!forceRefresh &&
+        _isValid(userId, timeRange, category, responseLocale)) {
       return _withAllowance(_cache!);
     }
     final response = await _supabase.functions.invoke(
@@ -48,6 +61,7 @@ class AIIntelligenceService {
       headers: {'Authorization': 'Bearer ${session.accessToken}'},
       body: {
         'requestId': newAiRequestId(),
+        'responseLocale': responseLocale,
         'timeRange': timeRange,
         if (category != null) 'category': category,
       },
@@ -64,6 +78,7 @@ class AIIntelligenceService {
     _cachedUserId = userId;
     _cachedTimeRange = timeRange;
     _cachedCategory = category;
+    _cachedResponseLocale = responseLocale;
     _cacheTime = DateTime.now();
     return _withAllowance(_cache!);
   }
@@ -93,6 +108,7 @@ class AIIntelligenceService {
     _cachedUserId = null;
     _cachedTimeRange = null;
     _cachedCategory = null;
+    _cachedResponseLocale = null;
     _cacheTime = null;
   }
 }

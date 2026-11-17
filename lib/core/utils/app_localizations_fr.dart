@@ -30,6 +30,9 @@ const Map<String, String> appLocalizationsFr = {
   'signin_failed': 'La connexion a échoué. Vérifiez vos identifiants.',
   'auth_service_unavailable':
       'Les services de compte sont indisponibles. Veuillez réessayer plus tard.',
+  'refresh_advice': 'Actualiser les conseils',
+  'coach_tip_needs_refresh':
+      'La langue a changé. Actualisez pour recevoir des conseils dans cette langue.',
 
   // Common UI
   'continue': 'Continuer',

@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../ai_request_id.dart';
+import '../ai_locale_context.dart';
 import './cloud_vision_service.dart';
 
 /// Vision Engine Service Interface
@@ -19,7 +21,10 @@ abstract class VisionEngineService {
     return _instance!;
   }
 
-  Future<Map<String, dynamic>> analyzeClothing(String imagePath);
+  Future<Map<String, dynamic>> analyzeClothing(
+    String imagePath, {
+    required Locale locale,
+  });
   Future<String> getAITier(); // Returns: 'cloud' or 'manual'
   void dispose();
 }
@@ -29,7 +34,10 @@ class VisionEngineServiceWeb implements VisionEngineService {
   final CloudVisionService _cloudService = CloudVisionService();
 
   @override
-  Future<Map<String, dynamic>> analyzeClothing(String imagePath) async {
+  Future<Map<String, dynamic>> analyzeClothing(
+    String imagePath, {
+    required Locale locale,
+  }) async {
     // Web has no Gemini access, use heuristic fallback
     return _getHeuristicAnalysis();
   }
@@ -61,8 +69,11 @@ class VisionEngineServiceMobile implements VisionEngineService {
   final CloudVisionService _cloudService = CloudVisionService();
 
   @override
-  Future<Map<String, dynamic>> analyzeClothing(String imagePath) async {
-    final geminiResult = await _analyzeWithGemini(imagePath);
+  Future<Map<String, dynamic>> analyzeClothing(
+    String imagePath, {
+    required Locale locale,
+  }) async {
+    final geminiResult = await _analyzeWithGemini(imagePath, locale: locale);
     if (geminiResult != null) {
       return geminiResult;
     }
@@ -72,7 +83,10 @@ class VisionEngineServiceMobile implements VisionEngineService {
     );
   }
 
-  Future<Map<String, dynamic>?> _analyzeWithGemini(String imagePath) async {
+  Future<Map<String, dynamic>?> _analyzeWithGemini(
+    String imagePath, {
+    required Locale locale,
+  }) async {
     try {
       final file = File(imagePath);
       if (!await file.exists()) return null;
@@ -84,7 +98,11 @@ class VisionEngineServiceMobile implements VisionEngineService {
       final client = Supabase.instance.client;
       final response = await client.functions.invoke(
         'analyze-clothing',
-        body: {'imageBase64': base64Image, 'requestId': newAiRequestId()},
+        body: {
+          'imageBase64': base64Image,
+          'requestId': newAiRequestId(),
+          ...AiLocaleContext.proseResponse(locale),
+        },
       );
 
       if (response.data != null && response.data['success'] == true) {

@@ -1,9 +1,11 @@
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_request_id.dart';
 import './ai_image_payload.dart';
 import './supabase_service.dart';
 import './style_service.dart';
+import 'ai_locale_context.dart';
 
 class AiSuggestionsService {
   SupabaseClient get _supabase => SupabaseService.instance.client;
@@ -12,7 +14,7 @@ class AiSuggestionsService {
   ///
   /// Parameters:
   /// - [imageFile]: image selected or captured by this device
-  /// - [language]: Language code for suggestions ('EN', 'FR', or 'ES')
+  /// - [locale]: The current, resolved UI locale for this request.
   ///
   /// Returns a map containing:
   /// - 'success': boolean indicating if the operation succeeded
@@ -20,7 +22,7 @@ class AiSuggestionsService {
   /// - 'error': error message if operation failed
   Future<Map<String, dynamic>> generateSuggestions({
     required XFile imageFile,
-    required String language,
+    required Locale locale,
     Map<String, dynamic>? weatherContext,
     List<Map<String, dynamic>>? itemHistory,
   }) async {
@@ -75,7 +77,7 @@ class AiSuggestionsService {
         body: {
           'requestId': newAiRequestId(),
           'imageBase64': imageBase64,
-          'language': language,
+          ...AiLocaleContext.suggestions(locale),
           'userName': userName,
           'userProfile': profile,
           'weather': weatherContext,
