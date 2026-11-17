@@ -1,5 +1,18 @@
 # Android release status
 
+## Full Flutter test suite after locale/font checkpoint (2026-11-17)
+
+- Ran `.tooling/flutter/bin/flutter test --no-pub --concurrency=1
+  --reporter expanded` from commit `a2e68572876ff4010b17184784ce986943d55cea`.
+  Result: **135 tests passed, 0 failed**. This includes locale propagation,
+  passive advice refresh/stale-response handling, and bundled-font loading.
+- A few offline fail-closed service tests printed expected diagnostics because
+  Supabase was deliberately not initialized in those unit fixtures; they did
+  not fail. The run did not call hosted services, start an emulator, or test
+  device behavior.
+- No build, device smoke, Deno check, deployment, production operation, or push
+  was performed. Existing unrelated working changes remain unstaged.
+
 ## Client locale consistency (2026-11-17)
 
 - The active UI locale is now the source for every client AI call:
