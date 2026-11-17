@@ -21,6 +21,16 @@
   pending. Gradle emitted an Android SDK XML v4/tooling-version warning but
   completed successfully.
 
+## Edge Function checks after locale/font checkpoint (2026-11-17)
+
+- Installed Deno **2.9.6** into ignored `.tooling/deno/` and ran the complete
+  `supabase/functions` fixture suite: **51 passed, 0 failed**. These tests use
+  mock/provider fixtures and did not call hosted functions or AI providers.
+- `deno fmt --check`, `deno lint`, and `deno check` passed for
+  `_shared/response_locale.ts` and the modified `analyze-clothing`,
+  `generate-ai-insights`, and `today-suggestion` handlers. No hosted operation
+  or deployment was performed.
+
 ## Full Flutter test suite after locale/font checkpoint (2026-11-17)
 
 - Ran `.tooling/flutter/bin/flutter test --no-pub --concurrency=1
