@@ -2,8 +2,8 @@
 
 ## Current gate
 
-**Staging backend and APK archive are verified; device beta check remains.** The owner
-approved the isolated `Everywear-staging` project
+**The current source compiles into a verified staging APK; device beta checks
+remain.** The owner approved the isolated `Everywear-staging` project
 (`aftdbphdobfrshienple`) in the existing Everywear organization; authenticated
 CLI identity confirmed North EU/Stockholm and the owner confirmed Free-plan
 status. All nine reviewed migrations and eight JWT-protected Edge Functions
@@ -19,6 +19,12 @@ still has the recovered schema, public image buckets and older function
 versions described in [`recovered-supabase-reconciliation.md`](recovered-supabase-reconciliation.md);
 it remains read-only and must not be used by this beta. No production data,
 keys or configuration were copied.
+
+The newest locally built artifact, including the current locale/font changes,
+is recorded in [release status](release-status.md). Its archive, package
+identity and debug signature were inspected; it has not been installed or
+runtime-tested. Older APK install evidence below applies only to the artifact
+named in those historical sections.
 
 ## Beta behavior and provider gates
 
@@ -56,6 +62,9 @@ was cleared after the build.
 
 ## Built staging test APK
 
+> Historical artifact. The newer locale/font build documented in
+> `release-status.md` supersedes this APK for current-source testing.
+
 - Path:
   `build/beta-artifacts/Everywear-Uptodown-Free-STAGING-Beta-1.0.0-beta.1-2-aftdbphdobfrshienple-debug.apk`
 - Rebuilt from `main` after the first-frame startup fix in commit `0cbf2ff` on
@@ -75,10 +84,9 @@ was cleared after the build.
 - The superseded APK was preserved outside Git at ignored
   `.tooling/recovery/Everywear-staging-before-startup-fix.apk`.
 
-This is a staging test APK for controlled installation only. It is not suitable
-for public distribution and does not establish signing continuity. No physical
-device is attached; install, cold-start, account isolation and core-flow
-verification remain pending. The source fix has not been verified on-device.
+This was a staging test APK for controlled installation only. It is not suitable
+for public distribution and does not establish signing continuity. Its device
+checks are historical and do not verify later source changes.
 
 ## Startup diagnostic APK
 
@@ -268,7 +276,7 @@ account label (never passwords/tokens).
    responses, and no checkout, ads, paid inference, or production endpoint is
    contacted.
 
-## Exact next actions
+## Historical next actions (2026-11-16; superseded)
 
 1. The corrected normal staging APK is installed over the earlier probe on the
    connected A065 using `adb install -r`, preserving app data. The unlocked
@@ -320,3 +328,25 @@ artifact below is a staging test build, not a public release artifact.
   row-specific assertions, but those changes remain unverified on-device. A
   new full run requires private sign-in to `com.stylewise.app.stagingtest` and
   must not target the normal package.
+
+## Current next actions (2026-11-17)
+
+1. For current-source runtime verification, use the locale/font staging APK
+   documented in `release-status.md`. It is a new artifact with the same
+   `com.stylewise.app` package and debug certificate, but it has not been
+   installed. Do not treat the prior version-code-4 install/session evidence as
+   verification of these newly compiled bytes. Device interaction was not part
+   of the latest validation pass.
+2. Complete only the remaining targeted sign-in checks when staging access is
+   available: Google OAuth return-to-app and a fresh email-confirmation link
+   return. Earlier email/password login and same-device confirmation evidence
+   applies to older builds; Google callback and cross-device confirmation are
+   still unverified.
+3. Before public distribution, the owner must privately locate and validate
+   the existing upload-signing key, confirm version-code availability, and
+   supply approved privacy, account-deletion and support URLs plus listing
+   artwork. Do not generate a replacement signing key or publish the debug
+   APK.
+4. Keep purchases and advertising disabled. The staging debug APK and current
+   synthetic tests do not establish release signing, device runtime, provider
+   quality, or production behavior.
