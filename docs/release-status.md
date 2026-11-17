@@ -1,5 +1,69 @@
 # Android release status
 
+## Staging Google OAuth and AI provider preflight (2026-11-17)
+
+- Baseline preserved: `main` at successful core-smoke checkpoint
+  `87f33bafcf41d7fd80ab4a66595cd36ae205b23e`. The existing modifications in
+  `purchase_tracking.dart`, `wardrobe_management.dart`, and
+  `scripts/build_uptodown_free_beta.sh` remain untouched.
+- Read-only Supabase CLI project listing confirms `Everywear-staging`, ref
+  `aftdbphdobfrshienple`, `eu-north-1`, active/healthy. CLI read-only function
+  and secret-name inspection used that explicit staging ref. No project link,
+  setting, secret, or deployment was changed.
+- A staging public Auth settings GET returned HTTP 200 with Google disabled and
+  email enabled. App source calls Supabase browser OAuth with
+  `io.supabase.everywear://login-callback`, and the Android manifest registers
+  that callback. The owner previously reported the callback allowlisted, but
+  the current hosted redirect allowlist was not independently read back: the
+  Management API Auth-config GET previously returned HTTP 401 and the CLI has
+  no Auth-config read command. The exact hosted allowlist and provider client
+  configuration therefore remain unverified.
+- No suitable Google OAuth Web client ID/secret was found in Git history, local
+  environment variables, or the local Android `google-services.json` file.
+  That file is ignored, does not match `com.stylewise.app`, and has no OAuth
+  client entries; it was not changed. The owner-suggested Google Cloud project
+  `gen-lang-client-0622881366` remains only a candidate: `gcloud` is not
+  installed, and this environment could not inspect its Google Cloud Console
+  OAuth setup. The app's browser-based Supabase OAuth flow needs a Google OAuth
+  **Web** client, not a Firebase Android client.
+- Google sign-in could not be completed. No browser flow or Google account
+  interaction was started. To unblock it, verify the intended Google Cloud
+  project; create/reuse a Web OAuth client whose authorized redirect URI is
+  `https://aftdbphdobfrshienple.supabase.co/auth/v1/callback`; enable Google in
+  the **staging** Supabase Auth provider and enter that client ID/secret
+  there; confirm `io.supabase.everywear://login-callback` remains in the
+  staging redirect allowlist; and add the test Google account to the consent
+  screen if it is in Testing mode. Keep the secret in Supabase, never the app.
+  After that, perform the Google account step privately in the emulator and
+  verify return to the app plus a Supabase session.
+- Read-only inspection of the deployed staging AI functions was saved in the
+  ignored directory
+  `.tooling/recovery/staging-functions-aftdbphdobfrshienple-20261117/`; local
+  function files were not overwritten. Deployed handlers match source:
+  `analyze-clothing`, `today-suggestion`, `style-coach`, and
+  `generate-ai-insights` require `GOOGLE_AI_API_KEY` and use direct Gemini
+  Developer API `gemini-2.5-flash-lite`; `ai-suggestions` requires
+  `OPENROUTER_API_KEY` and uses `google/gemini-2.5-flash-lite` through
+  OpenRouter. A read-only staging Edge Function secret-name listing shows
+  **both names absent**. This confirms the current `AI_UNAVAILABLE` response
+  cause; no provider key value was read and no production key was copied.
+- No AI request or paid inference was made in this pass. Before bounded
+  staging validation, add a valid Gemini Developer API key as the staging
+  `GOOGLE_AI_API_KEY` secret and an OpenRouter key as staging
+  `OPENROUTER_API_KEY` (needed for outfit-photo advice). Add them through the
+  staging Dashboard's Edge Function Secrets or a private local credential
+  channel. Then verify authenticated success, one quota-limited exhaustion
+  case, unauthenticated denial, and unavailable/malformed-provider errors with
+  synthetic data only. Do not copy production provider secrets.
+- The coach prompt and its dynamic fields/output contracts are documented at
+  [coach-prompt-review.md](coach-prompt-review.md). The deployed staging
+  prompt matches local source. No prompt, model, quota, or app behavior was
+  changed. The core smoke at `87f33baf` was not repeated.
+- Checks actually performed: source and Git-history inspection; staging
+  project/function/secret-name reads; staging public Auth settings GET;
+  callback and manifest inspection; targeted diff/status inspection. No build,
+  tests, analyzer, OAuth browser flow, email test, or AI inference was run.
+
 ## Unattended emulator smoke: prebuilt staging test APK (2026-11-16)
 
 - Updated the unattended runner to build the isolated
