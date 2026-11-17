@@ -3,7 +3,8 @@
 ## Scope and provenance
 
 This is a review copy of the deployed staging `style-coach` source inspected on
-2026-11-17 and the matching local source at `supabase/functions/style-coach/`.
+2026-11-17 and the matching local source at that time. The local prompt has
+since been revised; this section preserves the historical review baseline.
 The deployed copy is retained only in the ignored
 `.tooling/recovery/staging-functions-aftdbphdobfrshienple-20261117/` directory.
 No real-user data was sent to a model. A separate bounded synthetic staging
@@ -168,3 +169,23 @@ model-quality evaluation. The prompt itself was not changed.
   the provider; the prompt currently receives no raw credentials.
 
 No prompt or model behavior was changed for this review.
+
+## Local coach update (not deployed)
+
+After review, the local implementation was updated to fetch up to 24 current
+wardrobe rows server-side for the authenticated user, retaining stable IDs and
+saved names/categories/semantic labels/notes. Questions and all other dynamic
+fields now travel inside a bounded JSON reference-data block; static shared and
+mode instructions explicitly treat those values as data. The app sends its
+saved response locale (`en`, `fr`, or `es`). Shared, passive, active, and event
+instructions now emphasize practical owned-item outfits, brief reasoning,
+useful next actions, and optional gentle experimentation within stated
+preferences. Event instructions request missing information instead of
+inventing wardrobe/event details. The active response keys remain `answer` and
+`next_step`; the parser now requires a non-empty, non-duplicate next step. No
+Challenge generation or Challenge data flow was changed.
+
+These are local source changes only. Staging still needs a separately
+authorized deployment of `style-coach` and a bounded request from an account
+with available quota; the existing test account's daily allowance is
+exhausted. No live inference was used to validate the new prompt.

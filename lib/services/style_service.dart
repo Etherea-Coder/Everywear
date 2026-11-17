@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_request_id.dart';
 import './supabase_service.dart';
 import './outfit_log_service.dart';
+import '../core/utils/locale_manager.dart';
 
 class StyleService {
   final OutfitLogService _outfitLogService = OutfitLogService();
@@ -292,6 +293,8 @@ class StyleService {
           'userName': userName,
           'localHour': DateTime.now().hour,
           'mode': 'passive',
+          'responseLocale':
+              (await LocaleManager.getSavedLocale())?.languageCode ?? 'en',
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': wardrobeSummary,
@@ -340,6 +343,8 @@ class StyleService {
           'requestId': newAiRequestId(),
           'userName': userName,
           'mode': 'active',
+          'responseLocale':
+              (await LocaleManager.getSavedLocale())?.languageCode ?? 'en',
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': _buildWardrobeSummary(insights),
@@ -403,6 +408,8 @@ class StyleService {
           'requestId': newAiRequestId(),
           'userName': userName,
           'mode': 'event',
+          'responseLocale':
+              (await LocaleManager.getSavedLocale())?.languageCode ?? 'en',
           'userProfile': profile,
           'insights': insights,
           'wardrobeSummary': _buildWardrobeSummary(insights),

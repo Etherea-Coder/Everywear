@@ -57,12 +57,12 @@ export function parseCoachResponse(
     const answer = boundedText(parsed.answer);
     if (!answer) return failure();
     const nextStep = boundedText(parsed.next_step);
-    return {
-      success: true,
-      mode,
-      answer,
-      next_step: nextStep ?? "",
-    };
+    if (
+      !nextStep || nextStep.toLocaleLowerCase() === answer.toLocaleLowerCase()
+    ) {
+      return failure();
+    }
+    return { success: true, mode, answer, next_step: nextStep };
   }
 
   const intro = boundedText(parsed.intro);
@@ -81,4 +81,23 @@ export function parseCoachResponse(
     ...(outfit3 ? { outfit_3: outfit3 } : {}),
     ...(prepTip ? { prep_tip: prepTip } : {}),
   };
+}
+
+/** Parses the bounded Gemini envelope separately from the provider transport. */
+export function parseGeminiCoachPayload(
+  mode: unknown,
+  payload: unknown,
+): CoachResponse {
+  if (!isRecord(payload)) return failure();
+  const candidates = payload.candidates;
+  if (!Array.isArray(candidates) || !isRecord(candidates[0])) return failure();
+  const content = candidates[0].content;
+  if (!isRecord(content) || !Array.isArray(content.parts)) return failure();
+  const firstPart = content.parts.find((part) =>
+    isRecord(part) && typeof part.text === "string"
+  );
+  return parseCoachResponse(
+    mode,
+    isRecord(firstPart) ? firstPart.text : undefined,
+  );
 }

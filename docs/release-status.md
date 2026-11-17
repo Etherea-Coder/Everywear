@@ -1,5 +1,53 @@
 # Android release status
 
+## Coach grounding and response quality update (2026-11-17)
+
+- Local `style-coach` now queries wardrobe rows only after validating the
+  bearer user, with both the caller JWT/RLS context and an explicit
+  `user_id = auth user UUID` filter. It selects stable item IDs plus saved
+  `name`, `category`, `semantic_label`, and `notes`; image URLs and other
+  account rows are excluded. The resulting context is capped at 24 items and
+  4,500 UTF-8 bytes. A wardrobe-query failure returns a clear unavailable
+  response before reserving AI quota.
+- All existing client callers send the saved app locale (`en`, `fr`, or `es`);
+  the function normalizes unsupported values to English. Coach context is JSON
+  data, capped at 8,000 UTF-8 bytes, with a 16,000-byte total prompt ceiling.
+  Questions, wardrobe descriptors, profile values, event details, and history
+  are explicitly marked untrusted reference data. The static safety and mode
+  instructions stay outside that data block.
+- Shared, passive, active, and event instructions now prioritize practical
+  everyday outfits from owned items, comfort/preferences and the asked
+  occasion; request a short explanation and a useful distinct next action
+  where the existing contract supports it; avoid generic praise and routine
+  disclaimers; and allow at most a relevant gentle experiment within stated
+  boundaries. Event mode asks for missing context instead of inventing details
+  and retains its existing JSON keys. Active parsing now rejects a missing or
+  verbatim-duplicate `next_step`, while retaining the same response fields.
+- Added focused Deno tests for owner filtering, stable descriptors and context
+  bounds, locale normalization, data/instruction separation, mocked Gemini
+  response parsing, malformed output, and insufficient event context. These
+  use fixtures only; no provider request, quota reset, hosted operation, or
+  full smoke suite was run.
+- **Not deployed:** staging `style-coach` still runs its previous deployed
+  source until a separately authorized staging deployment. No schema change
+  or migration is needed. After review, deploy only this function to staging
+  with the repository import map, then test one bounded request using a
+  synthetic account with available quota (do not reset the exhausted account).
+  Reviewed staging command:
+  `.tooling/supabase/node_modules/.bin/supabase functions deploy style-coach --project-ref aftdbphdobfrshienple --import-map supabase/functions/deno.json`.
+  Production remains untouched.
+- Existing uncommitted purchase/wardrobe UI and staging-script changes remain
+  unrelated and unstaged.
+- Checks actually performed: targeted `deno fmt`; focused Deno tests for
+  `coach_context_test.ts` and `coach_response_test.ts` (**11 passed, 0 failed**);
+  targeted Deno lint on the five changed TypeScript files; Deno type-check of
+  `style-coach/index.ts` with the repository import map; Dart formatting of
+  `lib/services/style_service.dart`; and `git diff --check`. One initial
+  focused test invocation exposed an outdated fixture without `next_step`; the
+  fixture was corrected and the focused suite then passed. No Flutter tests,
+  project-wide analysis, staging request, live inference, deployment, build,
+  or full device smoke was performed.
+
 ## Bounded staging Gemini validation (2026-11-17)
 
 - The owner reports saving `GOOGLE_AI_API_KEY` to staging project
