@@ -1,5 +1,29 @@
 # Android release status
 
+## Staging coach deployment and bounded evaluation gate (2026-11-17)
+
+- Before deployment, authenticated only with the dedicated staging smoke
+  account and read `get_ai_allowance`: project ref
+  `aftdbphdobfrshienple`, free tier, 17 monthly actions remaining, 0 daily
+  actions remaining (3/3 used), and 1 burst slot remaining. No request ID was
+  reserved and no provider request was made.
+- Deployed only the committed `style-coach` implementation from
+  `e1cdace29dafdcb379f1f2eea87a87d1350d8091` to the CLI-verified
+  `Everywear-staging` project (`aftdbphdobfrshienple`, `eu-north-1`), using
+  the repository Deno import map and server-side Supabase bundling. No
+  `--no-verify-jwt` option was passed. Read-only `functions list` afterward
+  showed `style-coach` active at version 4 with `verify_jwt: true` and deployed entrypoint SHA-256 `f558744a0e607bf67e26ea55de77064a7e3ad13e84d54d3a0773b978360af127`.
+- The authorized allowance gate prevented the three planned active/passive/
+  event requests because daily remaining was zero. No inference was attempted;
+  therefore there are no response outputs or request-driven quota changes.
+  Language, item grounding, useful next-step behavior, and insufficient-event
+  behavior remain pending runtime evaluation. Do not reset or bypass the
+  account's quota; use an authorized synthetic staging account with available
+  daily allowance for a later bounded evaluation.
+- The deployed prompt/context source was not changed beyond commit `e1cdace`.
+  Production, other functions, app builds, phone/emulator tests, and push were
+  untouched.
+
 ## Coach grounding and response quality update (2026-11-17)
 
 - Local `style-coach` now queries wardrobe rows only after validating the
