@@ -16,41 +16,65 @@
   `style-coach` request returned HTTP 401. The authenticated
   `get_ai_allowance` RPC reported free tier with 20 monthly, 3 daily, and 1
   burst action remaining before inference.
-- One bounded synthetic `style-coach` request reached the deployed function
-  and failed with HTTP 502 / `AI_PROVIDER_REJECTED`. The post-request allowance
-  was 19 monthly and 2 daily; the burst allowance was consumed. This confirms
-  the deployed reservation is charged for the failed provider attempt. The
-  staged response envelope was `{ "success": false, "error": "AI provider
-  rejected the request.", "code": "AI_PROVIDER_REJECTED" }`; Gemini returned
-  no coach text, so no model-response example was fabricated for prompt
-  review.
-- Read-only staging Edge Function logs confirmed the expected unauthenticated
-  401 and authenticated 502, plus a generic `provider_rejected` event after
-  336 ms. The deployed handler does not record the upstream Gemini HTTP
-  status, so the exact provider rejection cause (key restrictions/project/API
-  access/model request) remains **unverified**. A local source-only telemetry
-  change records that numeric status without logging provider bodies, prompts,
-  or credentials. Deploying this diagnostic change to staging was blocked by
-  the CLI's hosted-mutation consent guard; no deployment occurred. To identify
-  the cause, approve a staging-only `style-coach` redeploy, then make one new
-  synthetic request after the quota burst window resets and inspect only the
-  status-only function log.
-- Other Gemini-backed endpoints were not called after the shared provider
-  failure, avoiding unnecessary quota consumption. The OpenRouter-backed
-  `ai-suggestions` outfit-photo advice feature remains unavailable until
-  `OPENROUTER_API_KEY` is intentionally configured in staging. No successful
-  Gemini inference has been verified. The coach prompt remains unchanged.
-- Google OAuth callback verification remains pending; this AI validation did
-  not use the emulator or personal phone. No production project, provider
-  settings, or production data was changed.
+- The first bounded synthetic `style-coach` call returned HTTP 502 /
+  `AI_PROVIDER_REJECTED`. Its post-request allowance was 19 monthly and 2
+  daily; the burst action was consumed. The sanitized response contained no
+  generated coach text.
+- After the owner explicitly authorized deployment, only `style-coach` was
+  deployed to the verified staging project. JWT verification remained enabled.
+  The deployment added status-only telemetry; no provider response body,
+  prompt, credential, token, or personal data is logged. One synthetic retry
+  returned HTTP 502 / `AI_PROVIDER_REJECTED`. Its function log reported
+  upstream status **402**, category `provider_rejected`, and 259 ms latency.
+  The sanitized API envelope remained generic and contained no generated
+  coach text. No raw Gemini error body was read.
+- Google AI Studio's current billing documentation defines HTTP 402 as
+  `Payment Required`; the Gemini API stops serving requests when a Prepay
+  balance is zero, and the billing UI also uses “No credits” when required
+  Prepay setup is missing or the balance is depleted. This identifies the
+  failure as Gemini billing/Prepay availability for the project behind the
+  saved key. The exact AI Studio project and whether it lacks Prepay setup or
+  has a zero balance were not inspected. Check AI Studio → Billing for the
+  project that owns the staging key; do not change billing or purchase credits
+  without the owner's separate decision. See
+  [Gemini API billing](https://aistudio.google.com/docs/billing).
+- After both failed provider attempts, allowance was 18 monthly and 1 daily;
+  the burst action was consumed by the retry. This matches the documented
+  backend policy: reservation is charged before provider execution and is not
+  refunded after provider errors because the provider may already have incurred
+  cost. No quota reset or accounting change was made. The HTTP 402 result
+  occurred before a model response; whether this failed attempt incurred any
+  provider charge was not independently measured.
+- The deployed `style-coach` telemetry code and status classifier are present
+  locally. The coach prompt remains unchanged. No successful Gemini inference
+  or model-response example was produced, so none was fabricated for the
+  upcoming prompt review.
+- Other Gemini-backed endpoints were not called after the 402, avoiding
+  unnecessary requests while this shared key/project billing issue remains.
+  The OpenRouter-backed `ai-suggestions` outfit-photo advice feature remains
+  unavailable until `OPENROUTER_API_KEY` is intentionally configured in
+  staging. Its failure path was not invoked.
+- A fresh public Auth settings GET returned HTTP 200 with Google and email
+  providers enabled. The isolated emulator OAuth flow had previously reached
+  Google's account sign-in page, but no private account interaction or
+  callback/session completion was observed. The emulator was shut down
+  gracefully at the owner's request; Google OAuth remains unverified. No
+  production project, provider settings, or production data was changed.
 - Checks actually performed: authenticated staging password grant; unauth-
   enticated and authenticated function calls; authenticated allowance reads
-  before and after the request; staging function/secret-name inventory; and
-  read-only function logs. `deno` is unavailable, so no Deno test/type-check
-  was run. No build, analyzer, core smoke, production operation, or model
-  success is claimed.
+  before and after both requests; read-only staging function/secret inventory
+  and Edge Function logs; and one-function staging deployment. The CLI's
+  server-side bundler initially failed because it was not given the Deno import
+  map; the deployment succeeded after explicitly passing
+  `supabase/functions/deno.json`. `deno` is unavailable, so no Deno
+  test/type-check was run. `git diff --check` passed. No build, analyzer, core
+  smoke, production operation, or model success is claimed.
 
 ## Staging Google OAuth recheck after Google Cloud callback update (2026-11-17)
+
+Historical pre-configuration snapshot; superseded by the newer bounded staging
+Gemini validation entry above. At the time of this check, public Auth settings
+reported Google disabled and no OAuth attempt was started.
 
 - The owner reports adding
   `https://aftdbphdobfrshienple.supabase.co/auth/v1/callback` to the existing
@@ -92,6 +116,9 @@
   at `87f33baf` remains valid and was not repeated.
 
 ## Staging Google OAuth and AI provider preflight (2026-11-17)
+
+Historical pre-configuration snapshot; its disabled-provider and absent-key
+findings were superseded by later staging configuration checks above.
 
 - Baseline preserved: `main` at successful core-smoke checkpoint
   `87f33bafcf41d7fd80ab4a66595cd36ae205b23e`. The existing modifications in

@@ -36,6 +36,15 @@ function boundedString(value: unknown, maxLength: number): string | undefined {
     : undefined;
 }
 
+function providerFailureCategory(status: number): string {
+  if (status === 400) return "provider_bad_request";
+  if (status === 401 || status === 403) return "provider_auth_or_permission";
+  if (status === 404) return "provider_model_not_found";
+  if (status === 429) return "provider_rate_limited";
+  if (status >= 500) return "provider_server_error";
+  return "provider_rejected";
+}
+
 Deno.serve(async (req) => {
   let quotaClient: RpcClient | null = null;
   let pendingRequestId: string | null = null;
@@ -467,7 +476,7 @@ Output a JSON object with keys: "intro", "outfit_1", "outfit_2", "outfit_3", "pr
           action: "style-coach",
           model: GEMINI_MODEL,
           latency_ms: Math.round(performance.now() - startedAt),
-          error: "provider_rejected",
+          error: providerFailureCategory(geminiResponse.status),
           provider_status: geminiResponse.status,
         }),
       );
