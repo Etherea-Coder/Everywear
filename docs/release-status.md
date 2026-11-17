@@ -4,11 +4,25 @@
 
 - Local `style-coach` now queries wardrobe rows only after validating the
   bearer user, with both the caller JWT/RLS context and an explicit
-  `user_id = auth user UUID` filter. It selects stable item IDs plus saved
+  `user_id = auth user UUID` filter and an exact count. It selects stable item IDs plus saved
   `name`, `category`, `semantic_label`, and `notes`; image URLs and other
   account rows are excluded. The resulting context is capped at 24 items and
   4,500 UTF-8 bytes. A wardrobe-query failure returns a clear unavailable
   response before reserving AI quota.
+- The context includes server-generated `complete`, `partial`, or
+  `unavailable` status. Omitted counts are attached only when the exact count
+  is known; a capped query without a count reports `partial` without guessing
+  the number. If the overall context limit forces removal of the list, status
+  becomes `unavailable` and the known total is reported as omitted. Optional
+  outfit history is trimmed before the owned-item list.
+- Selection remains newest-first by `created_at`, not relevance-ranked. Older
+  saved pieces may be omitted even if they better fit a request; this is a
+  known limitation pending usage evidence and a deliberate ranking design.
+- Every mode is told a partial list is not the user's entire wardrobe, and an
+  unavailable/empty context is not evidence that they own no clothing. Active
+  mode now allows useful general guidance or one relevant question in `answer`
+  when item context is unusable, while retaining a concrete non-question
+  `next_step`.
 - All existing client callers send the saved app locale (`en`, `fr`, or `es`);
   the function normalizes unsupported values to English. Coach context is JSON
   data, capped at 8,000 UTF-8 bytes, with a 16,000-byte total prompt ceiling.
@@ -39,7 +53,7 @@
 - Existing uncommitted purchase/wardrobe UI and staging-script changes remain
   unrelated and unstaged.
 - Checks actually performed: targeted `deno fmt`; focused Deno tests for
-  `coach_context_test.ts` and `coach_response_test.ts` (**11 passed, 0 failed**);
+  `coach_context_test.ts` and `coach_response_test.ts` (**13 passed, 0 failed**);
   targeted Deno lint on the five changed TypeScript files; Deno type-check of
   `style-coach/index.ts` with the repository import map; Dart formatting of
   `lib/services/style_service.dart`; and `git diff --check`. One initial
