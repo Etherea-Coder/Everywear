@@ -507,7 +507,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
       if (mounted) {
         setState(() {
-          _locale = savedLocale ?? const Locale('en');
+          _locale = LocaleManager.resolveInitialLocale(
+            savedLocale,
+            WidgetsBinding.instance.platformDispatcher.locale,
+          );
           _themeMode = _parseThemeMode(savedTheme);
           _isInitialized = true;
         });
@@ -535,11 +538,16 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       }
       if (kDebugMode) debugPrint('⚠️ App initialization failed: $e');
       if (mounted) {
+        final fallbackLocale = LocaleManager.resolveInitialLocale(
+          null,
+          WidgetsBinding.instance.platformDispatcher.locale,
+        );
         setState(() {
-          _locale = const Locale('en');
+          _locale = fallbackLocale;
           _themeMode = ThemeMode.light;
           _isInitialized = true;
         });
+        ref.read(localeProvider.notifier).state = fallbackLocale;
       }
     }
   }
@@ -574,6 +582,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final activeLocale = ref.watch(localeProvider);
     // Show plain loader until locale is ready
     if (!_isInitialized || _locale == null) {
       if (widget.diagnosticMode) {
@@ -625,7 +634,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     return Sizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
-          key: ValueKey(_locale!.languageCode + _themeMode.toString()),
+          key: ValueKey(_themeMode.toString()),
           scaffoldMessengerKey: _scaffoldMessengerKey,
           title: 'everywear',
           theme: AppTheme.lightTheme,
@@ -650,7 +659,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
           },
           // 🚨 END CRITICAL SECTION
           debugShowCheckedModeBanner: false,
-          locale: _locale,
+          locale: activeLocale,
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

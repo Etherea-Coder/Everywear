@@ -2,25 +2,45 @@ import 'package:everywear/core/utils/app_localizations.dart';
 import 'package:everywear/presentation/splash_screen/splash_screen.dart';
 import 'package:everywear/services/supabase_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sizer/sizer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:everywear/core/providers.dart';
+import 'package:everywear/core/utils/locale_manager.dart';
 
 const _unavailableMessage =
     'Account services are unavailable right now. Please try again later.';
 
-Future<void> _pumpSplash(WidgetTester tester) async {
+Future<void> _pumpSplash(
+  WidgetTester tester, {
+  Locale initialLocale = const Locale('en'),
+  double textScale = 1,
+}) async {
   await tester.pumpWidget(
-    Sizer(
-      builder: (context, orientation, deviceType) => MaterialApp(
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const SplashScreen(),
+    ProviderScope(
+      overrides: [localeProvider.overrideWith((ref) => initialLocale)],
+      child: Consumer(
+        builder: (context, ref, _) => Sizer(
+          builder: (context, orientation, deviceType) => MaterialApp(
+            locale: ref.watch(localeProvider),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
+            home: const SplashScreen(),
+          ),
+        ),
       ),
     ),
   );
@@ -35,6 +55,73 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  testWidgets('language can change before login and persists for restart', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await _pumpSplash(tester);
+
+    expect(SupabaseService.isInitialized, isFalse);
+    await tester.tap(find.byKey(const Key('welcome-language-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Français').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Comprenez votre style'), findsOneWidget);
+    expect(find.text('Continuer avec Google'), findsOneWidget);
+    expect(await LocaleManager.getSavedLocale(), const Locale('fr'));
+
+    await _tapVisible(tester, find.text('Continuer avec email'));
+    expect(find.text('Bon retour'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('welcome-language-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Español').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bienvenido de nuevo'), findsOneWidget);
+    expect(await LocaleManager.getSavedLocale(), const Locale('es'));
+    expect(
+      LocaleManager.resolveInitialLocale(
+        await LocaleManager.getSavedLocale(),
+        const Locale('en'),
+      ),
+      const Locale('es'),
+    );
+  });
+
+  test('fresh-install locale uses supported device language or English', () {
+    expect(
+      LocaleManager.resolveInitialLocale(null, const Locale('fr', 'FR')),
+      const Locale('fr'),
+    );
+    expect(
+      LocaleManager.resolveInitialLocale(null, const Locale('de', 'DE')),
+      const Locale('en'),
+    );
+    expect(
+      LocaleManager.resolveInitialLocale(
+        const Locale('es'),
+        const Locale('fr'),
+      ),
+      const Locale('es'),
+    );
+  });
+
+  testWidgets('welcome controls fit a narrow screen with enlarged text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _pumpSplash(tester, textScale: 1.8);
+
+    expect(find.byKey(const Key('welcome-language-selector')), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Continue with Email'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('splash logo loads as a raster asset', (tester) async {
     await _pumpSplash(tester);
 

@@ -7,9 +7,12 @@ import '../../services/revenuecat_service.dart';
 import '../../services/auth_redirects.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'dart:async';
 import '../../core/app_export.dart';
+import '../../core/providers.dart';
+import '../../core/utils/locale_manager.dart';
 
 /// Splash Screen with Authentication - Branded login experience
 /// Displays app logo with authentication options (Google & Email)
@@ -150,6 +153,11 @@ class _SplashScreenState extends State<SplashScreen>
         padding: EdgeInsets.symmetric(horizontal: 6.w),
         child: Column(
           children: [
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: _buildLanguageSelector(l10n),
+            ),
+            SizedBox(height: 1.h),
             SizedBox(height: 8.h),
             _buildBrandingSection(theme, l10n),
             SizedBox(height: _showAuthOptions ? 6.h : 12.h),
@@ -162,6 +170,77 @@ class _SplashScreenState extends State<SplashScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLanguageSelector(AppLocalizations l10n) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final locale = LocaleManager.resolveInitialLocale(
+          ref.watch(localeProvider),
+          null,
+        );
+        String nativeName(Locale value) => switch (value.languageCode) {
+          'fr' => 'Français',
+          'es' => 'Español',
+          _ => 'English',
+        };
+
+        final labelStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontWeight: FontWeight.w600,
+        );
+        return Semantics(
+          label: '${l10n.language}: ${nativeName(locale)}',
+          button: true,
+          child: Tooltip(
+            message: l10n.selectLanguage,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.language,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  size: 20,
+                ),
+                const SizedBox(width: 6),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<Locale>(
+                    key: const Key('welcome-language-selector'),
+                    value: locale,
+                    borderRadius: BorderRadius.circular(12),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
+                    iconEnabledColor: Theme.of(context).colorScheme.onPrimary,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    selectedItemBuilder: (context) => AppLocalizations
+                        .supportedLocales
+                        .map(
+                          (option) => Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(nativeName(option), style: labelStyle),
+                          ),
+                        )
+                        .toList(),
+                    items: AppLocalizations.supportedLocales
+                        .map(
+                          (option) => DropdownMenuItem<Locale>(
+                            value: option,
+                            child: Text(nativeName(option)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (selected) {
+                      if (selected == null) return;
+                      ref.read(localeProvider.notifier).state = selected;
+                      unawaited(LocaleManager.saveLocale(selected));
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -197,8 +276,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   Widget _buildLogo(ThemeData theme) {
     return Container(
-      width: 100.w,
-      height: 100.w,
+      width: 84.w,
+      height: 84.w,
       decoration: BoxDecoration(
         color: theme.colorScheme.onPrimary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(25),
@@ -215,8 +294,8 @@ class _SplashScreenState extends State<SplashScreen>
           borderRadius: BorderRadius.circular(20),
           child: Image.asset(
             'assets/images/splash-screen.png',
-            width: 90.w,
-            height: 90.w,
+            width: 78.w,
+            height: 78.w,
             fit: BoxFit.contain,
           ),
         ),
@@ -245,38 +324,47 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Widget _buildGoogleSignInButton(ThemeData theme, AppLocalizations l10n) {
-    return Material(
-      elevation: 4,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: _isLoading ? null : _handleGoogleSignIn,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 2.h),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.onPrimary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                'assets/icons/google_logo.svg',
-                width: 6.w,
-                height: 6.w,
-                fit: BoxFit.contain,
+    const borderRadius = BorderRadius.all(Radius.circular(12));
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: const Color(0xFFFFFFFF),
+        shape: const RoundedRectangleBorder(
+          borderRadius: borderRadius,
+          side: BorderSide(color: Color(0xFF747775), width: 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _isLoading ? null : _handleGoogleSignIn,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/icons/google_logo.svg',
+                    width: 20,
+                    height: 20,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      l10n.continueGoogle,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.googleSans(
+                        color: const Color(0xFF1F1F1F),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        height: 20 / 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 3.w),
-              Text(
-                l10n.continueGoogle,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14.sp,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -284,41 +372,52 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Widget _buildEmailSignInButton(ThemeData theme, AppLocalizations l10n) {
-    return Material(
-      elevation: 0,
-      borderRadius: BorderRadius.circular(12),
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _isLoading ? null : () => setState(() => _showEmailForm = true),
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        elevation: 0,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 2.h),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.colorScheme.onPrimary.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.email_outlined,
-                color: theme.colorScheme.onPrimary,
-                size: 6.w,
-              ),
-              SizedBox(width: 3.w),
-              Text(
-                l10n.continueEmail,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14.sp,
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isLoading
+              ? null
+              : () => setState(() => _showEmailForm = true),
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.5),
+                  width: 1.5,
                 ),
+                borderRadius: BorderRadius.circular(12),
               ),
-            ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.email_outlined,
+                    color: theme.colorScheme.onPrimary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      l10n.continueEmail,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -377,6 +476,10 @@ class _SplashScreenState extends State<SplashScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: _buildLanguageSelector(l10n),
+            ),
             SizedBox(height: 2.h),
             _buildBackButton(theme),
             SizedBox(height: 4.h),

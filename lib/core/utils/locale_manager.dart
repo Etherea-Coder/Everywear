@@ -1,10 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'app_localizations.dart';
 
 /// Manages app locale preferences and persistence
 class LocaleManager {
   static const String _localeKey = 'app_locale';
   static const String _themeModeKey = 'theme_mode';
+
+  /// Resolve persisted choice first, then device language, then English.
+  static Locale resolveInitialLocale(Locale? saved, Locale? device) {
+    Locale? supported(Locale? locale) {
+      if (locale == null) return null;
+      for (final option in AppLocalizations.supportedLocales) {
+        if (option.languageCode == locale.languageCode.toLowerCase()) {
+          return option;
+        }
+      }
+      return null;
+    }
+
+    return supported(saved) ?? supported(device) ?? const Locale('en');
+  }
 
   /// Saves the selected locale to persistent storage
   static Future<void> saveLocale(Locale locale) async {
