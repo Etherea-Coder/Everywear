@@ -1,6 +1,8 @@
 # Server-side AI quota proposal
 
-**Status:** local implementation and migration prepared; not applied to any hosted database.
+**Status:** base quotas are deployed in isolated staging. The style-coach
+refund migration and matching handler remain local until a reviewed staging
+rollout; production remains unchanged.
 
 **Policy status:** provisional configurable defaults, not a customer promise.
 **Time basis:** UTC.
@@ -40,9 +42,13 @@ Windows reset at their next UTC boundary: the first UTC day of the next month,
 00:00 UTC for the daily allowance, and the next UTC minute for burst control.
 In-flight reservations older than 30 seconds stop counting toward concurrency;
 the provider request itself times out after 20 seconds. Counters are reserved
-before making a provider request and are never refunded. Thus provider errors,
-invalid responses, timeouts, and interrupted requests count, since provider
-billing may already have occurred. There are no application retries or model
+before making a provider request. The proposed style-coach correction in
+`20261118180000_style_coach_quota_refunds.sql` restores daily and monthly
+allowance for a finalized provider error, timeout, or invalid response.
+Successful coach responses count once. Burst usage stays charged. Interrupted
+requests with unknown provider outcomes stay charged and their stale ledger
+status is closed after 30 seconds. Other AI endpoints retain the existing
+charged-attempt policy. There are no application retries or model
 fallbacks. The OpenRouter request also sets `allow_fallbacks: false` and a
 maximum accepted per-token price, but OpenRouter's general routing docs mention
 retrying failed provider attempts. Its precise retry/billing behavior for these
@@ -86,6 +92,22 @@ consumed if finalization itself fails. Provider timeouts, response byte limits,
 request body bounds, JPEG validation, prompt byte caps, and output-token caps
 are shared or explicit in source. See `docs/ai-cost-review.md` for the per
 feature input/output ceilings and modeled costs.
+
+The coach refund migration records each reservation's original UTC month and
+day. A refund only changes counters whose window still matches; an old action
+cannot decrement a new day or month. The refund and status transition share
+one transaction and per-user lock. Duplicate finalization returns false, and
+a completed success cannot be reversed. The authenticated finalizer rejects
+coach actions; the coach finalizer and stale-action reconciler grant EXECUTE
+only to `service_role`. The handler validates the user before using its
+server-side service credential. Failed requests before reservation leave
+quota untouched. Unknown interrupted provider outcomes retain their charge.
+
+For staging, apply this migration after the existing quota migration, verify
+grants and fixtures, then deploy only `style-coach` with JWT verification
+retained. The old handler cannot finalize through the protected coach RPC.
+For rollback, leave coaching unavailable until a reviewed compatible handler
+and RPC are restored together; do not reopen client refund authority.
 
 ## Rollout and rollback
 

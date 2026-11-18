@@ -1,5 +1,31 @@
 # Android release status
 
+## Style-coach failed-request quota restoration (local checkpoint)
+
+- Added `20261118180000_style_coach_quota_refunds.sql` after the existing
+  quota migration. Only finalized style-coach provider errors, timeouts, and
+  invalid responses restore monthly/daily allowance; successful requests count
+  once, burst attempts stay counted, and unknown interrupted outcomes remain
+  charged. The original UTC reservation dates prevent an old failure from
+  decrementing a new day/month. Finalization is atomic under the per-user
+  lock and returns false on repeat calls.
+- The authenticated finalizer now refuses style-coach reservations. A new
+  service-role-only finalizer and stale-action reconciler are used by the
+  authenticated style-coach handler. The service credential remains server
+  side. Missing finalizer configuration fails before reservation; no retry,
+  fallback advice, or client response shape was added.
+- Disposable local PostgreSQL 17.6: migration applied; focused pgTAP fixture
+  **30/30** passed; two simultaneous finalizations produced one transition and
+  one refund with burst retained; existing database security fixture **48/48**
+  passed after restoring the missing entitlement-prerequisite migration in the
+  copied local harness. The fixture transaction rolled back its synthetic
+  users and reservations. This harness is not full Supabase staging.
+- Focused Deno tests **16/16** passed, Deno type-check and lint passed for the
+  coach handler, and targeted formatting passed. Hosted quota behavior remains
+  unverified. Staging order: review/apply the migration, verify grants and
+  focused fixtures, then deploy only `style-coach` with JWT verification
+  retained. No hosted change, inference, quota reset, device run, or push.
+
 ## Staging locale-analytics deployment and validation (2026-11-18)
 
 - Authenticated CLI identity confirmed `Everywear-staging`, project ref

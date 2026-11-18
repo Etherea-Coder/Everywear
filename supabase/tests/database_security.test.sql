@@ -104,14 +104,14 @@ SELECT set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222
 SELECT set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
 SELECT is(public.get_ai_allowance()->>'tier', 'free', 'expired premium access immediately uses free quota');
 SELECT ok(
-  (public.reserve_ai_action('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'style-coach')->>'allowed')::boolean,
+  (public.reserve_ai_action('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'today-suggestion')->>'allowed')::boolean,
   'user B receives an independent allowance'
 );
 SELECT ok(
   public.finalize_ai_action('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'provider_error', 'provider_unavailable'),
-  'provider failure is finalized without refunding the reserved action'
+  'non-coach provider failure retains the existing charged-attempt policy'
 );
-SELECT is(public.get_ai_allowance()->>'month_remaining', '19', 'provider failure still consumes monthly usage');
+SELECT is(public.get_ai_allowance()->>'month_remaining', '19', 'non-coach failure still consumes monthly usage');
 SELECT ok(
   NOT has_table_privilege('authenticated', 'public.ai_action_reservations', 'SELECT'),
   'authenticated clients cannot read the private idempotency ledger'

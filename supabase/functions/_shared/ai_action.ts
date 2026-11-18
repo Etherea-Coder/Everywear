@@ -149,8 +149,8 @@ export async function finalizeAiAction(
     | "timeout"
     | "internal_error",
 ): Promise<void> {
-  // The reservation itself consumes quota. A failed finalization must never
-  // refund it or permit another attempt with the same operation id.
+  // Shared handlers keep charged attempts. Style-coach uses a separate
+  // server-only finalizer for its scoped refund rule.
   const { error } = await client.rpc("finalize_ai_action", {
     p_request_id: requestId,
     p_outcome: outcome,

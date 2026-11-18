@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { createGeminiRequest } from "../_shared/gemini_request.ts";
 import {
   cancelProviderResponse,
-  finalizeAiAction,
   isRecord,
   isRequestId,
   quotaDeniedResponse,
@@ -15,6 +14,10 @@ import {
   withProviderTimeout,
 } from "../_shared/ai_action.ts";
 import { isCoachMode, parseGeminiCoachPayload } from "./coach_response.ts";
+import {
+  finalizeCoachAction,
+  reconcileStaleCoachActions,
+} from "./coach_quota.ts";
 import { selectTopRatedItems } from "./item_ratings.ts";
 import {
   buildCoachPrompt,
@@ -49,6 +52,8 @@ function providerFailureCategory(status: number): string {
 
 Deno.serve(async (req) => {
   let quotaClient: RpcClient | null = null;
+  let coachFinalizer: RpcClient | null = null;
+  let coachUserId: string | null = null;
   let pendingRequestId: string | null = null;
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -85,6 +90,23 @@ Deno.serve(async (req) => {
         headers: { "Access-Control-Allow-Origin": "*" },
       });
     }
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!serviceRoleKey) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Style coaching is unavailable. Try again later.",
+          code: "AI_UNAVAILABLE",
+        }),
+        { status: 503, headers: { "Access-Control-Allow-Origin": "*" } },
+      );
+    }
+    coachFinalizer = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      serviceRoleKey,
+      { auth: { persistSession: false, autoRefreshToken: false } },
+    );
+    coachUserId = user.id;
 
     let requestBody: unknown;
     try {
@@ -334,6 +356,7 @@ Deno.serve(async (req) => {
         temperature: 0.7,
       },
     });
+    await reconcileStaleCoachActions(coachFinalizer, user.id);
     const reservation = await reserveAiAction(
       supabaseClient,
       requestId,
@@ -352,8 +375,9 @@ Deno.serve(async (req) => {
     } catch (error) {
       const timedOut = error instanceof DOMException &&
         error.name === "AbortError";
-      await finalizeAiAction(
-        supabaseClient,
+      await finalizeCoachAction(
+        coachFinalizer,
+        user.id,
         requestId,
         timedOut ? "timeout" : "provider_error",
         timedOut ? "timeout" : "provider_unavailable",
@@ -385,8 +409,9 @@ Deno.serve(async (req) => {
 
     if (!geminiResponse.ok) {
       await cancelProviderResponse(geminiResponse);
-      await finalizeAiAction(
-        supabaseClient,
+      await finalizeCoachAction(
+        coachFinalizer,
+        user.id,
         requestId,
         "provider_error",
         "provider_rejected",
@@ -428,8 +453,9 @@ Deno.serve(async (req) => {
     };
     const result = parseGeminiCoachPayload(mode, geminiData);
     if (result.success !== true) {
-      await finalizeAiAction(
-        supabaseClient,
+      await finalizeCoachAction(
+        coachFinalizer,
+        user.id,
         requestId,
         "invalid_response",
         "invalid_response",
@@ -452,7 +478,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    await finalizeAiAction(supabaseClient, requestId, "succeeded");
+    await finalizeCoachAction(coachFinalizer, user.id, requestId, "succeeded");
     pendingRequestId = null;
     console.info(
       JSON.stringify({
@@ -479,7 +505,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    if (quotaClient && pendingRequestId) {
+    if (quotaClient && coachFinalizer && coachUserId && pendingRequestId) {
       const outcome =
         error instanceof DOMException && error.name === "AbortError"
           ? "timeout"
@@ -487,8 +513,9 @@ Deno.serve(async (req) => {
           ? "invalid_response"
           : "internal_error";
       try {
-        await finalizeAiAction(
-          quotaClient,
+        await finalizeCoachAction(
+          coachFinalizer,
+          coachUserId,
           pendingRequestId,
           outcome,
           outcome === "timeout"
@@ -497,7 +524,7 @@ Deno.serve(async (req) => {
             ? "invalid_response"
             : "internal_error",
         );
-      } catch { /* reservation still consumes allowance */ }
+      } catch { /* Unknown outcome stays charged until reconciliation. */ }
     }
     console.error(
       "style-coach error:",
