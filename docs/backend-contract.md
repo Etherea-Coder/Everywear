@@ -69,6 +69,18 @@ The catalog seed contains only factual learning modules and challenge definition
 
 Interactive functions `ai-suggestions`, `analyze-clothing`, `generate-ai-insights`, `style-coach`, `today-suggestion`, `check-and-request-suggestion`, `verify-purchase`, and `delete-account` must call `auth.getUser()` with the bearer token and reject invalid users before any privileged operation. `revenuecat-webhook` is machine-to-machine and authenticates its configured webhook secret.
 
+`analyze-clothing` keeps `color` in the existing canonical English backend
+vocabulary and `material` as a concise canonical English descriptor regardless
+of request locale. `colorLabel` and `materialLabel` are localized display
+fields; fixed `category` and `style_vibe` enums remain unchanged. The app uses
+display labels for a generated item name and the canonical fields for
+`semantic_label`. `generate-ai-insights` normalizes existing English, French,
+and Spanish color terms (including mixed-language legacy labels) into the same
+canonical vocabulary before calculating dominant colors. Its existing
+`dominantColors` response remains canonical; Flutter localizes it only when
+rendering. This requires staging deployment of both functions; no migration or
+record rewrite is required.
+
 `verify-purchase` derives the RevenueCat customer from the authenticated Supabase UUID, requires the exact configured entitlement, requires its RevenueCat subscription record's `is_sandbox` value to match server configuration, and fails closed when `REVENUECAT_EXPECTED_ENVIRONMENT` is missing. `revenuecat-webhook` reads fields from the wrapped `event`, records its unique event ID, ignores stale events after comparing event time, and does not apply events whose production/sandbox environment differs from that server configuration. Sandbox must use an isolated non-production Supabase/RevenueCat environment.
 
 ## Required security proofs

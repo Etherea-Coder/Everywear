@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_icon_widget.dart';
 import '../../services/wardrobe_service.dart';
+import '../../services/clothing_semantic_label.dart';
 import '../../services/storage_service.dart';
 import './widgets/item_details_form.dart';
 import './widgets/photo_capture_section.dart';
@@ -121,13 +122,20 @@ class _AddClothingItemState extends State<AddClothingItem> {
       final confidence =
           (analysisResult['confidence'] as num?)?.toDouble() ?? 0.0;
       if (_itemNameController.text.trim().isEmpty && confidence > 0.6) {
-        final color = analysisResult['color'] as String? ?? '';
-        final material = analysisResult['material'] as String? ?? '';
+        final color =
+            analysisResult['colorLabel'] as String? ??
+            analysisResult['color'] as String? ??
+            '';
+        final material =
+            analysisResult['materialLabel'] as String? ??
+            analysisResult['material'] as String? ??
+            '';
         final category = analysisResult['category'] as String? ?? '';
+        final categoryLabel = localizations.getLocalizedCategory(category);
         final parts = [
           color,
           material,
-          category,
+          categoryLabel,
         ].where((s) => s.isNotEmpty && s.toLowerCase() != 'unknown').toList();
         if (parts.isNotEmpty) {
           _itemNameController.text = parts.join(' ');
@@ -210,9 +218,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
               ? _brandController.text.trim()
               : null,
           imageUrl: imageUrl,
-          semanticLabel: _aiAnalysisData != null
-              ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
-              : null,
+          semanticLabel: _aiAnalysisData == null
+              ? null
+              : buildClothingSemanticLabel(_aiAnalysisData),
           purchasePrice: price,
           purchaseDate: _purchaseDate,
           notes: _storeController.text.trim().isNotEmpty
@@ -226,9 +234,9 @@ class _AddClothingItemState extends State<AddClothingItem> {
           category: _selectedCategory!, // We validated it's not null
           brand: _brandController.text.trim(),
           imageUrl: imageUrl,
-          semanticLabel: _aiAnalysisData != null
-              ? '${_aiAnalysisData!['color']} ${_aiAnalysisData!['material']} ${_aiAnalysisData!['category']}'
-              : null,
+          semanticLabel: _aiAnalysisData == null
+              ? null
+              : buildClothingSemanticLabel(_aiAnalysisData),
           purchasePrice: price,
           purchaseDate: _purchaseDate,
           notes: _storeController.text.trim(), // Reusing store as notes for now

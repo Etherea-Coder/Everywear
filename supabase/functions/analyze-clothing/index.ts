@@ -18,6 +18,7 @@ import {
   withProviderTimeout,
 } from "../_shared/ai_action.ts";
 import {
+  buildClothingAnalysisPrompt,
   parseClothingAnalysis,
   validateImageRequest,
 } from "./clothing_analysis.ts";
@@ -111,17 +112,7 @@ Deno.serve(async (req) => {
     }
     pendingRequestId = requestId;
 
-    const prompt =
-      `Analyze this clothing item image and respond ONLY with a JSON object in this exact format.
-Write color and material in ${responseLanguage}. Keep category and style_vibe values in the fixed English enums below:
-{
-  "category": one of ["Tops", "Bottoms", "Shoes", "Outerwear", "Accessories", "Dresses", "Activewear"],
-  "color": main color as a single word,
-  "material": likely material as a single word,
-  "confidence": a number between 0.5 and 0.99,
-  "style_vibe": one of ["Casual", "Formal", "Sport", "Elegant", "Street"]
-}
-Respond with ONLY the JSON, no other text.`;
+    const prompt = buildClothingAnalysisPrompt(responseLanguage);
 
     const geminiRequest = createGeminiRequest(GEMINI_MODEL, googleAiApiKey, {
       contents: [{

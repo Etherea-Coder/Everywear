@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { extractGeminiText, parseAiInsights } from "./ai_response.ts";
 import { createGeminiRequest } from "../_shared/gemini_request.ts";
+import { calculateDominantColorAnalytics } from "../_shared/color_vocabulary.ts";
 import {
   normalizeResponseLocale,
   responseLanguageName,
@@ -51,40 +52,6 @@ const CORS = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-// Extracts a colour keyword from semantic_label (no `color` column exists in DB)
-const COLOUR_KEYWORDS = [
-  "black",
-  "white",
-  "gray",
-  "grey",
-  "brown",
-  "beige",
-  "cream",
-  "navy",
-  "blue",
-  "red",
-  "green",
-  "yellow",
-  "orange",
-  "pink",
-  "purple",
-  "burgundy",
-  "camel",
-  "khaki",
-  "olive",
-  "coral",
-  "teal",
-  "gold",
-  "silver",
-  "tan",
-];
-
-function extractColour(semanticLabel: string): string | null {
-  if (!semanticLabel) return null;
-  const lower = semanticLabel.toLowerCase();
-  return COLOUR_KEYWORDS.find((c) => lower.includes(c)) ?? null;
-}
 
 Deno.serve(async (req) => {
   let quotaClient: RpcClient | null = null;
@@ -231,20 +198,8 @@ Deno.serve(async (req) => {
     // ══════════════════════════════════════════════════════════════════════
 
     // ── Dominant colours (from semantic_label — no color column in DB) ────
-    const colourCount: Record<string, number> = {};
-    items.forEach((i) => {
-      const c = extractColour(i.semantic_label ?? "");
-      if (c) colourCount[c] = (colourCount[c] ?? 0) + 1;
-    });
-    const sortedColours = Object.entries(colourCount).sort(([, a], [, b]) =>
-      b - a
-    ).slice(0, 4);
-    const dominantColors = sortedColours.map(([c]) =>
-      c.charAt(0).toUpperCase() + c.slice(1)
-    );
-    const colorPercentages = sortedColours.map(([, n]) =>
-      Math.round((n / Math.max(items.length, 1)) * 100)
-    );
+    const { dominantColors, colorPercentages } =
+      calculateDominantColorAnalytics(items.map((item) => item.semantic_label));
 
     // ── Versatility scores (top 4 by wear_count from DB) ─────────────────
     const versatilityScores = [...items]

@@ -1,5 +1,33 @@
 # Android release status
 
+## Locale-independent clothing color analytics (2026-11-18)
+
+- Moved the exact existing `generate-ai-insights` color keyword vocabulary to
+  `_shared/color_vocabulary.ts` and added French/Spanish legacy aliases.
+  Matching uses normalized whole-word/phrase tokens, maps the existing `grey`
+  spelling to canonical `gray`, and counts at most one color per semantic label.
+  English, French, Spanish, and mixed-language fixtures produce identical
+  canonical dominant-color counts and percentages. No schema migration or
+  hosted-record rewrite is needed.
+- `analyze-clothing` now requests canonical English `color` and material fields
+  independently of locale, while returning additive localized `colorLabel`
+  and `materialLabel` display fields. Existing category and `style_vibe` enum
+  values remain fixed. The app uses localized labels for the suggested item
+  name and canonical fields for the persisted `semantic_label`.
+- `generate-ai-insights` keeps its existing canonical `dominantColors`
+  response shape; the AI Intelligence chart localizes labels at render time and
+  keeps canonical keys for color swatches. Its user-facing AI prose still uses
+  the requested response locale.
+- Checks: focused Deno tests **12 passed**; Deno checks for
+  `analyze-clothing` and `generate-ai-insights` passed; targeted Dart tests
+  **4 passed**; targeted Dart analysis reported no errors (11 existing
+  info-level lints); targeted Deno format/lint and Dart formatting passed.
+  No live inference, quota use, hosted operation, full suite, device test, or
+  deployment was performed.
+- Staging must deploy **both** `analyze-clothing` and `generate-ai-insights`
+  before relying on language-independent AI-saved attributes and normalized
+  analytics. Production remains untouched.
+
 ## Locale/font staging APK build (2026-11-17)
 
 - Built the current source with `scripts/build_uptodown_free_beta.sh`, explicit

@@ -2,6 +2,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:everywear/core/utils/app_localizations.dart';
 
 void main() {
+  test('canonical insight colors get localized only at display time', () async {
+    const expected = <String, Map<String, String>>{
+      'en': {'Blue': 'Blue', 'Gray': 'Grey', 'Navy': 'Navy'},
+      'fr': {'Blue': 'Bleu', 'Gray': 'Gris', 'Navy': 'Bleu Marine'},
+      'es': {'Blue': 'Azul', 'Gray': 'Gris', 'Navy': 'Azul Marino'},
+    };
+
+    for (final locale in AppLocalizations.supportedLocales) {
+      final localizations = AppLocalizations(locale);
+      await localizations.load();
+      for (final entry in expected[locale.languageCode]!.entries) {
+        expect(localizations.getLocalizedColor(entry.key), entry.value);
+      }
+    }
+  });
+
   group('AppLocalizations auth strings', () {
     test('loads the forgot password label for every supported locale', () async {
       final expectedLabels = <String, String>{

@@ -1,4 +1,5 @@
 import {
+  buildClothingAnalysisPrompt,
   parseClothingAnalysis,
   validateImageRequest,
 } from "./clothing_analysis.ts";
@@ -58,17 +59,107 @@ Deno.test("returns only allowed bounded analysis fields", () => {
   const result = parseClothingAnalysis(JSON.stringify({
     success: false,
     category: "Tops",
-    color: ` ${"blue".repeat(20)} `,
+    color: " Blue ",
     material: " Cotton ",
     confidence: 1.5,
     style_vibe: "Casual",
     error: "model supplied field",
   }));
   assertEquals(result?.success, true);
-  assertEquals(result?.color.length, 40);
+  assertEquals(result?.color, "blue");
   assertEquals(result?.material, "Cotton");
   assertEquals(result?.confidence, 0.99);
   assertEquals("error" in (result ?? {}), false);
+});
+
+Deno.test("canonical fields stay stable while display labels follow the locale", () => {
+  const localizedSamples = [
+    {
+      color: "Blue",
+      colorLabel: "Blue",
+      material: "Cotton",
+      materialLabel: "Cotton",
+    },
+    {
+      color: "Bleu",
+      colorLabel: "Bleu",
+      material: "Cotton",
+      materialLabel: "Coton",
+    },
+    {
+      color: "Azul",
+      colorLabel: "Azul",
+      material: "Cotton",
+      materialLabel: "Algodón",
+    },
+  ];
+  const results = localizedSamples.map((sample) =>
+    parseClothingAnalysis(JSON.stringify({
+      category: "Tops",
+      ...sample,
+      confidence: 0.9,
+      style_vibe: "Casual",
+    }))
+  );
+
+  assertEquals(results.map((result) => result?.color), [
+    "blue",
+    "blue",
+    "blue",
+  ]);
+  assertEquals(results.map((result) => result?.material), [
+    "Cotton",
+    "Cotton",
+    "Cotton",
+  ]);
+  assertEquals(results.map((result) => result?.category), [
+    "Tops",
+    "Tops",
+    "Tops",
+  ]);
+  assertEquals(results.map((result) => result?.style_vibe), [
+    "Casual",
+    "Casual",
+    "Casual",
+  ]);
+  assertEquals(results.map((result) => result?.colorLabel), [
+    "Blue",
+    "Bleu",
+    "Azul",
+  ]);
+  assertEquals(results.map((result) => result?.materialLabel), [
+    "Cotton",
+    "Coton",
+    "Algodón",
+  ]);
+});
+
+Deno.test("localized prompt keeps color, material, and enums language-independent", () => {
+  const prompts = ["English", "French", "Spanish"].map((language) =>
+    buildClothingAnalysisPrompt(language)
+  );
+  for (const prompt of prompts) {
+    assertEquals(prompt.includes("one exact canonical English value"), true);
+    assertEquals(
+      prompt.includes("concise canonical English material name"),
+      true,
+    );
+    assertEquals(
+      prompt.includes(
+        '"category": one of ["Tops", "Bottoms", "Shoes", "Outerwear", "Accessories", "Dresses", "Activewear"]',
+      ),
+      true,
+    );
+    assertEquals(
+      prompt.includes(
+        '"style_vibe": one of ["Casual", "Formal", "Sport", "Elegant", "Street"]',
+      ),
+      true,
+    );
+  }
+  assertEquals(prompts[0].includes("in English"), true);
+  assertEquals(prompts[1].includes("in French"), true);
+  assertEquals(prompts[2].includes("in Spanish"), true);
 });
 
 Deno.test("fails closed on malformed or unsupported model output", () => {

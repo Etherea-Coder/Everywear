@@ -110,7 +110,15 @@ class VisionEngineServiceMobile implements VisionEngineService {
           'category': response.data['category'] ?? 'Tops',
           'confidence': (response.data['confidence'] ?? 0.8).toDouble(),
           'color': response.data['color'] ?? 'Unknown',
+          'colorLabel':
+              response.data['colorLabel'] ??
+              response.data['color'] ??
+              'Unknown',
           'material': response.data['material'] ?? 'Cotton',
+          'materialLabel':
+              response.data['materialLabel'] ??
+              response.data['material'] ??
+              'Cotton',
           'style_vibe': response.data['style_vibe'] ?? 'Casual',
           'tags': [
             response.data['category']?.toLowerCase() ?? 'tops',
