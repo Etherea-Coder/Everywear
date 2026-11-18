@@ -1,5 +1,35 @@
 # Android release status
 
+## Style-coach refund staging rollout (2026-11-18)
+
+- Verified the authenticated CLI target is active `Everywear-staging`,
+  `aftdbphdobfrshienple` in `eu-north-1`. Read-only migration history
+  contained prerequisite `20261112100000` and lacked `20261118180000`.
+  Applied only `20261118180000_style_coach_quota_refunds.sql` to staging.
+  The SQL runner did not record migration history, so the exact applied
+  version was marked applied using targeted CLI history repair; read-only
+  verification then showed both versions recorded.
+- Hosted catalog verification found the refund RPC present, executable by
+  `service_role`, and not executable by `authenticated` or `anon`.
+  Deployed only the committed `style-coach` function using the shared Deno
+  import map. The function is active at version **5**, with
+  `verify_jwt: true`.
+- The dedicated staging account's free-tier allowance before the bounded
+  success request was monthly **15**, daily **1**, burst **1**. One synthetic
+  authenticated active coach request returned HTTP 200 with nonempty
+  `answer` and `next_step`; afterward the counters were **14 / 0 / 0**.
+  This verifies that one valid response consumes one daily and monthly
+  action. No account identifiers, tokens, prompt text, or provider secrets
+  were recorded in the report.
+- Hosted refund behavior after provider error/timeout/invalid response is
+  **pending**: there is no safe deterministic fault mechanism available
+  without changing provider configuration or adding a hosted hook. No such
+  change was made. The local disposable PostgreSQL fixtures passed 30/30
+  refund assertions, 48/48 security assertions, and concurrent finalization;
+  those results do not substitute for hosted failure evidence. The account
+  now has zero daily actions remaining; no quota was reset.
+- Production and Clameo were untouched. No phone/emulator run or GitHub push.
+
 ## Style-coach failed-request quota restoration (local checkpoint)
 
 - Added `20261118180000_style_coach_quota_refunds.sql` after the existing
