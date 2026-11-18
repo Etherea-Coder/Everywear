@@ -17,6 +17,7 @@ import { isCoachMode, parseGeminiCoachPayload } from "./coach_response.ts";
 import {
   finalizeCoachAction,
   reconcileStaleCoachActions,
+  respondWithValidatedCoachAdvice,
 } from "./coach_quota.ts";
 import { selectTopRatedItems } from "./item_ratings.ts";
 import {
@@ -478,8 +479,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    await finalizeCoachAction(coachFinalizer, user.id, requestId, "succeeded");
+    // A validated provider response must not enter the failure/refund path if
+    // the success RPC reports an uncertain outcome.
     pendingRequestId = null;
+    const adviceResponse = await respondWithValidatedCoachAdvice(
+      coachFinalizer,
+      user.id,
+      requestId,
+      result,
+      reservation,
+    );
     console.info(
       JSON.stringify({
         action: "style-coach",
@@ -498,12 +507,7 @@ Deno.serve(async (req) => {
       }),
     );
 
-    return new Response(JSON.stringify({ ...result, allowance: reservation }), {
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+    return adviceResponse;
   } catch (error) {
     if (quotaClient && coachFinalizer && coachUserId && pendingRequestId) {
       const outcome =

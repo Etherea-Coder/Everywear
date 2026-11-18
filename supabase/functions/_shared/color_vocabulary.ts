@@ -82,12 +82,21 @@ const aliases: Alias[] = CANONICAL_COLOR_VALUES.flatMap((color, order) => {
   left.order - right.order
 );
 
-function findColor(value: string): { color: string; start: number } | null {
+function findColor(
+  value: string,
+  storedSemanticLabel = false,
+): { color: string; start: number } | null {
   const words = foldWords(value);
   let best:
     | { color: string; start: number; length: number; order: number }
     | null = null;
   for (const alias of aliases) {
+    // "or" is a legacy French gold label, but also an English conjunction.
+    // Accept it only while reading persisted semantic labels.
+    if (
+      !storedSemanticLabel && alias.value === "gold" &&
+      alias.words.length === 1 && alias.words[0] === "or"
+    ) continue;
     for (let start = 0; start <= words.length - alias.words.length; start++) {
       if (!alias.words.every((word, index) => words[start + index] === word)) {
         continue;
@@ -117,7 +126,7 @@ export function normalizeCanonicalColor(value: string): string | null {
 
 /** Extracts one color from an old semantic_label without substring matches. */
 export function extractCanonicalColor(label: string): string | null {
-  return findColor(label)?.color ?? null;
+  return findColor(label, true)?.color ?? null;
 }
 
 export type DominantColorAnalytics = {

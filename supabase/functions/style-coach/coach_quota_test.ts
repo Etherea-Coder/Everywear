@@ -1,6 +1,7 @@
 import {
   finalizeCoachAction,
   reconcileStaleCoachActions,
+  respondWithValidatedCoachAdvice,
 } from "./coach_quota.ts";
 
 const uid = "11111111-1111-4111-8111-111111111111";
@@ -29,6 +30,55 @@ Deno.test("coach finalization uses the server-only RPC and exact identity", asyn
     calls[1].args?.p_request_id !== requestId ||
     calls[1].args?.p_outcome !== "succeeded"
   ) throw new Error("Coach used the wrong protected RPC contract");
+});
+
+Deno.test("uncertain success finalization returns validated advice without refund", async () => {
+  const calls: Array<Record<string, unknown> | undefined> = [];
+  const advice = {
+    success: true,
+    mode: "active",
+    answer: "Wear the blue shirt.",
+    next_step: "Try it with your dark trousers.",
+  };
+  const originalError = console.error;
+  const errors: unknown[][] = [];
+  console.error = (...args: unknown[]) => {
+    errors.push(args);
+  };
+  try {
+    const response = await respondWithValidatedCoachAdvice(
+      {
+        rpc: (_name, args) => {
+          calls.push(args);
+          return Promise.resolve({
+            data: null,
+            error: new Error("transport failed"),
+          });
+        },
+      },
+      uid,
+      requestId,
+      advice,
+      { allowed: true },
+    );
+    const body = await response.json();
+    if (
+      response.status !== 200 || body.answer !== advice.answer ||
+      body.next_step !== advice.next_step || calls.length !== 1 ||
+      calls[0]?.p_outcome !== "succeeded"
+    ) {
+      throw new Error("Valid advice was lost or a refund was attempted");
+    }
+    if (
+      errors.length !== 1 ||
+      errors[0][0] !==
+        "style-coach accounting error: success_finalization_uncertain"
+    ) {
+      throw new Error("Accounting failure was not logged safely");
+    }
+  } finally {
+    console.error = originalError;
+  }
 });
 
 Deno.test("duplicate or failed finalization cannot be treated as success", async () => {

@@ -63,4 +63,6 @@ Deno.test("mixed-language legacy labels normalize once and safely", () => {
   });
   assertEquals(extractCanonicalColor("A blueberry print shirt"), null);
   assertEquals(normalizeCanonicalColor("gris / grey"), "gray");
+  assertEquals(normalizeCanonicalColor("or"), null);
+  assertEquals(extractCanonicalColor("or"), "gold");
 });
