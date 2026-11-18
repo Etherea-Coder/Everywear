@@ -14,6 +14,7 @@ export ANDROID_HOME="$android_sdk_root"
 export ANDROID_AVD_HOME="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
 device_serial="emulator-5554"
 test_package="com.stylewise.app.stagingtest"
+test_target="${EVERYWEAR_EMULATOR_SMOKE_TEST_TARGET:-integration_test/app_test.dart}"
 adb_bin="${ADB_BIN:-$HOME/Android/Sdk/platform-tools/adb}"
 emulator_bin="${EMULATOR_BIN:-$HOME/Android/Sdk/emulator/emulator}"
 aapt_bin=""
@@ -23,6 +24,11 @@ boot_log=""
 
 if [[ "$project_ref" != "aftdbphdobfrshienple" ]]; then
   echo "Refusing any project other than the approved Everywear staging project." >&2
+  exit 2
+fi
+if [[ "$test_target" != "integration_test/app_test.dart" && \
+      "$test_target" != "integration_test/ai_color_chart_test.dart" ]]; then
+  echo "Refusing an unreviewed emulator smoke target." >&2
   exit 2
 fi
 if [[ ! -f "$config_file" ]]; then
@@ -139,7 +145,7 @@ if [[ -n "$reuse_prebuilt_apk" ]]; then
     echo "Refusing to reuse an APK outside the isolated build output." >&2
     exit 2
   fi
-  for source_file in "$repo_root/integration_test/app_test.dart" "$repo_root/android/app/build.gradle" "$repo_root/android/gradle.properties"; do
+  for source_file in "$repo_root/$test_target" "$repo_root/android/app/build.gradle" "$repo_root/android/gradle.properties"; do
     if [[ "$reuse_prebuilt_apk" -ot "$source_file" ]]; then
       echo "The reusable isolated APK predates a relevant source/build input." >&2
       exit 2
@@ -153,7 +159,7 @@ else
   EVERYWEAR_STAGE_PROJECT_REF="$project_ref" \
   EVERYWEAR_STAGE_CONFIG_FILE="$config_file" \
   EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
-  EVERYWEAR_UI_SMOKE_TEST_TARGET="integration_test/app_test.dart" \
+  EVERYWEAR_UI_SMOKE_TEST_TARGET="$test_target" \
   EVERYWEAR_UI_SMOKE_PREBUILD_ONLY="true" \
   EVERYWEAR_JAVA21_HOME="$java21_home" \
     "$repo_root/scripts/run_staging_ui_smoke.sh"
@@ -248,23 +254,25 @@ fi
 # Install the normal package only as a preservation sentinel; never launch it.
 "$adb_bin" -s "$device_serial" install -r "$normal_apk" >/dev/null
 
-EVERYWEAR_STAGE_PROJECT_REF="$project_ref" \
-EVERYWEAR_STAGE_CONFIG_FILE="$config_file" \
-EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
-  python3 "$repo_root/scripts/verify_staging_signup_metadata.py" || signup_status=$?
-if [[ "${signup_status:-0}" == "0" ]]; then
-  echo "SIGNUP_METADATA=PASS"
-else
-  echo "SIGNUP_METADATA=NOT_VERIFIED; continuing core smoke independently."
+if [[ "$test_target" == "integration_test/app_test.dart" ]]; then
+  EVERYWEAR_STAGE_PROJECT_REF="$project_ref" \
+  EVERYWEAR_STAGE_CONFIG_FILE="$config_file" \
+  EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
+    python3 "$repo_root/scripts/verify_staging_signup_metadata.py" || signup_status=$?
+  if [[ "${signup_status:-0}" == "0" ]]; then
+    echo "SIGNUP_METADATA=PASS"
+  else
+    echo "SIGNUP_METADATA=NOT_VERIFIED; continuing core smoke independently."
+  fi
 fi
 
 EVERYWEAR_STAGE_PROJECT_REF="$project_ref" \
 EVERYWEAR_STAGE_CONFIG_FILE="$config_file" \
 EVERYWEAR_SMOKE_CREDENTIALS_FILE="$credentials_file" \
 EVERYWEAR_UI_SMOKE_DEVICE_SERIAL="$device_serial" \
-EVERYWEAR_UI_SMOKE_TEST_TARGET="integration_test/app_test.dart" \
+EVERYWEAR_UI_SMOKE_TEST_TARGET="$test_target" \
 EVERYWEAR_UI_SMOKE_RUNTIME_AUTH="true" \
 EVERYWEAR_UI_SMOKE_PREBUILT_APK="$test_apk" \
   "$repo_root/scripts/run_staging_ui_smoke.sh"
 
-echo "EMULATOR_CORE_SMOKE=PASS"
+echo "EMULATOR_SMOKE=PASS target=$test_target"

@@ -1,5 +1,40 @@
 # Android release status
 
+## Staging locale-analytics deployment and validation (2026-11-18)
+
+- Authenticated CLI identity confirmed `Everywear-staging`, project ref
+  `aftdbphdobfrshienple`, region `eu-north-1`, active/healthy. Deployed the
+  reviewed `analyze-clothing` and `generate-ai-insights` source from commit
+  `b123c52b3cee1924ee07e4649045e442f5f2eb69` only to that project. The CLI
+  required the shared Deno import map; the successful scoped deploy used
+  `--import-map supabase/functions/deno.json`. Follow-up metadata showed both
+  functions active at version 3 with `verify_jwt: true`; no other function
+  versions changed.
+- The dedicated staging account had 17 monthly, 3 daily, and 1 burst action
+  remaining before the synthetic checks. One synthetic French clothing
+  analysis succeeded and saved a clearly named synthetic blue tee using a
+  stable private Storage reference. The response and persisted semantic label
+  use canonical `blue`, canonical `cotton`, and fixed `Tops`; separate French
+  display labels were `Bleu` and `Coton`. Remaining allowance became 16 monthly
+  and 2 daily.
+- One authenticated French `generate-ai-insights` request succeeded. Its chart
+  payload contained canonical `Blue` at 10%; remaining allowance became 15
+  monthly and 1 daily. The Flutter chart localizes canonical `Blue` using the
+  active locale; the focused localization test displayed the French mapping
+  `Bleu`. No quota was reset, and these two requests used exactly two actions.
+- A targeted `ai_color_chart_test.dart` and narrowly scoped runner target were
+  prepared. The staging isolated APK built successfully with package
+  `com.stylewise.app.stagingtest`, Java 21, one Gradle worker, and a 2 GiB heap.
+  After AVD boot, available host memory fell below the runner's 3 GiB execution
+  guard. The wrapper stopped the AVD before installing/running the test. Thus
+  backend analytics and localization mapping are verified, but actual chart
+  rendering on an emulator is **not verified**. Do not rerun the core smoke
+  suite; a future chart-only run needs sufficient post-boot memory.
+- Checks: targeted integration-test Dart analysis passed; focused localization
+  Flutter tests **2 passed**; shell syntax and `git diff --check` passed. The
+  earlier commit's 12 focused Deno tests and function checks remain applicable.
+  No production changes, quota changes/resets, phone test, push, or publication.
+
 ## Locale-independent clothing color analytics (2026-11-18)
 
 - Moved the exact existing `generate-ai-insights` color keyword vocabulary to

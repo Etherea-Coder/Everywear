@@ -26,6 +26,7 @@ if [[ "$prebuild_only" == "false" && -z "$device_serial" ]]; then
   exit 2
 fi
 if [[ "$test_target" != "integration_test/app_test.dart" && \
+      "$test_target" != "integration_test/ai_color_chart_test.dart" && \
       "$test_target" != "integration_test/auth_session_isolation_test.dart" && \
       "$test_target" != "integration_test/package_isolation_test.dart" ]]; then
   echo "Refusing an unreviewed UI smoke target." >&2
@@ -37,8 +38,10 @@ if [[ "$runtime_auth" != "true" && "$runtime_auth" != "false" ]]; then
   echo "EVERYWEAR_UI_SMOKE_RUNTIME_AUTH must be true or false." >&2
   exit 2
 fi
-if [[ "$runtime_auth" == "true" && "$test_target" != "integration_test/app_test.dart" ]]; then
-  echo "Runtime credentials are accepted only by the guarded core smoke target." >&2
+if [[ "$runtime_auth" == "true" && \
+      "$test_target" != "integration_test/app_test.dart" && \
+      "$test_target" != "integration_test/ai_color_chart_test.dart" ]]; then
+  echo "Runtime credentials are accepted only by reviewed staging integration targets." >&2
   exit 2
 fi
 if [[ "$runtime_auth" == "true" ]]; then
@@ -218,8 +221,9 @@ verify_isolated_apk() {
 
 app_apk="$repo_root/build/app/outputs/flutter-apk/app-debug.apk"
 if [[ "$prebuild_only" == "true" ]]; then
-  if [[ "$test_target" != "integration_test/app_test.dart" ]]; then
-    echo "Prebuilt emulator smoke currently supports only the reviewed core integration target." >&2
+  if [[ "$test_target" != "integration_test/app_test.dart" && \
+        "$test_target" != "integration_test/ai_color_chart_test.dart" ]]; then
+    echo "Prebuild supports only reviewed staging integration targets." >&2
     exit 2
   fi
   gradle_app_identity="$(
